@@ -146,6 +146,7 @@ namespace engine
             swapchain_image_extent_2d_ = choose_swapchain_extent_2d( swapchain_support_details.capabilities_ );
 
             uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
+
             if( swapchain_support_details.capabilities_.maxImageCount > 0 && image_count > swapchain_support_details.capabilities_.maxImageCount )
                 image_count = swapchain_support_details.capabilities_.maxImageCount;
 
@@ -181,17 +182,34 @@ namespace engine
             if( !render_pass_handle_ )
                 throw std::runtime_error{ "Failed to create Render Pass!" };
         }   //////////////////////////
+
+        {   /// Create Framebuffers ///
+            swapchain_framebuffer_handles_ = create_swapchain_framebuffers( );
+
+            for( const auto& framebuffer_handle : swapchain_framebuffer_handles_ )
+            {
+                if( !framebuffer_handle )
+                    throw std::runtime_error{ "Failed to create Framebuffer!" };
+            }
+        }   ///////////////////////////
     }
     renderer::~renderer( )
     {
         logical_device_handle_.destroyPipeline( graphics_pipeline_handle_ );
         logical_device_handle_.destroyPipelineLayout( graphics_pipeline_layout_handle_ );
+
+        for( auto& framebuffer_handle : swapchain_framebuffer_handles_ )
+        {
+            logical_device_handle_.destroyFramebuffer( framebuffer_handle );
+        }
+
         logical_device_handle_.destroyRenderPass( render_pass_handle_ );
 
         for( auto& image_view_handle : swapchain_image_view_handles_ )
         {
             logical_device_handle_.destroyImageView( image_view_handle );
         }
+
         logical_device_handle_.destroySwapchainKHR( swapchain_handle_ );
         logical_device_handle_.destroy( );
 
@@ -426,6 +444,26 @@ namespace engine
 
         return logical_device_handle_.createRenderPass( create_info );
     }
+    const std::vector<vk::Framebuffer> renderer::create_swapchain_framebuffers( ) const noexcept
+    {
+        std::vector<vk::Framebuffer> framebuffer_handles( swapchain_image_view_handles_.size( ) );
+
+        for( size_t i = 0; i < framebuffer_handles.size(); ++i )
+        {
+            const vk::FramebufferCreateInfo create_info
+                    {
+                            { }, render_pass_handle_,
+                            1, &swapchain_image_view_handles_[i],
+                            swapchain_image_extent_2d_.width,
+                            swapchain_image_extent_2d_.height,
+                            1
+                    };
+
+            framebuffer_handles[i] = logical_device_handle_.createFramebuffer( create_info );
+        }
+
+        return framebuffer_handles;
+    }
     const vk::PipelineLayout renderer::create_graphics_pipeline_layout( ) const noexcept
     {
         const vk::PipelineLayoutCreateInfo create_info{ { }, 0, nullptr, 0, nullptr };
@@ -521,7 +559,6 @@ namespace engine
 
         return logical_device_handle_.createGraphicsPipeline( nullptr, create_info );
     }
-
 
     bool renderer::check_extensions_support( const std::vector<const char*>& extensions )
     {

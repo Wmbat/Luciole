@@ -55,6 +55,7 @@ namespace engine
         const std::vector<vk::ImageView> create_swapchain_image_views( ) const noexcept;
         const vk::ShaderModule create_shader_module( const std::string& shader_code ) const noexcept;
         const vk::RenderPass create_render_pass( ) const noexcept;
+        const std::vector<vk::Framebuffer> create_swapchain_framebuffers( ) const noexcept;
         const vk::PipelineLayout create_graphics_pipeline_layout( ) const noexcept;
         const vk::Pipeline create_graphics_pipeline( const vk::ShaderModule& vert_shader_handle,
                                                      const vk::ShaderModule& frag_shader_handle ) const noexcept;
