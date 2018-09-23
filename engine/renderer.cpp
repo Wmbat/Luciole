@@ -23,6 +23,7 @@
 #include "utilities/file_io.h"
 #include "renderer.h"
 
+#ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL
 debug_callback_function( VkDebugReportFlagsEXT flags,
                          VkDebugReportObjectTypeEXT objType,
@@ -64,6 +65,7 @@ vkDestroyDebugReportCallbackEXT ( VkInstance instance,
         func ( instance, callback, pAllocator );
     }
 }
+#endif
 
 namespace engine
 {
@@ -82,7 +84,7 @@ namespace engine
             throw std::runtime_error{ "Extensions requested, but not supported!" };
         }
 
-        if( enable_validation_layers && !check_validation_layer_support( validation_layers ) )
+        if( !enable_validation_layers && !check_validation_layer_support( validation_layers ) )
         {
             throw std::runtime_error{ "Validation Layers requested, but not supported!" };
         }
@@ -97,10 +99,12 @@ namespace engine
 
 
         {   /// Create Vulkan Debug Callback ///
+#ifndef NDEBUG
             debug_report_callback_handle_ = create_debug_report_callback();
 
             if( !debug_report_callback_handle_ )
                 throw std::runtime_error{ "Failed to create Debug Report Callback!" };
+#endif
         }   ////////////////////////////////////
 
 
@@ -214,7 +218,9 @@ namespace engine
         logical_device_handle_.destroy( );
 
         instance_handle_.destroySurfaceKHR( surface_handle_ );
+#ifndef NDEBUG
         instance_handle_.destroyDebugReportCallbackEXT( debug_report_callback_handle_ );
+#endif
         instance_handle_.destroy( );
     }
 
@@ -274,6 +280,8 @@ namespace engine
 
         return vk::createInstance( create_info );
     }
+
+#ifndef NDEBUG
     const vk::DebugReportCallbackEXT renderer::create_debug_report_callback( ) const noexcept
     {
         const vk::DebugReportCallbackCreateInfoEXT create_info
@@ -284,6 +292,7 @@ namespace engine
 
         return instance_handle_.createDebugReportCallbackEXT( create_info );
     }
+#endif
     const vk::SurfaceKHR renderer::create_surface( const window& wnd ) const noexcept
     {
         auto [result, surface_handle] = wnd.create_surface( instance_handle_ );
