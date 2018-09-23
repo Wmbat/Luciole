@@ -19,7 +19,7 @@
 
 #include <optional>
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "window.h"
 
@@ -44,7 +44,10 @@ namespace engine
         const vk::Instance create_instance( const std::vector<const char*>& extensions,
                                             const std::vector<const char*>& validation_layers,
                                             const std::string& app_name, uint32_t app_version ) const noexcept;
+
+#ifndef NDEBUG
         const vk::DebugReportCallbackEXT create_debug_report_callback( ) const noexcept;
+#endif
         const vk::SurfaceKHR create_surface( const window& wnd ) const noexcept;
         const vk::PhysicalDevice pick_physical_device( const std::vector<const char*>& device_extensions ) const noexcept;
         const vk::Device create_logical_device( const std::vector<const char*>& validation_layers,
@@ -79,7 +82,9 @@ namespace engine
 
     private:
         vk::Instance instance_handle_;
+#ifndef NDEBUG
         vk::DebugReportCallbackEXT debug_report_callback_handle_;
+#endif
         vk::SurfaceKHR surface_handle_;
         vk::PhysicalDevice physical_device_handle_;
         vk::Device logical_device_handle_;

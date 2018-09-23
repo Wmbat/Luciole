@@ -42,8 +42,11 @@ add_executable( vulkan_project
         test/game.h
         test/main.cpp
 
+        engine/renderer.cpp
+        engine/renderer.h
         engine/window.cpp
-        engine/window.h engine/renderer.cpp engine/renderer.h engine/utilities/file_io.h)
+        engine/window.h
+        engine/utilities/file_io.h )
 
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}

@@ -17,7 +17,7 @@
 #ifndef VULKAN_PROJECT_WINDOW_H
 #define VULKAN_PROJECT_WINDOW_H
 
-#if NDEBUG
+#ifdef NDEBUG
 static constexpr bool enable_validation_layers = false;
 #else
 static constexpr bool enable_validation_layers = true;
