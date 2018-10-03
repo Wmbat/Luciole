@@ -31,6 +31,8 @@ namespace engine
     class window
     {
     public:
+        struct surface;
+
         window( ) = default;
         window( uint32_t width, uint32_t height, const std::string& title );
         window( const window& other ) = delete;
@@ -42,7 +44,7 @@ namespace engine
         void poll_events( );
 
         std::vector<const char*> get_required_extensions( ) const noexcept;
-        std::pair<VkBool32, VkSurfaceKHR> create_surface( const VkInstance& instance ) const noexcept;
+        surface create_surface( const VkInstance& instance ) const noexcept;
 
         const uint32_t get_width( ) const noexcept;
         const uint32_t get_height( ) const noexcept;
@@ -56,6 +58,13 @@ namespace engine
         std::string title_;
         uint32_t width_ = 0;
         uint32_t height_ = 0;
+
+    public:
+        struct surface
+        {
+            VkResult result_;
+            VkSurfaceKHR handle_ = VK_NULL_HANDLE;
+        };
     };
 }
 

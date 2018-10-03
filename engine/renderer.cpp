@@ -78,7 +78,6 @@ namespace engine
         const std::vector<const char*> validation_layers = { "VK_LAYER_LUNARG_standard_validation" };
         const std::vector<const char*> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-
         if( !check_extensions_support( glfw_extensions ) )
         {
             throw std::runtime_error{ "Extensions requested, but not supported!" };
@@ -90,54 +89,56 @@ namespace engine
         }
 
 
-        {   /// Create Vulkan Instance ///
-            instance_handle_ = create_instance( glfw_extensions, validation_layers, app_name, app_version );
+        instance_handle_ = create_instance( glfw_extensions, validation_layers, app_name, app_version );
 
-            if( !instance_handle_ )
-                throw std::runtime_error{ "Failed to create Vulkan Instance!" };
-        }   //////////////////////////////
+        if( !instance_handle_ )
+            throw std::runtime_error{ "Failed to create Vulkan Instance!" };
 
 
-        {   /// Create Vulkan Debug Callback ///
 #ifndef NDEBUG
-            debug_report_callback_handle_ = create_debug_report_callback();
+        debug_report_callback_handle_ = create_debug_report_callback( instance_handle_ );
 
-            if( !debug_report_callback_handle_ )
-                throw std::runtime_error{ "Failed to create Debug Report Callback!" };
+        if( !debug_report_callback_handle_ )
+            throw std::runtime_error{ "Failed to create Debug Report Callback!" };
 #endif
-        }   ////////////////////////////////////
 
 
-        {   /// Create Surface ///
-            surface_handle_ = create_surface( wnd );
+        surface_handle_ = create_surface( wnd, instance_handle_ );
 
-            if( !surface_handle_ )
-                throw std::runtime_error{ "Failed to create Surface!" };
-        }   //////////////////////
+        if( !surface_handle_ )
+            throw std::runtime_error{ "Failed to create Surface!" };
 
 
-        {   /// Choose Physical Device ///
-            physical_device_handle_ = pick_physical_device( device_extensions );
+        physical_device_handle_ = pick_physical_device( device_extensions, instance_handle_ );
 
-            if( !physical_device_handle_ )
-                std::runtime_error{ "Failed to find a valid GPU for Vulkan!" };
-        }   //////////////////////////////
+        if( !physical_device_handle_ )
+            std::runtime_error{ "Failed to find a valid GPU for Vulkan!" };
 
 
-        {   /// Create Logical Device ///
-            logical_device_handle_ = create_logical_device( validation_layers, device_extensions );
+        logical_device_handle_ = create_logical_device( validation_layers, device_extensions, physical_device_handle_ );
 
-            if( !logical_device_handle_ )
-                std::runtime_error{ "Failed to create Logical Device!" };
-        }   /////////////////////////////
+        if( !logical_device_handle_ )
+            std::runtime_error{ "Failed to create Logical Device!" };
+
+
+
+        image_available_semaphore_handle_ = create_semaphore( logical_device_handle_ );
+
+        if( !image_available_semaphore_handle_ )
+            std::runtime_error{ "Failed to create Image Available Semaphore!" };
+
+        render_finished_semaphore_handle_ = create_semaphore( logical_device_handle_ );
+
+        if( !render_finished_semaphore_handle_ )
+                std::runtime_error{ "Failed to create Render Finished Semaphore!" };
+
 
         auto queue_family_indices = find_queue_families( physical_device_handle_ );
 
         graphics_queue_ = logical_device_handle_.getQueue( static_cast<uint32_t>( queue_family_indices.graphics_family_ ), 0 );
         present_queue_ = logical_device_handle_.getQueue( static_cast<uint32_t>( queue_family_indices.present_family_ ), 0 );
 
-
-        {   /// Create Swapchain ///
+        {
             const swapchain_support_details swapchain_support_details
             {
                 physical_device_handle_.getSurfaceCapabilitiesKHR( surface_handle_ ),
@@ -154,7 +155,8 @@ namespace engine
             if( swapchain_support_details.capabilities_.maxImageCount > 0 && image_count > swapchain_support_details.capabilities_.maxImageCount )
                 image_count = swapchain_support_details.capabilities_.maxImageCount;
 
-            swapchain_handle_ = create_swapchain( swapchain_support_details, surface_format,
+            swapchain_handle_ = create_swapchain( logical_device_handle_, physical_device_handle_,
+                                                  swapchain_support_details, surface_format,
                                                   swapchain_image_extent_2d_, present_mode, image_count );
             swapchain_image_handles_ = logical_device_handle_.getSwapchainImagesKHR( swapchain_handle_ );
             swapchain_image_format_ = surface_format.format;
@@ -167,35 +169,56 @@ namespace engine
                 if( !image_handle )
                     throw std::runtime_error{ "Failed to create Swapchain Image!" };
             }
-        }   ////////////////////////
+        }
 
-        {   /// Create Image Views ///
-            swapchain_image_view_handles_ = create_swapchain_image_views( );
+        swapchain_image_view_handles_ = create_swapchain_image_views( logical_device_handle_,
+                swapchain_image_format_,
+                swapchain_image_handles_,
+                static_cast<uint32_t>( swapchain_image_handles_.size() ) );
 
-            for( const auto& image_view_handle : swapchain_image_view_handles_ )
-            {
-                if( !image_view_handle )
-                    throw std::runtime_error{ "Failed to create Image View!" };
-            }
-        }   //////////////////////////
+        for( const auto& image_view_handle : swapchain_image_view_handles_ )
+        {
+            if( !image_view_handle )
+                throw std::runtime_error{ "Failed to create Image View!" };
+        }
 
 
-        {   /// Create Render Pass ///
-            render_pass_handle_ = create_render_pass();
 
-            if( !render_pass_handle_ )
-                throw std::runtime_error{ "Failed to create Render Pass!" };
-        }   //////////////////////////
+        render_pass_handle_ = create_render_pass( logical_device_handle_, swapchain_image_format_ );
 
-        {   /// Create Framebuffers ///
-            swapchain_framebuffer_handles_ = create_swapchain_framebuffers( );
+        if( !render_pass_handle_ )
+            throw std::runtime_error{ "Failed to create Render Pass!" };
 
-            for( const auto& framebuffer_handle : swapchain_framebuffer_handles_ )
-            {
-                if( !framebuffer_handle )
-                    throw std::runtime_error{ "Failed to create Framebuffer!" };
-            }
-        }   ///////////////////////////
+
+
+        command_pool_handle_ = create_command_pool( logical_device_handle_, queue_family_indices );
+
+        if( !command_pool_handle_ )
+            throw std::runtime_error{ "Failed to create Command Pool!" };
+
+
+        command_buffer_handles_ = allocate_command_buffers( logical_device_handle_,
+                command_pool_handle_,
+                static_cast<uint32_t>( swapchain_image_view_handles_.size() ) );
+
+        for( const auto& command_buffer_handle : command_buffer_handles_ )
+        {
+            if( !command_buffer_handle )
+                throw std::runtime_error{ "Failed to allocate Command Buffer" };
+        }
+
+
+        swapchain_framebuffer_handles_ = create_swapchain_framebuffers( logical_device_handle_,
+                render_pass_handle_,
+                swapchain_image_extent_2d_,
+                swapchain_image_view_handles_,
+                static_cast<uint32_t>( swapchain_image_view_handles_.size() ) );
+
+        for( const auto& framebuffer_handle : swapchain_framebuffer_handles_ )
+        {
+            if( !framebuffer_handle )
+                throw std::runtime_error{ "Failed to create Framebuffer!" };
+        }
     }
     renderer::~renderer( )
     {
@@ -207,6 +230,8 @@ namespace engine
             logical_device_handle_.destroyFramebuffer( framebuffer_handle );
         }
 
+        logical_device_handle_.destroyCommandPool( command_pool_handle_ );
+
         logical_device_handle_.destroyRenderPass( render_pass_handle_ );
 
         for( auto& image_view_handle : swapchain_image_view_handles_ )
@@ -215,6 +240,8 @@ namespace engine
         }
 
         logical_device_handle_.destroySwapchainKHR( swapchain_handle_ );
+        logical_device_handle_.destroySemaphore( image_available_semaphore_handle_ );
+        logical_device_handle_.destroySemaphore( render_finished_semaphore_handle_ );
         logical_device_handle_.destroy( );
 
         instance_handle_.destroySurfaceKHR( surface_handle_ );
@@ -227,36 +254,89 @@ namespace engine
     void renderer::setup_graphics_pipeline( const std::string& vert_shader_filepath,
                                             const std::string& frag_shader_filepath )
     {
-        /// Create Vertex Shader Module ///
-        const vk::ShaderModule vert_shader_handle = create_shader_module( utilities::read_from_binary_file( vert_shader_filepath ) );
+        const vk::ShaderModule vert_shader_handle = create_shader_module( logical_device_handle_, utilities::read_from_binary_file( vert_shader_filepath ) );
 
         if( !vert_shader_handle )
             throw std::runtime_error{ "Failed to create Vertex Shader!" };
-        ///////////////////////////////////
 
-        /// Create Fragment Shader Module ///
-        const vk::ShaderModule frag_shader_handle = create_shader_module( utilities::read_from_binary_file( frag_shader_filepath ) );
+
+        const vk::ShaderModule frag_shader_handle = create_shader_module( logical_device_handle_, utilities::read_from_binary_file( frag_shader_filepath ) );
 
         if( !frag_shader_handle )
             throw std::runtime_error{ "Failed to create Fragment Shader!" };
-        /////////////////////////////////////
 
-        /// Create Pipeline Layout ///
-        graphics_pipeline_layout_handle_ = create_graphics_pipeline_layout( );
+
+        graphics_pipeline_layout_handle_ = create_graphics_pipeline_layout( logical_device_handle_ );
 
         if( !graphics_pipeline_layout_handle_ )
             throw std::runtime_error{ "Failed to create Graphics Pipeline Layout!" };
-        //////////////////////////////
 
-        /// Create Pipeline ///
-        graphics_pipeline_handle_ = create_graphics_pipeline( vert_shader_handle, frag_shader_handle );
+
+        graphics_pipeline_handle_ = create_graphics_pipeline( logical_device_handle_,
+                swapchain_image_extent_2d_,
+                graphics_pipeline_layout_handle_,
+                render_pass_handle_,
+                vert_shader_handle,
+                frag_shader_handle );
 
         if( !graphics_pipeline_handle_ )
             throw std::runtime_error{ "Failed to create Graphics Pipeline!" };
-        ///////////////////////
 
         logical_device_handle_.destroyShaderModule( vert_shader_handle );
         logical_device_handle_.destroyShaderModule( frag_shader_handle );
+    }
+
+    void renderer::record_command_buffers( ) const noexcept
+    {
+        for( auto i = 0; i < command_buffer_handles_.size(); ++i )
+        {
+            const vk::CommandBufferBeginInfo begin_info
+            {
+                vk::CommandBufferUsageFlagBits::eSimultaneousUse, nullptr
+            };
+
+            command_buffer_handles_[i].begin( begin_info );
+            {
+                const std::array<float, 4> clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+                const vk::ClearColorValue clear_colour_value{ clear_colour };
+                const vk::ClearValue clear_value{ clear_colour_value };
+
+                const vk::RenderPassBeginInfo render_pass_begin_info
+                {
+                    render_pass_handle_, swapchain_framebuffer_handles_[i],
+                    vk::Rect2D{ { 0, 0 }, swapchain_image_extent_2d_ },
+                    1, &clear_value
+                };
+
+                command_buffer_handles_[i].beginRenderPass( render_pass_begin_info, vk::SubpassContents::eInline );
+                {
+                    command_buffer_handles_[i].bindPipeline( vk::PipelineBindPoint::eGraphics, graphics_pipeline_handle_ );
+                    command_buffer_handles_[i].draw( 3, 1, 0, 0 );
+                }
+                command_buffer_handles_[i].endRenderPass( );
+            }
+            command_buffer_handles_[i].end( );
+        }
+    }
+    void renderer::draw_frame( )
+    {
+        const auto image_index = logical_device_handle_.acquireNextImageKHR( swapchain_handle_, std::numeric_limits<uint64_t>::max(),
+                image_available_semaphore_handle_, nullptr ).value;
+
+        const vk::Semaphore wait_semaphores[] = { image_available_semaphore_handle_ };
+        const vk::Semaphore signal_semaphores[] = { render_finished_semaphore_handle_ };
+        const vk::PipelineStageFlags wait_stages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+        const vk::SubmitInfo submit_info
+        {
+            1, wait_semaphores,
+            wait_stages,
+            1,
+            &command_buffer_handles_[image_index],
+            1, signal_semaphores
+        };
+
+        const auto submit_result = graphics_queue_.submit( 1, &submit_info, nullptr );
     }
 
     const vk::Instance renderer::create_instance( const std::vector<const char*>& extensions,
@@ -282,7 +362,7 @@ namespace engine
     }
 
 #ifndef NDEBUG
-    const vk::DebugReportCallbackEXT renderer::create_debug_report_callback( ) const noexcept
+    const vk::DebugReportCallbackEXT renderer::create_debug_report_callback( const vk::Instance& instance_handle ) const noexcept
     {
         const vk::DebugReportCallbackCreateInfoEXT create_info
         {
@@ -290,20 +370,23 @@ namespace engine
             debug_callback_function
         };
 
-        return instance_handle_.createDebugReportCallbackEXT( create_info );
+        auto test = instance_handle.createDebugReportCallbackEXT( create_info );
+
+        return instance_handle.createDebugReportCallbackEXT( create_info );
     }
 #endif
-    const vk::SurfaceKHR renderer::create_surface( const window& wnd ) const noexcept
+    const vk::SurfaceKHR renderer::create_surface( const window& wnd, const vk::Instance& instance_handle ) const noexcept
     {
-        auto [result, surface_handle] = wnd.create_surface( instance_handle_ );
+        auto surface = wnd.create_surface( instance_handle );
 
-        return ( result == VK_SUCCESS )
-                    ? surface_handle
+        return ( surface.result_ == VK_SUCCESS )
+                    ? surface.handle_
                     : nullptr;
     }
-    const vk::PhysicalDevice renderer::pick_physical_device( const std::vector<const char*>& device_extensions ) const noexcept
+    const vk::PhysicalDevice renderer::pick_physical_device( const std::vector<const char*>& device_extensions,
+                                                             const vk::Instance& instance_handle ) const noexcept
     {
-        std::vector<vk::PhysicalDevice> physical_devices = instance_handle_.enumeratePhysicalDevices( );
+        std::vector<vk::PhysicalDevice> physical_devices = instance_handle.enumeratePhysicalDevices( );
         std::multimap<int, vk::PhysicalDevice> candidates;
 
         if( !physical_devices.empty() )
@@ -327,9 +410,10 @@ namespace engine
         }
     }
     const vk::Device renderer::create_logical_device( const std::vector<const char*>& validation_layers,
-                                                      const std::vector<const char*>& device_extensions ) const noexcept
+                                                      const std::vector<const char*>& device_extensions,
+                                                      const vk::PhysicalDevice& physical_device_handle ) const noexcept
     {
-        auto queue_family_indices = find_queue_families( physical_device_handle_ );
+        auto queue_family_indices = find_queue_families( physical_device_handle_);
         std::set<int> unique_queue_family;
 
         if( queue_family_indices.graphics_family_ >= 0 )
@@ -350,7 +434,7 @@ namespace engine
             queue_create_infos.emplace_back( vk::DeviceQueueCreateInfo( { }, queue_family, 1, &queue_priority ) );
         }
 
-        const auto features = physical_device_handle_.getFeatures( );
+        const auto features = physical_device_handle.getFeatures( );
         const auto create_info = ( enable_validation_layers )
                 ? vk::DeviceCreateInfo{ { },
                                         static_cast<uint32_t>( queue_create_infos.size() ), queue_create_infos.data(),
@@ -363,13 +447,24 @@ namespace engine
                                         static_cast<uint32_t>( device_extensions.size() ), device_extensions.data(),
                                         &features };
 
-        return physical_device_handle_.createDevice( create_info );
+        return physical_device_handle.createDevice( create_info );
     }
-    const vk::SwapchainKHR renderer::create_swapchain( const swapchain_support_details& swapchain_support_details,
+    const vk::Semaphore renderer::create_semaphore( const vk::Device& logical_device_handle ) const noexcept
+    {
+        const vk::SemaphoreCreateInfo create_info
+        {
+            vk::SemaphoreCreateFlags( )
+        };
+
+        return logical_device_handle.createSemaphore( create_info );
+    }
+    const vk::SwapchainKHR renderer::create_swapchain( const vk::Device& logical_device_handle,
+                                                       const vk::PhysicalDevice& physical_device_handle,
+                                                       const swapchain_support_details& swapchain_support_details,
                                                        const vk::SurfaceFormatKHR& surface_format, const vk::Extent2D& extent_2d,
                                                        const vk::PresentModeKHR& present_mode, const uint32_t image_count ) const noexcept
     {
-        const auto indices = find_queue_families( physical_device_handle_ );
+        const auto indices = find_queue_families( physical_device_handle );
         const uint32_t queue_family_indices[] =
         {
             static_cast<uint32_t>( indices.graphics_family_ ),
@@ -390,31 +485,35 @@ namespace engine
                     swapchain_support_details.capabilities_.currentTransform,
                     vk::CompositeAlphaFlagBitsKHR::eOpaque, present_mode, VK_TRUE, nullptr };
 
-        return logical_device_handle_.createSwapchainKHR( create_info );
+        return logical_device_handle.createSwapchainKHR( create_info );
     }
-    const std::vector<vk::ImageView> renderer::create_swapchain_image_views( ) const noexcept
+    const std::vector<vk::ImageView> renderer::create_swapchain_image_views( const vk::Device& logical_device_handle,
+                                                                             const vk::Format& swapchain_image_format,
+                                                                             const std::vector<vk::Image>& swapchain_image_handles,
+                                                                             uint32_t image_view_count ) const noexcept
     {
-        std::vector<vk::ImageView> image_view_handles( swapchain_image_handles_.size() );
+        std::vector<vk::ImageView> image_view_handles( image_view_count );
 
-        for( size_t i = 0; i < swapchain_image_handles_.size(); ++i )
+        for( size_t i = 0; i < image_view_count; ++i )
         {
             vk::ImageViewCreateInfo create_info
             {
-                { }, swapchain_image_handles_[i],
+                { }, swapchain_image_handles[i],
                 vk::ImageViewType::e2D,
-                swapchain_image_format_,
+                swapchain_image_format,
                 { vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity,
                   vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity },
                 { vk::ImageAspectFlagBits::eColor,
                   0, 1, 0, 1 }
             };
 
-            image_view_handles[i] = logical_device_handle_.createImageView( create_info );
+            image_view_handles[i] = logical_device_handle.createImageView( create_info );
         }
 
         return image_view_handles;
     }
-    const vk::ShaderModule renderer::create_shader_module( const std::string& shader_code ) const noexcept
+    const vk::ShaderModule renderer::create_shader_module( const vk::Device& logical_device_handle,
+                                                           const std::string& shader_code ) const noexcept
     {
         const vk::ShaderModuleCreateInfo create_info
         {
@@ -422,13 +521,14 @@ namespace engine
             reinterpret_cast<const uint32_t*>( shader_code.data() )
         };
 
-        return logical_device_handle_.createShaderModule( create_info );
+        return logical_device_handle.createShaderModule( create_info );
     }
-    const vk::RenderPass renderer::create_render_pass( ) const noexcept
+    const vk::RenderPass renderer::create_render_pass( const vk::Device& logical_device_handle,
+                                                       const vk::Format& swapchain_image_format ) const noexcept
     {
         const vk::AttachmentDescription colour_attachment_description
         {
-            { }, swapchain_image_format_, vk::SampleCountFlagBits::e1,
+            { }, swapchain_image_format, vk::SampleCountFlagBits::e1,
             vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore,
             vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare,
             vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR
@@ -445,41 +545,77 @@ namespace engine
         };
         const vk::RenderPassCreateInfo create_info
         {
-                { },
-                1, &colour_attachment_description,
-                1, &subpass_description,
-                0, nullptr
+            { },
+            1, &colour_attachment_description,
+            1, &subpass_description,
+            0, nullptr
         };
 
-        return logical_device_handle_.createRenderPass( create_info );
+        return logical_device_handle.createRenderPass( create_info );
     }
-    const std::vector<vk::Framebuffer> renderer::create_swapchain_framebuffers( ) const noexcept
+    const std::vector<vk::Framebuffer> renderer::create_swapchain_framebuffers( const vk::Device& logical_device_handle,
+                                                                                const vk::RenderPass& render_pass_handle,
+                                                                                const vk::Extent2D& swapchain_image_extent_2d,
+                                                                                const std::vector<vk::ImageView>& swapchain_image_view_handles,
+                                                                                uint32_t framebuffer_count ) const noexcept
     {
         std::vector<vk::Framebuffer> framebuffer_handles( swapchain_image_view_handles_.size( ) );
 
         for( size_t i = 0; i < framebuffer_handles.size(); ++i )
         {
             const vk::FramebufferCreateInfo create_info
-                    {
-                            { }, render_pass_handle_,
-                            1, &swapchain_image_view_handles_[i],
-                            swapchain_image_extent_2d_.width,
-                            swapchain_image_extent_2d_.height,
-                            1
-                    };
+            {
+                { }, render_pass_handle,
+                1, &swapchain_image_view_handles[i],
+                swapchain_image_extent_2d.width,
+                swapchain_image_extent_2d.height,
+                1
+            };
 
-            framebuffer_handles[i] = logical_device_handle_.createFramebuffer( create_info );
+            framebuffer_handles[i] = logical_device_handle.createFramebuffer( create_info );
         }
 
         return framebuffer_handles;
     }
-    const vk::PipelineLayout renderer::create_graphics_pipeline_layout( ) const noexcept
+    const vk::CommandPool renderer::create_command_pool( const vk::Device& logical_device_handle,
+                                                         const queue_family_indices& queue_family_indices ) const noexcept
     {
-        const vk::PipelineLayoutCreateInfo create_info{ { }, 0, nullptr, 0, nullptr };
+        const vk::CommandPoolCreateInfo create_info
+        {
+            { }, static_cast<uint32_t>( queue_family_indices.graphics_family_ )
+        };
 
-        return logical_device_handle_.createPipelineLayout( create_info );
+        return logical_device_handle.createCommandPool( create_info );
     }
-    const vk::Pipeline renderer::create_graphics_pipeline( const vk::ShaderModule& vert_shader_handle,
+    const std::vector<vk::CommandBuffer> renderer::allocate_command_buffers( const vk::Device& logical_device_handle,
+                                                                             const vk::CommandPool& command_pool_handle,
+                                                                             uint32_t buffer_count ) const noexcept
+    {
+        const vk::CommandBufferAllocateInfo allocate_info
+        {
+            command_pool_handle,
+            vk::CommandBufferLevel::ePrimary,
+            buffer_count
+        };
+
+        return logical_device_handle.allocateCommandBuffers( allocate_info );
+    }
+    const vk::PipelineLayout renderer::create_graphics_pipeline_layout( const vk::Device& logical_device_handle ) const noexcept
+    {
+        const vk::PipelineLayoutCreateInfo create_info
+        {
+            { },
+            0, nullptr,     /// Descriptor sets.
+            0, nullptr      /// Push constants.
+        };
+
+        return logical_device_handle.createPipelineLayout( create_info );
+    }
+    const vk::Pipeline renderer::create_graphics_pipeline( const vk::Device& logical_device_handle,
+                                                           const vk::Extent2D& swapchain_image_extent_2d,
+                                                           const vk::PipelineLayout& graphics_pipeline_layout_handle,
+                                                           const vk::RenderPass& render_pass_handle,
+                                                           const vk::ShaderModule& vert_shader_handle,
                                                            const vk::ShaderModule& frag_shader_handle ) const noexcept
     {
         const vk::PipelineShaderStageCreateInfo shader_stages[] =
@@ -502,14 +638,14 @@ namespace engine
         const vk::Viewport viewport
         {
             0.0f, 0.0f,
-            static_cast<float>( swapchain_image_extent_2d_.width ),
-            static_cast<float>( swapchain_image_extent_2d_.height ),
+            static_cast<float>( swapchain_image_extent_2d.width ),
+            static_cast<float>( swapchain_image_extent_2d.height ),
             0.0f, 1.0f
         };
         const vk::Rect2D scissors
         {
             { 0, 0 },
-            swapchain_image_extent_2d_
+            swapchain_image_extent_2d
         };
         const vk::PipelineViewportStateCreateInfo viewport_state_create_info
         {
@@ -528,7 +664,6 @@ namespace engine
             { }, vk::SampleCountFlagBits::e1, VK_FALSE,
             1.0f, nullptr, VK_FALSE, VK_FALSE
         };
-        /// no depth buffer as of right now.
         const vk::PipelineColorBlendAttachmentState colour_blend_attachment_state
         {
             VK_FALSE,
@@ -546,7 +681,7 @@ namespace engine
         const vk::PipelineDynamicStateCreateInfo dynamic_state_create_info
         {
             { },
-            0, nullptr
+            0, nullptr                      /// No Dynamic States yet.
         };
         const vk::GraphicsPipelineCreateInfo create_info
         {
@@ -554,22 +689,22 @@ namespace engine
             2, shader_stages,
             &vertex_input_state_create_info,
             &input_assembly_state_create_info,
-            nullptr,
+            nullptr,                        /// No tesselation yet.
             &viewport_state_create_info,
             &rasterization_state_create_info,
             &multisample_state_create_info,
-            nullptr,
+            nullptr,                        /// No Depth buffer yet.
             &colour_blend_state_create_info,
-            &dynamic_state_create_info,
-            graphics_pipeline_layout_handle_,
-            render_pass_handle_, 0,
+            nullptr,                        /// No dynamic states yet.
+            graphics_pipeline_layout_handle,
+            render_pass_handle, 0,
             { }, 0
         };
 
-        return logical_device_handle_.createGraphicsPipeline( nullptr, create_info );
+        return logical_device_handle.createGraphicsPipeline( nullptr, create_info );
     }
 
-    bool renderer::check_extensions_support( const std::vector<const char*>& extensions )
+    bool renderer::check_extensions_support( const std::vector<const char*>& extensions ) const noexcept
     {
         for( const auto& extension : extensions )
         {
@@ -604,7 +739,7 @@ namespace engine
 
         return required_extensions.empty();
     }
-    bool renderer::check_validation_layer_support( const std::vector<const char*>& validation_layers )
+    bool renderer::check_validation_layer_support( const std::vector<const char*>& validation_layers ) const noexcept
     {
         for( const auto& layer_name : validation_layers )
         {
