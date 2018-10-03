@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <fstream>
+#include <vector>
 
 namespace utilities
 {
@@ -43,10 +44,10 @@ namespace utilities
 
     inline const std::string read_from_binary_file( const std::string& filepath )
     {
-        std::ifstream file( filepath , std::ios::binary );
+        std::ifstream file( filepath );
         std::string str;
 
-        if( !file.tellg() < 0 )
+        if( !file.is_open() )
             throw std::runtime_error{ "Error loading file at location: " + filepath + "." };
         else if( !file.good() )
             throw std::runtime_error{ "Error reading file: " + filepath + "." };

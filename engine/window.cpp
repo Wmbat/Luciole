@@ -79,7 +79,7 @@ namespace engine
 
         return vulkan_extensions;
     }
-    std::pair<VkBool32, VkSurfaceKHR> window::create_surface( const VkInstance& instance ) const noexcept
+    window::surface window::create_surface( const VkInstance& instance ) const noexcept
     {
         VkSurfaceKHR surface_handle;
 

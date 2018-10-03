@@ -21,7 +21,8 @@ game::game( engine::window& wnd )
     wnd_( wnd ),
     renderer_( wnd_, "Test", VK_MAKE_VERSION( 0, 0, 1 ) )
 {
-
+    renderer_.setup_graphics_pipeline( "test/shaders/vert.spv", "test/shaders/frag.spv" );
+    renderer_.record_command_buffers( );
 }
 
 void game::run( )
@@ -30,4 +31,6 @@ void game::run( )
     {
         wnd_.poll_events();
     }
+
+    renderer_.draw_frame( );
 }

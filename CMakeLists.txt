@@ -17,18 +17,13 @@ project( vulkan_project )
 
 set( CMAKE_CXX_STANDARD 17 )
 
+set( CMAKE_CXX_FLAGS -pthread )
+
 set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
 
 find_package( Vulkan REQUIRED )
-
-if( ${VULKAN_FOUND} )
-    include_directories( ${Vulkan_INCLUDE_DIR} )
-else( )
-    message( ERROR "Vulkan not found!" )
-endif( )
-
 find_package( glfw3 3.2 REQUIRED )
 
 if( WIN32 )
