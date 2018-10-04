@@ -30,7 +30,7 @@ void game::run( )
     while( wnd_.is_open() )
     {
         wnd_.poll_events();
-    }
 
-    renderer_.draw_frame( );
+        renderer_.draw_frame();
+    }
 }
