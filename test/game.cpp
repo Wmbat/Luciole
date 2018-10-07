@@ -14,6 +14,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
+#include <iostream>
+#include <unordered_map>
+
 #include "game.h"
 
 game::game( engine::window& wnd )
@@ -27,9 +31,37 @@ game::game( engine::window& wnd )
 
 void game::run( )
 {
-    while( wnd_.is_open() )
+    auto time_point = std::chrono::steady_clock::now( );
+    float max_dt = 1.0f / 20.0f;
+
+    bool is_open = wnd_.is_open();
+    while( is_open )
     {
         wnd_.poll_events();
+
+        float dt;
+        {
+            const auto new_time_point = std::chrono::steady_clock::now( );
+            dt = std::chrono::duration<float>( new_time_point - time_point ).count( );
+            time_point = new_time_point;
+        }
+        dt = std::min( dt, max_dt );
+
+        time_passed_ += dt;
+        frames_passed_ += 1;
+
+        if( time_passed_ >= 0.1 )
+        {
+            // std::cout << "FPS: " << frames_passed_ / time_passed_ << "\n";
+
+            time_passed_ = 0;
+            frames_passed_ = 0;
+        }
+
+        if( wnd_.p_keyboard_->is_key_pressed( GLFW_KEY_ESCAPE ) )
+        {
+            is_open = false;
+        }
 
         renderer_.draw_frame();
     }

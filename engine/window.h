@@ -26,6 +26,8 @@ static constexpr bool enable_validation_layers = true;
 #include <vulkan/vulkan.hpp>
 #include <glfw/glfw3.h>
 
+#include "keyboard.h"
+
 namespace engine
 {
     class window
@@ -43,6 +45,8 @@ namespace engine
 
         void poll_events( );
 
+        void close( );
+
         std::vector<const char*> get_required_extensions( ) const noexcept;
         surface create_surface( const VkInstance& instance ) const noexcept;
 
@@ -58,6 +62,9 @@ namespace engine
         std::string title_;
         uint32_t width_ = 0;
         uint32_t height_ = 0;
+
+    public:
+        keyboard *p_keyboard_;
 
     public:
         struct surface
