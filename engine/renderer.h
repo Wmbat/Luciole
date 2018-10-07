@@ -46,6 +46,11 @@ namespace engine
         void draw_frame( );
 
     private:
+        void recreate_swapchain( const std::string& vert_shader_filepath,
+                                 const std::string& frag_shader_filepath );
+        void cleanup_swapchain( ) noexcept;
+
+    private:
         const vk::Instance create_instance( const std::vector<const char*>& extensions,
                                             const std::vector<const char*>& validation_layers,
                                             const std::string& app_name, uint32_t app_version ) const noexcept;
@@ -59,6 +64,7 @@ namespace engine
                                                 const std::vector<const char*>& device_extensions,
                                                 const vk::PhysicalDevice& physical_device ) const noexcept;
         const vk::Semaphore create_semaphore( const vk::Device& logical_device ) const noexcept;
+        const vk::Fence create_fence( const vk::Device& logical_device ) const noexcept;
         const vk::SwapchainKHR create_swapchain( const vk::SurfaceKHR& surface,
                                                  const vk::Device& logical_device,
                                                  const vk::PhysicalDevice& physical_device,
@@ -124,8 +130,9 @@ namespace engine
         vk::Queue graphics_queue_;
         vk::Queue present_queue_;
 
-        vk::Semaphore image_available_semaphore_;
-        vk::Semaphore render_finished_semaphore_;
+        std::vector<vk::Semaphore> image_available_semaphores_;
+        std::vector<vk::Semaphore> render_finished_semaphores_;
+        std::vector<vk::Fence> frame_in_flight_fences_;
 
         vk::SwapchainKHR swapchain_;
         vk::Format swapchain_image_format_;
@@ -144,6 +151,8 @@ namespace engine
 
         uint32_t window_width_;
         uint32_t window_height_;
+
+        size_t current_frame_ = 0;
 
     private:
         /// Helper structs ///

@@ -23,6 +23,8 @@
 #include "utilities/file_io.h"
 #include "renderer.h"
 
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL
 debug_callback_function( VkDebugReportFlagsEXT flags,
@@ -122,16 +124,35 @@ namespace engine
 
 
 
-        image_available_semaphore_ = create_semaphore( logical_device_ );
+        image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
 
-        if( !image_available_semaphore_ )
-            std::runtime_error{ "Failed to create Image Available Semaphore!" };
+        for( auto& semaphore : image_available_semaphores_ )
+        {
+            semaphore = create_semaphore( logical_device_ );
 
-        render_finished_semaphore_ = create_semaphore( logical_device_ );
+            if( !semaphore )
+                std::runtime_error{ "Failed to create Image Available Semaphore!" };
+        }
 
-        if( !render_finished_semaphore_ )
+        render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
+
+        for( auto& semaphore : render_finished_semaphores_ )
+        {
+            semaphore = create_semaphore( logical_device_ );
+
+            if( !semaphore )
                 std::runtime_error{ "Failed to create Render Finished Semaphore!" };
+        }
 
+        frame_in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
+
+        for( auto& fence : frame_in_flight_fences_ )
+        {
+            fence = create_fence( logical_device_ );
+
+            if( !fence )
+                std::runtime_error{ "Failed to create In-Fligh Fence!" };
+        }
 
         auto queue_family_indices = find_queue_families( physical_device_ );
 
@@ -236,6 +257,8 @@ namespace engine
             logical_device_.destroyFramebuffer( framebuffer_handle );
         }
 
+        logical_device_.freeCommandBuffers( command_pool_, static_cast<uint32_t>( command_buffers_.size() ), command_buffers_.data() );
+
         logical_device_.destroyCommandPool( command_pool_ );
 
         logical_device_.destroyRenderPass( render_pass_ );
@@ -246,8 +269,14 @@ namespace engine
         }
 
         logical_device_.destroySwapchainKHR( swapchain_ );
-        logical_device_.destroySemaphore( image_available_semaphore_ );
-        logical_device_.destroySemaphore( render_finished_semaphore_ );
+
+        for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
+        {
+            logical_device_.destroySemaphore( image_available_semaphores_[i] );
+            logical_device_.destroySemaphore( render_finished_semaphores_[i] );
+            logical_device_.destroyFence( frame_in_flight_fences_[i] );
+        }
+
         logical_device_.destroy( );
 
         instance_.destroySurfaceKHR( surface_ );
@@ -284,11 +313,14 @@ namespace engine
             present_queue_ = renderer.present_queue_;
             renderer.present_queue_ = nullptr;
 
-            image_available_semaphore_ = renderer.image_available_semaphore_;
-            renderer.image_available_semaphore_ = nullptr;
+            image_available_semaphores_ = renderer.image_available_semaphores_;
+            renderer.image_available_semaphores_ = { };
 
-            render_finished_semaphore_ = renderer.render_finished_semaphore_;
-            renderer.render_finished_semaphore_ = nullptr;
+            render_finished_semaphores_ = renderer.render_finished_semaphores_;
+            renderer.render_finished_semaphores_ = { };
+
+            frame_in_flight_fences_ = renderer.frame_in_flight_fences_;
+            renderer.frame_in_flight_fences_ = { };
 
             swapchain_ = renderer.swapchain_;
             renderer.swapchain_ = nullptr;
@@ -403,11 +435,14 @@ namespace engine
     }
     void renderer::draw_frame( )
     {
-        const auto image_index = logical_device_.acquireNextImageKHR( swapchain_, std::numeric_limits<uint64_t>::max(),
-                image_available_semaphore_, nullptr ).value;
+        logical_device_.waitForFences( frame_in_flight_fences_[current_frame_], VK_TRUE, std::numeric_limits<uint64_t>::max( ) );
+        logical_device_.resetFences( frame_in_flight_fences_[current_frame_] );
 
-        const vk::Semaphore wait_semaphores[] = { image_available_semaphore_ };
-        const vk::Semaphore signal_semaphores[] = { render_finished_semaphore_ };
+        const auto image_index = logical_device_.acquireNextImageKHR( swapchain_, std::numeric_limits<uint64_t>::max(),
+                image_available_semaphores_[current_frame_], nullptr ).value;
+
+        const vk::Semaphore wait_semaphores[] = { image_available_semaphores_[current_frame_] };
+        const vk::Semaphore signal_semaphores[] = { render_finished_semaphores_[current_frame_] };
         const vk::PipelineStageFlags wait_stages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
         const vk::SubmitInfo submit_info
         {
@@ -418,7 +453,7 @@ namespace engine
             1, signal_semaphores
         };
 
-        const auto submit_result = graphics_queue_.submit( 1, &submit_info, nullptr );
+        const auto submit_result = graphics_queue_.submit( 1, &submit_info, frame_in_flight_fences_[current_frame_] );
 
         const vk::SwapchainKHR swapchains[] = { swapchain_ };
         vk::PresentInfoKHR present_info
@@ -430,7 +465,115 @@ namespace engine
         };
 
         present_queue_.presentKHR( present_info );
+
+        current_frame_ = ( current_frame_ + 1 ) & MAX_FRAMES_IN_FLIGHT;
     }
+
+
+    void renderer::recreate_swapchain( const std::string& vert_shader_filepath,
+                                       const std::string& frag_shader_filepath )
+    {
+        logical_device_.waitIdle( );
+
+        cleanup_swapchain();
+
+        {
+            const swapchain_support_details swapchain_support_details
+                    {
+                            physical_device_.getSurfaceCapabilitiesKHR( surface_ ),
+                            physical_device_.getSurfaceFormatsKHR( surface_ ),
+                            physical_device_.getSurfacePresentModesKHR( surface_ )
+                    };
+
+            const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
+            const auto present_mode = choose_swapchain_present_mode( swapchain_support_details.present_modes_ );
+            swapchain_image_extent_2d_ = choose_swapchain_extent_2d( swapchain_support_details.capabilities_ );
+
+            uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
+
+            if( swapchain_support_details.capabilities_.maxImageCount > 0 && image_count > swapchain_support_details.capabilities_.maxImageCount )
+                image_count = swapchain_support_details.capabilities_.maxImageCount;
+
+            swapchain_ = create_swapchain( surface_, logical_device_, physical_device_,
+                                           swapchain_support_details, surface_format,
+                                           swapchain_image_extent_2d_, present_mode, image_count );
+            swapchain_images_ = logical_device_.getSwapchainImagesKHR( swapchain_ );
+            swapchain_image_format_ = surface_format.format;
+
+            if( !swapchain_ )
+                throw std::runtime_error{ "Failed to create Swapchain!" };
+
+            for( const auto& image_handle : swapchain_images_ )
+            {
+                if( !image_handle )
+                    throw std::runtime_error{ "Failed to create Swapchain Image!" };
+            }
+        }
+
+        swapchain_image_views_ = create_swapchain_image_views( logical_device_,
+                                                               swapchain_image_format_,
+                                                               swapchain_images_,
+                                                               static_cast<uint32_t>( swapchain_images_.size() ) );
+
+        for( const auto& image_view_handle : swapchain_image_views_ )
+        {
+            if( !image_view_handle )
+                throw std::runtime_error{ "Failed to create Image View!" };
+        }
+
+
+        render_pass_ = create_render_pass( logical_device_, swapchain_image_format_ );
+
+        if( !render_pass_ )
+            throw std::runtime_error{ "Failed to create Render Pass!" };
+
+
+        setup_graphics_pipeline( vert_shader_filepath, frag_shader_filepath );
+
+
+        swapchain_framebuffers_ = create_swapchain_framebuffers( logical_device_,
+                                                                 render_pass_,
+                                                                 swapchain_image_extent_2d_,
+                                                                 swapchain_image_views_,
+                                                                 static_cast<uint32_t>( swapchain_image_views_.size() ) );
+
+        for( const auto& framebuffer_handle : swapchain_framebuffers_ )
+        {
+            if( !framebuffer_handle )
+                throw std::runtime_error{ "Failed to create Framebuffer!" };
+        }
+
+        command_buffers_ = allocate_command_buffers( logical_device_,
+                                                     command_pool_,
+                                                     static_cast<uint32_t>( swapchain_image_views_.size() ) );
+
+        for( const auto& command_buffer_handle : command_buffers_ )
+        {
+            if( !command_buffer_handle )
+                throw std::runtime_error{ "Failed to allocate Command Buffer" };
+        }
+    }
+    void renderer::cleanup_swapchain( ) noexcept
+    {
+        for( auto& framebuffer : swapchain_framebuffers_ )
+        {
+            logical_device_.destroyFramebuffer( framebuffer );
+        }
+
+        logical_device_.freeCommandBuffers( command_pool_, static_cast<uint32_t>( command_buffers_.size() ), command_buffers_.data() );
+
+        logical_device_.destroyPipeline( graphics_pipeline_ );
+        logical_device_.destroyPipelineLayout( graphics_pipeline_layout_ );
+        logical_device_.destroyRenderPass( render_pass_ );
+
+        for( auto& image_view : swapchain_image_views_ )
+        {
+            logical_device_.destroyImageView( image_view );
+        }
+
+        logical_device_.destroySwapchainKHR( swapchain_ );
+    }
+
 
     const vk::Instance renderer::create_instance( const std::vector<const char*>& extensions,
                                                   const std::vector<const char*>& validation_layers,
@@ -443,15 +586,29 @@ namespace engine
             VK_API_VERSION_1_1
         };
 
-        const vk::InstanceCreateInfo create_info = ( enable_validation_layers )
-                ? vk::InstanceCreateInfo{ { }, &application_info,
-                    static_cast<uint32_t>( validation_layers.size() ), validation_layers.data(),
-                    static_cast<uint32_t>( extensions.size() ), extensions.data() }
-                : vk::InstanceCreateInfo{ { }, &application_info,
-                    0, nullptr,
-                    static_cast<uint32_t>( extensions.size() ), extensions.data() };
+        if( enable_validation_layers )
+        {
+            const vk::InstanceCreateInfo create_info
+            {
+                { }, &application_info,
+                static_cast<uint32_t>( validation_layers.size() ), validation_layers.data(),
+                static_cast<uint32_t>( extensions.size() ), extensions.data()
+            };
 
-        return vk::createInstance( create_info );
+            return vk::createInstance( create_info );
+        }
+        else
+        {
+            const vk::InstanceCreateInfo create_info
+            {
+                { }, &application_info,
+                0, nullptr,
+                static_cast<uint32_t>( extensions.size() ), extensions.data()
+            };
+
+            return vk::createInstance( create_info );
+        }
+
     }
 
 #ifndef NDEBUG
@@ -550,6 +707,15 @@ namespace engine
         };
 
         return logical_device.createSemaphore( create_info );
+    }
+    const vk::Fence renderer::create_fence( const vk::Device& logical_device ) const noexcept
+    {
+        const vk::FenceCreateInfo create_info
+        {
+            vk::FenceCreateFlagBits::eSignaled
+        };
+
+        return logical_device.createFence( create_info );
     }
     const vk::SwapchainKHR renderer::create_swapchain( const vk::SurfaceKHR& surface,
                                                        const vk::Device& logical_device,
@@ -979,10 +1145,6 @@ namespace engine
             if( available_present_mode == vk::PresentModeKHR::eMailbox )
             {
                 return available_present_mode;
-            }
-            else if( available_present_mode == vk::PresentModeKHR::eImmediate )
-            {
-                best_mode = available_present_mode;
             }
         }
 

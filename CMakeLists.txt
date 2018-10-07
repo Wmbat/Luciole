@@ -41,7 +41,7 @@ add_executable( vulkan_project
         engine/renderer.h
         engine/window.cpp
         engine/window.h
-        engine/utilities/file_io.h )
+        engine/utilities/file_io.h engine/keyboard.h engine/keyboard.cpp)
 
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}

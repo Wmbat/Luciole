@@ -30,6 +30,9 @@ public:
 private:
     engine::window& wnd_;
     engine::renderer renderer_;
+
+    float time_passed_ = 0;
+    int frames_passed_ = 0;
 };
 
 
