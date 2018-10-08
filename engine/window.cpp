@@ -20,23 +20,60 @@
 
 namespace engine
 {
-    static void key_callback( GLFWwindow* p_wnd, int key, int scan_code, int action, int mods )
+    static void key_callback( GLFWwindow *p_wnd, int key, int scan_code, int action, int mods )
     {
-        auto* p_keyboard = reinterpret_cast<keyboard*>( glfwGetWindowUserPointer( p_wnd ) );
+        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ));
 
         keyboard::key_event e;
         e.id_ = key;
-        e.type_ = ( action == GLFW_PRESS || action == GLFW_REPEAT ) ? keyboard::type::pressed : keyboard::type::released;
+        e.type_ = ( action == GLFW_PRESS || action == GLFW_REPEAT ) ? keyboard::type::pressed
+                                                                    : keyboard::type::released;
 
-        p_keyboard->push_key_event( e );
+        p_input_device->keyboard_.push_key_event( e );
+    }
+
+    static void cursor_position_callback( GLFWwindow *p_wnd, double x_pos, double y_pos )
+    {
+        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ));
+
+        mouse::cursor_event e;
+        e.x_pos_ = x_pos;
+        e.y_pos_ = y_pos;
+
+        p_input_device->mouse_.push_cursor_event( e );
+    }
+
+    static void mouse_button_callback( GLFWwindow *p_wnd, int button, int action, int mods )
+    {
+        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ));
+
+        mouse::button_event e;
+        e.button_id_ = button;
+        e.type_ = ( action == GLFW_PRESS || action == GLFW_REPEAT ) ? mouse::type::pressed : mouse::type::released;
+
+        p_input_device->mouse_.push_button_event( e );
+    }
+
+    static void window_position_callback( GLFWwindow *p_wnd, int x, int y )
+    {
+
+    }
+
+    static void window_size_callback( GLFWwindow *p_wnd, int width, int height )
+    {
+
+    }
+
+    static void framebuffer_size_callback( GLFWwindow* p_wnd, int x, int y )
+    {
+
     }
 
     window::window( uint32_t width, uint32_t height, const std::string& title )
         :
         width_( width ),
         height_( height ),
-        title_( title ),
-        p_keyboard_( new keyboard( ) )
+        title_( title )
     {
         if ( !glfwInit( ) )
         {
@@ -45,7 +82,7 @@ namespace engine
 
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
         glfwWindowHint( GLFW_RESIZABLE, GLFW_FALSE );       // temp.
-        glfwWindowHint( GLFW_DECORATED, GLFW_FALSE );
+        glfwWindowHint( GLFW_DECORATED, GLFW_TRUE );
 
         p_glfw_window_ = glfwCreateWindow( width_, height_, title_.c_str( ), nullptr, nullptr );
 
@@ -61,8 +98,15 @@ namespace engine
 
         /// callbacks ///
         glfwSetKeyCallback( p_glfw_window_, key_callback );
+        glfwSetCursorPosCallback( p_glfw_window_, cursor_position_callback );
+        glfwSetMouseButtonCallback( p_glfw_window_, mouse_button_callback );
 
-        glfwSetWindowUserPointer( p_glfw_window_, p_keyboard_ );
+        glfwSetWindowPosCallback( p_glfw_window_, window_position_callback );
+        glfwSetWindowSizeCallback( p_glfw_window_, window_size_callback );
+        glfwSetFramebufferSizeCallback( p_glfw_window_, framebuffer_size_callback );
+
+
+        glfwSetWindowUserPointer( p_glfw_window_, &input_devices_ );
     }
     window::window( window&& other ) noexcept
     {
@@ -70,8 +114,6 @@ namespace engine
     }
     window::~window( )
     {
-        delete p_keyboard_;
-
         if( p_glfw_window_ != nullptr )
         {
             glfwDestroyWindow( p_glfw_window_ );
@@ -88,11 +130,6 @@ namespace engine
     void window::poll_events( )
     {
         glfwPollEvents( );
-    }
-
-    void window::close( )
-    {
-
     }
 
     std::vector<const char*> window::get_required_extensions( ) const noexcept

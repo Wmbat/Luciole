@@ -46,30 +46,21 @@ namespace engine
 
     void keyboard::push_key_event( const key_event& event )
     {
-        if( num_buffer_ == MAX_BUFFER_SIZE_ )
+        if( num_buffer_ >= MAX_BUFFER_SIZE_ )
         {
             pop_key_event();
-
-            key_buffer_[tail_] = event;
-
-            key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == type::pressed ) ? true : false;
-
-            ++num_buffer_;
-            tail_ = ( tail_ + 1 ) % MAX_BUFFER_SIZE_;
         }
-        else
-        {
-            key_buffer_[tail_] = event;
 
-            key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == type::pressed ) ? true : false;
+        key_buffer_[tail_] = event;
 
-            ++num_buffer_;
-            tail_ = ( tail_ + 1 ) % MAX_BUFFER_SIZE_;
-        }
+        key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == type::pressed ) ? true : false;
+
+        ++num_buffer_;
+        tail_ = ( tail_ + 1 ) % MAX_BUFFER_SIZE_;
     }
 
     bool keyboard::empty( ) const noexcept
     {
-        return ( head_ == tail_ );
+        return num_buffer_ == 0;
     }
 }

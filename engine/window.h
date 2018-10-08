@@ -27,11 +27,22 @@ static constexpr bool enable_validation_layers = true;
 #include <glfw/glfw3.h>
 
 #include "keyboard.h"
+#include "mouse.h"
 
 namespace engine
 {
     class window
     {
+    public:
+        class window_event_handler
+        {
+        public:
+            struct event
+            {
+
+            };
+        };
+
     public:
         struct surface;
 
@@ -44,8 +55,6 @@ namespace engine
         bool is_open( );
 
         void poll_events( );
-
-        void close( );
 
         std::vector<const char*> get_required_extensions( ) const noexcept;
         surface create_surface( const VkInstance& instance ) const noexcept;
@@ -64,7 +73,12 @@ namespace engine
         uint32_t height_ = 0;
 
     public:
-        keyboard *p_keyboard_;
+        struct input_devices
+        {
+            keyboard keyboard_ = keyboard( );
+            mouse mouse_ = mouse( );
+            window_event_handler window_event_handler_ = window_event_handler( );
+        } input_devices_;
 
     public:
         struct surface
