@@ -58,10 +58,14 @@ void game::run( )
             frames_passed_ = 0;
         }
 
-        if( wnd_.p_keyboard_->is_key_pressed( GLFW_KEY_ESCAPE ) )
+        if( wnd_.input_devices_.keyboard_.is_key_pressed( GLFW_KEY_ESCAPE ) )
         {
             is_open = false;
         }
+
+        auto test = wnd_.input_devices_.mouse_.cursor_pos();
+
+        std::cout << test.x << " : " << test.y << std::endl;
 
         renderer_.draw_frame();
     }

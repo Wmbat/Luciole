@@ -94,7 +94,7 @@ namespace engine
         instance_ = create_instance( glfw_extensions, validation_layers, app_name, app_version );
 
         if( !instance_ )
-            throw std::runtime_error{ "Failed to create Vulkan Instance!" };
+            throw std::runtime_error{ "Failed to create Vulkan Instance! Check Drivers." };
 
 
 #ifndef NDEBUG
