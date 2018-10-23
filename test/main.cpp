@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include <glfw/glfw3.h>
 
 #include "../engine/window.h"

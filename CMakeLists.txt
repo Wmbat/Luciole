@@ -23,14 +23,43 @@ set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
 
-find_package( Vulkan REQUIRED )
+
+include_directories( external )
+include_directories( external/glfw )
+include_directories( external/glm )
+
 find_package( glfw3 3.2 REQUIRED )
 
-if( WIN32 )
-    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external/win32/ )
-else( )
-    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external/linux/ )
+
+find_package( Vulkan REQUIRED )
+
+if( UNIX )
+    if( NOT Vulkan_FOUND )
+        find_library( Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${CMAKE_CURRENT_SOURCE_DIR}/libs/vulkan" REQUIRED )
+
+        if( Vulkan_LIBRARY )
+            set( Vulkan_FOUND ON )
+            message( "Using bundled Vulkan library version" )
+        endif( )
+    endif( )
 endif( )
+
+if( NOT Vulkan_FOUND )
+    message( FATAL_ERROR "Could not find Vulkan library!" )
+else( )
+    message( STATUS ${Vulkan_LIBRARY} )
+endif( )
+
+
+
+find_package( OpenAL REQUIRED )
+
+if( NOT OPENAL_FOUND )
+    message( FATAL_ERROR "Could not find OpenAL library! Check if installed" )
+else( )
+    message( STATUS ${OPENAL_LIBRARY} )
+endif()
+
 
 add_executable( vulkan_project
         test/game.cpp
@@ -41,7 +70,7 @@ add_executable( vulkan_project
         engine/renderer.h
         engine/window.cpp
         engine/window.h
-        engine/utilities/file_io.h engine/keyboard.h engine/keyboard.cpp engine/mouse.h engine/mouse.cpp)
+        engine/utilities/file_io.h engine/keyboard.h engine/keyboard.cpp engine/mouse.h engine/mouse.cpp engine/vulkan_core.h engine/vulkan_core.cpp engine/vulkan_utils.h)
 
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}

@@ -42,8 +42,13 @@ namespace engine
 
         void setup_graphics_pipeline( const std::string& vert_shader_filepath, const std::string& frag_shader_filepath );
 
+        void handle_resize( const std::string& vert_shader_filepath,
+                            const std::string& frag_shader_filepath,
+                            std::uint32_t width, std::uint32_t height );
+
         void record_command_buffers( ) const noexcept;
-        void draw_frame( );
+        void draw_frame( const std::string& vert_shader_filepath,
+                         const std::string& frag_shader_filepath );
 
     private:
         void recreate_swapchain( const std::string& vert_shader_filepath,

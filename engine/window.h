@@ -17,15 +17,12 @@
 #ifndef VULKAN_PROJECT_WINDOW_H
 #define VULKAN_PROJECT_WINDOW_H
 
-#ifdef NDEBUG
-static constexpr bool enable_validation_layers = false;
-#else
-static constexpr bool enable_validation_layers = true;
-#endif
+#include <vector>
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include <glfw/glfw3.h>
 
+#include "vulkan_utils.h"
 #include "keyboard.h"
 #include "mouse.h"
 
@@ -34,36 +31,62 @@ namespace engine
     class window
     {
     public:
-        class window_event_handler
+        class event_handler
         {
         public:
             struct event
             {
+                enum class type : std::int32_t
+                {
+                    window_move,
+                    window_resize,
+                    framebuffer_resize,
+                    invalid
+                };
 
+                type type_ = type::invalid;
+                std::int32_t x_ = 0;
+                std::int32_t y_ = 0;
             };
+
+        public:
+            event_handler( );
+
+            event pop_event( );
+            void push_event( const event& e );
+
+            bool empty( ) const noexcept;
+
+        private:
+            static constexpr int MAX_EVENTS = 16;
+
+            event event_buffer_[MAX_EVENTS];
+            size_t num_events_pending_;
+
+            size_t head_;
+            size_t tail_;
         };
 
     public:
-        struct surface;
-
         window( ) = default;
         window( uint32_t width, uint32_t height, const std::string& title );
         window( const window& other ) = delete;
         window( window&& other ) noexcept;
         ~window( );
 
+        window& operator=( const window& other ) = delete;
+        window& operator=( window&& other ) noexcept;
+
         bool is_open( );
 
         void poll_events( );
+        void handle_event( const event_handler::event& e );
 
         std::vector<const char*> get_required_extensions( ) const noexcept;
-        surface create_surface( const VkInstance& instance ) const noexcept;
+        vk_return_obj<VkSurfaceKHR> create_surface( const VkInstance& instance ) const noexcept;
 
         const uint32_t get_width( ) const noexcept;
         const uint32_t get_height( ) const noexcept;
-
-        window& operator=( const window& other ) = delete;
-        window& operator=( window&& other ) noexcept;
 
     private:
         GLFWwindow* p_glfw_window_ = nullptr;
@@ -71,21 +94,16 @@ namespace engine
         std::string title_;
         uint32_t width_ = 0;
         uint32_t height_ = 0;
+        uint32_t x_pos_ = 100;
+        uint32_t y_pos_ = 100;
 
     public:
         struct input_devices
         {
             keyboard keyboard_ = keyboard( );
             mouse mouse_ = mouse( );
-            window_event_handler window_event_handler_ = window_event_handler( );
+            event_handler event_handler_ = event_handler( );
         } input_devices_;
-
-    public:
-        struct surface
-        {
-            VkResult result_;
-            VkSurfaceKHR handle_ = VK_NULL_HANDLE;
-        };
     };
 }
 
