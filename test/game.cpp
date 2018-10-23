@@ -39,6 +39,7 @@ void game::run( )
     {
         wnd_.poll_events();
 
+        /// Get FPS
         float dt;
         {
             const auto new_time_point = std::chrono::steady_clock::now( );
@@ -57,16 +58,27 @@ void game::run( )
             time_passed_ = 0;
             frames_passed_ = 0;
         }
+        ///
+
+        if( !wnd_.input_devices_.event_handler_.empty() )
+        {
+            auto event = wnd_.input_devices_.event_handler_.pop_event( );
+
+            wnd_.handle_event( event );
+
+            if( event.type_ == engine::window::event_handler::event::type::window_resize ||
+                event.type_ == engine::window::event_handler::event::type::framebuffer_resize )
+            {
+                renderer_.handle_resize( "test/shaders/vert.spv", "test/shaders/frag.spv", event.x_, event.y_ );
+            }
+        }
+
 
         if( wnd_.input_devices_.keyboard_.is_key_pressed( GLFW_KEY_ESCAPE ) )
         {
             is_open = false;
         }
 
-        auto test = wnd_.input_devices_.mouse_.cursor_pos();
-
-        std::cout << test.x << " : " << test.y << std::endl;
-
-        renderer_.draw_frame();
+        renderer_.draw_frame( "test/shaders/vert.spv", "test/shaders/frag.spv" );
     }
 }

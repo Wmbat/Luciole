@@ -15,10 +15,8 @@
  */
 
 #include <iostream>
-#include <map>
 #include <set>
-
-#include <glm/glm.hpp>
+#include <map>
 
 #include "utilities/file_io.h"
 #include "renderer.h"
@@ -76,22 +74,33 @@ namespace engine
         window_width_( wnd.get_width() ),
         window_height_( wnd.get_height() )
     {
-        const std::vector<const char*> glfw_extensions = wnd.get_required_extensions();
+        uint32_t supported_api_version;
+        if( vkEnumerateInstanceVersion( &supported_api_version ) != VK_SUCCESS )
+        {
+            std::runtime_error{ "Vulkan Not Installed!" };
+        }
+
+        if( supported_api_version != VK_API_VERSION_1_1 )
+        {
+            std::runtime_error{ "Vulkan version 1.1+ not supported! Check vulkan version and if necessary, install latest version 1.1 and up." };
+        }
+
+        const std::vector<const char*> instance_extensions = wnd.get_required_extensions();
         const std::vector<const char*> validation_layers = { "VK_LAYER_LUNARG_standard_validation" };
         const std::vector<const char*> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-        if( !check_extensions_support( glfw_extensions ) )
+        if( !check_extensions_support( instance_extensions ) )
         {
             throw std::runtime_error{ "Extensions requested, but not supported!" };
         }
 
-        if( !enable_validation_layers && !check_validation_layer_support( validation_layers ) )
+        if( !enable_debug_layers && !check_validation_layer_support( validation_layers ) )
         {
             throw std::runtime_error{ "Validation Layers requested, but not supported!" };
         }
 
 
-        instance_ = create_instance( glfw_extensions, validation_layers, app_name, app_version );
+        instance_ = create_instance( instance_extensions, validation_layers, app_name, app_version );
 
         if( !instance_ )
             throw std::runtime_error{ "Failed to create Vulkan Instance! Check Drivers." };
@@ -400,6 +409,14 @@ namespace engine
         logical_device_.destroyShaderModule( frag_shader_handle );
     }
 
+    void renderer::handle_resize( const std::string& vert_shader_filepath,
+                                  const std::string& frag_shader_filepath,
+                                  std::uint32_t width, std::uint32_t height )
+    {
+        window_width_ = width;
+        window_height_ = height;
+    }
+
     void renderer::record_command_buffers( ) const noexcept
     {
         for( auto i = 0; i < command_buffers_.size(); ++i )
@@ -433,13 +450,23 @@ namespace engine
             command_buffers_[i].end( );
         }
     }
-    void renderer::draw_frame( )
+    void renderer::draw_frame( const std::string& vert_shader_filepath,
+                               const std::string& frag_shader_filepath )
     {
         logical_device_.waitForFences( frame_in_flight_fences_[current_frame_], VK_TRUE, std::numeric_limits<uint64_t>::max( ) );
-        logical_device_.resetFences( frame_in_flight_fences_[current_frame_] );
 
-        const auto image_index = logical_device_.acquireNextImageKHR( swapchain_, std::numeric_limits<uint64_t>::max(),
-                image_available_semaphores_[current_frame_], nullptr ).value;
+        const auto result = logical_device_.acquireNextImageKHR( swapchain_, std::numeric_limits<uint64_t>::max(),
+                image_available_semaphores_[current_frame_], nullptr );
+
+        if( result.result == vk::Result::eErrorOutOfDateKHR )
+        {
+            recreate_swapchain( vert_shader_filepath, frag_shader_filepath );
+            record_command_buffers();
+        }
+        else if( result.result != vk::Result::eSuccess && result.result != vk::Result::eSuboptimalKHR )
+        {
+            throw std::runtime_error{ "Failed to acquire swapchain image!" };
+        }
 
         const vk::Semaphore wait_semaphores[] = { image_available_semaphores_[current_frame_] };
         const vk::Semaphore signal_semaphores[] = { render_finished_semaphores_[current_frame_] };
@@ -449,22 +476,62 @@ namespace engine
             1, wait_semaphores,
             wait_stages,
             1,
-            &command_buffers_[image_index],
+            &command_buffers_[result.value],
             1, signal_semaphores
         };
 
-        const auto submit_result = graphics_queue_.submit( 1, &submit_info, frame_in_flight_fences_[current_frame_] );
+        logical_device_.resetFences( frame_in_flight_fences_[current_frame_] );
 
+        if( graphics_queue_.submit( 1, &submit_info, frame_in_flight_fences_[current_frame_] ) != vk::Result::eSuccess )
+        {
+            throw std::runtime_error{ "Failed to submit draw command to buffer" };
+        }
+
+        /*
         const vk::SwapchainKHR swapchains[] = { swapchain_ };
-        vk::PresentInfoKHR present_info
+        const vk::PresentInfoKHR present_info
         {
             1, signal_semaphores,
             1, swapchains,
-            &image_index,
+            &( result.value ),
             nullptr
         };
 
-        present_queue_.presentKHR( present_info );
+
+        const auto present_result = present_queue_.presentKHR( present_info );
+
+        if( present_result == vk::Result::eErrorOutOfDateKHR || present_result == vk::Result::eSuboptimalKHR )
+        {
+            recreate_swapchain( vert_shader_filepath, frag_shader_filepath );
+            record_command_buffers();
+        }
+        else if( present_result != vk::Result::eSuccess )
+        {
+            throw std::runtime_error{ "Failed to present swapchain Image!" };
+        }
+         */
+
+        const VkSwapchainKHR test_swapchains[] = { swapchain_ };
+        const VkSemaphore  test_semaphores[] = { signal_semaphores[current_frame_] };
+        VkPresentInfoKHR present_info = {};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.waitSemaphoreCount = 1;
+        present_info.pWaitSemaphores = test_semaphores;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = test_swapchains;
+        present_info.pImageIndices = &( result.value );
+
+        const auto test_result = vkQueuePresentKHR( present_queue_, &present_info );
+
+        if( test_result == VK_ERROR_OUT_OF_DATE_KHR || test_result == VK_SUBOPTIMAL_KHR )
+        {
+            recreate_swapchain( vert_shader_filepath, frag_shader_filepath );
+            record_command_buffers();
+        }
+        else if( test_result != VK_SUCCESS )
+        {
+            throw std::runtime_error{ "Failed to present swapchain image!" };
+        }
 
         current_frame_ = ( current_frame_ + 1 ) & MAX_FRAMES_IN_FLIGHT;
     }
@@ -479,11 +546,11 @@ namespace engine
 
         {
             const swapchain_support_details swapchain_support_details
-                    {
-                            physical_device_.getSurfaceCapabilitiesKHR( surface_ ),
-                            physical_device_.getSurfaceFormatsKHR( surface_ ),
-                            physical_device_.getSurfacePresentModesKHR( surface_ )
-                    };
+            {
+                physical_device_.getSurfaceCapabilitiesKHR( surface_ ),
+                physical_device_.getSurfaceFormatsKHR( surface_ ),
+                physical_device_.getSurfacePresentModesKHR( surface_ )
+            };
 
             const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
             const auto present_mode = choose_swapchain_present_mode( swapchain_support_details.present_modes_ );
@@ -586,7 +653,7 @@ namespace engine
             VK_API_VERSION_1_1
         };
 
-        if( enable_validation_layers )
+        if( enable_debug_layers )
         {
             const vk::InstanceCreateInfo create_info
             {
@@ -620,8 +687,6 @@ namespace engine
             debug_callback_function
         };
 
-        auto test = instance.createDebugReportCallbackEXT( create_info );
-
         return instance.createDebugReportCallbackEXT( create_info );
     }
 #endif
@@ -630,7 +695,7 @@ namespace engine
         auto surface = wnd.create_surface( instance );
 
         return ( surface.result_ == VK_SUCCESS )
-                    ? surface.handle_
+                    ? surface.value_
                     : nullptr;
     }
     const vk::PhysicalDevice renderer::pick_physical_device( const std::vector<const char*>& device_extensions,
@@ -685,7 +750,7 @@ namespace engine
         }
 
         const auto features = physical_device.getFeatures( );
-        const auto create_info = ( enable_validation_layers )
+        const auto create_info = ( enable_debug_layers )
                 ? vk::DeviceCreateInfo{ { },
                                         static_cast<uint32_t>( queue_create_infos.size() ), queue_create_infos.data(),
                                         static_cast<uint32_t>( validation_layers.size() ), validation_layers.data(),
