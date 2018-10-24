@@ -136,13 +136,13 @@ namespace engine
             const VkInstanceCreateInfo create_info =
             {
                 .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                .pNext = nullptr,
                 .flags = { },
                 .pApplicationInfo = &app_info,
                 .enabledLayerCount = static_cast<uint32_t>( debug_layers.size() ),
                 .ppEnabledLayerNames = debug_layers.data(),
                 .enabledExtensionCount = static_cast<uint32_t>( extensions.size() ),
                 .ppEnabledExtensionNames = extensions.data(),
-                .pNext = nullptr,
             };
 
             return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
@@ -152,13 +152,13 @@ namespace engine
             const VkInstanceCreateInfo create_info =
             {
                 .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                .pNext = nullptr,
                 .flags = { },
                 .pApplicationInfo = &app_info,
                 .enabledLayerCount = 0,
                 .ppEnabledLayerNames = nullptr,
                 .enabledExtensionCount = static_cast<uint32_t>( extensions.size() ),
                 .ppEnabledExtensionNames = extensions.data(),
-                .pNext = nullptr,
             };
 
             return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
@@ -199,7 +199,13 @@ namespace engine
         {
             if( is_physical_device_suitable( surface, physical_device, device_extensions ) )
             {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties( physical_device, &properties );
 
+                auto i = 0;
+                std::cout << "(" << i << ") " << properties.deviceName << ": " << properties.deviceType << "\n";
+
+                ++i;
             }
         }
     }

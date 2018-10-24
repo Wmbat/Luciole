@@ -38,7 +38,7 @@ namespace engine
     };
 
     template<typename T>
-    const T check_vk_return_state( vk_return_obj<T>&& return_obj, const std::string& error_msg )
+    const T check_vk_return_state( const vk_return_obj<T>& return_obj, const std::string& error_msg )
     {
         if( return_obj.result_ != VK_SUCCESS )
         {
