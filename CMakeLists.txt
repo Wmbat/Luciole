@@ -17,6 +17,8 @@ project( vulkan_project )
 
 set( CMAKE_CXX_STANDARD 17 )
 
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
+
 set( CMAKE_CXX_FLAGS -pthread )
 
 set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
@@ -30,7 +32,6 @@ include_directories( external/glm )
 
 find_package( glfw3 3.2 REQUIRED )
 
-
 find_package( Vulkan REQUIRED )
 
 if( UNIX )
@@ -42,7 +43,22 @@ if( UNIX )
             message( "Using bundled Vulkan library version" )
         endif( )
     endif( )
+
+
+    find_package( XCB REQUIRED )
+
+    if( NOT XCB_FOUND )
+        message( FATAL_ERROR "XCB development package not found" )
+    else( )
+        message( STATUS ${XCB_LIBRARIES} )
+    endif( )
+
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
 endif( )
+
+
+
+
 
 if( NOT Vulkan_FOUND )
     message( FATAL_ERROR "Could not find Vulkan library!" )
@@ -60,7 +76,6 @@ else( )
     message( STATUS ${OPENAL_LIBRARY} )
 endif()
 
-
 add_executable( vulkan_project
         test/game.cpp
         test/game.h
@@ -74,4 +89,6 @@ add_executable( vulkan_project
 
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}
+        ${XCB_LIBRARIES}
+        ${WAYLAND_CLIENT_LIBRARIES}
         glfw ${GLFW_LIBRARIES} )
