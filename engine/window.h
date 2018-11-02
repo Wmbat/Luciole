@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,11 @@
 #ifndef VULKAN_PROJECT_WINDOW_H
 #define VULKAN_PROJECT_WINDOW_H
 
+#include <vector>
+#include <memory>
+#include <iostream>
+#include <functional>
+
 #include <vulkan/vulkan.h>
 
 #if defined( _WIN32 )
@@ -27,14 +32,9 @@
 #include <xcb/xcb.h>
 #endif
 
-#include <vector>
-
-#include <vulkan/vulkan.h>
-#include <glfw/glfw3.h>
-
 #include "vulkan_utils.h"
-#include "keyboard.h"
-#include "mouse.h"
+#include "io/keyboard.h"
+#include "io/mouse.h"
 
 namespace engine
 {
@@ -46,74 +46,71 @@ namespace engine
         public:
             struct event
             {
-                enum class type : std::int32_t
+                enum class type : std::uint32_t
                 {
+                    window_out_of_focus,
                     window_move,
                     window_resize,
                     framebuffer_resize,
                     invalid
                 };
 
-                type type_ = type::invalid;
-                std::int32_t x_ = 0;
-                std::int32_t y_ = 0;
+                type event_type_ = type::invalid;
+                std::uint32_t x_ = 0;
+                std::uint32_t y_ = 0;
             };
-
-        public:
-            event_handler( );
-
-            event pop_event( );
-            void push_event( const event& e );
-
-            bool empty( ) const noexcept;
-
-        private:
-            static constexpr int MAX_EVENTS = 16;
-
-            event event_buffer_[MAX_EVENTS];
-            size_t num_events_pending_;
-
-            size_t head_;
-            size_t tail_;
         };
 
-    public:
-        window( ) = default;
-        window( uint32_t width, uint32_t height, const std::string& title );
-        window( const window& other ) = delete;
-        window( window&& other ) noexcept;
+        explicit window( const std::string& title );
+        window( const window& rhs ) noexcept = delete;
+        window( window&& rhs ) noexcept;
         ~window( );
 
-        window& operator=( const window& other ) = delete;
-        window& operator=( window&& other ) noexcept;
-
-        bool is_open( );
-
         void poll_events( );
-        void handle_event( const event_handler::event& e );
 
-        std::vector<const char*> get_required_extensions( ) const noexcept;
-        vk_return_obj<VkSurfaceKHR> create_surface( const VkInstance& instance ) const noexcept;
+        void set_title( const std::string& title ); // doesn't work.
 
-        const uint32_t get_width( ) const noexcept;
-        const uint32_t get_height( ) const noexcept;
+        bool is_open( ) const noexcept;
+
+        vk_return_obj<VkSurfaceKHR> create_surface( const VkInstance& instance );
+
+        window& operator=( const window& rhs ) noexcept = delete;
+        window& operator=( window&& rhs ) noexcept;
+
+    public:     // TODO: don't do that
+        keyboard keyboard_;
+        mouse mouse_;
 
     private:
-        GLFWwindow* p_glfw_window_ = nullptr;
-
         std::string title_;
-        uint32_t width_ = 0;
-        uint32_t height_ = 0;
-        uint32_t x_pos_ = 100;
-        uint32_t y_pos_ = 100;
+        bool open_ = false;
 
-    public:
-        struct input_devices
+#if defined( _WIN32 )
+
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+        xcb_connection_t *p_xcb_connection_;
+        xcb_screen_t* p_xcb_screen_;
+        xcb_window_t xcb_window_;
+
+        xcb_intern_atom_reply_t* p_xcb_wm_delete_window_;
+#endif
+
+        event_handler window_event_handler_;
+
+        struct settings
         {
-            keyboard keyboard_ = keyboard( );
-            mouse mouse_ = mouse( );
-            event_handler event_handler_ = event_handler( );
-        } input_devices_;
+            uint32_t x_position = 0;
+            uint32_t y_position = 0;
+
+            uint32_t width_ = 1080;
+            uint32_t height_ = 720;
+
+            int default_screen_id_ = 0;
+
+            bool fullscreen_ = false;
+        } settings_;
     };
 }
 

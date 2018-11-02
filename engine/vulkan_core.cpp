@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ namespace engine
 
     vulkan_core::vulkan_core( const window& wnd, const std::string& app_name, uint32_t app_version )
     {
-        const std::vector<const char*> instance_extensions = wnd.get_required_extensions( );
+        const std::vector<const char*> instance_extensions = { };//wnd.get_required_extensions( );
         const std::vector<const char*> debug_layers = { "VK_LAYER_LUNARG_standard_validation" };
 
         if( !check_instance_extension_support( instance_extensions ) )
@@ -183,7 +183,7 @@ namespace engine
 
     const vk_return_obj<VkSurfaceKHR> vulkan_core::create_surface( const window& wnd, const VkInstance& instance ) const noexcept
     {
-        return wnd.create_surface( instance );
+        return { VK_SUCCESS, VK_NULL_HANDLE };//wnd.create_surface( instance );
     }
 
     const vk_return_obj<VkPhysicalDevice> vulkan_core::pick_physical_device( const VkSurfaceKHR& surface,

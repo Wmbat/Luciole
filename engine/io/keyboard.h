@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,22 +22,29 @@
 #include <glfw/glfw3.h>
 #include <bitset>
 
+#include "keyboard_layouts.h"
+
 namespace engine
 {
     class keyboard
     {
     public:
-        enum class type : std::uint32_t
+        enum class event_type : std::uint32_t
         {
             pressed,
             released,
             invalid
         };
 
+        enum class key_code : std::int32_t
+        {
+
+        };
+
         struct key_event
         {
             std::int32_t id_ = -1;
-            type type_ = type::invalid;
+            event_type type_ = event_type::invalid;
         };
 
     public:
@@ -45,17 +52,16 @@ namespace engine
 
         bool is_key_pressed( std::int32_t key_code ) const noexcept;
 
-        void push_key_event( const key_event& event );
+
+        key_event pop_key_event( );
+        void emplace_event( const key_event& event );
 
         bool empty( ) const noexcept;
 
     private:
-        void pop_key_event( );
-
-    private:
         static constexpr std::uint8_t MAX_BUFFER_SIZE_ = 8;
 
-        std::bitset<GLFW_KEY_LAST> key_states_;
+        std::bitset<key_codes::max_keys> key_states_;
 
         key_event key_buffer_[MAX_BUFFER_SIZE_];
         int num_buffer_;

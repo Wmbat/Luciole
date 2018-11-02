@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -70,9 +70,9 @@ vkDestroyDebugReportCallbackEXT ( VkInstance instance,
 namespace engine
 {
     renderer::renderer( const engine::window& wnd, const std::string& app_name, uint32_t app_version )
-        :
-        window_width_( wnd.get_width() ),
-        window_height_( wnd.get_height() )
+        //:
+        //window_width_( wnd.get_width() ),
+        //window_height_( wnd.get_height() )
     {
         uint32_t supported_api_version;
         if( vkEnumerateInstanceVersion( &supported_api_version ) != VK_SUCCESS )
@@ -85,7 +85,7 @@ namespace engine
             std::runtime_error{ "Vulkan version 1.1+ not supported! Check vulkan version and if necessary, install latest version 1.1 and up." };
         }
 
-        const std::vector<const char*> instance_extensions = wnd.get_required_extensions();
+        const std::vector<const char*> instance_extensions = { };//wnd.get_required_extensions();
         const std::vector<const char*> validation_layers = { "VK_LAYER_LUNARG_standard_validation" };
         const std::vector<const char*> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
@@ -615,7 +615,21 @@ namespace engine
                                                      static_cast<uint32_t>( swapchain_image_views_.size() ) );
 
         for( const auto& command_buffer_handle : command_buffers_ )
-        {
+        {/*!
+ *  Copyright (C) 2018 BouwnLaw
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  You should have received a copy of the GNU General Public License
+ *  GNU General Public License for more details.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
             if( !command_buffer_handle )
                 throw std::runtime_error{ "Failed to allocate Command Buffer" };
         }
@@ -692,11 +706,15 @@ namespace engine
 #endif
     const vk::SurfaceKHR renderer::create_surface( const window& wnd, const vk::Instance& instance ) const noexcept
     {
-        auto surface = wnd.create_surface( instance );
+        return nullptr;
+
+        /*
+        auto surface = //wnd.create_surface( instance );
 
         return ( surface.result_ == VK_SUCCESS )
                     ? surface.value_
                     : nullptr;
+                    */
     }
     const vk::PhysicalDevice renderer::pick_physical_device( const std::vector<const char*>& device_extensions,
                                                              const vk::Instance& instance ) const noexcept

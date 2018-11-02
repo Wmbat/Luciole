@@ -85,7 +85,7 @@ add_executable( vulkan_project
         engine/renderer.h
         engine/window.cpp
         engine/window.h
-        engine/utilities/file_io.h engine/keyboard.h engine/keyboard.cpp engine/mouse.h engine/mouse.cpp engine/vulkan_core.h engine/vulkan_core.cpp engine/vulkan_utils.h)
+        engine/utilities/file_io.h engine/io/keyboard.h engine/io/keyboard.cpp engine/io/mouse.h engine/io/mouse.cpp engine/vulkan_core.h engine/vulkan_core.cpp engine/vulkan_utils.h engine/console.h engine/console.cpp engine/io/keyboard_layouts.h)
 
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}
