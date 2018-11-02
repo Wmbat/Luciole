@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,17 +34,21 @@ namespace engine
         return key_states_[key_code];
     }
 
-    void keyboard::pop_key_event( )
+    keyboard::key_event keyboard::pop_key_event( )
     {
         assert( num_buffer_ >= 0 );
 
+        auto event_ret = key_buffer_[head_];
+
         --num_buffer_;
-        key_buffer_[head_] = key_event{ 0, type::invalid };
+        key_buffer_[head_] = key_event{ 0, event_type::invalid };
 
         head_ = ( head_ + 1 ) % MAX_BUFFER_SIZE_;
+
+        return event_ret;
     }
 
-    void keyboard::push_key_event( const key_event& event )
+    void keyboard::emplace_event( const key_event& event )
     {
         if( num_buffer_ >= MAX_BUFFER_SIZE_ )
         {
@@ -53,7 +57,7 @@ namespace engine
 
         key_buffer_[tail_] = event;
 
-        key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == type::pressed ) ? true : false;
+        key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == event_type::pressed ) ? true : false;
 
         ++num_buffer_;
         tail_ = ( tail_ + 1 ) % MAX_BUFFER_SIZE_;

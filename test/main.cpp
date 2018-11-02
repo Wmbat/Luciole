@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include <glfw/glfw3.h>
 
 #include "../engine/window.h"
+#include "../engine/console.h"
 
 #include "game.h"
 
@@ -28,7 +29,7 @@ int main( )
 {
     try
     {
-        engine::window wnd( 1080, 720, "Test" );
+        engine::window wnd( "Test" );
 
         try
         {
@@ -64,6 +65,8 @@ int main( )
     {
         std::cerr << "Major fuck up caught at window creation!" << std::endl;
     }
+
+    engine::console::flush();
 
     return 0;
 }

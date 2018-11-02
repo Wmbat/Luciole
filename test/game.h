@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ public:
 
 private:
     engine::window& wnd_;
-    engine::renderer renderer_;
+    // engine::renderer renderer_;
 
     float time_passed_ = 0;
     int frames_passed_ = 0;

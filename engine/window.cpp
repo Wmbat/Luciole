@@ -1,5 +1,5 @@
 /*!
- *  Copyright (C) 2018 BouwnLaw
+ *  Copyright (C) 2018 Wmbat
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,242 +17,279 @@
 #include <iostream>
 
 #include "window.h"
+#include "console.h"
 
 namespace engine
 {
-    static void key_callback( GLFWwindow *p_wnd, int key, int scan_code, int action, int mods )
+#if defined( VK_USE_PLATFORM_XCB_KHR )
+    static inline xcb_intern_atom_reply_t* intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const char *str )
     {
-        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ));
+        xcb_intern_atom_cookie_t cookie = xcb_intern_atom( p_connection, only_if_exists, strlen( str ), str);
 
-        keyboard::key_event e;
-        e.id_ = key;
-        e.type_ = ( action == GLFW_PRESS || action == GLFW_REPEAT ) ? keyboard::type::pressed : keyboard::type::released;
-
-        p_input_device->keyboard_.push_key_event( e );
+        return xcb_intern_atom_reply( p_connection, cookie, NULL);
     }
-    static void cursor_position_callback( GLFWwindow *p_wnd, double x_pos, double y_pos )
+#endif
+
+    window::window( const std::string &title )
+            :
+            title_( title ),
+            open_( true )
     {
-        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ) );
+#if defined( _WIN32 )
 
-        mouse::cursor_event e;
-        e.x_pos_ = x_pos;
-        e.y_pos_ = y_pos;
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
-        p_input_device->mouse_.push_cursor_event( e );
-    }
-    static void mouse_button_callback( GLFWwindow *p_wnd, int button, int action, int mods )
-    {
-        auto *p_input_device = reinterpret_cast<window::input_devices *>( glfwGetWindowUserPointer( p_wnd ) );
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+        console::log( "Using XCB for Window creation.\n" );
 
-        mouse::button_event e;
-        e.button_id_ = button;
-        e.type_ = ( action == GLFW_PRESS || action == GLFW_REPEAT ) ? mouse::type::pressed : mouse::type::released;
+        p_xcb_connection_ = xcb_connect( nullptr, &settings_.default_screen_id_ );
 
-        p_input_device->mouse_.push_button_event( e );
-    }
-    static void window_position_callback( GLFWwindow *p_wnd, int x, int y )
-    {
-        auto *p_input_device = reinterpret_cast<window::input_devices*>( glfwGetWindowUserPointer( p_wnd ) );
-
-        const window::event_handler::event e
+        if( xcb_connection_has_error( p_xcb_connection_ ) )
         {
-            window::event_handler::event::type::window_move,
-            x, y
-        };
+            console::log(
+                    "Failed to connect to the X server.\nDisconnecting from X Server.\nExiting Application.",
+                    console::message_priority::error );
 
-        p_input_device->event_handler_.push_event( e );
-    }
-    static void window_size_callback( GLFWwindow *p_wnd, int width, int height )
-    {
-        auto *p_input_device = reinterpret_cast<window::input_devices*>( glfwGetWindowUserPointer( p_wnd ) );
-
-        const window::event_handler::event e
+            xcb_disconnect( p_xcb_connection_ );
+        }
+        else
         {
-            window::event_handler::event::type::window_resize,
-            width, height
-        };
-
-        p_input_device->event_handler_.push_event( e );
-    }
-    static void framebuffer_size_callback( GLFWwindow *p_wnd, int width, int height )
-    {
-        auto *p_input_device = reinterpret_cast<window::input_devices*>( glfwGetWindowUserPointer( p_wnd ) );
-
-        const window::event_handler::event e
-        {
-            window::event_handler::event::type::framebuffer_resize,
-            width, height
-        };
-
-        p_input_device->event_handler_.push_event( e );
-    }
-
-
-    window::event_handler::event_handler( )
-        :
-        head_( 0 ),
-        tail_( 0 ),
-        num_events_pending_( 0 )
-    { }
-
-    window::event_handler::event window::event_handler::pop_event( )
-    {
-        event ret = event_buffer_[head_];
-
-        event_buffer_[head_] = event{ };
-
-        --num_events_pending_;
-        head_ = ( head_ + 1 ) % MAX_EVENTS;
-
-        return ret;
-    }
-
-    void window::event_handler::push_event( const event& e )
-    {
-        if( num_events_pending_ >= MAX_EVENTS )
-        {
-            pop_event();
+            console::log( "Connection to X Server established.\n" );
         }
 
-        event_buffer_[tail_] = e;
+        auto monitor_nbr = xcb_setup_roots_iterator( xcb_get_setup ( p_xcb_connection_ ) ).rem;
 
-        ++num_events_pending_;
-        tail_ = ( tail_ + 1 ) % MAX_EVENTS;
-    }
-
-    bool window::event_handler::empty( ) const noexcept
-    {
-        return ( num_events_pending_ == 0 );
-    }
-
-    window::window( uint32_t width, uint32_t height, const std::string& title )
-        :
-        width_( width ),
-        height_( height ),
-        title_( title )
-    {
-        if ( !glfwInit( ) )
+        /* Get Default monitor */
+        auto iter = xcb_setup_roots_iterator( xcb_get_setup( p_xcb_connection_ ) );
+        while( monitor_nbr-- > 1 )
         {
-            std::cerr << "Failed to initialize GLFW!" << std::endl;
+            xcb_screen_next( &iter );
         }
 
-        glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
-        glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
-        glfwWindowHint( GLFW_DECORATED, GLFW_TRUE );
+        p_xcb_screen_ = iter.data;
 
-        p_glfw_window_ = glfwCreateWindow( width_, height_, title_.c_str( ), nullptr, nullptr );
 
-        if ( !p_glfw_window_ )
+        xcb_window_ = xcb_generate_id( p_xcb_connection_ );
+
+        console::log( "XCB window ID generated: " + std::to_string( xcb_window_ ) + '\n' );
+
+        uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+        uint32_t value_list[32];
+        value_list[0] = p_xcb_screen_->black_pixel;
+        value_list[1] =
+                XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+                XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE;
+
+        if( settings_.fullscreen_ )
         {
-            glfwDestroyWindow( p_glfw_window_ );
-            glfwTerminate( );
+            console::log( "XCB window fullscreen mode.\n" );
 
-            std::cerr << "Failed to create GLFW window!" << std::endl;
+            settings_.width_ = p_xcb_screen_->width_in_pixels;
+            settings_.height_ = p_xcb_screen_->height_in_pixels;
         }
 
-        //glfwSetWindowPos( p_glfw_window_, x_pos_, y_pos_);
+        xcb_create_window(
+                p_xcb_connection_,                                /* Connection             */
+                XCB_COPY_FROM_PARENT,                             /* Depth ( same as root ) */
+                xcb_window_,                                      /* Window ID              */
+                p_xcb_screen_->root,                              /* Parent Window          */
+                settings_.x_position, settings_.y_position,       /* Window Position        */
+                settings_.width_, settings_.height_, 10,          /* Window + border Size   */
+                XCB_WINDOW_CLASS_INPUT_OUTPUT,                    /* Class                  */
+                p_xcb_screen_->root_visual,                       /* Visual                 */
+                value_mask, value_list );                         /* Masks                  */
 
-        /// callbacks ///
-        glfwSetKeyCallback( p_glfw_window_, key_callback );
-        glfwSetCursorPosCallback( p_glfw_window_, cursor_position_callback );
-        glfwSetMouseButtonCallback( p_glfw_window_, mouse_button_callback );
+        console::log( "XCB window created.\n" );
 
-        glfwSetWindowPosCallback( p_glfw_window_, window_position_callback );
-        glfwSetWindowSizeCallback( p_glfw_window_, window_size_callback );
-        glfwSetFramebufferSizeCallback( p_glfw_window_, framebuffer_size_callback );
 
-        /// user pointer ///
-        glfwSetWindowUserPointer( p_glfw_window_, &input_devices_ );
+        xcb_intern_atom_reply_t* reply = intern_atom_helper( p_xcb_connection_, true, "WM_PROTOCOLS" );
+        p_xcb_wm_delete_window_ = intern_atom_helper( p_xcb_connection_, false, "WM_DELETE_WINDOW" );
+
+        xcb_change_property(
+                p_xcb_connection_, XCB_PROP_MODE_REPLACE,
+                xcb_window_, reply->atom, 4, 32, 1,
+                &p_xcb_wm_delete_window_ ->atom );
+
+        xcb_change_property(
+                p_xcb_connection_, XCB_PROP_MODE_REPLACE,
+                xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+                title_.size(), title_.c_str());
+
+        free( reply );
+
+        if ( settings_.fullscreen_ )
+        {
+            xcb_intern_atom_reply_t *atom_wm_state = intern_atom_helper( p_xcb_connection_, false, "_NET_WM_STATE" );
+            xcb_intern_atom_reply_t *atom_wm_fullscreen = intern_atom_helper( p_xcb_connection_, false, "_NET_WM_STATE_FULLSCREEN");
+            xcb_change_property(
+                    p_xcb_connection_, XCB_PROP_MODE_REPLACE,
+                    xcb_window_, atom_wm_state->atom,
+                    XCB_ATOM_ATOM, 32, 1,
+                    &(atom_wm_fullscreen->atom));
+
+            free( atom_wm_fullscreen );
+            free( atom_wm_state );
+        }
+
+        xcb_map_window( p_xcb_connection_, xcb_window_ );
+        xcb_flush( p_xcb_connection_ );
+
+        console::flush();
+#endif
     }
-    window::window( window&& other ) noexcept
+    window::window( window&& rhs ) noexcept
     {
-        *this = std::move( other );
+        *this = std::move( rhs );
     }
     window::~window( )
     {
-        if( p_glfw_window_ != nullptr )
-        {
-            glfwDestroyWindow( p_glfw_window_ );
-        }
+        free( p_xcb_wm_delete_window_ );
 
-        glfwTerminate( );
-    }
+        xcb_flush( p_xcb_connection_ );
 
-    window& window::operator=( window&& other ) noexcept
-    {
-        if( this != &other )
-        {
-            if( p_glfw_window_ != nullptr )
-            {
-                glfwDestroyWindow( p_glfw_window_ );
-            }
 
-            p_glfw_window_ = other.p_glfw_window_;
-            other.p_glfw_window_ = nullptr;
+        xcb_destroy_window( p_xcb_connection_, xcb_window_ );
 
-            title_ = other.title_;
-            other.title_ = "";
+        console::log( "XCB window destroyed.\n" );
 
-            width_ = other.width_;
-            other.width_ = 0;
+        xcb_disconnect( p_xcb_connection_ );
 
-            height_ = other.height_;
-            other.height_ = 0;
-        }
-
-        return *this;
-    }
-
-    bool window::is_open( )
-    {
-        return !glfwWindowShouldClose( p_glfw_window_ );
+        console::log( "Disconnected from X server.\n" );
+        console::flush( );
     }
 
     void window::poll_events( )
     {
-        glfwPollEvents( );
-    }
-    void window::handle_event( const window::event_handler::event &e )
-    {
-        if( e.type_ == window::event_handler::event::type::window_move )
+#if defined( _WIN32 )
+
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+
+        xcb_generic_event_t *event;
+        while( ( event = xcb_poll_for_event( p_xcb_connection_ ) ) )
         {
-            x_pos_ = static_cast<uint32_t>( e.x_ );
-            y_pos_ = static_cast<uint32_t>( e.y_ );
+            switch( event->response_type & 0x7f )
+            {
+                case XCB_CLIENT_MESSAGE:
+                {
+                    const auto* message_event = reinterpret_cast<const xcb_client_message_event_t *>( event );
+
+                    if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
+                    {
+                        open_ = false;
+                    }
+                }
+                break;
+
+                case XCB_KEY_PRESS:
+                {
+                    const auto* key_press_event = reinterpret_cast<const xcb_key_press_event_t*>( event );
+
+                    keyboard::key_event key_event;
+                    key_event.type_ = keyboard::event_type::pressed;
+                    key_event.id_ = key_press_event->detail;
+
+                    keyboard_.emplace_event( key_event );
+                }
+                break;
+
+                case XCB_KEY_RELEASE:
+                {
+                    const auto* key_release_event = reinterpret_cast<const xcb_key_release_event_t*>( event );
+
+                    keyboard::key_event key_event;
+                    key_event.type_ = keyboard::event_type::released;
+                    key_event.id_ = key_release_event->detail;
+
+                    keyboard_.emplace_event( key_event );
+                }
+                break;
+            }
+
+            free( event );
         }
-        else if ( e.type_ == window::event_handler::event::type::window_resize )
+
+#endif
+    }
+
+    void window::set_title( const std::string &title )
+    {
+        title_ = title;
+
+        xcb_change_property(
+                p_xcb_connection_, XCB_PROP_MODE_REPLACE,
+                xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+                title_.size(), title_.c_str() );
+    }
+
+    bool window::is_open( ) const noexcept
+    {
+        return open_;
+    }
+
+    vk_return_obj<VkSurfaceKHR> window::create_surface( const VkInstance &instance )
+    {
+#if defined( _WIN32 )
+        const VkWin32SurfaceCreateInfoKHR create_info
         {
-            width_ = static_cast<uint32_t>( e.x_ );
-            height_ = static_cast<uint32_t>( e.y_ );
+            .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+        };
+
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+        const VkWaylandSurfaceCreateInfoKHR create_info
+        {
+            .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+        };
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+        const VkXcbSurfaceCreateInfoKHR create_info
+        {
+            .sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
+        };
+#endif
+    }
+
+    window &window::operator=( window &&rhs ) noexcept
+    {
+        if( this != &rhs )
+        {
+            title_ = rhs.title_;
+            rhs.title_ = { };
+
+            open_ = rhs.open_;
+            rhs.open_ = false;
+#if defined( _WIN32 )
+
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+            p_xcb_connection_ = rhs.p_xcb_connection_;
+            rhs.p_xcb_connection_ = nullptr;
+
+            p_xcb_screen_ = rhs.p_xcb_screen_;
+            rhs.p_xcb_screen_ = nullptr;
+
+            p_xcb_wm_delete_window_ = rhs.p_xcb_wm_delete_window_;
+            rhs.p_xcb_wm_delete_window_ = nullptr;
+
+            xcb_window_ = rhs.xcb_window_;
+            rhs.xcb_window_ = 0;
+#endif
+
+            window_event_handler_ = rhs.window_event_handler_;
+            rhs.window_event_handler_ = { };
+
+            keyboard_ = rhs.keyboard_;
+            rhs.keyboard_ = { };
+
+            mouse_ = rhs.mouse_;
+            rhs.mouse_ = { };
+
+            settings_ = rhs.settings_;
+            rhs.settings_ = { };
         }
-    }
 
-    std::vector<const char*> window::get_required_extensions( ) const noexcept
-    {
-
-
-        uint32_t extension_count;
-        const char** extensions = glfwGetRequiredInstanceExtensions( &extension_count );
-
-        std::vector<const char*> vulkan_extensions( extensions, extensions + extension_count );
-
-        if( enable_debug_layers )
-            vulkan_extensions.emplace_back( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-
-        return vulkan_extensions;
-    }
-    vk_return_obj<VkSurfaceKHR> window::create_surface( const VkInstance& instance ) const noexcept
-    {
-        VkSurfaceKHR surface_handle;
-
-        return { glfwCreateWindowSurface( instance, p_glfw_window_, nullptr, &surface_handle ), surface_handle };
-    }
-
-    const uint32_t window::get_width( ) const noexcept
-    {
-        return width_;
-    }
-    const uint32_t window::get_height( ) const noexcept
-    {
-        return height_;
+        return *this;
     }
 }
