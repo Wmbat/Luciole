@@ -23,7 +23,7 @@ namespace engine
 {
     struct key_codes
     {
-        static constexpr int max_keys = 125;
+        static constexpr int max_keys = 128;
 
         enum class us_qwerty : std::int32_t
         {

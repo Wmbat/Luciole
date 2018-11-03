@@ -22,7 +22,8 @@
 
 game::game( engine::window& wnd )
     :
-    wnd_( wnd )
+    wnd_( wnd ),
+    core_( wnd, wnd_.get_title(), VK_MAKE_VERSION( 0, 0, 1 ) )
     // renderer_( wnd_, "Test", VK_MAKE_VERSION( 0, 0, 1 ) )
 {
     //renderer_.setup_graphics_pipeline( "test/shaders/vert.spv", "test/shaders/frag.spv" );
@@ -49,19 +50,17 @@ void game::run( )
         time_passed_ += dt;
         frames_passed_ += 1;
 
-        if ( time_passed_ >= 0.1 )
+        if ( time_passed_ >= 1.0 )
         {
-            // std::cout << "FPS: " << frames_passed_ / time_passed_ << "\n";
+            wnd_.set_title( wnd_.get_title() + " - FPS: " + std::to_string( frames_passed_ / time_passed_ ) );
 
             time_passed_ = 0;
             frames_passed_ = 0;
         }
 
-        if( !wnd_.keyboard_.empty() )
+        while( !wnd_.no_window_event() )
         {
-            auto d = wnd_.keyboard_.pop_key_event();
-
-            std::cout << d.id_ << std::endl;
+            auto e = wnd_.pop_window_event();
         }
     }
 
@@ -90,12 +89,3 @@ void game::run( )
 
      */
 }
-
-
-/*
-
-/// Get FPS
-
-///
-
- */

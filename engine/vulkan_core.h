@@ -21,7 +21,6 @@
 
 #include <vulkan/vulkan.h>
 
-
 #include "vulkan_utils.h"
 #include "window.h"
 

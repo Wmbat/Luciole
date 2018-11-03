@@ -29,6 +29,18 @@ namespace engine
     {
     }
 
+    void keyboard::set_layout( keyboard::layout layout )
+    {
+        if( layout == layout::us_dvorak )
+        {
+
+        }
+        else if( layout == layout::us_qwerty )
+        {
+
+        }
+    }
+
     bool keyboard::is_key_pressed( std::int32_t key_code ) const noexcept
     {
         return key_states_[key_code];
