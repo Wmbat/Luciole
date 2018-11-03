@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <glm/fwd.hpp>
+#include <iostream>
 
 #include "mouse.h"
 
@@ -25,32 +26,48 @@ namespace engine
         :
         button_head_( 0 ),
         button_tail_( 0 ),
-        num_button_buffer_( 0 ),
-        cursor_head_( 0 ),
-        cursor_tail_( 0 ),
-        num_cursor_buffer_( 0 )
+        num_button_buffer_( 0 )
     {
 
     }
 
-    bool mouse::is_button_pressed( int button_id ) const noexcept
+    bool mouse::is_button_empty( ) const noexcept
     {
-        assert( button_id <= GLFW_MOUSE_BUTTON_LAST );
-        assert( button_id >= 0 );
-
-        return button_state_[button_id];
+        return num_button_buffer_ == 0;
     }
 
-    glm::dvec2 mouse::cursor_pos( ) noexcept
+    bool mouse::is_button_pressed( button button ) const noexcept
     {
-        auto top_event = cursor_buffer_[cursor_head_];
+        assert( button <= button::last );
+        assert( button >= button::invalid );
 
-        pop_cursor_event();
-
-        return { top_event.x_pos_, top_event.y_pos_ };
+        return button_state_[static_cast<size_t>( button )];
     }
 
-    void mouse::push_button_event( const engine::mouse::button_event &event )
+    glm::i32vec2 mouse::cursor_pos( ) const noexcept
+    {
+        return { x_pos_, y_pos_ };
+    }
+
+    void mouse::update_pos( int32_t x, int32_t y ) noexcept
+    {
+        x_pos_ = x;
+        y_pos_ = y;
+    }
+
+    mouse::button_event mouse::pop_button_event( )
+    {
+        auto ret = button_buffer_[button_head_];
+
+        button_buffer_[button_head_] = button_event{ };
+        --num_button_buffer_;
+
+        button_head_ = ( button_head_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
+
+        return ret;
+    }
+
+    void mouse::emplace_button_event( const engine::mouse::button_event &event )
     {
         if( num_button_buffer_>= MAX_BUTTON_BUFFER_SIZE_ )
         {
@@ -61,45 +78,14 @@ namespace engine
 
         if( button_buffer_[button_tail_].type_ == type::pressed )
         {
-            button_state_[button_buffer_[button_tail_].button_id_] = true;
+            button_state_[static_cast<size_t>( button_buffer_[button_tail_].button_ )] = true;
         }
         else if( button_buffer_[button_tail_].type_ == type::released )
         {
-            button_state_[button_buffer_[button_tail_].button_id_] = false;
+            button_state_[static_cast<size_t>( button_buffer_[button_tail_].button_ )] = false;
         }
 
         ++num_button_buffer_;
         button_tail_ = ( button_tail_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
-    }
-    void mouse::push_cursor_event( const engine::mouse::cursor_event &event )
-    {
-        if( num_cursor_buffer_ >= MAX_CURSOR_BUFFER_SIZE_ )
-        {
-            pop_cursor_event();
-        }
-
-        cursor_buffer_[cursor_tail_] = event;
-
-        ++num_cursor_buffer_;
-        cursor_tail_ = ( cursor_tail_ + 1 ) % MAX_CURSOR_BUFFER_SIZE_;
-    }
-
-    void mouse::pop_button_event( )
-    {
-        assert( num_button_buffer_ >= 0 );
-
-        --num_button_buffer_;
-        button_buffer_[button_head_] = button_event{ };
-
-        button_head_ = ( button_head_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
-    }
-    void mouse::pop_cursor_event( )
-    {
-        assert( num_cursor_buffer_ >= 0 );
-
-        --num_cursor_buffer_;
-        cursor_buffer_[cursor_head_] = cursor_event{ };
-
-        cursor_head_ = ( cursor_head_ + 1 ) % MAX_CURSOR_BUFFER_SIZE_;
     }
 }

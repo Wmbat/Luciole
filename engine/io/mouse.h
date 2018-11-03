@@ -20,6 +20,7 @@
 #include <bitset>
 #include <cstdint>
 #include <cstddef>
+#include <queue>
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -37,49 +38,54 @@ namespace engine
             invalid
         };
 
-        struct cursor_event
+        enum class button : std::int32_t
         {
-            double x_pos_ = 0.0;
-            double y_pos_ = 0.0;
+            invalid = -1,
+
+            l_click = 1,
+            scroll_click = 2,
+            r_click = 3,
+            scroll_up = 4,
+            scroll_down = 5,
+            scroll_left = 6,
+            scroll_right = 7,
+            side_button_1 = 8,
+            side_button_2 = 9,
+
+            last = 16
         };
 
         struct button_event
         {
-            std::int32_t button_id_ = 0;
+            button button_ = button::invalid;
             type type_ = type::invalid;
         };
 
     public:
         mouse( );
 
-        bool is_button_pressed( int button_id ) const noexcept;
+        glm::i32vec2 cursor_pos( ) const noexcept;
+        void update_pos( int32_t x, int32_t y ) noexcept;
 
-        glm::dvec2 cursor_pos( ) noexcept;
+        bool is_button_empty( ) const noexcept;
+        bool is_button_pressed( button button ) const noexcept;
 
-        void push_button_event( const button_event& event );
-        void push_cursor_event( const cursor_event& event );
-
-    private:
-        void pop_button_event( );
-        void pop_cursor_event( );
+        button_event pop_button_event( );
+        void emplace_button_event( const button_event& event );
 
     private:
         static constexpr std::uint8_t MAX_BUTTON_BUFFER_SIZE_ = 8;
-        static constexpr std::uint8_t MAX_CURSOR_BUFFER_SIZE_ = 8;
 
-        std::bitset<GLFW_MOUSE_BUTTON_LAST> button_state_;
+        int32_t x_pos_ = 0;
+        int32_t y_pos_ = 0;
+
+        std::bitset<static_cast<size_t>( button::last )> button_state_;
 
         button_event button_buffer_[MAX_BUTTON_BUFFER_SIZE_];
         size_t num_button_buffer_;
 
-        cursor_event cursor_buffer_[MAX_CURSOR_BUFFER_SIZE_];
-        size_t num_cursor_buffer_;
-
         size_t button_head_;
         size_t button_tail_;
-
-        size_t cursor_head_;
-        size_t cursor_tail_;
     };
 }
 

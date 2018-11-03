@@ -19,6 +19,7 @@
 
 #include "../engine/renderer.h"
 #include "../engine/window.h"
+#include "../engine/vulkan_core.h"
 
 class game
 {
@@ -29,6 +30,7 @@ public:
 
 private:
     engine::window& wnd_;
+    engine::vulkan_core core_;
     // engine::renderer renderer_;
 
     float time_passed_ = 0;

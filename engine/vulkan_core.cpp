@@ -37,7 +37,23 @@ namespace engine
 
     vulkan_core::vulkan_core( const window& wnd, const std::string& app_name, uint32_t app_version )
     {
-        const std::vector<const char*> instance_extensions = { };//wnd.get_required_extensions( );
+        const std::vector<const char*> instance_extensions
+        {
+            VK_KHR_SURFACE_EXTENSION_NAME,
+
+#ifndef NDEBUG
+            VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+#endif
+
+#if defined( _WIN32 )
+            VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+            VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+            VK_KHR_XCB_SURFACE_EXTENSION_NAME
+#endif
+        };
+
         const std::vector<const char*> debug_layers = { "VK_LAYER_LUNARG_standard_validation" };
 
         if( !check_instance_extension_support( instance_extensions ) )
@@ -122,7 +138,7 @@ namespace engine
 
         const VkApplicationInfo app_info =
         {
-            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
             .pNext = nullptr,
             .pApplicationName = app_name.c_str( ),
             .applicationVersion = app_version,
@@ -183,7 +199,7 @@ namespace engine
 
     const vk_return_obj<VkSurfaceKHR> vulkan_core::create_surface( const window& wnd, const VkInstance& instance ) const noexcept
     {
-        return { VK_SUCCESS, VK_NULL_HANDLE };//wnd.create_surface( instance );
+        return wnd.create_surface( instance );
     }
 
     const vk_return_obj<VkPhysicalDevice> vulkan_core::pick_physical_device( const VkSurfaceKHR& surface,

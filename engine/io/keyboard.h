@@ -29,16 +29,17 @@ namespace engine
     class keyboard
     {
     public:
+        enum class layout : std::uint32_t
+        {
+            us_qwerty,
+            us_dvorak
+        };
+
         enum class event_type : std::uint32_t
         {
             pressed,
             released,
             invalid
-        };
-
-        enum class key_code : std::int32_t
-        {
-
         };
 
         struct key_event
@@ -50,13 +51,15 @@ namespace engine
     public:
         keyboard( );
 
-        bool is_key_pressed( std::int32_t key_code ) const noexcept;
+        // maybe, in the future.
+        void set_layout( layout layout );
 
+        bool is_key_pressed( std::int32_t key_code ) const noexcept;
+        bool empty( ) const noexcept;
 
         key_event pop_key_event( );
         void emplace_event( const key_event& event );
 
-        bool empty( ) const noexcept;
 
     private:
         static constexpr std::uint8_t MAX_BUFFER_SIZE_ = 8;

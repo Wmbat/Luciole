@@ -24,7 +24,7 @@
 
 namespace engine
 {
-#ifdef NDEBUG
+#if defined( NDEBUG )
     static constexpr bool enable_validation_layers = false;
 #else
     static constexpr bool enable_debug_layers = true;
