@@ -29,7 +29,7 @@ int main( )
 {
     try
     {
-        engine::window wnd( "Test" );
+        TWE::window wnd( "Test" );
 
         try
         {
@@ -66,7 +66,7 @@ int main( )
         std::cerr << "Major fuck up caught at window creation!" << std::endl;
     }
 
-    engine::console::flush();
+    TWE::console::flush();
 
     return 0;
 }

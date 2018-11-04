@@ -19,7 +19,7 @@
 
 #include <cstdint>
 
-namespace engine
+namespace TWE
 {
     struct key_codes
     {

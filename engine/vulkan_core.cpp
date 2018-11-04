@@ -19,9 +19,10 @@
 #include <array>
 #include <set>
 
+#include "console.h"
 #include "vulkan_core.h"
 
-namespace engine
+namespace TWE
 {
     VKAPI_ATTR VkBool32 VKAPI_CALL
     debug_callback_function( VkDebugReportFlagsEXT flags,
@@ -40,7 +41,6 @@ namespace engine
         const std::vector<const char*> instance_extensions
         {
             VK_KHR_SURFACE_EXTENSION_NAME,
-
 #ifndef NDEBUG
             VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 #endif
@@ -69,13 +69,19 @@ namespace engine
         instance_ = check_vk_return_state(
                 create_instance( instance_extensions, debug_layers, app_name, app_version ),
                 "Failed to create Instance!" );
+        console::log( "Vulkan Instance created.\n" );
+
 
         if constexpr( enable_debug_layers )
         {
             debug_report_ = check_vk_return_state( create_debug_report( instance_ ), "Failed to create Debug Report Callback!" );
+            console::log( "Vulkan Debug Report Callback created.\n" );
         }
 
         surface_ = check_vk_return_state( create_surface( wnd, instance_ ), "Failed to create Surface!" );
+        console::log( "Vulkan Surface created.\n" );
+
+        console::flush();
     }
     vulkan_core::vulkan_core( vulkan_core&& rhs ) noexcept
     {
@@ -84,6 +90,7 @@ namespace engine
     vulkan_core::~vulkan_core( )
     {
         vkDestroySurfaceKHR( instance_, surface_, nullptr );
+
 
         if constexpr( enable_debug_layers )
         {
@@ -142,7 +149,7 @@ namespace engine
             .pNext = nullptr,
             .pApplicationName = app_name.c_str( ),
             .applicationVersion = app_version,
-            .pEngineName = "No Name Yet",
+            .pEngineName = "The Wonbat Engine",
             .engineVersion = VK_MAKE_VERSION( 0, 0, 0 ),
             .apiVersion = VK_API_VERSION_1_1,
         };

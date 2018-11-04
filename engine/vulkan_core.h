@@ -24,7 +24,7 @@
 #include "vulkan_utils.h"
 #include "window.h"
 
-namespace engine
+namespace TWE
 {
     class vulkan_core
     {

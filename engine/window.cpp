@@ -19,7 +19,7 @@
 #include "window.h"
 #include "console.h"
 
-namespace engine
+namespace TWE
 {
 #if defined( VK_USE_PLATFORM_XCB_KHR )
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
@@ -80,6 +80,7 @@ namespace engine
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
         console::log( "Using XCB for Window creation.\n" );
 
+        /** Connect to X11 window system. */
         p_xcb_connection_ = std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>>(
                 xcb_connect( nullptr, &settings_.default_screen_id_ ),
                 []( xcb_connection_t* p ) { xcb_disconnect( p ); } );
@@ -97,13 +98,14 @@ namespace engine
             console::log( "Connection to X Server established.\n" );
         }
 
-        /* Get Default monitor */
+        /** Get Default monitor */
         auto monitor_nbr = xcb_setup_roots_iterator( xcb_get_setup( p_xcb_connection_.get() ) ).rem;
 
+        /** Loop through all available monitors. */
         auto iter = xcb_setup_roots_iterator( xcb_get_setup( p_xcb_connection_.get() ) );
         while( monitor_nbr-- > 1 )
         {
-            xcb_screen_next( &iter );
+            xcb_screen_next( &iter );   // TODO: Allow user to pick their prefered monitor.
         }
         p_xcb_screen_ = iter.data;
 
@@ -140,24 +142,27 @@ namespace engine
                 p_xcb_screen_->root_visual,                       /* Visual                 */
                 value_mask, value_list );                         /* Masks                  */
 
-        console::log( "XCB window created.\n\n" );
+        console::log( "XCB window created.\n" );
 
 
         auto reply = intern_atom_helper( p_xcb_connection_.get(), true, "WM_PROTOCOLS" );
 
         p_xcb_wm_delete_window_ = intern_atom_helper( p_xcb_connection_.get(), false, "WM_DELETE_WINDOW" );
 
+        /** Allows checking of window closing event. */
         xcb_change_property(
                 p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
                 xcb_window_, reply->atom, 4, 32, 1,
                 &p_xcb_wm_delete_window_->atom );
 
+        /** Change the title of the window. */
         xcb_change_property(
                 p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
                 xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
                 title_.size(), title_.c_str() );
 
 
+        /** Set the window to fullscreen if fullscreen is enabled. */
         if ( settings_.fullscreen_ )
         {
             auto p_atom_wm_state = intern_atom_helper( p_xcb_connection_.get(), false, "_NET_WM_STATE" );
@@ -423,18 +428,18 @@ namespace engine
         return mouse_.is_button_empty();
     }
 
-    bool window::is_button_pressed( engine::mouse::button button ) const noexcept
+    bool window::is_button_pressed( mouse::button button ) const noexcept
     {
         return mouse_.is_button_pressed( button );
     }
 
 
-    glm::i32vec2 window::cursor_position( ) noexcept
+    glm::i32vec2 window::cursor_position( ) const noexcept
     {
         return mouse_.cursor_pos();
     }
 
-    mouse::button_event window::pop_button_event( )
+    mouse::button_event window::pop_button_event( ) noexcept
     {
         return mouse_.pop_button_event();
     }

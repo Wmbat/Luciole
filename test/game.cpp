@@ -20,7 +20,7 @@
 
 #include "game.h"
 
-game::game( engine::window& wnd )
+game::game( TWE::window& wnd )
     :
     wnd_( wnd ),
     core_( wnd, wnd_.get_title(), VK_MAKE_VERSION( 0, 0, 1 ) )

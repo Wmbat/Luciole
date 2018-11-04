@@ -21,7 +21,7 @@
 #include <fstream>
 #include <vector>
 
-namespace utilities
+namespace TWE
 {
     inline const std::string read_from_file( const std::string& filepath )
     {

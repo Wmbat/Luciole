@@ -22,7 +22,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace engine
+namespace TWE
 {
 #if defined( NDEBUG )
     static constexpr bool enable_validation_layers = false;
@@ -30,6 +30,11 @@ namespace engine
     static constexpr bool enable_debug_layers = true;
 #endif
 
+    /**
+     *  @brief: Returns a struct holding the desired object and a bool
+     *  to check whether it's creation was successful.
+     *  @tparam: T, The desired object type.
+     */
     template<typename T>
     struct vk_return_obj
     {
@@ -37,6 +42,14 @@ namespace engine
         T value_;
     };
 
+    /**
+     *  @brief: Helper function to check if an object was successfully created. Throws
+     *  an exception if it is not, otherwise, returns the desired object.
+     *  @tparam: T, The desired object type.
+     *  @param: return_obj, Struct containing the desired object and its creation result.
+     *  @param: error_msg, Message to display in case of creation failure.
+     *  @return: The successfully creation object.
+     */
     template<typename T>
     const T check_vk_return_state( const vk_return_obj<T>& return_obj, const std::string& error_msg )
     {
@@ -50,6 +63,12 @@ namespace engine
         }
     }
 
+    /**
+     *  @brief: Helper func to check if an object was successfully created. Throws
+     *  an exception if it is not.
+     *  @param: result, The result to check.
+     *  @param: error_msg, The message to display in case of error.
+     */
     inline void check_vk_return_result( const VkResult result, const std::string& error_msg )
     {
         if( result != VK_SUCCESS )

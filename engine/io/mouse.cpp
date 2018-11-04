@@ -20,7 +20,7 @@
 
 #include "mouse.h"
 
-namespace engine
+namespace TWE
 {
     mouse::mouse( )
         :
@@ -67,7 +67,7 @@ namespace engine
         return ret;
     }
 
-    void mouse::emplace_button_event( const engine::mouse::button_event &event )
+    void mouse::emplace_button_event( const mouse::button_event &event )
     {
         if( num_button_buffer_>= MAX_BUTTON_BUFFER_SIZE_ )
         {

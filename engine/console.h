@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace engine
+namespace TWE
 {
     class console
     {
