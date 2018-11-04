@@ -21,7 +21,7 @@
 
 #include "window.h"
 
-namespace engine
+namespace TWE
 {
     class renderer
     {
@@ -32,7 +32,7 @@ namespace engine
         //////////////////////
 
     public:
-        renderer( const engine::window& window, const std::string& app_name, uint32_t app_version );
+        renderer( const window& window, const std::string& app_name, uint32_t app_version );
         renderer( const renderer& renderer ) noexcept = delete;
         renderer( renderer&& renderer ) noexcept;
         ~renderer( );

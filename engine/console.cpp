@@ -6,12 +6,12 @@
 
 #include "console.h"
 
-namespace engine
+namespace TWE
 {
     char console::buffer_[4096];
     std::uint32_t console::buffer_index_ = 0;
 
-    void engine::console::log( const std::string &str, const engine::console::message_priority priority )
+    void console::log( const std::string &str, const console::message_priority priority )
     {
         if( buffer_index_ + str.length() > 4096 )
         {

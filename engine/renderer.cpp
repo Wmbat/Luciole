@@ -67,9 +67,9 @@ vkDestroyDebugReportCallbackEXT ( VkInstance instance,
 }
 #endif
 
-namespace engine
+namespace TWE
 {
-    renderer::renderer( const engine::window& wnd, const std::string& app_name, uint32_t app_version )
+    renderer::renderer( const window& wnd, const std::string& app_name, uint32_t app_version )
         //:
         //window_width_( wnd.get_width() ),
         //window_height_( wnd.get_height() )
@@ -377,13 +377,13 @@ namespace engine
     void renderer::setup_graphics_pipeline( const std::string& vert_shader_filepath,
                                             const std::string& frag_shader_filepath )
     {
-        const vk::ShaderModule vert_shader_handle = create_shader_module( logical_device_, utilities::read_from_binary_file( vert_shader_filepath ) );
+        const vk::ShaderModule vert_shader_handle = create_shader_module( logical_device_, read_from_binary_file( vert_shader_filepath ) );
 
         if( !vert_shader_handle )
             throw std::runtime_error{ "Failed to create Vertex Shader!" };
 
 
-        const vk::ShaderModule frag_shader_handle = create_shader_module( logical_device_, utilities::read_from_binary_file( frag_shader_filepath ) );
+        const vk::ShaderModule frag_shader_handle = create_shader_module( logical_device_, read_from_binary_file( frag_shader_filepath ) );
 
         if( !frag_shader_handle )
             throw std::runtime_error{ "Failed to create Fragment Shader!" };

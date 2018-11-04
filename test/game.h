@@ -24,13 +24,13 @@
 class game
 {
 public:
-    explicit game( engine::window& wnd );
+    explicit game( TWE::window& wnd );
 
     void run( );
 
 private:
-    engine::window& wnd_;
-    engine::vulkan_core core_;
+    TWE::window& wnd_;
+    TWE::vulkan_core core_;
     // engine::renderer renderer_;
 
     float time_passed_ = 0;
