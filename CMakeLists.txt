@@ -12,7 +12,7 @@
 #  GNU General Public License for more details.
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.12 )
+cmake_minimum_required( VERSION 3.10 )
 project( vulkan_project )
 
 set( CMAKE_CXX_STANDARD 17 )
@@ -21,16 +21,8 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
 set( CMAKE_CXX_FLAGS -pthread )
 
-set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
-set( GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE )
-set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
-
-
 include_directories( external )
-include_directories( external/glfw )
 include_directories( external/glm )
-
-find_package( glfw3 3.2 REQUIRED )
 
 find_package( Vulkan REQUIRED )
 
@@ -90,5 +82,4 @@ add_executable( vulkan_project
 target_link_libraries( vulkan_project
         ${Vulkan_LIBRARY}
         ${XCB_LIBRARIES}
-        ${WAYLAND_CLIENT_LIBRARIES}
-        glfw ${GLFW_LIBRARIES} )
+        ${WAYLAND_CLIENT_LIBRARIES} )
