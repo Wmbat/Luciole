@@ -19,37 +19,17 @@
 
 #include "keyboard.h"
 
+#include "../console.h"
+
 namespace TWE
 {
-    keyboard::keyboard( )
-        :
-        num_buffer_( 0 ),
-        head_( 0 ),
-        tail_( 0 )
+    bool keyboard::is_key_pressed( key key_code ) const noexcept
     {
+        return key_states_[static_cast<size_t>( key_code )];
     }
 
-    void keyboard::set_layout( keyboard::layout layout )
+    keyboard::key_event keyboard::pop_key_event( ) noexcept
     {
-        if( layout == layout::us_dvorak )
-        {
-
-        }
-        else if( layout == layout::us_qwerty )
-        {
-
-        }
-    }
-
-    bool keyboard::is_key_pressed( std::int32_t key_code ) const noexcept
-    {
-        return key_states_[key_code];
-    }
-
-    keyboard::key_event keyboard::pop_key_event( )
-    {
-        assert( num_buffer_ >= 0 );
-
         auto event_ret = key_buffer_[head_];
 
         --num_buffer_;
@@ -60,7 +40,7 @@ namespace TWE
         return event_ret;
     }
 
-    void keyboard::emplace_event( const key_event& event )
+    void keyboard::emplace_event( const key_event& event ) noexcept
     {
         if( num_buffer_ >= MAX_BUFFER_SIZE_ )
         {

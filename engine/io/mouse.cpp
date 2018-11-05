@@ -22,18 +22,9 @@
 
 namespace TWE
 {
-    mouse::mouse( )
-        :
-        button_head_( 0 ),
-        button_tail_( 0 ),
-        num_button_buffer_( 0 )
-    {
-
-    }
-
     bool mouse::is_button_empty( ) const noexcept
     {
-        return num_button_buffer_ == 0;
+        return num_elem_ == 0;
     }
 
     bool mouse::is_button_pressed( button button ) const noexcept
@@ -55,37 +46,37 @@ namespace TWE
         y_pos_ = y;
     }
 
-    mouse::button_event mouse::pop_button_event( )
+    mouse::button_event mouse::pop_button_event( ) noexcept
     {
-        auto ret = button_buffer_[button_head_];
+        auto ret = buffer_[head_];
 
-        button_buffer_[button_head_] = button_event{ };
-        --num_button_buffer_;
+        buffer_[head_] = button_event{ };
+        --num_elem_;
 
-        button_head_ = ( button_head_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
+        head_ = ( head_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
 
         return ret;
     }
 
-    void mouse::emplace_button_event( const mouse::button_event &event )
+    void mouse::emplace_button_event( const mouse::button_event &event ) noexcept
     {
-        if( num_button_buffer_>= MAX_BUTTON_BUFFER_SIZE_ )
+        if( num_elem_>= MAX_BUTTON_BUFFER_SIZE_ )
         {
             pop_button_event();
         }
 
-        button_buffer_[button_tail_] = event;
+        buffer_[tail_] = event;
 
-        if( button_buffer_[button_tail_].type_ == type::pressed )
+        if( buffer_[tail_].type_ == type::pressed )
         {
-            button_state_[static_cast<size_t>( button_buffer_[button_tail_].button_ )] = true;
+            button_state_[static_cast<size_t>( buffer_[tail_].button_ )] = true;
         }
-        else if( button_buffer_[button_tail_].type_ == type::released )
+        else if( buffer_[tail_].type_ == type::released )
         {
-            button_state_[static_cast<size_t>( button_buffer_[button_tail_].button_ )] = false;
+            button_state_[static_cast<size_t>( buffer_[tail_].button_ )] = false;
         }
 
-        ++num_button_buffer_;
-        button_tail_ = ( button_tail_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
+        ++num_elem_;
+        tail_ = ( tail_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
     }
 }

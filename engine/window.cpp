@@ -395,7 +395,8 @@ namespace TWE
 #endif
     }
 
-/// Window Event ///
+///////////////////////////////// Window Event //////////////////////////////////
+
     bool window::no_window_event( ) const noexcept
     {
         return event_handler_.is_empty();
@@ -420,9 +421,11 @@ namespace TWE
             settings_.height_ = event.y_;
         }
     }
-////////////////////
 
-/// Mouse IO ///
+/////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////// Mouse Event //////////////////////////////////
+
     bool window::no_button_event( ) const noexcept
     {
         return mouse_.is_button_empty();
@@ -443,15 +446,16 @@ namespace TWE
     {
         return mouse_.pop_button_event();
     }
-////////////////
 
+/////////////////////////////////////////////////////////////////////////////////
 
-/// Keyboard IO ///
+//////////////////////////////// Keyboard Event /////////////////////////////////
+
     bool window::no_key_event( )
     {
         return keyboard_.empty();
     }
-    bool window::is_key_pressed( std::int32_t key_code ) const noexcept
+    bool window::is_key_pressed( keyboard::key key_code ) const noexcept
     {
         return keyboard_.is_key_pressed( key_code );
     }
@@ -460,7 +464,8 @@ namespace TWE
     {
         return keyboard_.pop_key_event();
     }
-///////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
 
 
 

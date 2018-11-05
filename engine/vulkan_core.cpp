@@ -91,13 +91,20 @@ namespace TWE
     {
         vkDestroySurfaceKHR( instance_, surface_, nullptr );
 
+        console::log( "Vulkan Surface destroyed.\n" );
 
         if constexpr( enable_debug_layers )
         {
             vkDestroyDebugReportCallbackEXT( instance_, debug_report_, nullptr );
+
+            console::log( "Vulkan Debug Report Callback destroyed.\n" );
         }
 
         vkDestroyInstance( instance_, nullptr );
+
+        console::log( "Vulkan Instance destroyed.\n" );
+
+        console::flush();
     }
 
     vulkan_core& vulkan_core::operator=( vulkan_core &&rhs ) noexcept
