@@ -6,6 +6,7 @@
 #define VULKAN_PROJECT_CONSOLE_H
 
 #include <string>
+#include <iostream>
 
 namespace TWE
 {
@@ -16,11 +17,23 @@ namespace TWE
         {
             error,
             warning,
-            status
+            status,
+            normal
         };
 
     public:
+        template<typename T>
+        static T input( )
+        {
+            T input;
+
+            std::cin >> input;
+
+            return input;
+        }
+
         static void log( const std::string& str, const message_priority priority = message_priority::status );
+        static void new_line( );
 
         static void flush( );
 
