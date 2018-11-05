@@ -18,7 +18,6 @@
 #include <string>
 
 #include <vulkan/vulkan.h>
-#include <glfw/glfw3.h>
 
 #include "../engine/window.h"
 #include "../engine/console.h"
