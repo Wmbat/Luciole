@@ -12,8 +12,8 @@
 #  GNU General Public License for more details.
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.10 )
-project( vulkan_project )
+cmake_minimum_required( VERSION 3.9 )
+project( TWE VERSION 0.0.1 )
 
 set( CMAKE_CXX_STANDARD 17 )
 
@@ -21,14 +21,14 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
 set( CMAKE_CXX_FLAGS -pthread )
 
-include_directories( external )
-include_directories( external/glm )
+include_directories( external/include )
+include_directories( external/include/glm)
 
 find_package( Vulkan REQUIRED )
 
 if( UNIX )
     if( NOT Vulkan_FOUND )
-        find_library( Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${CMAKE_CURRENT_SOURCE_DIR}/libs/vulkan" REQUIRED )
+        find_library( Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/vulkan" REQUIRED )
 
         if( Vulkan_LIBRARY )
             set( Vulkan_FOUND ON )
@@ -49,9 +49,6 @@ if( UNIX )
 endif( )
 
 
-
-
-
 if( NOT Vulkan_FOUND )
     message( FATAL_ERROR "Could not find Vulkan library!" )
 else( )
@@ -68,18 +65,21 @@ else( )
     message( STATUS ${OPENAL_LIBRARY} )
 endif()
 
-add_executable( vulkan_project
-        test/game.cpp
-        test/game.h
-        test/main.cpp
+add_library( TWE SHARED
+        source/io/keyboard.cpp
+        source/io/mouse.cpp
+        source/console.cpp
+        source/renderer.cpp
+        source/vulkan_core.cpp
+        source/window.cpp)
 
-        engine/renderer.cpp
-        engine/renderer.h
-        engine/window.cpp
-        engine/window.h
-        engine/utilities/file_io.h engine/io/keyboard.h engine/io/keyboard.cpp engine/io/mouse.h engine/io/mouse.cpp engine/vulkan_core.h engine/vulkan_core.cpp engine/vulkan_utils.h engine/console.h engine/console.cpp)
+set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
+set_target_properties( TWE PROPERTIES SOVERSION 1 )
+set_target_properties( TWE PROPERTIES PUBLIC_HEADER TWE/TWE.h)
 
-target_link_libraries( vulkan_project
+target_include_directories( TWE PRIVATE TWE )
+
+target_link_libraries( TWE
         ${Vulkan_LIBRARY}
         ${XCB_LIBRARIES}
         ${WAYLAND_CLIENT_LIBRARIES} )
