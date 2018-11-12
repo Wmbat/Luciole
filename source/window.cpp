@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "window.h"
-#include "console.h"
+#include "log.h"
 
 namespace TWE
 {
@@ -73,12 +73,14 @@ namespace TWE
             title_( title ),
             open_( true )
     {
+
+
 #if defined( _WIN32 )
 
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-        console::log( "Using XCB for Window creation.\n" );
+        log::get_core_logger().trace( "Using XCB for Window creation." );
 
         /** Connect to X11 window system. */
         p_xcb_connection_ = std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>>(
@@ -87,15 +89,13 @@ namespace TWE
 
         if( xcb_connection_has_error( p_xcb_connection_.get() ) )
         {
-            console::log(
-                    "Failed to connect to the X server.\nDisconnecting from X Server.\nExiting Application.",
-                    console::message_priority::error );
+            log::get_core_logger().error( "Failed to connect to the X server.\nDisconnecting from X Server.\nExiting Application." );
 
             p_xcb_connection_.reset( );
         }
         else
         {
-            console::log( "Connection to X Server established.\n" );
+            log::get_core_logger().trace( "Connection to X server established." );
         }
 
         /** Get Default monitor */
@@ -110,7 +110,7 @@ namespace TWE
         p_xcb_screen_ = iter.data;
 
         xcb_window_ = xcb_generate_id( p_xcb_connection_.get() );
-        console::log( "XCB window ID generated: " + std::to_string( xcb_window_ ) + '\n' );
+        //console::log( "XCB window ID generated: " + std::to_string( xcb_window_ ) + '\n' );
 
 
         uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
@@ -125,7 +125,7 @@ namespace TWE
 
         if( settings_.fullscreen_ )
         {
-            console::log( "XCB window fullscreen mode.\n" );
+            //console::log( "XCB window fullscreen mode.\n" );
 
             settings_.width_ = p_xcb_screen_->width_in_pixels;
             settings_.height_ = p_xcb_screen_->height_in_pixels;
@@ -142,7 +142,7 @@ namespace TWE
                 p_xcb_screen_->root_visual,                       /* Visual                 */
                 value_mask, value_list );                         /* Masks                  */
 
-        console::log( "XCB window created.\n" );
+        //console::log( "XCB window created.\n" );
 
 
         auto reply = intern_atom_helper( p_xcb_connection_.get(), true, "WM_PROTOCOLS" );
@@ -178,7 +178,7 @@ namespace TWE
         xcb_map_window( p_xcb_connection_.get(), xcb_window_ );
         xcb_flush( p_xcb_connection_.get() );
 
-        console::flush();
+        //console::flush();
 #endif
     }
     window::window( window&& rhs ) noexcept
@@ -189,10 +189,8 @@ namespace TWE
     {
         xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
 
-        console::log( "XCB window destroyed.\n" );
-
-        console::log( "Disconnected from X server.\n" );
-        console::flush( );
+        log::get_core_logger().trace( "XCB window destroyed." );
+        log::get_core_logger().trace( "Disconnected from X server." );
     }
 
     void window::poll_events( )

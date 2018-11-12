@@ -74,6 +74,7 @@ namespace TWE
         //window_width_( wnd.get_width() ),
         //window_height_( wnd.get_height() )
     {
+        /*
         uint32_t supported_api_version;
         if( vkEnumerateInstanceVersion( &supported_api_version ) != VK_SUCCESS )
         {
@@ -99,7 +100,7 @@ namespace TWE
             throw std::runtime_error{ "Validation Layers requested, but not supported!" };
         }
 
-
+    */
 
 
 
@@ -295,9 +296,11 @@ namespace TWE
         logical_device_.destroy( );
 
         instance_.destroySurfaceKHR( surface_ );
+        /*
 #ifndef NDEBUG
         instance_.destroyDebugReportCallbackEXT( debug_report_callback_ );
 #endif
+         */
         instance_.destroy( );
     }
 
@@ -695,12 +698,12 @@ namespace TWE
 
             return vk::createInstance( create_info );
         }
-
     }
 
 #ifndef NDEBUG
     const vk::DebugReportCallbackEXT renderer::create_debug_report_callback( const vk::Instance& instance ) const noexcept
     {
+        /*
         const vk::DebugReportCallbackCreateInfoEXT create_info
         {
             vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eError,
@@ -708,6 +711,7 @@ namespace TWE
         };
 
         return instance.createDebugReportCallbackEXT( create_info );
+         */
     }
 #endif
     const vk::SurfaceKHR renderer::create_surface( const window& wnd, const vk::Instance& instance ) const noexcept

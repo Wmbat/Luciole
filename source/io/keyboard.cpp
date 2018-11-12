@@ -19,9 +19,6 @@
 
 #include "input_devices/keyboard.h"
 
-#include "console.h"
-
-
 namespace TWE
 {
     bool keyboard::is_key_pressed( key key_code ) const noexcept

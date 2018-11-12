@@ -23,6 +23,7 @@ set( CMAKE_CXX_FLAGS -pthread )
 
 include_directories( external/include )
 include_directories( external/include/glm )
+include_directories( external/include/spdlog/include )
 
 find_package( Vulkan REQUIRED )
 
@@ -68,16 +69,15 @@ endif()
 add_library( engine SHARED
         source/io/keyboard.cpp
         source/io/mouse.cpp
-        source/console.cpp
         source/renderer.cpp
         source/vulkan_core.cpp
-        source/window.cpp)
+        source/window.cpp
+        source/TWE.cpp source/log.cpp)
 
 set_target_properties( engine PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( engine PROPERTIES SOVERSION 1 )
-#set_target_properties( engine PROPERTIES PUBLIC_HEADER engine )
 
-target_include_directories( engine PUBLIC TWE)
+target_include_directories( engine PUBLIC TWE )
 
 target_link_libraries( engine
         ${Vulkan_LIBRARY}

@@ -14,25 +14,27 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_TWE_H
-#define TWE_TWE_H
+#ifndef ENGINE_LOGGER_H
+#define ENGINE_LOGGER_H
 
-#include "window.h"
-#include "vulkan_utils.h"
-#include "vulkan_core.h"
-#include "renderer.h"
-#include "log.h"
-#include "utilities/file_io.h"
-#include "input_devices/mouse.h"
-#include "input_devices/keyboard.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace TWE
 {
-    inline static void init_engine( )
+    class log
     {
-        log::init();
-    }
+    public:
+        static void init( );
+
+        inline static spdlog::logger& get_core_logger( )
+        {
+            return *core_logger_;
+        }
+
+    private:
+        static std::shared_ptr<spdlog::logger> core_logger_;
+    };
 }
 
-
-#endif //TWE_TWE_H
+#endif //ENGINE_LOGGER_H
