@@ -20,7 +20,7 @@
 #include <set>
 #include <future>
 
-#include "console.h"
+#include "log.h"
 #include "vulkan_core.h"
 
 namespace TWE
@@ -35,6 +35,35 @@ namespace TWE
         std::cerr << "validation layer: " << msg << std::endl;
 
         return VK_FALSE;
+    }
+    VKAPI_ATTR VkResult VKAPI_CALL
+    create_debug_callback( VkInstance instance,
+                                     const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
+                                     const VkAllocationCallbacks* pAllocator,
+                                     VkDebugReportCallbackEXT* pCallback )
+    {
+        static auto func = ( PFN_vkCreateDebugReportCallbackEXT ) vkGetInstanceProcAddr ( instance, "vkCreateDebugReportCallbackEXT" );
+
+        if ( func != nullptr )
+        {
+            return func ( instance, pCreateInfo, pAllocator, pCallback );
+        }
+        else
+        {
+            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+    }
+    VKAPI_ATTR void VKAPI_CALL
+    destroy_debug_callback( VkInstance instance,
+                                      VkDebugReportCallbackEXT callback,
+                                      const VkAllocationCallbacks* pAllocator )
+    {
+        static auto func = ( PFN_vkDestroyDebugReportCallbackEXT ) vkGetInstanceProcAddr ( instance, "vkDestroyDebugReportCallbackEXT" );
+
+        if ( func != nullptr )
+        {
+            func ( instance, callback, pAllocator );
+        }
     }
 
     vulkan_core::vulkan_core( const window& wnd, const std::string& app_name, uint32_t app_version )
@@ -73,7 +102,7 @@ namespace TWE
                 create_instance( instance_extensions, debug_layers, app_name, app_version ),
                 "Failed to create Instance!" );
 
-        console::log( "Vulkan Instance created.\n" );
+        //console::log( "Vulkan Instance created.\n" );
 
 
         if constexpr ( enable_debug_layers )
@@ -82,21 +111,21 @@ namespace TWE
                     create_debug_report( instance_ ),
                     "Failed to create Debug Report Callback!" );
 
-            console::log( "Vulkan Debug Report Callback created.\n" );
+            //console::log( "Vulkan Debug Report Callback created.\n" );
         }
 
         surface_ = check_vk_return_type_result(
                 create_surface( wnd, instance_ ),
                 "Failed to create Surface!" );
 
-        console::log( "Vulkan Surface created.\n" );
+        //console::log( "Vulkan Surface created.\n" );
 
 
         physical_device_ = check_vk_return_type_result(
                 pick_physical_device( surface_, device_extensions ),
                 "Failed to find a suitable GPU!" );
 
-        console::flush();
+        //console::flush();
     }
     vulkan_core::vulkan_core( vulkan_core&& rhs ) noexcept
     {
@@ -106,20 +135,20 @@ namespace TWE
     {
         vkDestroySurfaceKHR( instance_, surface_, nullptr );
 
-        console::log( "Vulkan Surface destroyed.\n" );
+        //console::log( "Vulkan Surface destroyed.\n" );
 
         if constexpr( enable_debug_layers )
         {
-            vkDestroyDebugReportCallbackEXT( instance_, debug_report_, nullptr );
+            destroy_debug_callback( instance_, debug_report_, nullptr );
 
-            console::log( "Vulkan Debug Report Callback destroyed.\n" );
+            //console::log( "Vulkan Debug Report Callback destroyed.\n" );
         }
 
         vkDestroyInstance( instance_, nullptr );
 
-        console::log( "Vulkan Instance destroyed.\n" );
+        //console::log( "Vulkan Instance destroyed.\n" );
 
-        console::flush();
+        //console::flush();
     }
 
     vulkan_core& vulkan_core::operator=( vulkan_core &&rhs ) noexcept
@@ -223,7 +252,7 @@ namespace TWE
             .pUserData = nullptr
         };
 
-        return { vkCreateDebugReportCallbackEXT( instance, &create_info, nullptr, &debug_report ), debug_report };
+        return { create_debug_callback( instance, &create_info, nullptr, &debug_report ), debug_report };
     }
 
     const vk_return_type<VkSurfaceKHR> vulkan_core::create_surface( const window& wnd, const VkInstance& instance ) const noexcept

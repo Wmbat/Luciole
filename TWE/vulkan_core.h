@@ -80,7 +80,6 @@ namespace TWE
         const queue_family_indices find_queue_family_indices( const VkSurfaceKHR& surface,
                                                               const VkPhysicalDevice& physical_device ) const noexcept;
 
-
     private:
         VkInstance instance_ = VK_NULL_HANDLE;
         VkDebugReportCallbackEXT  debug_report_ = VK_NULL_HANDLE;
