@@ -22,7 +22,6 @@
 #include <iostream>
 #include <functional>
 
-#include <vulkan/vulkan.h>
 
 #if defined( _WIN32 )
 #include <window.h>
@@ -31,6 +30,8 @@
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
 #endif
+
+#include <vulkan/vulkan.h>
 
 #include "vulkan_utils.h"
 

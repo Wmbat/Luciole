@@ -17,9 +17,9 @@
 #include <iostream>
 #include <assert.h>
 
-#include "../../TWE/input_devices/keyboard.h"
+#include "input_devices/keyboard.h"
 
-#include "../../TWE/console.h"
+#include "console.h"
 
 
 namespace TWE

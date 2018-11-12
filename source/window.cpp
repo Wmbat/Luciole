@@ -16,8 +16,8 @@
 
 #include <iostream>
 
-#include "../TWE/window.h"
-#include "../TWE/console.h"
+#include "window.h"
+#include "console.h"
 
 namespace TWE
 {
