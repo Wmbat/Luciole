@@ -4,20 +4,20 @@
 
 find_package( PkgConfig )
 
-if(NOT XCB_FIND_COMPONENTS)
-    set(XCB_FIND_COMPONENTS xcb)
-endif()
+if( NOT XCB_FIND_COMPONENTS )
+    set( XCB_FIND_COMPONENTS xcb )
+endif( )
 
-include(FindPackageHandleStandardArgs)
-set(XCB_FOUND true)
-set(XCB_INCLUDE_DIRS "")
-set(XCB_LIBRARIES "")
-foreach(comp ${XCB_FIND_COMPONENTS})
+include( FindPackageHandleStandardArgs )
+set( XCB_FOUND true )
+set( XCB_INCLUDE_DIRS "" )
+set( XCB_LIBRARIES "" )
+foreach( comp ${XCB_FIND_COMPONENTS} )
     # component name
-    string(TOUPPER ${comp} compname)
-    string(REPLACE "-" "_" compname ${compname})
+    string( TOUPPER ${comp} compname )
+    string( REPLACE "-" "_" compname ${compname} )
     # header name
-    string(REPLACE "xcb-" "" headername xcb/${comp}.h)
+    string( REPLACE "xcb-" "" headername xcb/${comp}.h )
     # library name
     set(libname ${comp})
 

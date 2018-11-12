@@ -18,7 +18,7 @@
 #include <glm/fwd.hpp>
 #include <iostream>
 
-#include "../../TWE/input_devices/mouse.h"
+#include "input_devices/mouse.h"
 
 namespace TWE
 {

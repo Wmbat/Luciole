@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "../TWE/console.h"
+#include "console.h"
 
 namespace TWE
 {

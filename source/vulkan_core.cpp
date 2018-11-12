@@ -20,8 +20,8 @@
 #include <set>
 #include <future>
 
-#include "../TWE/console.h"
-#include "../TWE/vulkan_core.h"
+#include "console.h"
+#include "vulkan_core.h"
 
 namespace TWE
 {

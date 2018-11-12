@@ -13,7 +13,7 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.9 )
-project( TWE VERSION 0.0.1 )
+project( engine VERSION 0.0.1 )
 
 set( CMAKE_CXX_STANDARD 17 )
 
@@ -22,7 +22,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_CXX_FLAGS -pthread )
 
 include_directories( external/include )
-include_directories( external/include/glm)
+include_directories( external/include/glm )
 
 find_package( Vulkan REQUIRED )
 
@@ -65,7 +65,7 @@ else( )
     message( STATUS ${OPENAL_LIBRARY} )
 endif()
 
-add_library( TWE SHARED
+add_library( engine SHARED
         source/io/keyboard.cpp
         source/io/mouse.cpp
         source/console.cpp
@@ -73,13 +73,13 @@ add_library( TWE SHARED
         source/vulkan_core.cpp
         source/window.cpp)
 
-set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
-set_target_properties( TWE PROPERTIES SOVERSION 1 )
-set_target_properties( TWE PROPERTIES PUBLIC_HEADER TWE/TWE.h)
+set_target_properties( engine PROPERTIES VERSION ${PROJECT_VERSION} )
+set_target_properties( engine PROPERTIES SOVERSION 1 )
+#set_target_properties( engine PROPERTIES PUBLIC_HEADER engine )
 
-target_include_directories( TWE PRIVATE TWE )
+target_include_directories( engine PUBLIC TWE)
 
-target_link_libraries( TWE
+target_link_libraries( engine
         ${Vulkan_LIBRARY}
         ${XCB_LIBRARIES}
         ${WAYLAND_CLIENT_LIBRARIES} )

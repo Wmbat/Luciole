@@ -19,7 +19,7 @@
 #include <map>
 
 #include "utilities/file_io.h"
-#include "../TWE/renderer.h"
+#include "renderer.h"
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
