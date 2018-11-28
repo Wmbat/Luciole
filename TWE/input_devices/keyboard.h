@@ -167,15 +167,12 @@ namespace TWE
 
 
     private:
-        static constexpr std::uint8_t MAX_BUFFER_SIZE_ = 8;
+        static constexpr std::uint32_t MAX_BUFFER_SIZE_ = 8;
 
         std::bitset<static_cast<size_t>( key::last )> key_states_;
 
         key_event key_buffer_[MAX_BUFFER_SIZE_];
 
-        uint32_t keyboard_layout_id_ = 0;
-
-        size_t num_buffer_ = 0;
         size_t head_ = 0;
         size_t tail_ = 0;
     };

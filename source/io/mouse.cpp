@@ -24,14 +24,11 @@ namespace TWE
 {
     bool mouse::is_button_empty( ) const noexcept
     {
-        return num_elem_ == 0;
+        return head_ == tail_;
     }
 
     bool mouse::is_button_pressed( button button ) const noexcept
     {
-        assert( button <= button::last );
-        assert( button >= button::invalid );
-
         return button_state_[static_cast<size_t>( button )];
     }
 
@@ -51,7 +48,6 @@ namespace TWE
         auto ret = buffer_[head_];
 
         buffer_[head_] = button_event{ };
-        --num_elem_;
 
         head_ = ( head_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
 
@@ -60,7 +56,7 @@ namespace TWE
 
     void mouse::emplace_button_event( const mouse::button_event &event ) noexcept
     {
-        if( num_elem_>= MAX_BUTTON_BUFFER_SIZE_ )
+        if( ( tail_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_ == head_ )
         {
             pop_button_event();
         }
@@ -76,7 +72,6 @@ namespace TWE
             button_state_[static_cast<size_t>( buffer_[tail_].button_ )] = false;
         }
 
-        ++num_elem_;
         tail_ = ( tail_ + 1 ) % MAX_BUTTON_BUFFER_SIZE_;
     }
 }

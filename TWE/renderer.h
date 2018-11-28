@@ -25,11 +25,13 @@ namespace TWE
 {
     class renderer
     {
+    public:
+        struct graphics_pipeline_data;
+    
     private:
-        /// Helper structs ///
-        struct queue_family_indices;
-        struct swapchain_support_details;
-        //////////////////////
+        struct swapchain_creation;
+        struct queue_family_indices_type;
+        struct swapchain_support_details_type;
 
     public:
         renderer( const window& window, const std::string& app_name, uint32_t app_version );
@@ -39,146 +41,147 @@ namespace TWE
 
         renderer& operator=( const renderer& renderer ) noexcept = delete;
         renderer& operator=( renderer&& renderer ) noexcept;
+        
+        void setup_graphics_pipeline( const graphics_pipeline_data& data );
 
-        void setup_graphics_pipeline( const std::string& vert_shader_filepath, const std::string& frag_shader_filepath );
+        void draw_frame( );
+        
+        void record_draw_calls( );
+    
+    private:
+        void set_up( );
+        
+        const vk_return_type<VkInstance> create_instance( const std::string& app_name,
+            uint32_t app_version ) const noexcept;
+    
+        const vk_return_type<VkDebugReportCallbackEXT> create_debug_report( ) const noexcept;
+    
+        const vk_return_type<VkSurfaceKHR> create_surface( const window& wnd ) const noexcept;
+    
+        const VkPhysicalDevice pick_physical_device( ) const noexcept;
+    
+        const vk_return_type<VkDevice> create_device( ) const noexcept;
+        
+        const vk_return_type<VkSemaphore> create_semaphore( ) const noexcept;
+        
+        const vk_return_type<VkFence> create_fence( ) const noexcept;
+        
+        const vk_return_type<VkCommandPool> create_command_pool( uint32_t queue_family ) const noexcept;
+        
+        const vk_return_type<std::vector<VkCommandBuffer>> create_command_buffers( uint32_t count ) const noexcept;
+        
+        const vk_return_type<VkSwapchainKHR> create_swapchain( const queue_family_indices_type& queue_family_indices_,
+            const VkPresentModeKHR& present_mode_, const VkSurfaceCapabilitiesKHR& capabilities_,
+            uint32_t image_count_ ) const noexcept;
+        
+        const vk_return_type<VkImageView> create_image_view( const VkImage& image ) const noexcept;
+        
+        const vk_return_type<VkFramebuffer> create_framebuffer( const VkImageView& image_view ) const noexcept;
+        
+        const vk_return_type<VkRenderPass> create_render_pass( ) const noexcept;
+        
+        const vk_return_type<VkShaderModule> create_shader_module( const std::string& filepath ) const noexcept;
+    
+        const vk_return_type<VkPipelineLayout> create_pipeline_layout( ) const noexcept;
+    
+        const vk_return_type<VkPipeline> create_graphics_pipeline(std::uint32_t stage_count,
+            const VkPipelineShaderStageCreateInfo* p_stages ) const noexcept;
+    
+        
+        
+        bool check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept;
+    
+        bool check_debug_layer_support( const std::vector<const char*>& debug_layers ) const noexcept;
+    
+        bool is_physical_device_suitable( const VkSurfaceKHR& surface, const VkPhysicalDevice& physical_device,
+            const std::vector<const char*>& device_extensions ) const noexcept;
+    
+        bool check_physical_device_extension_support( const VkPhysicalDevice& physical_device,
+            const std::vector<const char*>& device_extensions ) const noexcept;
+    
+        bool is_swapchain_adequate( const VkSurfaceKHR& surface,
+            const VkPhysicalDevice& physical_device ) const noexcept;
+    
+        const queue_family_indices_type find_queue_family_indices( const VkSurfaceKHR& surface,
+            const VkPhysicalDevice& physical_device ) const noexcept;
 
-        void handle_resize( const std::string& vert_shader_filepath,
-                            const std::string& frag_shader_filepath,
-                            std::uint32_t width, std::uint32_t height );
+        const swapchain_support_details_type query_swapchain_support( const VkSurfaceKHR& surface,
+                const VkPhysicalDevice& physical_device ) const noexcept;
 
-        void record_command_buffers( ) const noexcept;
-        void draw_frame( const std::string& vert_shader_filepath,
-                         const std::string& frag_shader_filepath );
+        const VkSurfaceFormatKHR choose_swapchain_surface_format(
+                const std::vector<VkSurfaceFormatKHR>& available_formats ) const noexcept;
+
+        const VkPresentModeKHR choose_swapchain_present_mode(
+                const std::vector<VkPresentModeKHR>& available_present_modes ) const noexcept;
+
+        const VkExtent2D choose_swapchain_extent( const VkSurfaceCapabilitiesKHR& capabilities ) const noexcept;
 
     private:
-        void recreate_swapchain( const std::string& vert_shader_filepath,
-                                 const std::string& frag_shader_filepath );
-        void cleanup_swapchain( ) noexcept;
-
-    private:
-        const vk::Instance create_instance( const std::vector<const char*>& extensions,
-                                            const std::vector<const char*>& validation_layers,
-                                            const std::string& app_name, uint32_t app_version ) const noexcept;
-#ifndef NDEBUG
-        const vk::DebugReportCallbackEXT create_debug_report_callback( const vk::Instance& instance ) const noexcept;
-#endif
-        const vk::SurfaceKHR create_surface( const window& wnd, const vk::Instance& instance ) const noexcept;
-        const vk::PhysicalDevice pick_physical_device( const std::vector<const char*>& device_extensions,
-                                                       const vk::Instance& instance ) const noexcept;
-        const vk::Device create_logical_device( const std::vector<const char*>& validation_layers,
-                                                const std::vector<const char*>& device_extensions,
-                                                const vk::PhysicalDevice& physical_device ) const noexcept;
-        const vk::Semaphore create_semaphore( const vk::Device& logical_device ) const noexcept;
-        const vk::Fence create_fence( const vk::Device& logical_device ) const noexcept;
-        const vk::SwapchainKHR create_swapchain( const vk::SurfaceKHR& surface,
-                                                 const vk::Device& logical_device,
-                                                 const vk::PhysicalDevice& physical_device,
-                                                 const swapchain_support_details& swapchain_support_details,
-                                                 const vk::SurfaceFormatKHR& surface_format, const vk::Extent2D& extent_2d,
-                                                 const vk::PresentModeKHR& present_mode,
-                                                 uint32_t image_count ) const noexcept;
-        const std::vector<vk::ImageView> create_swapchain_image_views( const vk::Device& logical_device,
-                                                                       const vk::Format& swapchain_image_format,
-                                                                       const std::vector<vk::Image>& swapchain_images,
-                                                                       uint32_t image_view_count ) const noexcept;
-        const vk::ShaderModule create_shader_module( const vk::Device& logical_device,
-                                                     const std::string& shader_code ) const noexcept;
-        const vk::RenderPass create_render_pass( const vk::Device& logical_device,
-                                                 const vk::Format& swapchain_image_format ) const noexcept;
-        const vk::CommandPool create_command_pool( const vk::Device& logical_device,
-                                                   const queue_family_indices& queue_family_indices ) const noexcept;
-        const std::vector<vk::CommandBuffer> allocate_command_buffers( const vk::Device& logical_device,
-                                                                       const vk::CommandPool& command_pool,
-                                                                       uint32_t buffer_count ) const noexcept;
-        const std::vector<vk::Framebuffer> create_swapchain_framebuffers( const vk::Device& logical_device,
-                                                                          const vk::RenderPass& render_pass,
-                                                                          const vk::Extent2D& swapchain_image_extent_2d,
-                                                                          const std::vector<vk::ImageView>& swapchain_image_views,
-                                                                          uint32_t framebuffer_count ) const noexcept;
-        const vk::PipelineLayout create_graphics_pipeline_layout( const vk::Device& logical_device ) const noexcept;
-        const vk::Pipeline create_graphics_pipeline( const vk::Device& logical_device,
-                                                     const vk::Extent2D& swapchain_image_extent_2d,
-                                                     const vk::PipelineLayout& graphics_pipeline_layout,
-                                                     const vk::RenderPass& render_pass,
-                                                     const vk::ShaderModule& vert_shader_handle,
-                                                     const vk::ShaderModule& frag_shader_handle ) const noexcept;
-
-
-        /// Helper Funcs ///
-        bool check_extensions_support( const std::vector<const char*>& extensions ) const noexcept;
-        bool check_physical_device_extension_support( const vk::PhysicalDevice& physical_device,
-                                                      const std::vector<const char*>& device_extensions ) const noexcept;
-        bool check_validation_layer_support( const std::vector<const char*>& validation_layers ) const noexcept;
-
-        int rate_physical_device( const vk::PhysicalDevice& physical_device ) const noexcept;
-
-        bool is_physical_device_suitable( const vk::PhysicalDevice& physical_device,
-                                          const std::vector<const char*>& device_extensions ) const noexcept;
-        bool is_swapchain_adequate( const vk::PhysicalDevice& physical_device ) const noexcept;
-
-        queue_family_indices find_queue_families( const vk::PhysicalDevice& physical_device ) const noexcept;
-
-        vk::SurfaceFormatKHR choose_swapchain_surface_format( const std::vector<vk::SurfaceFormatKHR>& available_formats ) const noexcept;
-        vk::PresentModeKHR choose_swapchain_present_mode( const std::vector<vk::PresentModeKHR>& available_formats ) const noexcept;
-        vk::Extent2D choose_swapchain_extent_2d( const vk::SurfaceCapabilitiesKHR& capabilities ) const noexcept;
-        ////////////////////
-
-    private:
-        vk::Instance instance_;
-#ifndef NDEBUG
-        vk::DebugReportCallbackEXT debug_report_callback_;
-#endif
-        vk::SurfaceKHR surface_;
-        vk::PhysicalDevice physical_device_;
-        vk::Device logical_device_;
-
-        vk::Queue graphics_queue_;
-        vk::Queue present_queue_;
-
-        std::vector<vk::Semaphore> image_available_semaphores_;
-        std::vector<vk::Semaphore> render_finished_semaphores_;
-        std::vector<vk::Fence> frame_in_flight_fences_;
-
-        vk::SwapchainKHR swapchain_;
-        vk::Format swapchain_image_format_;
-        vk::Extent2D swapchain_image_extent_2d_;
-        std::vector<vk::Image> swapchain_images_;
-        std::vector<vk::ImageView> swapchain_image_views_;
-        std::vector<vk::Framebuffer> swapchain_framebuffers_;
-
-        vk::RenderPass render_pass_;
-
-        vk::CommandPool command_pool_;
-        std::vector<vk::CommandBuffer> command_buffers_;
-
-        vk::PipelineLayout graphics_pipeline_layout_;
-        vk::Pipeline graphics_pipeline_;
-
         uint32_t window_width_;
         uint32_t window_height_;
-
+        
         size_t current_frame_ = 0;
-
-    private:
-        /// Helper structs ///
-        struct queue_family_indices
+        
+        struct vk_context_t
         {
-            int32_t graphics_family_ = -1;
-            int32_t present_family_ = -1;
-            int32_t compute_family_ = -1;
-
+            VkInstance instance_ = VK_NULL_HANDLE;
+            VkDebugReportCallbackEXT  debug_report_ = VK_NULL_HANDLE;
+            VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+            VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
+            VkDevice device_ = VK_NULL_HANDLE;
+            VkQueue graphics_queue_ = VK_NULL_HANDLE;
+            VkQueue present_queue_ = VK_NULL_HANDLE;
+            
+            std::vector<VkSemaphore> image_available_semaphores_;
+            std::vector<VkSemaphore> render_finished_semaphores_;
+            std::vector<VkFence> in_flight_fences_;
+            
+            VkCommandPool command_pool_ = VK_NULL_HANDLE;
+            std::vector<VkCommandBuffer> command_buffers_ = { };
+            
+            VkSurfaceFormatKHR surface_format_ = { };
+            
+            VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
+            VkExtent2D swapchain_extent_ = { };
+            std::vector<VkImage> swapchain_image_ = { };
+            std::vector<VkImageView> swapchain_image_views_ = { };
+            std::vector<VkFramebuffer> swapchain_framebuffers_ = { };
+            
+            VkRenderPass render_pass_ = VK_NULL_HANDLE;
+    
+            VkPipelineLayout graphics_pipeline_layout_ = VK_NULL_HANDLE;
+            VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
+            
+            std::vector<const char*> instance_extensions_;
+            std::vector<const char*> device_extensions_;
+            std::vector<const char*> validation_layers_;
+        } vk_context_;
+        
+    private:
+        struct queue_family_indices_type
+        {
+            std::optional<uint32_t> graphic_family_;
+            std::optional<uint32_t> compute_family_;
+            std::optional<uint32_t> present_family_;
+            
             bool is_complete( )
             {
-                return ( graphics_family_ >= 0 ) && ( compute_family_ >= 0 ) && ( present_family_ >= 0 );
+                return graphic_family_.has_value() && compute_family_.has_value() && present_family_.has_value();
             }
         };
-        struct swapchain_support_details
+        struct swapchain_support_details_type
         {
-            vk::SurfaceCapabilitiesKHR capabilities_;
-            std::vector<vk::SurfaceFormatKHR> formats_;
-            std::vector<vk::PresentModeKHR> present_modes_;
+            VkSurfaceCapabilitiesKHR capabilities_;
+            std::vector<VkSurfaceFormatKHR> formats_;
+            std::vector<VkPresentModeKHR> present_modes_;
         };
-        //////////////////////
+    
+    public:
+        struct graphics_pipeline_data
+        {
+            const std::string vertex_shader_filepath;
+            const std::string fragment_shader_filepath;
+        };
     };
 }
 

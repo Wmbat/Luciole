@@ -253,6 +253,17 @@ namespace TWE
          */
         window& operator=( window&& rhs ) noexcept;
 
+        /**
+         * @brief Get the width of the window.
+         * @return The width of the window.
+         */
+        uint32_t get_width( ) const noexcept;
+        /**
+         * @brief Get the height of the window.
+         * @return The height of the window.
+         */
+        uint32_t get_height( ) const noexcept;
+
     private:
         /**
          *  @brief Title of the window.

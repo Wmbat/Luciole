@@ -78,9 +78,9 @@ namespace TWE
 #if defined( _WIN32 )
 
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-
+        core_info( "Using Wayland for window creation." );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-        log::get_core_logger().trace( "Using XCB for Window creation." );
+        core_info( "Using XCB for window creation." );
 
         /** Connect to X11 window system. */
         p_xcb_connection_ = std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>>(
@@ -89,13 +89,13 @@ namespace TWE
 
         if( xcb_connection_has_error( p_xcb_connection_.get() ) )
         {
-            log::get_core_logger().error( "Failed to connect to the X server.\nDisconnecting from X Server.\nExiting Application." );
+            core_error( "Failed to connecte to the X server.\nDisconnecting from X server.\nExiting Application." );
 
             p_xcb_connection_.reset( );
         }
         else
         {
-            log::get_core_logger().trace( "Connection to X server established." );
+            core_info( "XCB -> Connection to X server established." );
         }
 
         /** Get Default monitor */
@@ -110,8 +110,7 @@ namespace TWE
         p_xcb_screen_ = iter.data;
 
         xcb_window_ = xcb_generate_id( p_xcb_connection_.get() );
-        //console::log( "XCB window ID generated: " + std::to_string( xcb_window_ ) + '\n' );
-
+        core_info( "XCB -> window ID generated: " + std::to_string( xcb_window_ ) + '.' );
 
         uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
         uint32_t value_list[32];
@@ -125,7 +124,7 @@ namespace TWE
 
         if( settings_.fullscreen_ )
         {
-            //console::log( "XCB window fullscreen mode.\n" );
+            core_info( "XCB -> window fullscreen mode." );
 
             settings_.width_ = p_xcb_screen_->width_in_pixels;
             settings_.height_ = p_xcb_screen_->height_in_pixels;
@@ -142,8 +141,7 @@ namespace TWE
                 p_xcb_screen_->root_visual,                       /* Visual                 */
                 value_mask, value_list );                         /* Masks                  */
 
-        //console::log( "XCB window created.\n" );
-
+        core_info( "XCB -> window created." );
 
         auto reply = intern_atom_helper( p_xcb_connection_.get(), true, "WM_PROTOCOLS" );
 
@@ -177,8 +175,6 @@ namespace TWE
 
         xcb_map_window( p_xcb_connection_.get(), xcb_window_ );
         xcb_flush( p_xcb_connection_.get() );
-
-        //console::flush();
 #endif
     }
     window::window( window&& rhs ) noexcept
@@ -189,8 +185,8 @@ namespace TWE
     {
         xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
 
-        log::get_core_logger().trace( "XCB window destroyed." );
-        log::get_core_logger().trace( "Disconnected from X server." );
+        core_info( "XCB -> window destroyed." );
+        core_info( "XCB -> Disconnected from X server." );
     }
 
     void window::poll_events( )
@@ -204,136 +200,133 @@ namespace TWE
         xcb_generic_event_t *event;
         while( ( event = xcb_poll_for_event( p_xcb_connection_.get() ) ) )
         {
-            switch( event->response_type & 0x7f )
+            switch ( event->response_type & 0x7f )
             {
                 case XCB_CLIENT_MESSAGE:
                 {
-                    const auto* message_event = reinterpret_cast<const xcb_client_message_event_t*>( event );
-
+                    const auto *message_event = reinterpret_cast<const xcb_client_message_event_t *>( event );
+            
                     if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
                     {
                         open_ = false;
                     }
                 }
                 break;
-                case XCB_DESTROY_NOTIFY:
+            case XCB_DESTROY_NOTIFY:
                 {
                     open_ = false;
                 }
                 break;
-
-                case XCB_CONFIGURE_NOTIFY:
+            case XCB_CONFIGURE_NOTIFY:
                 {
-                    const auto* motion_event = reinterpret_cast<const xcb_configure_notify_event_t*>( event );
-
+                    const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( event );
+            
                     const event_handler::event window_event
-                    {
-                        .type_ = event_handler::type::window_resize,
-                        .x_ = static_cast<uint32_t>( motion_event->width ),
-                        .y_ = static_cast<uint32_t>( motion_event->height )
-                    };
-
+                        {
+                            .type_ = event_handler::type::window_resize,
+                            .x_ = static_cast<uint32_t>( motion_event->width ),
+                            .y_ = static_cast<uint32_t>( motion_event->height )
+                        };
+            
                     event_handler_.emplace_event( window_event );
-
+            
                     const event_handler::event window_move_event
-                    {
-                        .type_ = event_handler::type::window_move,
-                        .x_ = static_cast<uint32_t>( motion_event->x ),
-                        .y_ = static_cast<uint32_t>( motion_event->y )
-                    };
-
+                        {
+                            .type_ = event_handler::type::window_move,
+                            .x_ = static_cast<uint32_t>( motion_event->x ),
+                            .y_ = static_cast<uint32_t>( motion_event->y )
+                        };
+            
                     event_handler_.emplace_event( window_move_event );
                 }
-                case XCB_FOCUS_IN:
+                break;
+            case XCB_FOCUS_IN:
                 {
-                    const auto* focus_in_event = reinterpret_cast<const xcb_focus_in_event_t*>( event );
-
+                    const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( event );
+            
                     const event_handler::event window_event
-                    {
-                        .type_ = event_handler::type::window_focus_in
-                    };
-
+                        {
+                            .type_ = event_handler::type::window_focus_in
+                        };
+            
                     event_handler_.emplace_event( window_event );
                 }
                 break;
-                case XCB_FOCUS_OUT:
+            case XCB_FOCUS_OUT:
                 {
-                    const auto* focus_out_event = reinterpret_cast<const xcb_focus_out_event_t*>( event );
-
+                    const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( event );
+            
                     const event_handler::event window_event
-                    {
-                        .type_ = event_handler::type ::window_focus_out
-                    };
-
+                        {
+                            .type_ = event_handler::type::window_focus_out
+                        };
+            
                     event_handler_.emplace_event( window_event );
                 }
                 break;
-
-                case XCB_KEY_PRESS:
+            case XCB_KEY_PRESS:
                 {
-                    const auto* key_press_event = reinterpret_cast<const xcb_key_press_event_t*>( event );
-
+                    const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( event );
+            
                     const keyboard::key_event key_event
-                    {
-                        .id_ = key_press_event->detail,
-                        .type_ = keyboard::event_type::pressed
-                    };
-
+                        {
+                            .id_ = key_press_event->detail,
+                            .type_ = keyboard::event_type::pressed
+                        };
+            
                     keyboard_.emplace_event( key_event );
                 }
                 break;
-                case XCB_KEY_RELEASE:
+            case XCB_KEY_RELEASE:
                 {
-                    const auto* key_release_event = reinterpret_cast<const xcb_key_release_event_t*>( event );
-
+                    const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( event );
+            
                     const keyboard::key_event key_event
-                    {
-                        .id_ = key_release_event->detail,
-                        .type_ = keyboard::event_type ::released
-                    };
-
+                        {
+                            .id_ = key_release_event->detail,
+                            .type_ = keyboard::event_type::released
+                        };
+            
                     keyboard_.emplace_event( key_event );
                 }
                 break;
-
-                case XCB_BUTTON_PRESS:
+            case XCB_BUTTON_PRESS:
                 {
-                    const auto* button_press_event = reinterpret_cast<const xcb_button_press_event_t*>( event );
-
+                    const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( event );
+            
                     const mouse::button_event button_event
-                    {
-                        .button_ = static_cast<mouse::button>( button_press_event->detail ),
-                        .type_ = mouse::type::pressed
-                    };
-
+                        {
+                            .button_ = static_cast<mouse::button>( button_press_event->detail ),
+                            .type_ = mouse::type::pressed
+                        };
+            
                     mouse_.update_pos( button_press_event->event_x, button_press_event->event_y );
                     mouse_.emplace_button_event( button_event );
                 }
                 break;
-                case XCB_BUTTON_RELEASE:
+            case XCB_BUTTON_RELEASE:
                 {
-                    const auto* button_release_event = reinterpret_cast<const xcb_button_release_event_t*>( event );
-
+                    const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( event );
+            
                     const mouse::button_event button_event
-                    {
-                        .button_ = static_cast<mouse::button>( button_release_event->detail ),
-                        .type_ = mouse::type::released
-                    };
-
+                        {
+                            .button_ = static_cast<mouse::button>( button_release_event->detail ),
+                            .type_ = mouse::type::released
+                        };
+            
                     mouse_.update_pos( button_release_event->event_x, button_release_event->event_y );
                     mouse_.emplace_button_event( button_event );
                 }
                 break;
-
-                case XCB_MOTION_NOTIFY:
+            case XCB_MOTION_NOTIFY:
                 {
-                    const auto* cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t*>( event );
-
+                    const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( event );
+            
                     mouse_.update_pos( cursor_motion->event_x, cursor_motion->event_y );
                 }
                 break;
             }
-
+    
             free( event );
         }
 #endif
@@ -506,5 +499,15 @@ namespace TWE
         }
 
         return *this;
+    }
+
+    uint32_t window::get_width( ) const noexcept
+    {
+        return settings_.width_;
+    }
+
+    uint32_t window::get_height( ) const noexcept
+    {
+        return settings_.height_;
     }
 }

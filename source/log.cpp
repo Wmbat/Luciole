@@ -14,7 +14,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../TWE/log.h"
+#include "log.h"
 
 namespace TWE
 {
@@ -25,6 +25,8 @@ namespace TWE
         core_logger_ = spdlog::stdout_color_mt( "TWE_logger" );
         core_logger_->set_pattern( "%^[%T] %n: %v%$" );
         core_logger_->set_level( spdlog::level::trace );
+        
+        core_info( "spdlog -> TWE_logger Initialized." );
     }
 }
 

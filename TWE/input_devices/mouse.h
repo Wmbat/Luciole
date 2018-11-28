@@ -115,7 +115,7 @@ namespace TWE
         /**
          *  @brief The Max number of elements the buffer can hold.
          */
-        static constexpr std::uint8_t MAX_BUTTON_BUFFER_SIZE_ = 16;
+        static constexpr std::uint8_t MAX_BUTTON_BUFFER_SIZE_ = 32;
 
         /**
          *  @brief The x position of the mouse cursor.
@@ -136,10 +136,6 @@ namespace TWE
          */
         button_event buffer_[MAX_BUTTON_BUFFER_SIZE_];
 
-        /**
-         *  @brief The current amount of elements in the buffer.
-         */
-        size_t num_elem_ = 0;
         /**
          *  @brief The position of the first element in the buffer.
          */
