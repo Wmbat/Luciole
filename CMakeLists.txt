@@ -27,7 +27,9 @@ include_directories( external/include/spdlog/include )
 
 find_package( Vulkan REQUIRED )
 
-if( UNIX )
+if( WIN32 )
+
+elseif( UNIX )
     if( NOT Vulkan_FOUND )
         find_library( Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/vulkan" REQUIRED )
 
@@ -70,9 +72,9 @@ add_library( engine SHARED
         source/io/keyboard.cpp
         source/io/mouse.cpp
         source/renderer.cpp
-        source/vulkan_core.cpp
         source/window.cpp
-        source/TWE.cpp source/log.cpp)
+        source/log.cpp
+        TWE/utilities/basic_error.h TWE/utilities/vk_error.h source/utilities/basic_error.cpp source/utilities/vk_error.cpp)
 
 set_target_properties( engine PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( engine PROPERTIES SOVERSION 1 )

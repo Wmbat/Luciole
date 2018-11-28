@@ -30,7 +30,6 @@ namespace TWE
     {
         auto event_ret = key_buffer_[head_];
 
-        --num_buffer_;
         key_buffer_[head_] = key_event{ 0, event_type::invalid };
 
         head_ = ( head_ + 1 ) % MAX_BUFFER_SIZE_;
@@ -40,21 +39,20 @@ namespace TWE
 
     void keyboard::emplace_event( const key_event& event ) noexcept
     {
-        if( num_buffer_ >= MAX_BUFFER_SIZE_ )
+        if ( ( tail_ + 1 ) % MAX_BUFFER_SIZE_ == head_ )
         {
             pop_key_event();
         }
 
         key_buffer_[tail_] = event;
 
-        key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == event_type::pressed ) ? true : false;
+        key_states_[key_buffer_[tail_].id_] = ( key_buffer_[tail_].type_ == event_type::pressed );
 
-        ++num_buffer_;
         tail_ = ( tail_ + 1 ) % MAX_BUFFER_SIZE_;
     }
 
     bool keyboard::empty( ) const noexcept
     {
-        return num_buffer_ == 0;
+        return head_ == tail_;
     }
 }

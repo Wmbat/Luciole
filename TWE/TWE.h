@@ -19,7 +19,6 @@
 
 #include "window.h"
 #include "vulkan_utils.h"
-#include "vulkan_core.h"
 #include "renderer.h"
 #include "log.h"
 #include "utilities/file_io.h"

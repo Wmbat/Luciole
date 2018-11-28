@@ -35,6 +35,53 @@ namespace TWE
     private:
         static std::shared_ptr<spdlog::logger> core_logger_;
     };
+
+    inline static void core_info( const std::string& msg )
+    {
+        log::get_core_logger().info( msg );
+    }
+    inline static void core_trace( const std::string& msg )
+    {
+        log::get_core_logger().trace( msg );
+    }
+    inline static void core_warn( const std::string& msg )
+    {
+        log::get_core_logger().warn( msg );
+    }
+    inline static void core_critical( const std::string& msg )
+    {
+        log::get_core_logger().critical( msg );
+    }
+    inline static void core_error( const std::string& msg )
+    {
+        log::get_core_logger().error( msg );
+    }
+
+    template<typename... arguments>
+    inline static void core_info( const std::string& msg, const arguments&... args )
+    {
+        log::get_core_logger().info( msg.c_str( ), args... );
+    }
+    template<typename... arguments>
+    inline static void core_trace( const std::string& msg, const arguments&... args )
+    {
+        log::get_core_logger().trace( msg.c_str( ), args... );
+    }
+    template<typename... arguments>
+    inline static void core_warn( const std::string& msg, const arguments&... args )
+    {
+        log::get_core_logger().warn( msg.c_str( ), args... );
+    }
+    template<typename... arguments>
+    inline static void core_critical( const std::string& msg, const arguments&... args )
+    {
+        log::get_core_logger().critical( msg.c_str(), args... );
+    }
+    template<typename... arguments>
+    inline static void core_error( const std::string& msg, const arguments&... args )
+    {
+        log::get_core_logger().error( msg.c_str( ), args... );
+    }
 }
 
 #endif //ENGINE_LOGGER_H
