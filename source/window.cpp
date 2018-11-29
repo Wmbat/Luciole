@@ -183,10 +183,14 @@ namespace TWE
     }
     window::~window( )
     {
+#if defined( _WIN32 )
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
         xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
 
         core_info( "XCB -> window destroyed." );
         core_info( "XCB -> Disconnected from X server." );
+#endif
     }
 
     void window::poll_events( )
@@ -334,12 +338,16 @@ namespace TWE
 
     void window::set_title( const std::string &title ) noexcept
     {
+#if defined( _WIN32 )
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
         xcb_change_property(
                 p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
                 xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
                 title.size(), title.c_str() );
 
         xcb_flush( p_xcb_connection_.get() );
+#endif
     }
 
     const std::string& window::get_title( ) const noexcept
@@ -360,10 +368,11 @@ namespace TWE
         const VkWin32SurfaceCreateInfoKHR create_info
         {
             .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-            .pNext = nullptr;
+            .pNext = nullptr,
             .flags = { },
         };
 
+        return { vkCreateWin32SurfaceKHR( instance, &create_info, nullptr, &surface ), surface };
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         const VkWaylandSurfaceCreateInfoKHR create_info
         {

@@ -19,7 +19,9 @@ set( CMAKE_CXX_STANDARD 17 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
-set( CMAKE_CXX_FLAGS -pthread )
+if( UNIX )
+    set( CMAKE_CXX_FLAGS -pthread )
+endif( )
 
 include_directories( external/include )
 include_directories( external/include/glm )
@@ -28,14 +30,23 @@ include_directories( external/include/spdlog/include )
 find_package( Vulkan REQUIRED )
 
 if( WIN32 )
-
-elseif( UNIX )
     if( NOT Vulkan_FOUND )
-        find_library( Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/vulkan" REQUIRED )
+        find_library( Vulkan_LIBRARY NAMES vulkan-1 HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/win32/vulkan" REQUIRED )
 
         if( Vulkan_LIBRARY )
             set( Vulkan_FOUND ON )
-            message( "Using bundled Vulkan library version" )
+            message( "Using bundled Vulkan library" )
+        endif( )
+    endif( )
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
+elseif( UNIX )
+    if( NOT Vulkan_FOUND )
+        find_library( Vulkan_LIBRARY NAMES libvulkan HINTS  "$ENV{VULKAN_SDK}/lib" "external/libs/linux/vulkan" REQUIRED )
+
+        if( Vulkan_LIBRARY )
+            set( Vulkan_FOUND ON )
+            message( "Using bundled Vulkan library" )
         endif( )
     endif( )
 
@@ -58,15 +69,13 @@ else( )
     message( STATUS ${Vulkan_LIBRARY} )
 endif( )
 
+#find_package( OpenAL REQUIRED )
 
-
-find_package( OpenAL REQUIRED )
-
-if( NOT OPENAL_FOUND )
-    message( FATAL_ERROR "Could not find OpenAL library! Check if installed" )
-else( )
-    message( STATUS ${OPENAL_LIBRARY} )
-endif()
+#if( NOT OPENAL_FOUND )
+#    message( FATAL_ERROR "Could not find OpenAL library! Check if installed" )
+#else( )
+#    message( STATUS ${OPENAL_LIBRARY} )
+#endif()
 
 add_library( TWE SHARED
         source/io/keyboard.cpp
@@ -74,7 +83,8 @@ add_library( TWE SHARED
         source/renderer.cpp
         source/window.cpp
         source/log.cpp
-        TWE/utilities/basic_error.h TWE/utilities/vk_error.h source/utilities/basic_error.cpp source/utilities/vk_error.cpp)
+        source/utilities/basic_error.cpp
+        source/utilities/vk_error.cpp)
 
 set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( TWE PROPERTIES SOVERSION 1 )
