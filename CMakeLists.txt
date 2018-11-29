@@ -13,7 +13,7 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.9 )
-project( engine VERSION 0.0.1 )
+project( TWE VERSION 0.0.2 )
 
 set( CMAKE_CXX_STANDARD 17 )
 
@@ -68,7 +68,7 @@ else( )
     message( STATUS ${OPENAL_LIBRARY} )
 endif()
 
-add_library( engine SHARED
+add_library( TWE SHARED
         source/io/keyboard.cpp
         source/io/mouse.cpp
         source/renderer.cpp
@@ -76,12 +76,12 @@ add_library( engine SHARED
         source/log.cpp
         TWE/utilities/basic_error.h TWE/utilities/vk_error.h source/utilities/basic_error.cpp source/utilities/vk_error.cpp)
 
-set_target_properties( engine PROPERTIES VERSION ${PROJECT_VERSION} )
-set_target_properties( engine PROPERTIES SOVERSION 1 )
+set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
+set_target_properties( TWE PROPERTIES SOVERSION 1 )
 
-target_include_directories( engine PUBLIC TWE )
+target_include_directories( TWE PUBLIC TWE )
 
-target_link_libraries( engine
+target_link_libraries( TWE
         ${Vulkan_LIBRARY}
         ${XCB_LIBRARIES}
         ${WAYLAND_CLIENT_LIBRARIES} )

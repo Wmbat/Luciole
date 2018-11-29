@@ -602,7 +602,7 @@ namespace TWE
             .pApplicationName = app_name.c_str( ),
             .applicationVersion = app_version,
             .pEngineName = "The Wombat Engine",
-            .engineVersion = VK_MAKE_VERSION( 0, 0, 0 ),
+            .engineVersion = VK_MAKE_VERSION( 0, 0, 2 ),
             .apiVersion = VK_API_VERSION_1_1,
         };
         
