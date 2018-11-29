@@ -139,12 +139,6 @@ namespace TWE
             last = 256
         };
 
-        enum class layout : std::uint32_t
-        {
-            us_dvorak = 0,
-            us_qwerty = 1
-        };
-
         enum class event_type : std::uint32_t
         {
             pressed,

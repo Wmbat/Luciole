@@ -22,7 +22,6 @@
 #include <iostream>
 #include <functional>
 
-
 #if defined( _WIN32 )
 #include <window.h>
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
@@ -65,6 +64,10 @@ namespace TWE
                 window_focus_in,
                 window_move,
                 window_resize,
+                
+                key_pressed,
+                key_released,
+                
                 invalid
             };
 
