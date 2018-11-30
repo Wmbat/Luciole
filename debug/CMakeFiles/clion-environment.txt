@@ -1,0 +1,4 @@
+ToolSet: w64 7.0 (local)@C:\msys64\mingw64
+Options: msvc.arch=amd64
+
+Options:
