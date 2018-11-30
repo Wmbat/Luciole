@@ -17,6 +17,8 @@
 #ifndef VULKAN_PROJECT_RENDERER_H
 #define VULKAN_PROJECT_RENDERER_H
 
+#include <optional>
+
 #include <vulkan/vulkan.hpp>
 
 #include "window.h"
