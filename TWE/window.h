@@ -87,13 +87,9 @@ namespace TWE
         const std::string& get_title( ) const noexcept;
 
         bool is_open( ) const noexcept;
-
         
         vk_return_type<VkSurfaceKHR> create_surface( const VkInstance& instance ) const noexcept;
-
         
-        
-
         uint32_t get_width( ) const noexcept;
         uint32_t get_height( ) const noexcept;
 
