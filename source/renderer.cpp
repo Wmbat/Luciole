@@ -402,24 +402,23 @@ namespace TWE
         
         const VkPipelineShaderStageCreateInfo shader_stages[]
         {
-            VkPipelineShaderStageCreateInfo
             {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                nullptr,
-                { },
-                VK_SHADER_STAGE_VERTEX_BIT,
-                vertex_shader,
-                "main",
-                nullptr
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,    // sType
+                nullptr,                                                // pNext
+                { },                                                    // flags
+                VK_SHADER_STAGE_VERTEX_BIT,                             // stage
+                vertex_shader,                                          // module
+                "main",                                                 // pName
+                nullptr                                                 // pSpecialization
             },
             {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                nullptr,
-                { },
-                VK_SHADER_STAGE_FRAGMENT_BIT,
-                fragment_shader,
-                "main",
-                nullptr
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,    // sType
+                nullptr,                                                // pNext
+                { },                                                    // flags
+                VK_SHADER_STAGE_FRAGMENT_BIT,                           // stage
+                fragment_shader,                                        // module
+                "main",                                                 // pName
+                nullptr                                                 // pSpecialization
             }
         };
         
@@ -455,15 +454,15 @@ namespace TWE
         const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         const VkSubmitInfo submit_info
         {
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .pNext = nullptr,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &vk_context_.image_available_semaphores_[current_frame_],
-            .pWaitDstStageMask = wait_stages,
-            .commandBufferCount = 1,
-            .pCommandBuffers = &vk_context_.command_buffers_[image_index],
-            .signalSemaphoreCount = 1,
-            .pSignalSemaphores = &vk_context_.render_finished_semaphores_[current_frame_]
+            VK_STRUCTURE_TYPE_SUBMIT_INFO,                                  // sType
+            nullptr,                                                        // pNext
+            1,                                                              // waitSemaphoreCount
+            &vk_context_.image_available_semaphores_[current_frame_],       // pWaitSemaphores
+            wait_stages,                                                    // pWaitDstStageMask
+            1,                                                              // commandBufferCount
+            &vk_context_.command_buffers_[image_index],                     // pCommandBuffers
+            1,                                                              // signalSemaphoreCount
+            &vk_context_.render_finished_semaphores_[current_frame_]        // pSignalSemaphores
         };
         
         try
