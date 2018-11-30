@@ -138,37 +138,6 @@ namespace TWE
 
             last = 256
         };
-
-        enum class event_type : std::uint32_t
-        {
-            pressed,
-            released,
-            invalid
-        };
-
-        struct key_event
-        {
-            std::int32_t id_ = -1;
-            event_type type_ = event_type::invalid;
-        };
-
-    public:
-        bool is_key_pressed( key key_code ) const noexcept;
-        bool empty( ) const noexcept;
-
-        key_event pop_key_event( ) noexcept;
-        void emplace_event( const key_event& event ) noexcept;
-
-
-    private:
-        static constexpr std::uint32_t MAX_BUFFER_SIZE_ = 8;
-
-        std::bitset<static_cast<size_t>( key::last )> key_states_;
-
-        key_event key_buffer_[MAX_BUFFER_SIZE_];
-
-        size_t head_ = 0;
-        size_t tail_ = 0;
     };
 }
 
