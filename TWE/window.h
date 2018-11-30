@@ -34,8 +34,7 @@
 
 #include "vulkan_utils.h"
 
-#include "input_devices/keyboard.h"
-#include "input_devices/mouse.h"
+#include "event.h"
 
 namespace TWE
 {
@@ -55,122 +54,39 @@ namespace TWE
         class event_handler
         {
         public:
-            /**
-             *  @brief Different types of window events.
-             */
-            enum class type : std::uint32_t
-            {
-                window_focus_out,
-                window_focus_in,
-                window_move,
-                window_resize,
-                
-                key_pressed,
-                key_released,
-                
-                invalid
-            };
-
-            /**
-             *  @brief Holds all necessary data for all event types.
-             */
-            struct event
-            {
-                type type_ = type::invalid;
-                std::uint32_t x_ = 0;
-                std::uint32_t y_ = 0;
-            };
-
-        public:
             event_handler( );
-
-            /**
-             *  @brief Query whether the event buffer is empty.
-             *  @return Whether the buffer is empty or not (empty = true).
-             */
+            
             bool is_empty( ) const noexcept;
-
-            /**
-             *  @brief Retrieve the event at the head of the buffer.
-             *  @return The event at the head of the buffer.
-             */
+            
             event pop_event( ) noexcept;
-
-            /**
-             *  @brief Insert an event at the tail of the buffer. If the
-             *  buffer is full, pop the event at the head and insert it in it's
-             *  place.
-             *  @param event, The event to push at the tail of the buffer.
-             */
+            
             void emplace_event( event event ) noexcept;
 
         private:
-            /**
-             *  @brief Max size of the event buffer.
-             */
-            static constexpr uint16_t BUFFER_SIZE = 16;
-
-            /**
-             *  @brief Buffer of events.
-             */
+            static constexpr uint16_t BUFFER_SIZE = 64;
+            
             event buffer_[BUFFER_SIZE];
-
-            /**
-             *  @brief The number of elements in the buffer.
-             */
+            
             uint32_t num_elem_;
-            /**
-             *  @brief Head of the buffer, show the first
-             *  element.
-             */
+
             uint32_t head_;
-            /**
-             *  @brief Tail of the buffer, shows one past the
-             *  last element.
-             */
             uint32_t tail_;
         };
 
-
+    public:
         explicit window( const std::string& title );
-        /**
-         *  @brief Disabled copy ctor.
-         */
         window( const window& rhs ) noexcept = delete;
-        /**
-         *  @brief Enabled move ctor.
-         */
         window( window&& rhs ) noexcept;
         ~window( );
 
-        /**
-         *  @brief Get all events from the window system and dispatch them to the
-         *  appropriate event handling devices such as the window event handler class, the
-         *  keyboard class and the mouse class.
-         */
         void poll_events( );
 
-        /**
-         *  @brief Change the title of the window.
-         *  @param title, The new title of the window.
-         */
         void set_title( const std::string& title ) noexcept;
-        /**
-         *  @brief Get the title of the window.
-         *  @return The title of the window.
-         */
+        
         const std::string& get_title( ) const noexcept;
 
-        /**
-         *  @brief Check whether the window is open or not.
-         *  @return Whether the window is open or not (open = true).
-         */
         bool is_open( ) const noexcept;
 
-        /**
-         *  @brief Handle all events related to the window.
-         *  @param event, The window event to handle.
-         */
         void handle_event( const event_handler::event& event ) noexcept;
 
         /**
@@ -306,14 +222,6 @@ namespace TWE
          *  @brief Helps handle window events.
          */
         event_handler event_handler_;
-        /**
-         *  @brief Helps handle keyboard input.
-         */
-        keyboard keyboard_;
-        /**
-         *  @brief Helps handle mouse input.
-         */
-        mouse mouse_;
 
         /**
          *  @brief organize the window settings.
