@@ -37,7 +37,7 @@ namespace TWE
         tail_( 0 )
     { }
 
-    window::event_handler::event window::event_handler::pop_event( ) noexcept
+    event window::event_handler::pop_event( ) noexcept
     {
         auto ret = buffer_[head_];
 
@@ -49,7 +49,7 @@ namespace TWE
         return ret;
     }
 
-    void window::event_handler::emplace_event( window::event_handler::event event ) noexcept
+    void window::event_handler::emplace_event( event event ) noexcept
     {
         if( num_elem_ == BUFFER_SIZE )
         {
@@ -225,108 +225,114 @@ namespace TWE
                 {
                     const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( event );
             
-                    const event_handler::event window_event
-                        {
-                            .type_ = event_handler::type::window_resize,
-                            .x_ = static_cast<uint32_t>( motion_event->width ),
-                            .y_ = static_cast<uint32_t>( motion_event->height )
-                        };
+                    const struct event resize
+                    {
+                        .type_ = event::type::window_resize,
+                        .window_resize.x_ = static_cast<uint32_t>( motion_event->width ),
+                        .window_resize.y_ = static_cast<uint32_t>( motion_event->height )
+                    };
             
-                    event_handler_.emplace_event( window_event );
+                    event_handler_.emplace_event( resize );
             
-                    const event_handler::event window_move_event
-                        {
-                            .type_ = event_handler::type::window_move,
-                            .x_ = static_cast<uint32_t>( motion_event->x ),
-                            .y_ = static_cast<uint32_t>( motion_event->y )
-                        };
+                    const struct event move
+                    {
+                        .type_ = event::type::window_move,
+                        .window_move.x_ = static_cast<uint32_t>( motion_event->x  ),
+                        .window_move.y_ = static_cast<uint32_t>( motion_event->y )
+                    };
             
-                    event_handler_.emplace_event( window_move_event );
+                    event_handler_.emplace_event( move );
                 }
                 break;
             case XCB_FOCUS_IN:
                 {
                     const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( event );
             
-                    const event_handler::event window_event
-                        {
-                            .type_ = event_handler::type::window_focus_in
-                        };
+                    const struct event focus_in
+                    {
+                        .type_ = event::type::window_focus_in;
+                    };
             
-                    event_handler_.emplace_event( window_event );
+                    event_handler_.emplace_event( focus_in );
                 }
                 break;
             case XCB_FOCUS_OUT:
                 {
                     const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( event );
             
-                    const event_handler::event window_event
-                        {
-                            .type_ = event_handler::type::window_focus_out
-                        };
+                    const struct event focus_out
+                    {
+                        .type_ = event::type::window_focus_out
+                    };
             
-                    event_handler_.emplace_event( window_event );
+                    event_handler_.emplace_event( focus_out );
                 }
                 break;
             case XCB_KEY_PRESS:
                 {
                     const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( event );
             
-                    const keyboard::key_event key_event
-                        {
-                            .id_ = key_press_event->detail,
-                            .type_ = keyboard::event_type::pressed
-                        };
+                    const struct event key_press
+                    {
+                        .type_ = event::type::key_pressed,
+                        .key.key_ = static_cast<keyboard::key>( key_press_event->detail )
+                    };
             
-                    keyboard_.emplace_event( key_event );
+                    event_handler_.emplace_event( key_press );
                 }
                 break;
             case XCB_KEY_RELEASE:
                 {
                     const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( event );
             
-                    const keyboard::key_event key_event
-                        {
-                            .id_ = key_release_event->detail,
-                            .type_ = keyboard::event_type::released
-                        };
+                    const struct event key_release
+                    {
+                        .type_ = event::type::key_released,
+                        .key.key_ = static_cast<keyboard::key>( key_release_event->detail );
+                    };
             
-                    keyboard_.emplace_event( key_event );
+                    event_handler_.emplace_event( key_release );
                 }
                 break;
             case XCB_BUTTON_PRESS:
                 {
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( event );
             
-                    const mouse::button_event button_event
-                        {
-                            .button_ = static_cast<mouse::button>( button_press_event->detail ),
-                            .type_ = mouse::type::pressed
-                        };
-            
-                    mouse_.update_pos( button_press_event->event_x, button_press_event->event_y );
-                    mouse_.emplace_button_event( button_event );
+                    const struct event button_press
+                    {
+                        .type_ = event::type::mouse_button_pressed,
+                        .mouse_button.button_ = static_cast<mouse::button>( button_press_event->detail )
+                    };
+                    
+                    event_handler_.emplace_event( button_press );
                 }
                 break;
             case XCB_BUTTON_RELEASE:
                 {
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( event );
-            
-                    const mouse::button_event button_event
-                        {
-                            .button_ = static_cast<mouse::button>( button_release_event->detail ),
-                            .type_ = mouse::type::released
-                        };
-            
-                    mouse_.update_pos( button_release_event->event_x, button_release_event->event_y );
-                    mouse_.emplace_button_event( button_event );
+    
+    
+                    const struct event button_release
+                    {
+                        .type_ = event::type::mouse_button_released,
+                        .mouse_button.button_ = static_cast<mouse::button>( button_release_event->detail )
+                    };
+    
+                    event_handler_.emplace_event( button_release );
                 }
                 break;
             case XCB_MOTION_NOTIFY:
                 {
                     const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( event );
             
-                    mouse_.update_pos( cursor_motion->event_x, cursor_motion->event_y );
+                    const struct event mouse_move
+                    {
+                        .type_ = event::type::mouse_move,
+                        .window_move.x_ = static_cast<uint32_t>( cursor_motion->event_x ),
+                        .window_move.x_ = static_cast<uint32_t>( cursor_motion->event_y )
+                    };
+                    
+                    event_handler_.emplace_event( mouse_move );
                 }
                 break;
             }

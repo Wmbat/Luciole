@@ -84,7 +84,7 @@ add_library( TWE SHARED
         source/window.cpp
         source/log.cpp
         source/utilities/basic_error.cpp
-        source/utilities/vk_error.cpp)
+        source/utilities/vk_error.cpp TWE/event.h)
 
 set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( TWE PROPERTIES SOVERSION 1 )
