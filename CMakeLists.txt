@@ -78,13 +78,11 @@ endif( )
 #endif()
 
 add_library( TWE SHARED
-        source/io/keyboard.cpp
-        source/io/mouse.cpp
-        source/renderer.cpp
-        source/window.cpp
-        source/log.cpp
         source/utilities/basic_error.cpp
-        source/utilities/vk_error.cpp TWE/event.h)
+        source/utilities/vk_error.cpp
+        source/log.cpp
+        source/renderer.cpp
+        source/window.cpp )
 
 set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( TWE PROPERTIES SOVERSION 1 )

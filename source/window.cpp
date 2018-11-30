@@ -15,6 +15,8 @@
  */
 
 #include <iostream>
+#include <window.h>
+
 
 #include "window.h"
 #include "log.h"
@@ -30,51 +32,69 @@ namespace TWE
     }
 #endif
 
-    window::event_handler::event_handler( )
-        :
-        num_elem_( 0 ),
-        head_( 0 ),
-        tail_( 0 )
-    { }
-
     event window::event_handler::pop_event( ) noexcept
     {
-        auto ret = buffer_[head_];
+        const auto ret = buffer_[head_];
 
         buffer_[head_] = { };
 
-        --num_elem_;
         head_ = ( head_ + 1 ) % BUFFER_SIZE;
 
         return ret;
     }
 
-    void window::event_handler::emplace_event( event event ) noexcept
+    void window::event_handler::push_event( event event ) noexcept
     {
-        if( num_elem_ == BUFFER_SIZE )
+        if (( tail_ + 1 ) % BUFFER_SIZE == head_ )
         {
-            pop_event();
+            pop_event( );
         }
-
+    
         buffer_[tail_] = event;
-
-        ++num_elem_;
+    
+        if ( buffer_[tail_].type_ == event::type::mouse_button_pressed )
+        {
+            button_states_[static_cast<size_t>( buffer_[tail_].mouse_button.button_ )] = true;
+        }
+        else if ( buffer_[tail_].type_ == event::type::mouse_button_released )
+        {
+            button_states_[static_cast<size_t>( buffer_[tail_].mouse_button.button_ )] = false;
+        }
+        else if ( buffer_[tail_].type_ == event::type::key_pressed )
+        {
+            key_states_[static_cast<size_t>( buffer_[tail_].key.key_ )] = true;
+        }
+        else if ( buffer_[tail_].type_ == event::type::key_released )
+        {
+            key_states_[static_cast<size_t>( buffer_[tail_].key.key_ )] = false;
+        }
+        
         tail_ = ( tail_ + 1 ) % BUFFER_SIZE;
     }
 
+    bool window::event_handler::is_keyboard_key_pressed( keyboard::key key_code ) noexcept
+    {
+        return key_states_[static_cast<size_t>( key_code )];
+    }
+    
+    bool window::event_handler::is_mouse_button_pressed( mouse::button button_code ) noexcept
+    {
+        return button_states_[static_cast<size_t>( button_code )];
+    }
+    
     bool window::event_handler::is_empty( ) const noexcept
     {
-        return num_elem_ == 0;
+        return head_ == tail_;
     }
 
+    
+    
 
     window::window( const std::string &title )
             :
             title_( title ),
             open_( true )
     {
-
-
 #if defined( _WIN32 )
 
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
@@ -135,7 +155,7 @@ namespace TWE
                 XCB_COPY_FROM_PARENT,                             /* Depth ( same as root ) */
                 xcb_window_,                                      /* Window ID              */
                 p_xcb_screen_->root,                              /* Parent Window          */
-                settings_.x_position, settings_.y_position,       /* Window Position        */
+                settings_.x_, settings_.y_,                       /* Window Position        */
                 settings_.width_, settings_.height_, 10,          /* Window + border Size   */
                 XCB_WINDOW_CLASS_INPUT_OUTPUT,                    /* Class                  */
                 p_xcb_screen_->root_visual,                       /* Visual                 */
@@ -192,7 +212,62 @@ namespace TWE
         core_info( "XCB -> Disconnected from X server." );
 #endif
     }
+    
+    window &window::operator=( window &&rhs ) noexcept
+    {
+        if( this != &rhs )
+        {
+            title_ = rhs.title_;
+            rhs.title_ = { };
+            
+            open_ = rhs.open_;
+            rhs.open_ = false;
+#if defined( _WIN32 )
 
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+            p_xcb_connection_ = std::move( p_xcb_connection_ );
+            
+            p_xcb_screen_ = rhs.p_xcb_screen_;
+            rhs.p_xcb_screen_ = nullptr;
+            
+            p_xcb_wm_delete_window_ = std::move( rhs.p_xcb_wm_delete_window_ );
+            
+            xcb_window_ = rhs.xcb_window_;
+            rhs.xcb_window_ = 0;
+#endif
+            
+            event_handler_ = rhs.event_handler_;
+            rhs.event_handler_ = { };
+            
+            settings_ = rhs.settings_;
+            rhs.settings_ = { };
+        }
+        
+        return *this;
+    }
+
+    event window::pop_event( ) noexcept
+    {
+        return event_handler_.pop_event();
+    }
+    
+    bool window::is_event_queue_empty( )
+    {
+        return event_handler_.is_empty();
+    }
+    
+    bool window::is_kbd_key_pressed( keyboard::key key_code ) noexcept
+    {
+        return event_handler_.is_keyboard_key_pressed( key_code );
+    }
+    
+    bool window::is_mb_pressed( mouse::button button_code ) noexcept
+    {
+        return event_handler_.is_mouse_button_pressed( button_code );
+    }
+    
     void window::poll_events( )
     {
 #if defined( _WIN32 )
@@ -200,7 +275,6 @@ namespace TWE
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-
         xcb_generic_event_t *event;
         while( ( event = xcb_poll_for_event( p_xcb_connection_.get() ) ) )
         {
@@ -225,114 +299,95 @@ namespace TWE
                 {
                     const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( event );
             
-                    const struct event resize
-                    {
-                        .type_ = event::type::window_resize,
-                        .window_resize.x_ = static_cast<uint32_t>( motion_event->width ),
-                        .window_resize.y_ = static_cast<uint32_t>( motion_event->height )
-                    };
+                    struct event resize{ };
+                        resize.type_ = event::type::window_resize,
+                        resize.window_resize = { static_cast<uint32_t>( motion_event->width ),
+                                                 static_cast<uint32_t>( motion_event->height ) };
             
-                    event_handler_.emplace_event( resize );
+                    event_handler_.push_event( resize );
             
-                    const struct event move
-                    {
-                        .type_ = event::type::window_move,
-                        .window_move.x_ = static_cast<uint32_t>( motion_event->x  ),
-                        .window_move.y_ = static_cast<uint32_t>( motion_event->y )
-                    };
+                    struct event move{ };
+                        move.type_ = event::type::window_move,
+                        move.window_move = { static_cast<uint32_t>( motion_event->x ),
+                                             static_cast<uint32_t>( motion_event->y ) };
             
-                    event_handler_.emplace_event( move );
+                    event_handler_.push_event( move );
                 }
                 break;
             case XCB_FOCUS_IN:
                 {
                     const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( event );
             
-                    const struct event focus_in
-                    {
-                        .type_ = event::type::window_focus_in;
-                    };
+                    struct event focus_in{ };
+                        focus_in.type_ = event::type::window_focus_in;
             
-                    event_handler_.emplace_event( focus_in );
+                    event_handler_.push_event( focus_in );
                 }
                 break;
             case XCB_FOCUS_OUT:
                 {
                     const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( event );
             
-                    const struct event focus_out
-                    {
-                        .type_ = event::type::window_focus_out
-                    };
+                    struct event focus_out{ };
+                        focus_out.type_ = event::type::window_focus_out;
             
-                    event_handler_.emplace_event( focus_out );
+                    event_handler_.push_event( focus_out );
                 }
                 break;
             case XCB_KEY_PRESS:
                 {
                     const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( event );
             
-                    const struct event key_press
-                    {
-                        .type_ = event::type::key_pressed,
-                        .key.key_ = static_cast<keyboard::key>( key_press_event->detail )
-                    };
+                    struct event key_press{ };
+                        key_press.type_ = event::type::key_pressed,
+                        key_press.key = { static_cast<keyboard::key>( key_press_event->detail ) };
             
-                    event_handler_.emplace_event( key_press );
+                    event_handler_.push_event( key_press );
                 }
                 break;
             case XCB_KEY_RELEASE:
                 {
                     const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( event );
             
-                    const struct event key_release
-                    {
-                        .type_ = event::type::key_released,
-                        .key.key_ = static_cast<keyboard::key>( key_release_event->detail );
-                    };
+                    struct event key_release{ };
+                        key_release.type_ = event::type::key_released,
+                        key_release.key = { .key_ = static_cast<keyboard::key>( key_release_event->detail ) };
             
-                    event_handler_.emplace_event( key_release );
+                    event_handler_.push_event( key_release );
                 }
                 break;
             case XCB_BUTTON_PRESS:
                 {
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( event );
             
-                    const struct event button_press
-                    {
-                        .type_ = event::type::mouse_button_pressed,
-                        .mouse_button.button_ = static_cast<mouse::button>( button_press_event->detail )
-                    };
+                    struct event button_press{ };
+                        button_press.type_ = event::type::mouse_button_pressed,
+                        button_press.mouse_button = { static_cast<mouse::button>( button_press_event->detail ) };
                     
-                    event_handler_.emplace_event( button_press );
+                    event_handler_.push_event( button_press );
                 }
                 break;
             case XCB_BUTTON_RELEASE:
                 {
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( event );
+                    
+                    struct event button_release{ };
+                        button_release.type_ = event::type::mouse_button_released,
+                        button_release.mouse_button = { static_cast<mouse::button>( button_release_event->detail ) };
     
-    
-                    const struct event button_release
-                    {
-                        .type_ = event::type::mouse_button_released,
-                        .mouse_button.button_ = static_cast<mouse::button>( button_release_event->detail )
-                    };
-    
-                    event_handler_.emplace_event( button_release );
+                    event_handler_.push_event( button_release );
                 }
                 break;
             case XCB_MOTION_NOTIFY:
                 {
                     const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( event );
             
-                    const struct event mouse_move
-                    {
-                        .type_ = event::type::mouse_move,
-                        .window_move.x_ = static_cast<uint32_t>( cursor_motion->event_x ),
-                        .window_move.x_ = static_cast<uint32_t>( cursor_motion->event_y )
-                    };
+                    struct event mouse_move{ };
+                        mouse_move.type_ = event::type::mouse_move,
+                        mouse_move.mouse_move = { static_cast<int32_t>( cursor_motion->event_x ),
+                                                  static_cast<int32_t>( cursor_motion->event_y ) };
                     
-                    event_handler_.emplace_event( mouse_move );
+                    event_handler_.push_event( mouse_move );
                 }
                 break;
             }
@@ -340,6 +395,19 @@ namespace TWE
             free( event );
         }
 #endif
+    }
+    void window::handle_event( const event &event ) noexcept
+    {
+        if( event.type_ == event::type::window_move )
+        {
+            settings_.x_ = event.window_move.x_;
+            settings_.y_ = event.window_move.y_;
+        }
+        else if( event.type_ == event::type::window_resize )
+        {
+            settings_.width_ = event.window_resize.x_;
+            settings_.height_ = event.window_resize.y_;
+        }
     }
 
     void window::set_title( const std::string &title ) noexcept
@@ -399,121 +467,6 @@ namespace TWE
 
         return { vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ), surface };
 #endif
-    }
-
-///////////////////////////////// Window Event //////////////////////////////////
-
-    bool window::no_window_event( ) const noexcept
-    {
-        return event_handler_.is_empty();
-    }
-
-    window::event_handler::event window::pop_window_event( ) noexcept
-    {
-        return event_handler_.pop_event();
-    }
-
-    void window::handle_event( const window::event_handler::event &event ) noexcept
-    {
-        if( event.type_ == event_handler::type::window_move )
-        {
-            settings_.x_position = event.x_;
-            settings_.y_position = event.y_;
-        }
-
-        if( event.type_ == event_handler::type::window_resize )
-        {
-            settings_.width_ = event.x_;
-            settings_.height_ = event.y_;
-        }
-    }
-
-/////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////// Mouse Event //////////////////////////////////
-
-    bool window::no_button_event( ) const noexcept
-    {
-        return mouse_.is_button_empty();
-    }
-
-    bool window::is_button_pressed( mouse::button button ) const noexcept
-    {
-        return mouse_.is_button_pressed( button );
-    }
-
-
-    glm::i32vec2 window::cursor_position( ) const noexcept
-    {
-        return mouse_.cursor_pos();
-    }
-
-    mouse::button_event window::pop_button_event( ) noexcept
-    {
-        return mouse_.pop_button_event();
-    }
-
-/////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////// Keyboard Event /////////////////////////////////
-
-    bool window::no_key_event( )
-    {
-        return keyboard_.empty();
-    }
-    bool window::is_key_pressed( keyboard::key key_code ) const noexcept
-    {
-        return keyboard_.is_key_pressed( key_code );
-    }
-
-    keyboard::key_event window::pop_key_event( )
-    {
-        return keyboard_.pop_key_event();
-    }
-
-/////////////////////////////////////////////////////////////////////////////////
-
-
-
-    window &window::operator=( window &&rhs ) noexcept
-    {
-        if( this != &rhs )
-        {
-            title_ = rhs.title_;
-            rhs.title_ = { };
-
-            open_ = rhs.open_;
-            rhs.open_ = false;
-#if defined( _WIN32 )
-
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-            p_xcb_connection_ = std::move( p_xcb_connection_ );
-
-            p_xcb_screen_ = rhs.p_xcb_screen_;
-            rhs.p_xcb_screen_ = nullptr;
-
-            p_xcb_wm_delete_window_ = std::move( rhs.p_xcb_wm_delete_window_ );
-
-            xcb_window_ = rhs.xcb_window_;
-            rhs.xcb_window_ = 0;
-#endif
-
-            event_handler_ = rhs.event_handler_;
-            rhs.event_handler_ = { };
-
-            keyboard_ = rhs.keyboard_;
-            rhs.keyboard_ = { };
-
-            mouse_ = rhs.mouse_;
-            rhs.mouse_ = { };
-
-            settings_ = rhs.settings_;
-            rhs.settings_ = { };
-        }
-
-        return *this;
     }
 
     uint32_t window::get_width( ) const noexcept
