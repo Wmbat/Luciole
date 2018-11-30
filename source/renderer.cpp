@@ -401,26 +401,26 @@ namespace TWE
         core_info( "Vulkan -> Fragment Shader Module Created from: {}.", data.fragment_shader_filepath );
         
         const VkPipelineShaderStageCreateInfo shader_stages[]
+        {
             {
-                {
-                    .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                    .pNext = nullptr,
-                    .flags = { },
-                    .stage = VK_SHADER_STAGE_VERTEX_BIT,
-                    .module = vertex_shader,
-                    .pName = "main",
-                    .pSpecializationInfo = nullptr
-                },
-                {
-                    .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                    .pNext = nullptr,
-                    .flags = { },
-                    .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-                    .module = fragment_shader,
-                    .pName = "main",
-                    .pSpecializationInfo = nullptr
-                }
-            };
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = { },
+                .stage = VK_SHADER_STAGE_VERTEX_BIT,
+                .module = vertex_shader,
+                .pName = "main",
+                .pSpecializationInfo = nullptr
+            },
+            {
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = { },
+                .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .module = fragment_shader,
+                .pName = "main",
+                .pSpecializationInfo = nullptr
+            }
+        };
         
         vk_context_.graphics_pipeline_layout_ = check_vk_return_type_result(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
