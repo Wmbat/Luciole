@@ -402,23 +402,24 @@ namespace TWE
         
         const VkPipelineShaderStageCreateInfo shader_stages[]
         {
+            VkPipelineShaderStageCreateInfo
             {
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .stage = VK_SHADER_STAGE_VERTEX_BIT,
-                .module = vertex_shader,
-                .pName = "main",
-                .pSpecializationInfo = nullptr
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                nullptr,
+                { },
+                VK_SHADER_STAGE_VERTEX_BIT,
+                vertex_shader,
+                "main",
+                nullptr
             },
             {
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-                .module = fragment_shader,
-                .pName = "main",
-                .pSpecializationInfo = nullptr
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                nullptr,
+                { },
+                VK_SHADER_STAGE_FRAGMENT_BIT,
+                fragment_shader,
+                "main",
+                nullptr
             }
         };
         

@@ -99,7 +99,10 @@ namespace TWE
         bool open_ = false;
 
 #if defined( _WIN32 )
-
+        HINSTANCE instance_ = nullptr;
+        HWND window_ = nullptr;
+        
+        
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
@@ -110,7 +113,6 @@ namespace TWE
         std::unique_ptr<xcb_intern_atom_reply_t> p_xcb_wm_delete_window_;
 #endif
         event_handler event_handler_;
-
  
         struct settings
         {
