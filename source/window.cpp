@@ -23,7 +23,21 @@
 
 namespace TWE
 {
-#if defined( VK_USE_PLATFORM_XCB_KHR )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+    static inline LRESULT CALLBACK window_proc ( HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param )
+    {
+        switch( message )
+        {
+            case WM_DESTROY:
+            {
+                PostQuitMessage ( 0 );
+                return 0;
+            } break;
+        }
+
+        return DefWindowProc ( h_wnd, message, w_param, l_param );
+    }
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
     {
         xcb_intern_atom_cookie_t cookie = xcb_intern_atom( p_connection, only_if_exists, str.size(), str.c_str() );
@@ -87,22 +101,65 @@ namespace TWE
         return head_ == tail_;
     }
 
-    
-    
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+    window::window ( HINSTANCE instance, const std::string& title )
+        : title_( title )
+    {
+        core_info ( "Using Win32 for window creation." );
 
+        WNDCLASSEX wc
+        {
+            sizeof ( WNDCLASSEX ),              // cbSize
+            CS_HREDRAW | CS_VREDRAW,            // style
+            window_proc,                        // lpfnWndProc
+            0,                                  // cbClsExtra
+            0,                                  // cbWndExtra
+            win_instance_,                      // hInstance
+            nullptr,                            // hIcon
+            LoadCursor ( nullptr,IDC_ARROW ),   // hCursor
+            nullptr,                            // hbrBackground
+            nullptr,                            // lpszMenuName
+            wnd_class_name_,                    // lpszClassName
+            nullptr                             // hIconSm
+        };
+
+        RegisterClassEx ( &wc );
+
+        /*
+        RECT wnd_rect
+        {
+            settings_.x_,                       // left
+            settings_.y_,                       // top
+            settings_.x_ + settings_.width_,    // right
+            settings_.y_ + settings_.height_     // bottom
+        };
+
+        AdjustWindowRect ( &wnd_rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE );
+        */
+
+        win_window_ = CreateWindow ( wnd_class_name_, title_.c_str ( ),
+                                     WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
+                                     settings_.x_, settings_.y_,
+                                     settings_.width_, settings_.height_,
+                                     nullptr, nullptr, win_instance_, this );
+
+        if( win_window_ == nullptr )
+        {
+            UnregisterClass ( wnd_class_name_, win_instance_ );
+        }
+
+        ShowWindow ( win_window_, SW_SHOWDEFAULT );
+
+    }
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
     window::window( const std::string &title )
             :
             title_( title ),
             open_( true )
     {
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-        core_info( "Using Win32 for window creation." );
-
-        
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-        core_info( "Using Wayland for window creation." );
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-        core_info( "Using XCB for window creation." );
+        core_info ( "Using XCB for window creation." );
 
         /** Connect to X11 window system. */
         p_xcb_connection_ = std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>>(
@@ -197,8 +254,8 @@ namespace TWE
 
         xcb_map_window( p_xcb_connection_.get(), xcb_window_ );
         xcb_flush( p_xcb_connection_.get() );
-#endif
     }
+#endif
     window::window( window&& rhs ) noexcept
     {
         *this = std::move( rhs );
@@ -290,14 +347,12 @@ namespace TWE
                     {
                         open_ = false;
                     }
-                }
-                break;
-            case XCB_DESTROY_NOTIFY:
+                } break;
+                case XCB_DESTROY_NOTIFY:
                 {
                     open_ = false;
-                }
-                break;
-            case XCB_CONFIGURE_NOTIFY:
+                } break;
+                case XCB_CONFIGURE_NOTIFY:
                 {
                     const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
         
@@ -314,62 +369,56 @@ namespace TWE
                                           static_cast<uint32_t>( motion_event->y ));
         
                     event_handler_.push_event( move );
-                }
-                break;
-            case XCB_FOCUS_IN:
+                } break;
+                case XCB_FOCUS_IN:
                 {
-                    const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( e );
-            
-                    const auto focus_in = event( )
-                        .set_type( event::type::window_focus_in );
-            
-                    event_handler_.push_event( focus_in );
-                }
-                break;
-            case XCB_FOCUS_OUT:
+                    const auto *focus_in_event = reinterpret_cast< const xcb_focus_in_event_t * >( e );
+
+                    const auto focus_in = event ( )
+                        .set_type ( event::type::window_focus_in );
+
+                    event_handler_.push_event ( focus_in );
+                } break;
+                case XCB_FOCUS_OUT:
                 {
                     const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
-            
+                
                     const auto focus_out = event( )
                         .set_type( event::type::window_focus_out );
-            
+                
                     event_handler_.push_event( focus_out );
-                }
-                break;
-            case XCB_KEY_PRESS:
+                } break;
+                case XCB_KEY_PRESS:
                 {
                     const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( e );
-            
+                
                     const auto key_press = event( )
                         .set_type( event::type::key_pressed )
                         .set_key( static_cast<keyboard::key>( key_press_event->detail ) );
-            
+                
                     event_handler_.push_event( key_press );
-                }
-                break;
-            case XCB_KEY_RELEASE:
+                } break;
+                case XCB_KEY_RELEASE:
                 {
                     const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( e );
-            
+                
                     const auto key_release = event( )
                         .set_type( event::type::key_released )
                         .set_key( static_cast<keyboard::key>( key_release_event->detail ) );
-            
+                
                     event_handler_.push_event( key_release );
-                }
-                break;
-            case XCB_BUTTON_PRESS:
+                } break;
+                case XCB_BUTTON_PRESS:
                 {
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
-            
+                
                     const auto button_press = event( )
                         .set_type( event::type::mouse_button_pressed )
                         .set_mouse_button( static_cast<mouse::button>( button_press_event->detail ) );
                     
                     event_handler_.push_event( button_press );
-                }
-                break;
-            case XCB_BUTTON_RELEASE:
+                } break;
+                case XCB_BUTTON_RELEASE:
                 {
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
                     
@@ -378,9 +427,8 @@ namespace TWE
                         .set_mouse_button( static_cast<mouse::button>( button_release_event->detail ) );
     
                     event_handler_.push_event( button_release );
-                }
-                break;
-            case XCB_MOTION_NOTIFY:
+                } break;
+                case XCB_MOTION_NOTIFY:
                 {
                     const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
         
@@ -390,8 +438,7 @@ namespace TWE
                                          static_cast<int32_t>( cursor_motion->event_y ));
         
                     event_handler_.push_event( mouse_move );
-                }
-                break;
+                } break;
             }
     
             free( e );
@@ -446,8 +493,8 @@ namespace TWE
             VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,            // sType
             nullptr,                                                    // pNext
             { },                                                        // flags
-            win32_instance_,                                            // hinstance
-            win32_window_                                               // hwnd
+            win_instance_,                                            // hinstance
+            win_window_                                               // hwnd
         };
 
         return { vkCreateWin32SurfaceKHR( instance, &create_info, nullptr, &surface ), surface };

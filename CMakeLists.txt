@@ -84,6 +84,8 @@ endif( )
 add_library( TWE SHARED
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
+		source/window/base_window.cpp
+		source/application.cpp
         source/log.cpp
         source/renderer.cpp
         source/window.cpp )
