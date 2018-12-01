@@ -300,19 +300,19 @@ namespace TWE
             case XCB_CONFIGURE_NOTIFY:
                 {
                     const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
-            
-                    struct event resize{ };
-                        resize.type_ = event::type::window_resize,
-                        resize.window_resize = { static_cast<uint32_t>( motion_event->width ),
-                                                 static_cast<uint32_t>( motion_event->height ) };
-            
+        
+                    const auto resize = event( )
+                        .set_type( event::type::window_resize )
+                        .set_window_resize( static_cast<uint32_t>( motion_event->width ),
+                                            static_cast<uint32_t>( motion_event->height ));
+        
                     event_handler_.push_event( resize );
-            
-                    struct event move{ };
-                        move.type_ = event::type::window_move,
-                        move.window_move = { static_cast<uint32_t>( motion_event->x ),
-                                             static_cast<uint32_t>( motion_event->y ) };
-            
+        
+                    const auto move = event( )
+                        .set_type( event::type::window_move )
+                        .set_window_move( static_cast<uint32_t>( motion_event->x ),
+                                          static_cast<uint32_t>( motion_event->y ));
+        
                     event_handler_.push_event( move );
                 }
                 break;
@@ -320,8 +320,8 @@ namespace TWE
                 {
                     const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( e );
             
-                    struct event focus_in{ };
-                        focus_in.type_ = event::type::window_focus_in;
+                    const auto focus_in = event( )
+                        .set_type( event::type::window_focus_in );
             
                     event_handler_.push_event( focus_in );
                 }
@@ -330,8 +330,8 @@ namespace TWE
                 {
                     const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
             
-                    struct event focus_out{ };
-                        focus_out.type_ = event::type::window_focus_out;
+                    const auto focus_out = event( )
+                        .set_type( event::type::window_focus_out );
             
                     event_handler_.push_event( focus_out );
                 }
@@ -340,9 +340,9 @@ namespace TWE
                 {
                     const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( e );
             
-                    struct event key_press{ };
-                        key_press.type_ = event::type::key_pressed,
-                        key_press.key = { static_cast<keyboard::key>( key_press_event->detail ) };
+                    const auto key_press = event( )
+                        .set_type( event::type::key_pressed )
+                        .set_key( static_cast<keyboard::key>( key_press_event->detail ) );
             
                     event_handler_.push_event( key_press );
                 }
@@ -351,9 +351,9 @@ namespace TWE
                 {
                     const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( e );
             
-                    struct event key_release{ };
-                        key_release.type_ = event::type::key_released,
-                        key_release.key = { .key_ = static_cast<keyboard::key>( key_release_event->detail ) };
+                    const auto key_release = event( )
+                        .set_type( event::type::key_released )
+                        .set_key( static_cast<keyboard::key>( key_release_event->detail ) );
             
                     event_handler_.push_event( key_release );
                 }
@@ -362,9 +362,9 @@ namespace TWE
                 {
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
             
-                    struct event button_press{ };
-                        button_press.type_ = event::type::mouse_button_pressed,
-                        button_press.mouse_button = { static_cast<mouse::button>( button_press_event->detail ) };
+                    const auto button_press = event( )
+                        .set_type( event::type::mouse_button_pressed )
+                        .set_mouse_button( static_cast<mouse::button>( button_press_event->detail ) );
                     
                     event_handler_.push_event( button_press );
                 }
@@ -373,9 +373,9 @@ namespace TWE
                 {
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
                     
-                    struct event button_release{ };
-                        button_release.type_ = event::type::mouse_button_released,
-                        button_release.mouse_button = { static_cast<mouse::button>( button_release_event->detail ) };
+                    const auto button_release = event( )
+                        .set_type( event::type::mouse_button_released )
+                        .set_mouse_button( static_cast<mouse::button>( button_release_event->detail ) );
     
                     event_handler_.push_event( button_release );
                 }
@@ -383,18 +383,18 @@ namespace TWE
             case XCB_MOTION_NOTIFY:
                 {
                     const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
-            
-                    struct event mouse_move{ };
-                        mouse_move.type_ = event::type::mouse_move,
-                        mouse_move.mouse_move = { static_cast<int32_t>( cursor_motion->event_x ),
-                                                  static_cast<int32_t>( cursor_motion->event_y ) };
-                    
+        
+                    const auto mouse_move = event( )
+                        .set_type( event::type::mouse_move )
+                        .set_mouse_move( static_cast<int32_t>( cursor_motion->event_x ),
+                                         static_cast<int32_t>( cursor_motion->event_y ));
+        
                     event_handler_.push_event( mouse_move );
                 }
                 break;
             }
     
-            free( event );
+            free( e );
         }
 #endif
     }
