@@ -66,7 +66,13 @@ namespace TWE
         };
 
     public:
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+        TWE_API window ( HINSTANCE instance, const std::string& title );
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
         explicit TWE_API window( const std::string& title );
+#endif
         window( const window& rhs ) noexcept = delete;
         TWE_API window( window&& rhs ) noexcept;
         TWE_API ~window( );
@@ -100,8 +106,9 @@ namespace TWE
         bool open_ = false;
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-        HINSTANCE win32_instance_ = nullptr;
-        HWND win32_window_ = nullptr;
+        static constexpr char* wnd_class_name_ = "TWE window";
+        HINSTANCE win_instance_ = nullptr;
+        HWND win_window_ = nullptr;
         
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
@@ -116,8 +123,8 @@ namespace TWE
  
         struct settings
         {
-            uint32_t x_ = 0;
-            uint32_t y_ = 0;
+            uint32_t x_ = 100;
+            uint32_t y_ = 100;
             
             uint32_t width_ = 1080;
             uint32_t height_ = 720;
