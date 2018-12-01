@@ -79,6 +79,10 @@ namespace TWE
             window_move_event window_move;
             window_resize_event window_resize;
         };
+
+        event& set_type( type type ) { type_ = type; };
+        event& set_key( keyboard::key key_code ) { key.key_ = key_code; };
+        event& set_mouse_button( mouse::button button ) { mouse_button.button_ = button; };
         
         type type_ = type::invalid;
     };

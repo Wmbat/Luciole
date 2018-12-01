@@ -403,22 +403,22 @@ namespace TWE
         const VkPipelineShaderStageCreateInfo shader_stages[]
         {
             {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,    // sType
-                nullptr,                                                // pNext
-                { },                                                    // flags
-                VK_SHADER_STAGE_VERTEX_BIT,                             // stage
-                vertex_shader,                                          // module
-                "main",                                                 // pName
-                nullptr                                                 // pSpecialization
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,                // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                VK_SHADER_STAGE_VERTEX_BIT,                                         // stage
+                vertex_shader,                                                      // module
+                "main",                                                             // pName
+                nullptr                                                             // pSpecialization
             },
             {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,    // sType
-                nullptr,                                                // pNext
-                { },                                                    // flags
-                VK_SHADER_STAGE_FRAGMENT_BIT,                           // stage
-                fragment_shader,                                        // module
-                "main",                                                 // pName
-                nullptr                                                 // pSpecialization
+                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,                // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                VK_SHADER_STAGE_FRAGMENT_BIT,                                       // stage
+                fragment_shader,                                                    // module
+                "main",                                                             // pName
+                nullptr                                                             // pSpecialization
             }
         };
         
@@ -454,15 +454,15 @@ namespace TWE
         const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         const VkSubmitInfo submit_info
         {
-            VK_STRUCTURE_TYPE_SUBMIT_INFO,                                  // sType
-            nullptr,                                                        // pNext
-            1,                                                              // waitSemaphoreCount
-            &vk_context_.image_available_semaphores_[current_frame_],       // pWaitSemaphores
-            wait_stages,                                                    // pWaitDstStageMask
-            1,                                                              // commandBufferCount
-            &vk_context_.command_buffers_[image_index],                     // pCommandBuffers
-            1,                                                              // signalSemaphoreCount
-            &vk_context_.render_finished_semaphores_[current_frame_]        // pSignalSemaphores
+            VK_STRUCTURE_TYPE_SUBMIT_INFO,                                          // sType
+            nullptr,                                                                // pNext
+            1,                                                                      // waitSemaphoreCount
+            &vk_context_.image_available_semaphores_[current_frame_],               // pWaitSemaphores
+            wait_stages,                                                            // pWaitDstStageMask
+            1,                                                                      // commandBufferCount
+            &vk_context_.command_buffers_[image_index],                             // pCommandBuffers
+            1,                                                                      // signalSemaphoreCount
+            &vk_context_.render_finished_semaphores_[current_frame_]                // pSignalSemaphores
         };
         
         try
@@ -479,14 +479,14 @@ namespace TWE
         
         VkPresentInfoKHR present_info
         {
-            .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-            .pNext = nullptr,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &vk_context_.render_finished_semaphores_[current_frame_],
-            .swapchainCount = 1,
-            .pSwapchains = &vk_context_.swapchain_,
-            .pImageIndices = &image_index,
-            .pResults = nullptr
+            VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,                                     // sType
+            nullptr,                                                                // pNext
+            1,                                                                      // waitSemaphoreCount
+            &vk_context_.render_finished_semaphores_[current_frame_],               // pWaitSemaphores
+            1,                                                                      // swapchainCount
+            &vk_context_.swapchain_,                                                // pSwapchains
+            &image_index,                                                           // pImageIndices
+            nullptr                                                                 // pResults
         };
     
         try
@@ -508,10 +508,10 @@ namespace TWE
         {
             const VkCommandBufferBeginInfo begin_info
             {
-                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-                .pNext = nullptr,
-                .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
-                .pInheritanceInfo = nullptr
+                VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,                        // sType
+                nullptr,                                                            // pNext
+                VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,                       // flags
+                nullptr                                                             // pInheritanceInfo
             };
             
             check_vk_return_result(
@@ -522,13 +522,13 @@ namespace TWE
             
             const VkRenderPassBeginInfo rp_begin_info
             {
-                .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-                .pNext = nullptr,
-                .renderPass = vk_context_.render_pass_,
-                .framebuffer = vk_context_.swapchain_framebuffers_[i],
-                .renderArea = { { 0, 0 }, vk_context_.swapchain_extent_ },
-                .clearValueCount = 1,
-                .pClearValues = &clear_colour
+                VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,                           // sType
+                nullptr,                                                            // pNext
+                vk_context_.render_pass_,                                           // renderPass
+                vk_context_.swapchain_framebuffers_[i],                             // framebuffer
+                { { 0, 0 }, vk_context_.swapchain_extent_ },                        // renderArea
+                1,                                                                  // clearValueCount
+                &clear_colour                                                       // pClearValues
             };
             
             vkCmdBeginRenderPass( vk_context_.command_buffers_[i], &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE );
@@ -597,27 +597,27 @@ namespace TWE
         
         const VkApplicationInfo app_info =
         {
-            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-            .pNext = nullptr,
-            .pApplicationName = app_name.c_str( ),
-            .applicationVersion = app_version,
-            .pEngineName = "The Wombat Engine",
-            .engineVersion = VK_MAKE_VERSION( 0, 0, 2 ),
-            .apiVersion = VK_API_VERSION_1_1,
+            VK_STRUCTURE_TYPE_APPLICATION_INFO,                                     // sType
+            nullptr,                                                                // pNext
+            app_name.c_str( ),                                                      // pApplicationName
+            app_version,                                                            // applicationVersion
+            "The Wombat Engine",                                                    // pEngineName
+            VK_MAKE_VERSION( 0, 0, 2 ),                                             // engineVersion
+            VK_API_VERSION_1_1,                                                     // apiVersion
         };
         
         if constexpr( enable_debug_layers )
         {
             const VkInstanceCreateInfo create_info =
             {
-                .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .pApplicationInfo = &app_info,
-                .enabledLayerCount = static_cast<uint32_t>( vk_context_.validation_layers_.size() ),
-                .ppEnabledLayerNames = vk_context_.validation_layers_.data(),
-                .enabledExtensionCount = static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),
-                .ppEnabledExtensionNames = vk_context_.instance_extensions_.data(),
+                VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,                             // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                &app_info,                                                          // pApplicationInfo
+                static_cast<uint32_t>( vk_context_.validation_layers_.size() ),     // enabledLayerCount
+                vk_context_.validation_layers_.data(),                              // ppEnabledLayerNames
+                static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),   // enabledExtensionCount
+                vk_context_.instance_extensions_.data(),                            // ppEnabledExtensionNames
             };
             
             return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
@@ -626,14 +626,14 @@ namespace TWE
         {
             const VkInstanceCreateInfo create_info =
             {
-                .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .pApplicationInfo = &app_info,
-                .enabledLayerCount = 0,
-                .ppEnabledLayerNames = nullptr,
-                .enabledExtensionCount = static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),
-                .ppEnabledExtensionNames = vk_context_.instance_extensions_.data(),
+                VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,                             // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                &app_info,                                                          // pApplicationInfo
+                0,                                                                  // enabledLayerCount
+                nullptr,                                                            // ppEnabledLayerNames
+                static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),   // enabledExtensionCount
+                vk_context_.instance_extensions_.data(),                            // ppEnabledExtensionNames
             };
             
             return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
@@ -646,12 +646,13 @@ namespace TWE
         
         const VkDebugReportCallbackCreateInfoEXT create_info
         {
-            .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
-            .pNext = nullptr,
-            .flags = VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-                VK_DEBUG_REPORT_ERROR_BIT_EXT,
-            .pfnCallback = debug_callback_function,
-            .pUserData = nullptr
+            VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,                // sType
+            nullptr,                                                                // pNext
+            VK_DEBUG_REPORT_WARNING_BIT_EXT |                                       // flags
+            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+            VK_DEBUG_REPORT_ERROR_BIT_EXT,
+            debug_callback_function,                                                // pfnCallback
+            nullptr                                                                 // pUserData
         };
         
         return { vk_create_debug_callback( vk_context_.instance_, &create_info, nullptr, &debug_report ), debug_report };
@@ -740,12 +741,12 @@ namespace TWE
         {
             const VkDeviceQueueCreateInfo create_info
             {
-                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .queueFamilyIndex = queue_family,
-                .queueCount = 1,
-                .pQueuePriorities = &priority
+                VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,                         // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                queue_family,                                                       // queueFamilyIndex
+                1,                                                                  // queueCount
+                &priority                                                           // pQueuePriorities
             };
             
             queue_create_infos.emplace_back( create_info );
@@ -758,16 +759,16 @@ namespace TWE
         {
             const VkDeviceCreateInfo create_info
             {
-                .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .queueCreateInfoCount = static_cast<uint32_t>( queue_create_infos.size() ),
-                .pQueueCreateInfos = queue_create_infos.data(),
-                .enabledLayerCount = static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ),
-                .ppEnabledLayerNames = vk_context_.validation_layers_.data(),
-                .enabledExtensionCount = static_cast<uint32_t>( vk_context_.device_extensions_.size() ),
-                .ppEnabledExtensionNames = vk_context_.device_extensions_.data(),
-                .pEnabledFeatures = &features
+                VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,                               // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                static_cast<uint32_t>( queue_create_infos.size() ),                 // queueCreateInfoCount
+                queue_create_infos.data(),                                          // pQueueCreateInfos
+                static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ),    // enabledLayerCount
+                vk_context_.validation_layers_.data(),                              // ppEnabledLayerNames
+                static_cast<uint32_t>( vk_context_.device_extensions_.size() ),     // enabledExtensionCount
+                vk_context_.device_extensions_.data(),                              // ppEnabledExtensionNames
+                &features                                                           // pEnabledFeatures
             };
     
             return { vkCreateDevice( vk_context_.gpu_, &create_info, nullptr, &device), device };
@@ -776,16 +777,16 @@ namespace TWE
         {
             const VkDeviceCreateInfo create_info
             {
-                .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .queueCreateInfoCount = static_cast<uint32_t>( queue_create_infos.size() ),
-                .pQueueCreateInfos = queue_create_infos.data(),
-                .enabledLayerCount = 0,
-                .ppEnabledLayerNames = nullptr,
-                .enabledExtensionCount = static_cast<uint32_t>( vk_context_.device_extensions_.size() ),
-                .ppEnabledExtensionNames = vk_context_.device_extensions_.data(),
-                .pEnabledFeatures = &features
+                VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,                               // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags 
+                static_cast<uint32_t>( queue_create_infos.size() ),                 // queueCreateInfoCount
+                queue_create_infos.data(),                                          // pQueueCreateInfos
+                0,                                                                  // enabledLayerCount
+                nullptr,                                                            // ppEnabledLayerNames
+                static_cast<uint32_t>( vk_context_.device_extensions_.size() ),     // enabledExtensionCount
+                vk_context_.device_extensions_.data(),                              // ppEnabledExtensionNames
+                &features                                                           // pEnabledFeatures
             };
     
             return { vkCreateDevice( vk_context_.gpu_, &create_info, nullptr, &device), device };
@@ -798,9 +799,9 @@ namespace TWE
         
         const VkSemaphoreCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { }
+            VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,                                // sType
+            nullptr,                                                                // pNext
+            { }                                                                     // flags
         };
         
         return { vkCreateSemaphore( vk_context_.device_, &create_info, nullptr, &semaphore_ ), semaphore_ };
@@ -812,9 +813,9 @@ namespace TWE
         
         const VkFenceCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = VK_FENCE_CREATE_SIGNALED_BIT
+            VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,                                    // sType
+            nullptr,                                                                // pNext
+            VK_FENCE_CREATE_SIGNALED_BIT                                            // flags
         };
         
         return { vkCreateFence( vk_context_.device_, &create_info, nullptr, &fence ), fence };
@@ -826,10 +827,10 @@ namespace TWE
         
         const VkCommandPoolCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .queueFamilyIndex = queue_family
+            VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,                             // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            queue_family                                                            // queueFamilyIndex 
         };
         
         return { vkCreateCommandPool( vk_context_.device_, &create_info, nullptr, &command_pool ), command_pool };
@@ -841,11 +842,11 @@ namespace TWE
         
         const VkCommandBufferAllocateInfo allocate_info
         {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .pNext = nullptr,
-            .commandPool = vk_context_.command_pool_,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            .commandBufferCount = count
+            VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,                         // sType
+            nullptr,                                                                // pNext
+            vk_context_.command_pool_,                                              // commandPool
+            VK_COMMAND_BUFFER_LEVEL_PRIMARY,                                        // level 
+            count                                                                   // commandBufferCount 
         };
         
         return { vkAllocateCommandBuffers( vk_context_.device_, &allocate_info, command_buffers.data() ), command_buffers };
@@ -867,24 +868,24 @@ namespace TWE
         {
             const VkSwapchainCreateInfoKHR create_info
             {
-                .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-                .pNext = nullptr,
-                .flags = { },
-                .surface = vk_context_.surface_,
-                .minImageCount = image_count_,
-                .imageFormat = vk_context_.surface_format_.format,
-                .imageColorSpace = vk_context_.surface_format_.colorSpace,
-                .imageExtent = vk_context_.swapchain_extent_,
-                .imageArrayLayers = 1,
-                .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                .imageSharingMode = VK_SHARING_MODE_CONCURRENT,
-                .queueFamilyIndexCount = 2,
-                .pQueueFamilyIndices = queue_family_indices,
-                .preTransform = capabilities_.currentTransform,
-                .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-                .presentMode = present_mode_,
-                .clipped = VK_TRUE,
-                .oldSwapchain = VK_NULL_HANDLE
+                VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,                        // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags 
+                vk_context_.surface_,                                               // surface 
+                image_count_,                                                       // minImageCount
+                vk_context_.surface_format_.format,                                 // imageFormat
+                vk_context_.surface_format_.colorSpace,                             // imageColorSpace
+                vk_context_.swapchain_extent_,                                      // imageExtent
+                1,                                                                  // imageArrayLayers
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,                                // imageUsage
+                VK_SHARING_MODE_CONCURRENT,                                         // imageSharingMode 
+                2,                                                                  // queueFamilyIndexCount
+                queue_family_indices,                                               // pQueueFamilyIndices
+                capabilities_.currentTransform,                                     // preTransform 
+                VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,                                  // compositeAlpha
+                present_mode_,                                                      // presentMode
+                VK_TRUE,                                                            // clipped 
+                VK_NULL_HANDLE                                                      // oldSwapchain
             };
         
             return { vkCreateSwapchainKHR( vk_context_.device_, &create_info, nullptr, &swapchain ), swapchain };
@@ -893,24 +894,24 @@ namespace TWE
         {
             const VkSwapchainCreateInfoKHR create_info
             {
-                .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-                .pNext = nullptr,
-                .flags = { },
-                .surface = vk_context_.surface_,
-                .minImageCount = image_count_,
-                .imageFormat = vk_context_.surface_format_.format,
-                .imageColorSpace = vk_context_.surface_format_.colorSpace,
-                .imageExtent = vk_context_.swapchain_extent_,
-                .imageArrayLayers = 1,
-                .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-                .queueFamilyIndexCount = 0,
-                .pQueueFamilyIndices = nullptr,
-                .preTransform = capabilities_.currentTransform,
-                .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-                .presentMode = present_mode_,
-                .clipped = VK_TRUE,
-                .oldSwapchain = VK_NULL_HANDLE
+                VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,                        // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                vk_context_.surface_,                                               // surface
+                image_count_,                                                       // minImageCount
+                vk_context_.surface_format_.format,                                 // imageFormat
+                vk_context_.surface_format_.colorSpace,                             // imageColorSpace
+                vk_context_.swapchain_extent_,                                      // imageExtent
+                1,                                                                  // imageArrayLayers
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,                                // imageUsage
+                VK_SHARING_MODE_EXCLUSIVE,                                          // imageSharingMode
+                0,                                                                  // queueFamilyIndexCount
+                nullptr,                                                            // pQueueFamilyIndices
+                capabilities_.currentTransform,                                     // preTransform
+                VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,                                  // compositeAlpha
+                present_mode_,                                                      // presentMode
+                VK_TRUE,                                                            // clipped
+                VK_NULL_HANDLE                                                      // oldSwapchain
             };
         
             return { vkCreateSwapchainKHR( vk_context_.device_, &create_info, nullptr, &swapchain ), swapchain };
@@ -923,29 +924,29 @@ namespace TWE
     
         const VkComponentMapping mapping
         {
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY
+            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // r 
+            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // g 
+            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // b
+            VK_COMPONENT_SWIZZLE_IDENTITY                                           // a
         };
         const VkImageSubresourceRange subresource_range
         {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = 1,
-            .baseArrayLayer = 0,
-            .layerCount = 1
+            VK_IMAGE_ASPECT_COLOR_BIT,                                              // aspectMask
+            0,                                                                      // baseMipLevel
+            1,                                                                      // levelCount
+            0,                                                                      // baseArrayLayer
+            1                                                                       // layerCount
         };
         const VkImageViewCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .image = image,
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = vk_context_.surface_format_.format,
-            .components = mapping,
-            .subresourceRange = subresource_range
+            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,                               // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            image,                                                                  // image
+            VK_IMAGE_VIEW_TYPE_2D,                                                  // viewType
+            vk_context_.surface_format_.format,                                     // format
+            mapping,                                                                // components
+            subresource_range                                                       // subresourceRange
         };
     
         return { vkCreateImageView( vk_context_.device_, &create_info, nullptr, &image_view ), image_view };
@@ -957,15 +958,15 @@ namespace TWE
         
         const VkFramebufferCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .renderPass = vk_context_.render_pass_,
-            .attachmentCount = 1,
-            .pAttachments = &image_view,
-            .width = vk_context_.swapchain_extent_.width,
-            .height = vk_context_.swapchain_extent_.height,
-            .layers = 1
+            VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,                              // sType 
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            vk_context_.render_pass_,                                               // renderPass 
+            1,                                                                      // attachmentCount
+            &image_view,                                                            // pAttachments
+            vk_context_.swapchain_extent_.width,                                    // width
+            vk_context_.swapchain_extent_.height,                                   // height
+            1                                                                       // layers
         };
         
         return { vkCreateFramebuffer( vk_context_.device_, &create_info, nullptr, &framebuffer ), framebuffer };
@@ -977,59 +978,60 @@ namespace TWE
         
         const VkAttachmentDescription colour_attachment
         {
-            .flags = { },
-            .format = vk_context_.surface_format_.format,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
-            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+            { },                                                                    // flags
+            vk_context_.surface_format_.format,                                     // format
+            VK_SAMPLE_COUNT_1_BIT,                                                  // samples
+            VK_ATTACHMENT_LOAD_OP_CLEAR,                                            // loadOp
+            VK_ATTACHMENT_STORE_OP_STORE,                                           // storeOp
+            VK_ATTACHMENT_LOAD_OP_DONT_CARE,                                        // stencilLoadOp
+            VK_ATTACHMENT_STORE_OP_DONT_CARE,                                       // stencilStoreOp
+            VK_IMAGE_LAYOUT_UNDEFINED,                                              // initialLayout
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR                                         // finalLayout
         };
         
         const VkAttachmentReference colour_attachment_ref
         {
-            .attachment = 0,
-            .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+            0,                                                                      // attachment
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL                                // 
         };
         
         const VkSubpassDescription subpass_description
         {
-            .flags = { },
-            .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-            .inputAttachmentCount = 0,
-            .pInputAttachments = nullptr,
-            .colorAttachmentCount = 1,
-            .pColorAttachments = &colour_attachment_ref,
-            .pResolveAttachments = nullptr,
-            .pDepthStencilAttachment = nullptr,
-            .preserveAttachmentCount = 0,
-            .pPreserveAttachments = nullptr
+            { },                                                                    // flags
+            VK_PIPELINE_BIND_POINT_GRAPHICS,                                        // pipelineBindPoint
+            0,                                                                      // inputAttachmentCount
+            nullptr,                                                                // pInputAttachments
+            1,                                                                      // colorAttachmentCount
+            &colour_attachment_ref,                                                 // pColorAttachments
+            nullptr,                                                                // pResolveAttachments
+            nullptr,                                                                // pDepthStencilAttachment
+            0,                                                                      // preserveAttachmentCount
+            nullptr                                                                 // pPreserveAttachments
         };
     
         const VkSubpassDependency dependency
         {
-            .srcSubpass = VK_SUBPASS_EXTERNAL,
-            .dstSubpass = 0,
-            .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            .dependencyFlags = { }
+            VK_SUBPASS_EXTERNAL,                                                    // srcSubpass
+            0,                                                                      // dstSubpass
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,                          // srcStageMask
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,                          // dstStageMask
+            0,                                                                      // srcAccessMask
+            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |                                   // dstAccessMask
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,          
+            { }                                                                     // dependencyFlags
         };
         
         const VkRenderPassCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .attachmentCount = 1,
-            .pAttachments = &colour_attachment,
-            .subpassCount = 1,
-            .pSubpasses = &subpass_description,
-            .dependencyCount = 1,
-            .pDependencies = &dependency,
+            VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,                              // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            1,                                                                      // attachmentCount
+            &colour_attachment,                                                     // pAttachments
+            1,                                                                      // subpassCount
+            &subpass_description,                                                   // pSubpasses
+            1,                                                                      // dependencyCount
+            &dependency                                                             // pDependencies
         };
         
         return { vkCreateRenderPass( vk_context_.device_, &create_info, nullptr, &render_pass ), render_pass };
@@ -1043,11 +1045,11 @@ namespace TWE
         
         const VkShaderModuleCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .codeSize = shader_code.size(),
-            .pCode = reinterpret_cast<const uint32_t*>( shader_code.data() )
+            VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,                            // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            shader_code.size(),                                                     // codeSize
+            reinterpret_cast<const uint32_t*>( shader_code.data() )                 // pCode
         };
         
         return { vkCreateShaderModule( vk_context_.device_, &create_info, nullptr, &shader_module ), shader_module };
@@ -1059,13 +1061,13 @@ namespace TWE
         
         const VkPipelineLayoutCreateInfo create_info
             {
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = { },
-                .setLayoutCount = 0,
-                .pSetLayouts = nullptr,
-                .pushConstantRangeCount = 0,
-                .pPushConstantRanges = nullptr
+                VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,                      // sType
+                nullptr,                                                            // pNext
+                { },                                                                // flags
+                0,                                                                  // setLayoutCount
+                nullptr,                                                            // pSetLayouts
+                0,                                                                  // pushConstantRangeCount
+                nullptr                                                             // pPushConstantRanges
             };
         
         return { vkCreatePipelineLayout( vk_context_.device_, &create_info, nullptr, &layout ), layout };
@@ -1078,96 +1080,97 @@ namespace TWE
         
         const VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .vertexBindingDescriptionCount = 0,
-            .pVertexBindingDescriptions = nullptr,
-            .vertexAttributeDescriptionCount = 0,
-            .pVertexAttributeDescriptions = nullptr
+            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,              // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            0,                                                                      // vertexBindingDescriptionCount
+            nullptr,                                                                // pVertexBindingDescriptions
+            0,                                                                      // vertexAttributeDescriptionCount
+            nullptr                                                                 // pVertexAttributeDescriptions
         };
         const VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-            .primitiveRestartEnable = VK_FALSE          // Test with VK_TRUE and VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+            // Test with primitiveRestartEnable = VK_TRUE and topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,            // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,                                    // topology
+            VK_FALSE                                                                // primitiveRestartEnable
         };
         const VkViewport viewport
         {
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = static_cast<float>( vk_context_.swapchain_extent_.width ),
-            .height = static_cast<float>( vk_context_.swapchain_extent_.height ),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f
+            0.0f,                                                                   // x
+            0.0f,                                                                   // y
+            static_cast<float>( vk_context_.swapchain_extent_.width ),              // width
+            static_cast<float>( vk_context_.swapchain_extent_.height ),             // height
+            0.0f,                                                                   // minDepth
+            1.0f                                                                    // maxDepth
         };
         const VkRect2D scissors
         {
-            .offset = { 0, 0 },
-            .extent = vk_context_.swapchain_extent_
+            { 0, 0 },                                                               // offset
+            vk_context_.swapchain_extent_                                           // extent
         };
         const VkPipelineViewportStateCreateInfo viewport_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .viewportCount = 1,
-            .pViewports = &viewport,
-            .scissorCount = 1,
-            .pScissors = &scissors
+            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,                  // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            1,                                                                      // viewportCount
+            &viewport,                                                              // pViewports
+            1,                                                                      // scissorCount
+            &scissors                                                               // pScissors
         };
         const VkPipelineRasterizationStateCreateInfo rasterization_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .depthClampEnable = VK_FALSE,
-            .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = VK_POLYGON_MODE_FILL,
-            .cullMode = VK_CULL_MODE_BACK_BIT,
-            .frontFace = VK_FRONT_FACE_CLOCKWISE,
-            .depthBiasEnable = VK_FALSE,
-            .depthBiasConstantFactor = 0.0f,
-            .depthBiasClamp = 0.0f,
-            .depthBiasSlopeFactor = 0.0f,
-            .lineWidth = 1.0f
+            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,             // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            VK_FALSE,                                                               // depthClampEnable
+            VK_FALSE,                                                               // rasterizerDiscardEnable
+            VK_POLYGON_MODE_FILL,                                                   // polygonMode
+            VK_CULL_MODE_BACK_BIT,                                                  // cullMode
+            VK_FRONT_FACE_CLOCKWISE,                                                // frontFace
+            VK_FALSE,                                                               // depthBiasEnable
+            0.0f,                                                                   // depthBiasConstantFactor
+            0.0f,                                                                   // depthBiasClamp
+            0.0f,                                                                   // depthBiasSlopeFactor
+            1.0f                                                                    // lineWidth
         };
         const VkPipelineMultisampleStateCreateInfo multisample_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-            .sampleShadingEnable = VK_FALSE,
-            .minSampleShading = 1.0f,
-            .pSampleMask = nullptr,
-            .alphaToCoverageEnable = VK_FALSE,
-            .alphaToOneEnable = VK_FALSE
+            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,               // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            VK_SAMPLE_COUNT_1_BIT,                                                  // rasterizationSamples
+            VK_FALSE,                                                               // sampleShadingEnable
+            1.0f,                                                                   // minSampleShading
+            nullptr,                                                                // pSampleMask
+            VK_FALSE,                                                               // alphaToCoverageEnable
+            VK_FALSE                                                                // alphaToOneEnable
         };
         const VkPipelineColorBlendAttachmentState colour_blend_attachment_state
         {
-            .blendEnable = VK_FALSE,
-            .srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
-            .dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
-            .colorBlendOp = VK_BLEND_OP_ADD,
-            .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-            .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-            .alphaBlendOp = VK_BLEND_OP_ADD,
-            .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+            VK_FALSE,                                                               // blendEnable
+            VK_BLEND_FACTOR_ONE,                                                    // srcColorBlendFactor
+            VK_BLEND_FACTOR_ZERO,                                                   // dstColorBlendFactor
+            VK_BLEND_OP_ADD,                                                        // colorBlendOp
+            VK_BLEND_FACTOR_ONE,                                                    // srcAlphaBlendFactor
+            VK_BLEND_FACTOR_ZERO,                                                   // dstAlphaBlendFactor
+            VK_BLEND_OP_ADD,                                                        // alphaBlendOp
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |                   // colorWriteMask
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
         };
         const VkPipelineColorBlendStateCreateInfo colour_blend_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .logicOpEnable = VK_FALSE,
-            .logicOp = VK_LOGIC_OP_COPY,
-            .attachmentCount = 1,
-            .pAttachments = &colour_blend_attachment_state,
-            .blendConstants = { 0.0f, 0.0f, 0.0f, 0.0f }
+            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,               // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            VK_FALSE,                                                               // logicOpEnable
+            VK_LOGIC_OP_COPY,                                                       // logicOp
+            1,                                                                      // attachmentCount
+            &colour_blend_attachment_state,                                         // pAttachments
+            { 0.0f, 0.0f, 0.0f, 0.0f }                                              // blendConstants
         };
         const VkDynamicState dynamic_states[]
         {
@@ -1176,34 +1179,34 @@ namespace TWE
         };
         const VkPipelineDynamicStateCreateInfo dynamic_state_create_info
         {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .dynamicStateCount = 0,
-            .pDynamicStates = nullptr
+            VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,                   // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            0,                                                                      // dynamicStateCount
+            nullptr                                                                 // pDynamicStates
         };
         
         const VkGraphicsPipelineCreateInfo create_info
         {
-            .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = { },
-            .stageCount = stage_count,
-            .pStages = p_stages,
-            .pVertexInputState = &vertex_input_state_create_info,
-            .pInputAssemblyState = &input_assembly_state_create_info,
-            .pTessellationState = nullptr,
-            .pViewportState = &viewport_state_create_info,
-            .pRasterizationState = &rasterization_state_create_info,
-            .pMultisampleState = &multisample_state_create_info,
-            .pDepthStencilState = nullptr,
-            .pColorBlendState = &colour_blend_state_create_info,
-            .pDynamicState = &dynamic_state_create_info,
-            .layout = vk_context_.graphics_pipeline_layout_,
-            .renderPass = vk_context_.render_pass_,
-            .subpass = 0,
-            .basePipelineHandle = VK_NULL_HANDLE,
-            .basePipelineIndex = -1
+            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,                        // sType
+            nullptr,                                                                // pNext
+            { },                                                                    // flags
+            stage_count,                                                            // stageCount
+            p_stages,                                                               // pStages
+            &vertex_input_state_create_info,                                        // pVertexInputState
+            &input_assembly_state_create_info,                                      // pInputAssemblyState
+            nullptr,                                                                // pTessellationState
+            &viewport_state_create_info,                                            // pViewportState
+            &rasterization_state_create_info,                                       // pRasterizationState
+            &multisample_state_create_info,                                         // pMultisampleState
+            nullptr,                                                                // pDepthStencilState
+            &colour_blend_state_create_info,                                        // pColorBlendState
+            &dynamic_state_create_info,                                             // pDynamicState
+            vk_context_.graphics_pipeline_layout_,                                  // layout
+            vk_context_.render_pass_,                                               // renderPass
+            0,                                                                      // subpass
+            VK_NULL_HANDLE,                                                         // basePipelineHandle
+            -1                                                                      // basePipelineIndex
         };
         
         return { vkCreateGraphicsPipelines( vk_context_.device_, nullptr, 1, &create_info, nullptr, &pipeline ), pipeline };

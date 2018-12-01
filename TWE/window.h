@@ -22,7 +22,7 @@
 #include <iostream>
 #include <functional>
 
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
 #include <window.h>
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 #include <wayland-client.h>
@@ -98,9 +98,9 @@ namespace TWE
         
         bool open_ = false;
 
-#if defined( _WIN32 )
-        HINSTANCE instance_ = nullptr;
-        HWND window_ = nullptr;
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+        HINSTANCE win32_instance_ = nullptr;
+        HWND win32_window_ = nullptr;
         
         
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
