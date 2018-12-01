@@ -27,11 +27,11 @@ include_directories( external/include )
 include_directories( external/include/glm )
 include_directories( external/include/spdlog/include )
 
-find_package( Vulkan REQUIRED )
+find_package( Vulkan )
 
 if( WIN32 )
     if( NOT Vulkan_FOUND )
-        find_library( Vulkan_LIBRARY NAMES vulkan-1 HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/win32/vulkan" REQUIRED )
+        find_library( Vulkan_LIBRARY NAMES vulkan-1 HINTS "$ENV{VULKAN_SDK}/lib" "external/libs/win32/vulkan" )
 
         if( Vulkan_LIBRARY )
             set( Vulkan_FOUND ON )
@@ -39,10 +39,10 @@ if( WIN32 )
         endif( )
     endif( )
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
 elseif( UNIX )
     if( NOT Vulkan_FOUND )
-        find_library( Vulkan_LIBRARY NAMES libvulkan HINTS  "$ENV{VULKAN_SDK}/lib" "external/libs/linux/vulkan" REQUIRED )
+        find_library( Vulkan_LIBRARY NAMES libvulkan HINTS  "$ENV{VULKAN_SDK}/lib" "external/libs/linux/vulkan" )
 
         if( Vulkan_LIBRARY )
             set( Vulkan_FOUND ON )
@@ -77,12 +77,21 @@ endif( )
 #    message( STATUS ${OPENAL_LIBRARY} )
 #endif()
 
+if( MSVC )
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+endif( )
+
 add_library( TWE SHARED
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
         source/log.cpp
         source/renderer.cpp
         source/window.cpp )
+
+if( WIN32 )
+	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
+	target_compile_definitions( TWE PRIVATE TWE_BUILD_DLL )
+endif( )
 
 set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
 set_target_properties( TWE PROPERTIES SOVERSION 1 )
