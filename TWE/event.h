@@ -80,11 +80,12 @@ namespace TWE
             window_resize_event window_resize;
         };
 
+        type type_ = type::invalid;
+
         event& set_type( type type ) { type_ = type; };
         event& set_key( keyboard::key key_code ) { key.key_ = key_code; };
         event& set_mouse_button( mouse::button button ) { mouse_button.button_ = button; };
-        
-        type type_ = type::invalid;
+        event& set_mouse_move( int32_t x, int32_t y ) { mouse_move.x_ = x; mouse_move.y_ = y; };
     };
 }
 
