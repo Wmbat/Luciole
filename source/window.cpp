@@ -95,8 +95,10 @@ namespace TWE
             title_( title ),
             open_( true )
     {
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+        core_info( "Using Win32 for window creation." );
 
+        
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         core_info( "Using Wayland for window creation." );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
@@ -203,7 +205,7 @@ namespace TWE
     }
     window::~window( )
     {
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
         xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
@@ -222,7 +224,7 @@ namespace TWE
             
             open_ = rhs.open_;
             rhs.open_ = false;
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
 
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
@@ -270,19 +272,19 @@ namespace TWE
     
     void window::poll_events( )
     {
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
 
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-        xcb_generic_event_t *event;
-        while( ( event = xcb_poll_for_event( p_xcb_connection_.get() ) ) )
+        xcb_generic_event_t *e;
+        while( ( e = xcb_poll_for_event( p_xcb_connection_.get() ) ) )
         {
-            switch ( event->response_type & 0x7f )
+            switch ( e->response_type & 0x7f )
             {
                 case XCB_CLIENT_MESSAGE:
                 {
-                    const auto *message_event = reinterpret_cast<const xcb_client_message_event_t *>( event );
+                    const auto *message_event = reinterpret_cast<const xcb_client_message_event_t *>( e );
             
                     if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
                     {
@@ -297,7 +299,7 @@ namespace TWE
                 break;
             case XCB_CONFIGURE_NOTIFY:
                 {
-                    const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( event );
+                    const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
             
                     struct event resize{ };
                         resize.type_ = event::type::window_resize,
@@ -316,7 +318,7 @@ namespace TWE
                 break;
             case XCB_FOCUS_IN:
                 {
-                    const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( event );
+                    const auto *focus_in_event = reinterpret_cast<const xcb_focus_in_event_t *>( e );
             
                     struct event focus_in{ };
                         focus_in.type_ = event::type::window_focus_in;
@@ -326,7 +328,7 @@ namespace TWE
                 break;
             case XCB_FOCUS_OUT:
                 {
-                    const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( event );
+                    const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
             
                     struct event focus_out{ };
                         focus_out.type_ = event::type::window_focus_out;
@@ -336,7 +338,7 @@ namespace TWE
                 break;
             case XCB_KEY_PRESS:
                 {
-                    const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( event );
+                    const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( e );
             
                     struct event key_press{ };
                         key_press.type_ = event::type::key_pressed,
@@ -347,7 +349,7 @@ namespace TWE
                 break;
             case XCB_KEY_RELEASE:
                 {
-                    const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( event );
+                    const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( e );
             
                     struct event key_release{ };
                         key_release.type_ = event::type::key_released,
@@ -358,7 +360,7 @@ namespace TWE
                 break;
             case XCB_BUTTON_PRESS:
                 {
-                    const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( event );
+                    const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
             
                     struct event button_press{ };
                         button_press.type_ = event::type::mouse_button_pressed,
@@ -369,7 +371,7 @@ namespace TWE
                 break;
             case XCB_BUTTON_RELEASE:
                 {
-                    const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( event );
+                    const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
                     
                     struct event button_release{ };
                         button_release.type_ = event::type::mouse_button_released,
@@ -380,7 +382,7 @@ namespace TWE
                 break;
             case XCB_MOTION_NOTIFY:
                 {
-                    const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( event );
+                    const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
             
                     struct event mouse_move{ };
                         mouse_move.type_ = event::type::mouse_move,
@@ -412,7 +414,7 @@ namespace TWE
 
     void window::set_title( const std::string &title ) noexcept
     {
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
         xcb_change_property(
@@ -438,31 +440,33 @@ namespace TWE
     {
         VkSurfaceKHR surface;
 
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
         const VkWin32SurfaceCreateInfoKHR create_info
         {
-            .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-            .pNext = nullptr,
-            .flags = { },
+            VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,            // sType
+            nullptr,                                                    // pNext
+            { },                                                        // flags
+            win32_instance_,                                            // hinstance
+            win32_window_                                               // hwnd
         };
 
         return { vkCreateWin32SurfaceKHR( instance, &create_info, nullptr, &surface ), surface };
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         const VkWaylandSurfaceCreateInfoKHR create_info
         {
-            .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-            .pNext = nullptr,
-            .flags = { },
+            VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,          // sType
+            nullptr,                                                    // pNext
+            { },                                                        // flags
         };
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
         const VkXcbSurfaceCreateInfoKHR create_info
         {
-            .sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
-            .pNext = nullptr,
-            .flags = { },
-            .connection = p_xcb_connection_.get(),
-            .window = xcb_window_
+            VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,              // sType
+            nullptr,                                                    // pNext
+            { },                                                        // flags
+            p_xcb_connection_.get(),                                    // connection
+            xcb_window_                                                 // window
         };
 
         return { vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ), surface };

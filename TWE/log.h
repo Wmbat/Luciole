@@ -20,12 +20,14 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "TWE_core.h"
+
 namespace TWE
 {
     class log
     {
     public:
-        static void init( );
+        static void TWE_API init( );
 
         inline static spdlog::logger& get_core_logger( )
         {

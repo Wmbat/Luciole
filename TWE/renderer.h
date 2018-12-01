@@ -21,6 +21,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "TWE_core.h"
 #include "window.h"
 
 namespace TWE
@@ -36,19 +37,19 @@ namespace TWE
         struct swapchain_support_details_type;
 
     public:
-        renderer( const window& window, const std::string& app_name, uint32_t app_version );
+        TWE_API renderer( const window& window, const std::string& app_name, uint32_t app_version );
         renderer( const renderer& renderer ) noexcept = delete;
-        renderer( renderer&& renderer ) noexcept;
-        ~renderer( );
+        TWE_API renderer( renderer&& renderer ) noexcept;
+        TWE_API ~renderer( );
 
         renderer& operator=( const renderer& renderer ) noexcept = delete;
-        renderer& operator=( renderer&& renderer ) noexcept;
+        TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
-        void setup_graphics_pipeline( const graphics_pipeline_data& data );
+        void TWE_API setup_graphics_pipeline( const graphics_pipeline_data& data );
 
-        void draw_frame( );
+        void TWE_API draw_frame( );
         
-        void record_draw_calls( );
+        void TWE_API record_draw_calls( );
     
     private:
         void set_up( );
@@ -89,8 +90,7 @@ namespace TWE
         const vk_return_type<VkPipeline> create_graphics_pipeline(std::uint32_t stage_count,
             const VkPipelineShaderStageCreateInfo* p_stages ) const noexcept;
     
-        
-        
+
         bool check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept;
     
         bool check_debug_layer_support( const std::vector<const char*>& debug_layers ) const noexcept;
