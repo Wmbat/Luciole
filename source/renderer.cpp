@@ -86,6 +86,8 @@ namespace TWE
         window_width_( wnd.get_width() ),
         window_height_( wnd.get_height() )
     {
+
+
         try
         {
             set_up();
@@ -128,7 +130,7 @@ namespace TWE
                 semaphore = check_vk_return_type_result( create_semaphore(), "create_semaphore( )" );
             }
             core_info( "Vulkan -> Image Available Semaphores created" );
-            
+
             vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& semaphore : vk_context_.render_finished_semaphores_ )
             {
