@@ -14,6 +14,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <application.h>
+
 #include "application.h"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
@@ -23,17 +25,21 @@
 #include "window/xcb_window.h"
 #endif
 
+#include "TWE.h"
+
 namespace TWE
 {
-    application::application ( )
+    application::application ( const std::string& title )
     {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
         p_wnd_ = std::make_unique<win32_window> ( );
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         p_wnd_ = std::make_unique<wayland_window> ( );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-        p_wnd_ = std::make_unique<xcb_window> ( );
+        p_wnd_ = std::make_unique<xcb_window> ( title );
 #endif
+        
+        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), p_wnd_->get_title(), VK_MAKE_VERSION( 0, 0, 1 ) );
     }
     application::~application ( )
     {
@@ -42,6 +48,18 @@ namespace TWE
 
     void application::run ( )
     {
-
+        while( p_wnd_->is_open() )
+        {
+            p_wnd_->poll_events();
+            
+            p_renderer_->draw_frame();
+        }
+    }
+    
+    void application::init_graphics_pipeline( const std::string &vertex_shader_filepath,
+        const std::string &fragment_shader_filepath )
+    {
+        p_renderer_->setup_graphics_pipeline( { vertex_shader_filepath, fragment_shader_filepath } );
+        p_renderer_->record_draw_calls();
     }
 }

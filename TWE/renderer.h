@@ -22,7 +22,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "TWE_core.h"
-#include "window.h"
+#include "window/base_window.h"
 
 namespace TWE
 {
@@ -37,7 +37,7 @@ namespace TWE
         struct swapchain_support_details_type;
 
     public:
-        TWE_API renderer( const window& window, const std::string& app_name, uint32_t app_version );
+        TWE_API renderer( const base_window* p_window, const std::string& app_name, uint32_t app_version );
         renderer( const renderer& renderer ) noexcept = delete;
         TWE_API renderer( renderer&& renderer ) noexcept;
         TWE_API ~renderer( );
@@ -59,7 +59,7 @@ namespace TWE
     
         const vk_return_type<VkDebugReportCallbackEXT> create_debug_report( ) const noexcept;
     
-        const vk_return_type<VkSurfaceKHR> create_surface( const window& wnd ) const noexcept;
+        const vk_return_type<VkSurfaceKHR> create_surface( const base_window* p_window ) const noexcept;
     
         const VkPhysicalDevice pick_physical_device( ) const noexcept;
     

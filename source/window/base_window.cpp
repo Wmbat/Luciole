@@ -72,4 +72,44 @@ namespace TWE
     {
         return head_ == tail_;
     }
+    
+    event base_window::pop_event( ) noexcept
+    {
+        return event_handler_.pop_event();
+    }
+    
+    bool base_window::is_event_queue_empty( )
+    {
+        return event_handler_.is_empty();
+    }
+    
+    bool base_window::is_kbd_key_pressed( keyboard::key key_code ) noexcept
+    {
+        return event_handler_.is_keyboard_key_pressed( key_code );
+    }
+    
+    bool base_window::is_mb_pressed( mouse::button button_code ) noexcept
+    {
+        return event_handler_.is_mouse_button_pressed( button_code );
+    }
+    
+    const std::string& base_window::get_title( ) const noexcept
+    {
+        return title_;
+    }
+    
+    bool base_window::is_open( ) const noexcept
+    {
+        return open_;
+    }
+    
+    uint32_t base_window::get_width( ) const noexcept
+    {
+        return settings_.width_;
+    }
+    
+    uint32_t base_window::get_height( ) const noexcept
+    {
+        return settings_.height_;
+    }
 }

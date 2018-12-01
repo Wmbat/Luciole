@@ -18,6 +18,7 @@
 #define BASE_WINDOW_H
 
 #include "../TWE_core.h"
+#include "../vulkan_utils.h"
 #include "../event.h"
 
 namespace TWE
@@ -47,9 +48,46 @@ namespace TWE
             uint32_t head_ = 0;
             uint32_t tail_ = 0;
         };
+    
+    public:
+        event TWE_API pop_event( ) noexcept;
+    
+        bool TWE_API is_event_queue_empty( );
+        bool TWE_API is_kbd_key_pressed( keyboard::key key_code ) noexcept;
+        bool TWE_API is_mb_pressed( mouse::button button_code ) noexcept;
+    
+        virtual void TWE_API poll_events( ) = 0;
+        
+        void TWE_API handle_event( const event& event ) noexcept;
+    
+        const TWE_API std::string& get_title( ) const noexcept;
+    
+        bool TWE_API is_open( ) const noexcept;
+    
+        virtual vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept = 0;
+    
+        uint32_t TWE_API get_width( ) const noexcept;
+        uint32_t TWE_API get_height( ) const noexcept;
 
-    private:
-
+    protected:
+        std::string title_;
+    
+        bool open_ = false;
+        
+        event_handler event_handler_;
+    
+        struct settings
+        {
+            uint32_t x_ = 100;
+            uint32_t y_ = 100;
+        
+            uint32_t width_ = 1080;
+            uint32_t height_ = 720;
+        
+            int default_screen_id_ = 0;
+        
+            bool fullscreen_ = false;
+        } settings_;
     };
 }
 

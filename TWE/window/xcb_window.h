@@ -17,7 +17,10 @@
 #ifndef XCB_WINDOW_H
 #define XCB_WINDOW_H
 
-#if defined( VK_USE_PLATFORM_XCB_XHR )
+#include <memory>
+#include <functional>
+
+#if defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
 
 #include "base_window.h"
@@ -26,7 +29,26 @@ namespace TWE
 {
     class xcb_window : public base_window
     {
-
+    public:
+        TWE_API xcb_window( ) = default;
+        TWE_API explicit xcb_window( const std::string& title );
+        TWE_API xcb_window( const xcb_window& rhs ) = delete;
+        TWE_API xcb_window( xcb_window&& rhs ) noexcept;
+        TWE_API ~xcb_window( );
+        
+        TWE_API xcb_window& operator=( const xcb_window& rhs ) = delete;
+        TWE_API xcb_window& operator=( xcb_window&& rhs ) noexcept;
+    
+        virtual void TWE_API poll_events( ) override;
+        
+        vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept override;
+    
+    private:
+        std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>> p_xcb_connection_;
+        xcb_screen_t* p_xcb_screen_;
+        xcb_window_t xcb_window_;
+    
+        std::unique_ptr<xcb_intern_atom_reply_t> p_xcb_wm_delete_window_;
     };
 }
 #endif

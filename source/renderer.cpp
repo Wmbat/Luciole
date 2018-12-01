@@ -81,10 +81,10 @@ namespace TWE
     }
     
     
-    renderer::renderer( const window& wnd, const std::string& app_name, uint32_t app_version )
+    renderer::renderer( const base_window* p_wnd, const std::string& app_name, uint32_t app_version )
         :
-        window_width_( wnd.get_width() ),
-        window_height_( wnd.get_height() )
+        window_width_( p_wnd->get_width() ),
+        window_height_( p_wnd->get_height() )
     {
 
 
@@ -106,7 +106,7 @@ namespace TWE
             }
     
             vk_context_.surface_ = check_vk_return_type_result(
-                create_surface( wnd ), "create_surface( )" );
+                create_surface( p_wnd ), "create_surface( )" );
             core_info( "Vulkan -> Surface created." );
     
             vk_context_.gpu_ = pick_physical_device( );
@@ -660,9 +660,9 @@ namespace TWE
         return { vk_create_debug_callback( vk_context_.instance_, &create_info, nullptr, &debug_report ), debug_report };
     }
     
-    const vk_return_type<VkSurfaceKHR> renderer::create_surface( const window& wnd ) const noexcept
+    const vk_return_type<VkSurfaceKHR> renderer::create_surface( const base_window* p_wnd ) const noexcept
     {
-        return wnd.create_surface( vk_context_.instance_ );
+        return p_wnd->create_surface( vk_context_.instance_ );
     }
     
     const VkPhysicalDevice renderer::pick_physical_device( ) const noexcept
