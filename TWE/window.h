@@ -32,6 +32,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "TWE_core.h"
 #include "vulkan_utils.h"
 
 #include "event.h"
@@ -44,14 +45,14 @@ namespace TWE
         class event_handler
         {
         public:
-            event pop_event( ) noexcept;
+            event TWE_API pop_event( ) noexcept;
             
-            void push_event( event event ) noexcept;
+            void TWE_API push_event( event event ) noexcept;
             
-            bool is_keyboard_key_pressed( keyboard::key key_code ) noexcept;
-            bool is_mouse_button_pressed( mouse::button button_code ) noexcept;
+            bool TWE_API is_keyboard_key_pressed( keyboard::key key_code ) noexcept;
+            bool TWE_API is_mouse_button_pressed( mouse::button button_code ) noexcept;
             
-            bool is_empty( ) const noexcept;
+            bool TWE_API is_empty( ) const noexcept;
 
         private:
             static constexpr uint16_t BUFFER_SIZE = 64;
@@ -65,33 +66,33 @@ namespace TWE
         };
 
     public:
-        explicit window( const std::string& title );
+        explicit TWE_API window( const std::string& title );
         window( const window& rhs ) noexcept = delete;
-        window( window&& rhs ) noexcept;
-        ~window( );
+        TWE_API window( window&& rhs ) noexcept;
+        TWE_API ~window( );
 
         window& operator=( const window& rhs ) noexcept = delete;
-        window& operator=( window&& rhs ) noexcept;
+        TWE_API window& operator=( window&& rhs ) noexcept;
         
-        event pop_event( ) noexcept;
+        event TWE_API pop_event( ) noexcept;
         
-        bool is_event_queue_empty( );
-        bool is_kbd_key_pressed( keyboard::key key_code ) noexcept;
-        bool is_mb_pressed( mouse::button button_code ) noexcept;
+        bool TWE_API is_event_queue_empty( );
+        bool TWE_API is_kbd_key_pressed( keyboard::key key_code ) noexcept;
+        bool TWE_API is_mb_pressed( mouse::button button_code ) noexcept;
         
-        void poll_events( );
-        void handle_event( const event& event ) noexcept;
+        void TWE_API poll_events( );
+        void TWE_API handle_event( const event& event ) noexcept;
 
-        void set_title( const std::string& title ) noexcept;
+        void TWE_API set_title( const std::string& title ) noexcept;
         
-        const std::string& get_title( ) const noexcept;
+        const TWE_API std::string& get_title( ) const noexcept;
 
-        bool is_open( ) const noexcept;
+        bool TWE_API is_open( ) const noexcept;
         
-        vk_return_type<VkSurfaceKHR> create_surface( const VkInstance& instance ) const noexcept;
+        vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept;
         
-        uint32_t get_width( ) const noexcept;
-        uint32_t get_height( ) const noexcept;
+        uint32_t TWE_API get_width( ) const noexcept;
+        uint32_t TWE_API get_height( ) const noexcept;
 
     private:
         std::string title_;

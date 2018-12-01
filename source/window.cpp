@@ -97,6 +97,8 @@ namespace TWE
     {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
         core_info( "Using Win32 for window creation." );
+
+        
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         core_info( "Using Wayland for window creation." );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
