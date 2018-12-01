@@ -87,6 +87,7 @@ namespace TWE
         event& set_mouse_button( mouse::button button ) { mouse_button.button_ = button; };
         event& set_mouse_move( int32_t x, int32_t y ) { mouse_move.x_ = x; mouse_move.y_ = y; };
         event& set_window_move( uint32_t x, uint32_t y ) { window_move.x_ = x; window_move.y_ = y; };
+
     };
 }
 
