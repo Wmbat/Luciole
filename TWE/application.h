@@ -22,20 +22,30 @@
 #include "window/base_window.h"
 
 #include "TWE_core.h"
+#include "renderer.h"
 
 namespace TWE
 {
     class application
     {
     public:
-        TWE_API application ( );
+        TWE_API application ( const std::string& title );
         virtual TWE_API ~application ( );
 
-        void run ( );
+        void TWE_API init_graphics_pipeline( const std::string& vertex_shader_filepath,
+            const std::string& fragment_shader_filepath );
+        
+        void TWE_API run( );
 
     private:
         std::unique_ptr<base_window> p_wnd_;
+        std::unique_ptr<renderer> p_renderer_;
     };
+    
+    /**
+     * should be defined by the Client.
+     */
+    application* create_application( );
 }
 
 #endif //TWE_APPLICATION_H

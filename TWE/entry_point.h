@@ -14,14 +14,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_H
-#define TWE_H
+#ifndef TWE_ENTRY_POINT_H
+#define TWE_ENTRY_POINT_H
 
-#include "application.h"
-#include "log.h"
+extern TWE::application* TWE::create_application( );
 
-//
-#include "entry_point.h"
-//
+#if defined( TWE_PLATFORM_WINDOWS )
 
-#endif //TWE_H
+#else
+int main( int args, char** argv )
+{
+    TWE::log::init( );
+    
+    auto app = TWE::create_application( );
+    app->run();
+    
+    delete app;
+}
+#endif
+
+#endif //TWE_ENTRY_POINT_H
