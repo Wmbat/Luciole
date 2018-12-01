@@ -103,7 +103,6 @@ namespace TWE
         HINSTANCE win32_instance_ = nullptr;
         HWND win32_window_ = nullptr;
         
-        
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
