@@ -1,3 +1,0 @@
-C:/Users/hugos/Documents/programming/cpp/TWE/cmake-build-debug/CMakeFiles/TWE.dir
-C:/Users/hugos/Documents/programming/cpp/TWE/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/hugos/Documents/programming/cpp/TWE/cmake-build-debug/CMakeFiles/rebuild_cache.dir
