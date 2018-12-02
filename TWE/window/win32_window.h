@@ -17,16 +17,33 @@
 #ifndef WIN32_WINDOW_H
 #define WIN32_WINDOW_H
 
+#include "base_window.h"
+
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
 #include <window.h>
-
-#include "base_window.h"
 
 namespace TWE
 {
     class win32_window : public base_window
     {
+    public:
+        TWE_API win32_window ( ) = default;
+        TWE_API win32_window ( const std::string& title );
+        TWE_API win32_window ( const win32_window& rhs ) = delete;
+        TWE_API win32_window ( win32_window&& rhs ) noexcept;
+        TWE_API ~win32_window ( );
 
+        TWE_API win32_window& operator=( const win32_window& rhs ) = delete;
+        TWE_API win32_window& operator=( win32_window&& rhs ) noexcept;
+
+        virtual void TWE_API poll_events ( ) override;
+
+        vk_return_type<VkSurfaceKHR> TWE_API create_surface ( const VkInstance& instance ) const noexcept override;
+
+    private:
+        static constexpr char* wnd_class_name_ = "TWE window";
+        HINSTANCE win_instance_ = nullptr;
+        HWND win_window_ = nullptr;
     };
 }
 #endif

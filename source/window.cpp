@@ -24,19 +24,7 @@
 namespace TWE
 {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-    static inline LRESULT CALLBACK window_proc ( HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param )
-    {
-        switch( message )
-        {
-            case WM_DESTROY:
-            {
-                PostQuitMessage ( 0 );
-                return 0;
-            } break;
-        }
 
-        return DefWindowProc ( h_wnd, message, w_param, l_param );
-    }
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
     {
@@ -105,50 +93,6 @@ namespace TWE
     window::window ( HINSTANCE instance, const std::string& title )
         : title_( title )
     {
-        core_info ( "Using Win32 for window creation." );
-
-        WNDCLASSEX wc
-        {
-            sizeof ( WNDCLASSEX ),              // cbSize
-            CS_HREDRAW | CS_VREDRAW,            // style
-            window_proc,                        // lpfnWndProc
-            0,                                  // cbClsExtra
-            0,                                  // cbWndExtra
-            win_instance_,                      // hInstance
-            nullptr,                            // hIcon
-            LoadCursor ( nullptr,IDC_ARROW ),   // hCursor
-            nullptr,                            // hbrBackground
-            nullptr,                            // lpszMenuName
-            wnd_class_name_,                    // lpszClassName
-            nullptr                             // hIconSm
-        };
-
-        RegisterClassEx ( &wc );
-
-        /*
-        RECT wnd_rect
-        {
-            settings_.x_,                       // left
-            settings_.y_,                       // top
-            settings_.x_ + settings_.width_,    // right
-            settings_.y_ + settings_.height_     // bottom
-        };
-
-        AdjustWindowRect ( &wnd_rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE );
-        */
-
-        win_window_ = CreateWindow ( wnd_class_name_, title_.c_str ( ),
-                                     WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
-                                     settings_.x_, settings_.y_,
-                                     settings_.width_, settings_.height_,
-                                     nullptr, nullptr, win_instance_, this );
-
-        if( win_window_ == nullptr )
-        {
-            UnregisterClass ( wnd_class_name_, win_instance_ );
-        }
-
-        ShowWindow ( win_window_, SW_SHOWDEFAULT );
 
     }
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )

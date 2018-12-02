@@ -93,11 +93,6 @@ namespace TWE
         return event_handler_.is_mouse_button_pressed( button_code );
     }
     
-    const std::string& base_window::get_title( ) const noexcept
-    {
-        return title_;
-    }
-    
     bool base_window::is_open( ) const noexcept
     {
         return open_;
