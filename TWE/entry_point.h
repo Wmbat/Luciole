@@ -20,7 +20,15 @@
 extern TWE::application* TWE::create_application( );
 
 #if defined( TWE_PLATFORM_WINDOWS )
+int WINAPI wWinMain ( HINSTANCE hInst, HINSTANCE, LPWSTR pArgs, INT )
+{
+    TWE::log::init ( );
 
+    auto app = TWE::create_application ( );
+    app->run ( );
+
+    delete app;
+}
 #else
 int main( int args, char** argv )
 {

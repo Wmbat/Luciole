@@ -130,7 +130,7 @@ namespace TWE
     }
     xcb_window::xcb_window( xcb_window&& rhs ) noexcept
     {
-    
+        *this = std::move ( rhs );
     }
     xcb_window::~xcb_window( )
     {

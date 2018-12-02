@@ -60,8 +60,6 @@ namespace TWE
         
         void TWE_API handle_event( const event& event ) noexcept;
     
-        const TWE_API std::string& get_title( ) const noexcept;
-    
         bool TWE_API is_open( ) const noexcept;
     
         virtual vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept = 0;
