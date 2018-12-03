@@ -1,4 +1,3 @@
-#include "..\..\TWE\window\win32_window.h"
 /*!
  *  Copyright (C) 2018 Wmbat
  *

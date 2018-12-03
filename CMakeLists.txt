@@ -90,7 +90,7 @@ add_library( TWE SHARED
 		source/application.cpp
         source/log.cpp
         source/renderer.cpp
-        source/window.cpp )
+        source/event/event_dispatcher.cpp)
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
@@ -102,7 +102,11 @@ set_target_properties( TWE PROPERTIES SOVERSION 1 )
 
 target_include_directories( TWE PUBLIC TWE )
 
-target_link_libraries( TWE
-        ${Vulkan_LIBRARY}
-        ${XCB_LIBRARIES}
-        ${WAYLAND_CLIENT_LIBRARIES} )
+if( NOT WIN32 )
+    target_link_libraries( TWE
+            ${Vulkan_LIBRARY}
+            ${XCB_LIBRARIES}
+            ${WAYLAND_CLIENT_LIBRARIES} )
+else()
+    target_link_libraries( TWE ${Vulkan_LIBRARY} )
+endif( )

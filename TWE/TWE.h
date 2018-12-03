@@ -17,6 +17,9 @@
 #ifndef TWE_H
 #define TWE_H
 
+#include <memory>
+
+#include "event/event_listeners.h"
 #include "application.h"
 #include "log.h"
 

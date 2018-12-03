@@ -63,7 +63,7 @@ namespace TWE
 
     inline const void write_to_file( const std::string& filepath, const std::string& data )
     {
-        std::ofstream file( filepath );
+        std::ofstream file( filepath, std::ios::binary );
 
         if( !file.good() )
             throw std::runtime_error{ "Error finding file: " + filepath + "." };
