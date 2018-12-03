@@ -17,48 +17,20 @@
 #ifndef BASE_WINDOW_H
 #define BASE_WINDOW_H
 
+
+#include "../event/event.h"
+#include "../event/event_dispatcher.h"
 #include "../TWE_core.h"
 #include "../vulkan_utils.h"
-#include "../event.h"
 
 namespace TWE
 {
-    class base_window
+    class base_window : public event_dispatcher
     {
     public:
-        class event_handler
-        {
-        public:
-            event TWE_API pop_event ( ) noexcept;
-
-            void TWE_API push_event ( event event ) noexcept;
-
-            bool TWE_API is_keyboard_key_pressed ( keyboard::key key_code ) noexcept;
-            bool TWE_API is_mouse_button_pressed ( mouse::button button_code ) noexcept;
-
-            bool TWE_API is_empty ( ) const noexcept;
-
-        private:
-            static constexpr uint16_t BUFFER_SIZE = 64;
-
-            std::bitset<static_cast< size_t >( keyboard::key::last )> key_states_;
-            std::bitset<static_cast< size_t >( mouse::button::last )> button_states_;
-
-            event buffer_[BUFFER_SIZE];
-            uint32_t head_ = 0;
-            uint32_t tail_ = 0;
-        };
-    
-    public:
-        event TWE_API pop_event( ) noexcept;
-    
-        bool TWE_API is_event_queue_empty( );
-        bool TWE_API is_kbd_key_pressed( keyboard::key key_code ) noexcept;
-        bool TWE_API is_mb_pressed( mouse::button button_code ) noexcept;
-    
-        virtual void TWE_API poll_events( ) = 0;
+        virtual ~base_window( ) = default;
         
-        void TWE_API handle_event( const event& event ) noexcept;
+        virtual void TWE_API poll_events( ) = 0;
     
         bool TWE_API is_open( ) const noexcept;
     
@@ -72,7 +44,7 @@ namespace TWE
     
         bool open_ = false;
         
-        event_handler event_handler_;
+        //event_handler event_handler_;
     
         struct settings
         {

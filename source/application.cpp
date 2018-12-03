@@ -39,20 +39,6 @@ namespace TWE
         
         p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
     }
-    application::~application ( )
-    {
-
-    }
-
-    void application::run ( )
-    {
-        while( p_wnd_->is_open() )
-        {
-            p_wnd_->poll_events();
-            
-            p_renderer_->draw_frame();
-        }
-    }
     
     void application::init_graphics_pipeline( const std::string &vertex_shader_filepath,
         const std::string &fragment_shader_filepath )

@@ -30,14 +30,14 @@ namespace TWE
     {
     public:
         TWE_API application ( const std::string& title );
-        virtual TWE_API ~application ( );
+        virtual ~application ( ) = default;
 
         void TWE_API init_graphics_pipeline( const std::string& vertex_shader_filepath,
             const std::string& fragment_shader_filepath );
         
-        void TWE_API run( );
+        virtual void run( ) = 0;
 
-    private:
+    protected:
         std::unique_ptr<base_window> p_wnd_;
         std::unique_ptr<renderer> p_renderer_;
     };
@@ -45,7 +45,7 @@ namespace TWE
     /**
      * should be defined by the Client.
      */
-    application* create_application( );
+    std::unique_ptr<application> create_application( );
 }
 
 #endif //TWE_APPLICATION_H

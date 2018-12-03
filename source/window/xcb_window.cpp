@@ -17,6 +17,10 @@
 #include "window/xcb_window.h"
 #include "log.h"
 
+#define explicit c_explicit             // Avoid mixing up "explicit" with the C++11 explicit
+#include <xcb/xkb.h>
+#undef explicit
+
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 namespace TWE
 {
@@ -74,6 +78,15 @@ namespace TWE
             XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
             XCB_EVENT_MASK_POINTER_MOTION;
     
+        /*
+        xcb_xkb_use_extension( p_xcb_connection_.get(), XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION );
+        
+        xcb_xkb_per_client_flags( p_xcb_connection_.get(), XCB_XKB_ID_USE_CORE_KBD,
+                                  XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+                                  XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+                                  0,0,0 );
+        */
+        
         if( settings_.fullscreen_ )
         {
             core_info( "XCB -> window fullscreen mode." );
@@ -160,9 +173,11 @@ namespace TWE
             xcb_window_ = rhs.xcb_window_;
             rhs.xcb_window_ = 0;
         
+            /*
             event_handler_ = rhs.event_handler_;
             rhs.event_handler_ = { };
-        
+            */
+            
             settings_ = rhs.settings_;
             rhs.settings_ = { };
         }
@@ -177,106 +192,92 @@ namespace TWE
         {
             switch ( e->response_type & 0x7f )
             {
-            case XCB_CLIENT_MESSAGE:
-            {
-                const auto *message_event = reinterpret_cast<const xcb_client_message_event_t *>( e );
-            
-                if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
+                case XCB_CLIENT_MESSAGE:
+                {
+                    const auto *message_event = reinterpret_cast<const xcb_client_message_event_t *>( e );
+                
+                    if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
+                    {
+                        open_ = false;
+                    }
+                } break;
+                case XCB_DESTROY_NOTIFY:
                 {
                     open_ = false;
-                }
-            } break;
-            case XCB_DESTROY_NOTIFY:
-            {
-                open_ = false;
-            } break;
-            case XCB_CONFIGURE_NOTIFY:
-            {
-                const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
-            
-                const auto resize = event( )
-                    .set_type( event::type::window_resize )
-                    .set_window_resize( static_cast<uint32_t>( motion_event->width ),
-                                        static_cast<uint32_t>( motion_event->height ));
-            
-                event_handler_.push_event( resize );
-            
-                const auto move = event( )
-                    .set_type( event::type::window_move )
-                    .set_window_move( static_cast<uint32_t>( motion_event->x ),
-                                      static_cast<uint32_t>( motion_event->y ));
-            
-                event_handler_.push_event( move );
-            } break;
-            case XCB_FOCUS_IN:
-            {
-                const auto *focus_in_event = reinterpret_cast< const xcb_focus_in_event_t * >( e );
-            
-                const auto focus_in = event ( )
-                    .set_type ( event::type::window_focus_in );
-            
-                event_handler_.push_event ( focus_in );
-            } break;
-            case XCB_FOCUS_OUT:
-            {
-                const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
-            
-                const auto focus_out = event( )
-                    .set_type( event::type::window_focus_out );
-            
-                event_handler_.push_event( focus_out );
-            } break;
-            case XCB_KEY_PRESS:
-            {
-                const auto *key_press_event = reinterpret_cast<const xcb_key_press_event_t *>( e );
-            
-                const auto key_press = event( )
-                    .set_type( event::type::key_pressed )
-                    .set_key( static_cast<keyboard::key>( key_press_event->detail ) );
-            
-                event_handler_.push_event( key_press );
-            } break;
-            case XCB_KEY_RELEASE:
-            {
-                const auto *key_release_event = reinterpret_cast<const xcb_key_release_event_t *>( e );
-            
-                const auto key_release = event( )
-                    .set_type( event::type::key_released )
-                    .set_key( static_cast<keyboard::key>( key_release_event->detail ) );
-            
-                event_handler_.push_event( key_release );
-            } break;
-            case XCB_BUTTON_PRESS:
-            {
-                const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
-            
-                const auto button_press = event( )
-                    .set_type( event::type::mouse_button_pressed )
-                    .set_mouse_button( static_cast<mouse::button>( button_press_event->detail ) );
-            
-                event_handler_.push_event( button_press );
-            } break;
-            case XCB_BUTTON_RELEASE:
-            {
-                const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
-            
-                const auto button_release = event( )
-                    .set_type( event::type::mouse_button_released )
-                    .set_mouse_button( static_cast<mouse::button>( button_release_event->detail ) );
-            
-                event_handler_.push_event( button_release );
-            } break;
-            case XCB_MOTION_NOTIFY:
-            {
-                const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
-            
-                const auto mouse_move = event( )
-                    .set_type( event::type::mouse_move )
-                    .set_mouse_move( static_cast<int32_t>( cursor_motion->event_x ),
-                                     static_cast<int32_t>( cursor_motion->event_y ));
-            
-                event_handler_.push_event( mouse_move );
-            } break;
+                } break;
+                case XCB_CONFIGURE_NOTIFY:
+                {
+                    const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
+                    
+                    settings_.x_ = static_cast<uint32_t>( motion_event->x );
+                    settings_.y_ = static_cast<uint32_t>( motion_event->y );
+                    settings_.width_ = static_cast<uint32_t>( motion_event->width );
+                    settings_.height_ = static_cast<uint32_t>( motion_event->height );
+                } break;
+                case XCB_FOCUS_IN:
+                {
+                    const auto *focus_in_event = reinterpret_cast< const xcb_focus_in_event_t * >( e );
+                
+                    //const auto focus_in = event ( )
+                    //    .set_type ( event::type::window_focus_in );
+                
+                    //event_handler_.push_event ( focus_in );
+                } break;
+                case XCB_FOCUS_OUT:
+                {
+                    const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
+                
+                    //const auto focus_out = event( )
+                    //    .set_type( event::type::window_focus_out );
+                
+                    //event_handler_.push_event( focus_out );
+                } break;
+                case XCB_KEY_PRESS:
+                {
+                    const auto *xcb_key_press = reinterpret_cast<const xcb_key_press_event_t *>( e );
+                
+                    const auto event = key_press_event( )
+                        .set_key_code( static_cast<keyboard::key>( xcb_key_press->detail ) );
+                    
+                    event_dispatcher::dispatch_key_pressed_event( event );
+                } break;
+                case XCB_KEY_RELEASE:
+                {
+                    const auto *xcb_key_release = reinterpret_cast<const xcb_key_release_event_t *>( e );
+                
+                    const auto event = key_release_event( )
+                        .set_key_code( static_cast<keyboard::key>( xcb_key_release->detail ) );
+                
+                    event_dispatcher::dispatch_key_released_event( event );
+                } break;
+                case XCB_BUTTON_PRESS:
+                {
+                    const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
+                
+                    const auto event = mouse_button_press_event( )
+                        .set_button_code( static_cast<mouse::button>( button_press_event->detail ) );
+                    
+                    event_dispatcher::dispatch_mouse_button_pressed_event( event );
+                } break;
+                case XCB_BUTTON_RELEASE:
+                {
+                    const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
+                
+                    const auto event = mouse_button_release_event( )
+                        .set_button_code( static_cast<mouse::button>( button_release_event->detail ) );
+                    
+                    event_dispatcher::dispatch_mouse_button_released_event( event );
+                } break;
+                case XCB_MOTION_NOTIFY:
+                {
+                    const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
+                
+                    const auto event = mouse_motion_event( )
+                        .set_position( static_cast<int32_t>( cursor_motion->event_x ),
+                            static_cast<int32_t>( cursor_motion->event_y ) );
+                    
+                    event_dispatcher::dispatch_mouse_motion_event( event );
+                } break;
             }
         
             free( e );
