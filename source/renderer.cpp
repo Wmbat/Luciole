@@ -22,6 +22,7 @@
 
 #include "utilities/file_io.h"
 #include "utilities/basic_error.h"
+#include "utilities/vk_error.h"
 #include "renderer.h"
 #include "log.h"
 
@@ -387,7 +388,6 @@ namespace TWE
         return *this;
     }
     
-    
     void renderer::setup_graphics_pipeline( const TWE::renderer::graphics_pipeline_data &data )
     {
         auto vertex_shader = check_vk_return_type_result(
@@ -441,17 +441,79 @@ namespace TWE
         core_info( "Vulkan -> Vertex Shader Module Destroyed." );
         core_info( "Vulkan -> Fragment Shader Module Destroyed." );
     }
+    void renderer::record_draw_calls( )
+    {
+        for( auto i = 0; i < vk_context_.command_buffers_.size(); ++i )
+        {
+            const VkCommandBufferBeginInfo begin_info
+                {
+                    VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,                        // sType
+                    nullptr,                                                            // pNext
+                    VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,                       // flags
+                    nullptr                                                             // pInheritanceInfo
+                };
+            
+            check_vk_return_result(
+                vkBeginCommandBuffer( vk_context_.command_buffers_[i], &begin_info ),
+                "Failed to begin recording Command Buffer." );
+            
+            const VkClearValue clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+            
+            const VkRenderPassBeginInfo rp_begin_info
+                {
+                    VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,                           // sType
+                    nullptr,                                                            // pNext
+                    vk_context_.render_pass_,                                           // renderPass
+                    vk_context_.swapchain_framebuffers_[i],                             // framebuffer
+                    { { 0, 0 }, vk_context_.swapchain_extent_ },                        // renderArea
+                    1,                                                                  // clearValueCount
+                    &clear_colour                                                       // pClearValues
+                };
+            
+            vkCmdBeginRenderPass( vk_context_.command_buffers_[i], &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+            
+            vkCmdBindPipeline( vk_context_.command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_context_.graphics_pipeline_ );
+            
+            vkCmdDraw( vk_context_.command_buffers_[i], 3, 1, 0, 0 );
+            
+            vkCmdEndRenderPass( vk_context_.command_buffers_[i] );
+            
+            check_vk_return_result(
+                vkEndCommandBuffer( vk_context_.command_buffers_[i] ),
+                "Failed to record Command Buffer" );
+        }
+    }
+    void renderer::execute( const framebuffer_resize_event& event )
+    {
+        window_width_ = event.x_;
+        window_height_ = event.y_;
+        framebuffer_resized_ = true;
+    }
     
-    void renderer::draw_frame( )
+    void renderer::draw_frame( const TWE::renderer::graphics_pipeline_data &data )
     {
         vkWaitForFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_],
             VK_TRUE, std::numeric_limits<uint64_t>::max() );
-        vkResetFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_] );
         
         uint32_t image_index;
         
-        vkAcquireNextImageKHR( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max( ),
+        auto result = vkAcquireNextImageKHR( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max( ),
             vk_context_.image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index );
+        try
+        {
+            if( result == VK_ERROR_OUT_OF_DATE_KHR )
+            {
+                recreate_swapchain( data );
+            }
+            else if( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+            {
+                throw vk_error{ result, "Failed to acquire swapchain image" };
+            }
+        }
+        catch( const vk_error& e )
+        {
+            core_error( e.what() );
+        }
             
         const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         const VkSubmitInfo submit_info
@@ -466,7 +528,9 @@ namespace TWE
             1,                                                                      // signalSemaphoreCount
             &vk_context_.render_finished_semaphores_[current_frame_]                // pSignalSemaphores
         };
-        
+    
+        vkResetFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_] );
+    
         try
         {
             check_vk_return_result(
@@ -491,10 +555,19 @@ namespace TWE
             nullptr                                                                 // pResults
         };
     
+        result = vkQueuePresentKHR( vk_context_.present_queue_, &present_info );
+        
         try
         {
-            check_vk_return_result(
-                vkQueuePresentKHR( vk_context_.present_queue_, &present_info ), "Failed to present Image" );
+            if( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized_ )
+            {
+                framebuffer_resized_ = false;
+                recreate_swapchain( data );
+            }
+            else if( result != VK_SUCCESS )
+            {
+                throw vk_error{ result, "failed to present swapchain image." };
+            }
         }
         catch( const vk_error& e )
         {
@@ -504,48 +577,115 @@ namespace TWE
         current_frame_ = ( ++current_frame_ ) % MAX_FRAMES_IN_FLIGHT;
     }
     
-    void renderer::record_draw_calls( )
+    void renderer::recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data )
     {
-        for( auto i = 0; i < vk_context_.command_buffers_.size(); ++i )
+        cleanup_swapchain();
+        
+        const auto queue_family_indices = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
+        const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_, vk_context_.gpu_ );
+        const auto present_mode = choose_swapchain_present_mode( swapchain_support_details.present_modes_ );
+        const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
+        const auto extent = choose_swapchain_extent( swapchain_support_details.capabilities_ );
+    
+        vk_context_.surface_format_ = surface_format;
+        vk_context_.swapchain_extent_ = extent;
+    
+        uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
+        if( swapchain_support_details.capabilities_.maxImageCount > 0 &&
+            image_count > swapchain_support_details.capabilities_.maxImageCount )
         {
-            const VkCommandBufferBeginInfo begin_info
+            image_count = swapchain_support_details.capabilities_.maxImageCount;
+        }
+    
+    
+        vk_context_.swapchain_ = check_vk_return_type_result(
+            create_swapchain( queue_family_indices, present_mode, swapchain_support_details.capabilities_,
+                              image_count ), "create_swapchain( )" );
+        core_info( "Vulkan -> Swapchain created." );
+    
+        vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, nullptr );
+        vk_context_.swapchain_image_.resize( image_count );
+        vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, vk_context_.swapchain_image_.data( ) );
+        core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
+    
+        vk_context_.swapchain_image_views_.resize( image_count );
+        for( auto i = 0; i < image_count; ++i )
+        {
+            vk_context_.swapchain_image_views_[i] = check_vk_return_type_result(
+                create_image_view( vk_context_.swapchain_image_[i] ), "create_image_view( )" );
+        }
+        core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
+        
+        vk_context_.command_buffers_ = check_vk_return_type_result(
+            create_command_buffers( image_count ), "create_command_buffers( )" );
+        core_info( "Vulkan -> Command Buffers created. Count: {0:d}.", image_count );
+    
+        vk_context_.render_pass_ = check_vk_return_type_result(
+            create_render_pass( ), "create_render_pass( )" );
+        core_info( "Vulkan -> Render Pass created." );
+    
+        vk_context_.swapchain_framebuffers_.resize( image_count );
+        for( auto i = 0; i < image_count; ++i )
+        {
+            vk_context_.swapchain_framebuffers_[i] = check_vk_return_type_result(
+                create_framebuffer( vk_context_.swapchain_image_views_[i] ), "create_framebuffer( )" );
+        }
+        core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
+        
+        setup_graphics_pipeline( data );
+        record_draw_calls( );
+    }
+    void renderer::cleanup_swapchain( )
+    {
+        vkDeviceWaitIdle( vk_context_.device_ );
+        
+        if ( vk_context_.graphics_pipeline_ != VK_NULL_HANDLE )
+        {
+            vkDestroyPipeline( vk_context_.device_, vk_context_.graphics_pipeline_, nullptr );
+            core_info( "Vulkan -> Pipeline destroyed." );
+        }
+    
+        if ( vk_context_.graphics_pipeline_layout_ != VK_NULL_HANDLE )
+        {
+            vkDestroyPipelineLayout( vk_context_.device_, vk_context_.graphics_pipeline_layout_, nullptr );
+            core_info( "Vulkan -> Pipeline Layout destroyed." );
+        }
+    
+        for ( auto &framebuffer : vk_context_.swapchain_framebuffers_ )
+        {
+            vkDestroyFramebuffer( vk_context_.device_, framebuffer, nullptr );
+        }
+        core_info( "Vulkan -> Swapchain Framebuffer destroyed." );
+    
+        if ( vk_context_.render_pass_ != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass( vk_context_.device_, vk_context_.render_pass_, nullptr );
+            core_info( "Vulkan -> Render Pass destroyed." );
+        }
+    
+        for ( auto &image_view : vk_context_.swapchain_image_views_ )
+        {
+            if ( image_view != VK_NULL_HANDLE )
             {
-                VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,                        // sType
-                nullptr,                                                            // pNext
-                VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,                       // flags
-                nullptr                                                             // pInheritanceInfo
-            };
-            
-            check_vk_return_result(
-                vkBeginCommandBuffer( vk_context_.command_buffers_[i], &begin_info ),
-                "Failed to begin recording Command Buffer." );
-            
-            const VkClearValue clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
-            
-            const VkRenderPassBeginInfo rp_begin_info
-            {
-                VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,                           // sType
-                nullptr,                                                            // pNext
-                vk_context_.render_pass_,                                           // renderPass
-                vk_context_.swapchain_framebuffers_[i],                             // framebuffer
-                { { 0, 0 }, vk_context_.swapchain_extent_ },                        // renderArea
-                1,                                                                  // clearValueCount
-                &clear_colour                                                       // pClearValues
-            };
-            
-            vkCmdBeginRenderPass( vk_context_.command_buffers_[i], &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE );
-            
-            vkCmdBindPipeline( vk_context_.command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_context_.graphics_pipeline_ );
-            
-            vkCmdDraw( vk_context_.command_buffers_[i], 3, 1, 0, 0 );
-            
-            vkCmdEndRenderPass( vk_context_.command_buffers_[i] );
-            
-            check_vk_return_result(
-                vkEndCommandBuffer( vk_context_.command_buffers_[i] ),
-                "Failed to record Command Buffer" );
+                vkDestroyImageView( vk_context_.device_, image_view, nullptr );
+            }
+        }
+        core_info( "Vulkan -> Swapchain Image Views destroyed" );
+    
+        if ( vk_context_.swapchain_ != VK_NULL_HANDLE )
+        {
+            vkDestroySwapchainKHR( vk_context_.device_, vk_context_.swapchain_, nullptr );
+            core_info( "Vulkan -> Swapchain destroyed." );
+        }
+    
+        if( !vk_context_.command_buffers_.empty() )
+        {
+            vkFreeCommandBuffers( vk_context_.device_, vk_context_.command_pool_,
+                                  static_cast<uint32_t>( vk_context_.command_buffers_.size() ), vk_context_.command_buffers_.data() );
+            core_info( "Vulkan -> Command Buffers freed." );
         }
     }
+    
     
     void renderer::set_up( )
     {

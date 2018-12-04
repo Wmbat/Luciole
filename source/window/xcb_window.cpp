@@ -207,6 +207,11 @@ namespace TWE
                     settings_.y_ = static_cast<uint32_t>( motion_event->y );
                     settings_.width_ = static_cast<uint32_t>( motion_event->width );
                     settings_.height_ = static_cast<uint32_t>( motion_event->height );
+                    
+                    const auto event = framebuffer_resize_event( )
+                        .set_size( settings_.width_, settings_.height_ );
+                    
+                    event_dispatcher::dispatch_framebuffer_resize_event( event );
                 } break;
                 case XCB_FOCUS_IN:
                 {

@@ -112,6 +112,22 @@ namespace TWE
             return *this;
         }
     };
+    
+    /*!
+     * @brief An event to pass information regarding a frame buffer resize.
+     */
+    struct framebuffer_resize_event
+    {
+        uint32_t x_;
+        uint32_t y_;
+        
+        framebuffer_resize_event& set_size( const uint32_t x, const uint32_t y )
+        {
+            x_ = x;
+            y_ = y;
+            return *this;
+        }
+    };
 }
 
 #endif //TWE_EVENT_H

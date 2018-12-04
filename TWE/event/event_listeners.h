@@ -33,7 +33,7 @@ namespace TWE
          * define the desired behaviour at the key press.
          * @param event The event to handle.
          */
-        virtual void on_key_press( const key_press_event& event ) = 0;
+        virtual void execute( const key_press_event& event ) = 0;
     };
     
     /*!
@@ -48,7 +48,7 @@ namespace TWE
          * define the desired behaviour at the key release.
          * @param event The event to handle.
          */
-        virtual void on_key_release( const key_release_event& event ) = 0;
+        virtual void execute( const key_release_event& event ) = 0;
     };
     
     /*!
@@ -64,7 +64,7 @@ namespace TWE
          * define the desired behaviour at the mouse button press.
          * @param event The event to handle.
          */
-        virtual void on_button_press( const mouse_button_press_event& event ) = 0;
+        virtual void execute( const mouse_button_press_event& event ) = 0;
     };
     
     /*!
@@ -76,11 +76,11 @@ namespace TWE
     {
     public:
         /*!
-         * @brief Virtual function to be override by the inheritor to
+         * @brief Virtual function to be overriden by the inheritor to
          * define the desired behaviour at the mouse button release.
          * @param event The event to handle.
          */
-        virtual void on_button_release( const mouse_button_release_event& event ) = 0;
+        virtual void execute( const mouse_button_release_event& event ) = 0;
     };
     
     /*!
@@ -91,11 +91,26 @@ namespace TWE
     {
     public:
         /*!
-         * @brief Virtual function to be override by the intheritor to
+         * @brief Virtual function to be overriden by the intheritor to
          * define the desired behaviour at the mouse motion event
          * @param event The event to handle.
          */
-        virtual void on_mouse_motion( const mouse_motion_event& event ) = 0;
+        virtual void execute( const mouse_motion_event& event ) = 0;
     };
+    
+    /*!
+     * @brief An interface that allows for listening to
+     * framebuffer resize events dispatched by an event dispatcher.
+     */
+     class framebuffer_resize_listener
+     {
+     public:
+         /*!
+          * @brief Virtual function to be overriden by the inheritor to
+          * define the desired behaviour at the framebuffer resize event
+          * @param event The event to handle.
+          */
+         virtual void execute( const framebuffer_resize_event& event ) = 0;
+     };
 }
 #endif //TWE_I_EVENT_LISTENER_H

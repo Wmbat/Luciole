@@ -69,6 +69,14 @@ namespace TWE
          */
         void TWE_API add_mouse_motion_listener(
             const std::shared_ptr<mouse_motion_listener>& p_listener );
+        /*!
+         * @brief Add a shared_ptr to an object that inherits from
+         * framebuffer_resize_listener to listen for framebuffer resizes.
+         * @param p_listener A shared_ptr to the object that inherits from
+         * framebuffer_resize_listener.
+         */
+        void TWE_API add_framebuffer_resize_listener(
+            const std::shared_ptr<framebuffer_resize_listener>& p_listener );
         
         
         /*!
@@ -106,7 +114,7 @@ namespace TWE
          * vector.
          */
         void TWE_API remove_mouse_button_released_listener(
-            const std::shared_ptr<mouse_button_released_listener>& p_listeners );
+            const std::shared_ptr<mouse_button_released_listener>& p_listener );
         /*!
          * @brief Remove a mouse motion listener from the vector of
          * listeners.
@@ -115,7 +123,15 @@ namespace TWE
          * vector.
          */
         void TWE_API remove_mouse_motion_listener(
-            const std::shared_ptr<mouse_motion_listener>& p_listeners );
+            const std::shared_ptr<mouse_motion_listener>& p_listener );
+        /*!
+         * @brief Remove a framebuffer resize listener from the vector
+         * of listeners.
+         * @param p_listener The shared_ptr to a framebuffer_resize_listener
+         * that is to be removed if present in the vector.
+         */
+        void TWE_API remove_framebuffer_resize_listener(
+            const std::shared_ptr<framebuffer_resize_listener>& p_listener );
         
     protected:
         /*!
@@ -148,6 +164,12 @@ namespace TWE
          * @param event The mouse motion event to dispatch.
          */
         void TWE_API dispatch_mouse_motion_event( const mouse_motion_event& event );
+        /*!
+         * @brief Dispatch the framebuffer resize event to all the
+         * framebuffer resize event listeners.
+         * @param event The framebuffer resize event to dispatch.
+         */
+        void TWE_API dispatch_framebuffer_resize_event( const framebuffer_resize_event& event );
     
     private:
         /* vector of key_press_listeners. */
@@ -160,6 +182,8 @@ namespace TWE
         std::vector<std::shared_ptr<mouse_button_released_listener>> mouse_button_release_listeners_;
         /* vector of mouse_motion_listeners. */
         std::vector<std::shared_ptr<mouse_motion_listener>> mouse_motion_listeners_;
+        /* vector of framebuffer resize listeners. */
+        std::vector<std::shared_ptr<framebuffer_resize_listener>> framebuffer_resize_listeners_;
     };
 }
 

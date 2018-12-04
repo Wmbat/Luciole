@@ -83,6 +83,18 @@ namespace TWE
             mouse_motion_listeners_.emplace_back( p_listener );
         }
     }
+    void event_dispatcher::add_framebuffer_resize_listener(
+        const std::shared_ptr<TWE::framebuffer_resize_listener>& p_listener )
+    {
+        /* Find if p_listener is not already in vector. */
+        if( framebuffer_resize_listeners_.cend( ) ==
+            std::find_if( framebuffer_resize_listeners_.cbegin(), framebuffer_resize_listeners_.cend(),
+                [p_listener]( const std::shared_ptr<framebuffer_resize_listener>& p_list )
+                { return p_listener == p_list; } ) )
+        {
+            framebuffer_resize_listeners_.emplace_back( p_listener );
+        }
+    }
     
     
     void event_dispatcher::remove_key_pressed_listener( const std::shared_ptr<key_pressed_listener>& p_listener )
@@ -153,40 +165,61 @@ namespace TWE
             mouse_motion_listeners_.erase( it );
         }
     }
+    void event_dispatcher::remove_framebuffer_resize_listener(
+        const std::shared_ptr<TWE::framebuffer_resize_listener>& p_listener )
+    {
+        /* Find if p_listener is in vector. */
+        const auto it = std::find_if( framebuffer_resize_listeners_.cbegin(), framebuffer_resize_listeners_.cend( ),
+            [p_listener]( const std::shared_ptr<framebuffer_resize_listener>& p_list )
+            { return p_listener == p_list; } );
+        
+        /* If present, remove it */
+        if( it != framebuffer_resize_listeners_.cend() )
+        {
+            framebuffer_resize_listeners_.erase( it );
+        }
+    }
     
     void event_dispatcher::dispatch_key_pressed_event( const key_press_event& event )
     {
         for( auto& p_listener : key_press_listeners_ )
         {
-            p_listener->on_key_press( event );
+            p_listener->execute( event );
         }
     }
     void event_dispatcher::dispatch_key_released_event( const key_release_event& event )
     {
         for( auto& p_listener : key_release_listeners_ )
         {
-            p_listener->on_key_release( event );
+            p_listener->execute( event );
         }
     }
     void event_dispatcher::dispatch_mouse_button_pressed_event( const mouse_button_press_event& event )
     {
         for( auto& p_listener : mouse_button_press_listeners_ )
         {
-            p_listener->on_button_press( event );
+            p_listener->execute( event );
         }
     }
     void event_dispatcher::dispatch_mouse_button_released_event( const mouse_button_release_event& event )
     {
         for( auto& p_listener : mouse_button_release_listeners_ )
         {
-            p_listener->on_button_release( event );
+            p_listener->execute( event );
         }
     }
     void event_dispatcher::dispatch_mouse_motion_event( const mouse_motion_event& event )
     {
         for( auto& p_listener : mouse_motion_listeners_ )
         {
-            p_listener->on_mouse_motion( event );
+            p_listener->execute( event );
+        }
+    }
+    void event_dispatcher::dispatch_framebuffer_resize_event( const TWE::framebuffer_resize_event& event )
+    {
+        for( auto& p_listener : framebuffer_resize_listeners_ )
+        {
+            p_listener->execute( event );
         }
     }
 }

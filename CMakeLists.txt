@@ -21,7 +21,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
 if( UNIX )
     set( CMAKE_CXX_FLAGS -pthread )
-    OPTION( USE_WAYLAND_WSI "Build the project using Wayland swapchain" ON )
+    OPTION( USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF )
 endif( )
 
 include_directories( external/include )
@@ -61,6 +61,7 @@ elseif( UNIX )
             message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
         endif( )
 
+        include_directories( ${WAYLAND_INCLUDE_DIR} )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR")
     else( )
         find_package( XCB REQUIRED )
@@ -95,7 +96,7 @@ add_library( TWE SHARED
         source/window/xcb_window.cpp
 		source/application.cpp
         source/log.cpp
-        source/renderer.cpp )
+        source/renderer.cpp TWE/window/wayland_window.h source/window/wayland_window.cpp)
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )

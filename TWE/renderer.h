@@ -22,11 +22,13 @@
 #include <vulkan/vulkan.hpp>
 
 #include "TWE_core.h"
+#include "event/event_listeners.h"
 #include "window/base_window.h"
+
 
 namespace TWE
 {
-    class renderer
+    class renderer : public framebuffer_resize_listener
     {
     public:
         struct graphics_pipeline_data;
@@ -47,11 +49,16 @@ namespace TWE
         
         void TWE_API setup_graphics_pipeline( const graphics_pipeline_data& data );
 
-        void TWE_API draw_frame( );
+        void TWE_API draw_frame( const TWE::renderer::graphics_pipeline_data &data );
         
         void TWE_API record_draw_calls( );
+        
+        void TWE_API execute( const framebuffer_resize_event& event ) override;
     
     private:
+        void recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data );
+        void cleanup_swapchain( );
+        
         void set_up( );
         
         const vk_return_type<VkInstance> create_instance( const std::string& app_name,
@@ -121,6 +128,7 @@ namespace TWE
     private:
         uint32_t window_width_;
         uint32_t window_height_;
+        bool framebuffer_resized_ = false;
         
         size_t current_frame_ = 0;
         

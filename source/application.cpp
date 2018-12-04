@@ -32,12 +32,12 @@ namespace TWE
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
         p_wnd_ = std::make_unique<win32_window> ( title );
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-        p_wnd_ = std::make_unique<wayland_window> ( );
+        p_wnd_ = std::make_unique<wayland_window> ( title );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
         p_wnd_ = std::make_unique<xcb_window> ( title );
 #endif
         
-        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
+        p_renderer_ = std::make_shared<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
+        p_wnd_->add_framebuffer_resize_listener( p_renderer_ );
     }
-
 }
