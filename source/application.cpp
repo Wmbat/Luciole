@@ -39,11 +39,5 @@ namespace TWE
         
         p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
     }
-    
-    void application::init_graphics_pipeline( const std::string &vertex_shader_filepath,
-        const std::string &fragment_shader_filepath )
-    {
-        p_renderer_->setup_graphics_pipeline( { vertex_shader_filepath, fragment_shader_filepath } );
-        p_renderer_->record_draw_calls();
-    }
+
 }

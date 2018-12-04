@@ -31,9 +31,6 @@ namespace TWE
     public:
         TWE_API application ( const std::string& title );
         virtual ~application ( ) = default;
-
-        void TWE_API init_graphics_pipeline( const std::string& vertex_shader_filepath,
-            const std::string& fragment_shader_filepath );
         
         virtual void run( ) = 0;
 

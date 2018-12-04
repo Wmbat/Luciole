@@ -37,9 +37,9 @@ namespace TWE
         {
             invalid = -1,
 
-            l_click = 1,
-            scroll_click = 2,
-            r_click = 3,
+            l_button = 1,
+            scroll_button = 2,
+            r_button = 3,
             scroll_up = 4,
             scroll_down = 5,
             scroll_left = 6,

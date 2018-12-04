@@ -17,10 +17,6 @@
 #include "window/xcb_window.h"
 #include "log.h"
 
-#define explicit c_explicit             // Avoid mixing up "explicit" with the C++11 explicit
-#include <xcb/xkb.h>
-#undef explicit
-
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 namespace TWE
 {

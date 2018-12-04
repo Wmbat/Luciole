@@ -14,27 +14,14 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "log.h"
 #include "window/win32_window.h"
 
-#include "log.h"
-
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
+
+#include <Windows.h>
 namespace TWE
 {
-    static inline LRESULT CALLBACK window_proc ( HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param )
-    {
-        switch( message )
-        {
-            case WM_DESTROY:
-            {
-                PostQuitMessage ( 0 );
-                return 0;
-            } break;
-        }
-
-        return DefWindowProc ( h_wnd, message, w_param, l_param );
-    }
-
     win32_window::win32_window ( const std::string& title )
     {
         core_info ( "Using Win32 for window creation." );
@@ -42,16 +29,16 @@ namespace TWE
         title_ = title;
         open_ = true;
 
-        win_instance_ = GetModuleHandle ( NULL );
+        h_inst_ = GetModuleHandle ( NULL );
 
         WNDCLASSEX wc
         {
             sizeof ( WNDCLASSEX ),              // cbSize
             CS_HREDRAW | CS_VREDRAW,            // style
-            window_proc,                        // lpfnWndProc
+            handle_msg_setup,                   // lpfnWndProc
             0,                                  // cbClsExtra
             0,                                  // cbWndExtra
-            win_instance_,                      // hInstance
+            h_inst_,                            // hInstance
             nullptr,                            // hIcon
             LoadCursor ( nullptr,IDC_ARROW ),   // hCursor
             nullptr,                            // hbrBackground
@@ -72,20 +59,20 @@ namespace TWE
 
         AdjustWindowRect ( &wnd_rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE );
 
-        win_window_ = CreateWindow ( wnd_class_name_, title_.c_str ( ),
+        h_wnd_ = CreateWindow ( wnd_class_name_, title_.c_str ( ),
                                      WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
                                      settings_.x_, settings_.y_,
                                      wnd_rect.right - wnd_rect.left,
                                      wnd_rect.bottom - wnd_rect.top,
-                                     nullptr, nullptr, win_instance_, this );
+                                     nullptr, nullptr, h_inst_, this );
 
-        if( win_window_ == nullptr )
+        if( h_wnd_ == nullptr )
         {
-            UnregisterClass ( wnd_class_name_, win_instance_ );
+            UnregisterClass ( wnd_class_name_, h_inst_ );
         }
 
-        ShowWindow ( win_window_, SW_SHOWDEFAULT );
-        UpdateWindow ( win_window_ );
+        ShowWindow ( h_wnd_, SW_SHOWDEFAULT );
+        UpdateWindow ( h_wnd_ );
     }
     win32_window::win32_window ( win32_window&& rhs ) noexcept
     {
@@ -93,7 +80,7 @@ namespace TWE
     }
     win32_window::~win32_window ( )
     {
-        UnregisterClass ( wnd_class_name_, win_instance_ );
+        UnregisterClass ( wnd_class_name_, h_inst_ );
     }
 
     win32_window& win32_window::operator=( win32_window&& rhs ) noexcept
@@ -106,14 +93,11 @@ namespace TWE
             open_ = rhs.open_;
             rhs.open_ = false;
 
-            win_instance_ = rhs.win_instance_;
-            rhs.win_instance_ = nullptr;
+            h_inst_ = rhs.h_inst_;
+            rhs.h_inst_ = nullptr;
 
-            win_window_ = rhs.win_window_;
-            rhs.win_window_ = nullptr;
-
-            event_handler_ = rhs.event_handler_;
-            rhs.event_handler_ = { };
+            h_wnd_ = rhs.h_wnd_;
+            rhs.h_wnd_ = nullptr;
 
             settings_ = rhs.settings_;
             rhs.settings_ = { };
@@ -124,7 +108,19 @@ namespace TWE
 
     void win32_window::poll_events ( )
     {
+        MSG msg = { 0 };
 
+        while( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+        {
+            TranslateMessage ( &msg );
+
+            DispatchMessage ( &msg );
+
+            if( msg.message == WM_QUIT )
+            {
+                open_ = false;
+            }
+        }
     };
 
     vk_return_type<VkSurfaceKHR> win32_window::create_surface ( const VkInstance& instance ) const noexcept
@@ -136,11 +132,264 @@ namespace TWE
             VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,            // sType
             nullptr,                                                    // pNext
             { },                                                        // flags
-            win_instance_,                                              // hinstance
-            win_window_                                                 // hwnd
+            h_inst_,                                                    // hinstance
+            h_wnd_                                                      // hwnd
         };
 
         return { vkCreateWin32SurfaceKHR ( instance, &create_info, nullptr, &surface ), surface };
+    }
+
+    LRESULT __stdcall win32_window::handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
+    {
+        // use create parameter passed in from CreateWindow() to store window class pointer at WinAPI side
+        if( msg == WM_NCCREATE )
+        {
+            // extract ptr to window class from creation data
+            const CREATESTRUCTW* const p_create = reinterpret_cast< CREATESTRUCTW* >( l_param );
+            win32_window* const p_wnd = reinterpret_cast< win32_window* >( p_create->lpCreateParams );
+
+            // set WinAPI-managed user data to store ptr to window class
+            SetWindowLongPtr ( h_wnd, GWLP_USERDATA, reinterpret_cast< LONG_PTR >( p_wnd ) );
+            // set message proc to normal (non-setup) handler now that setup is finished
+            SetWindowLongPtr ( h_wnd, GWLP_WNDPROC, reinterpret_cast< LONG_PTR >( &win32_window::handle_msg_thunk ) );
+            // forward message to window class handler
+            return p_wnd->handle_msg ( h_wnd, msg, w_param, l_param );
+        }
+        // if we get a message before the WM_NCCREATE message, handle with default handler
+        return DefWindowProc ( h_wnd, msg, w_param, l_param );
+    }
+
+    LRESULT __stdcall win32_window::handle_msg_thunk ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
+    {
+        // retrieve ptr to window class
+        win32_window* const p_wnd = reinterpret_cast<win32_window*>( GetWindowLongPtr ( h_wnd, GWLP_USERDATA ) );
+        // forward message to window class handler
+        return p_wnd->handle_msg ( h_wnd, msg, w_param, l_param );
+    }
+
+    LRESULT win32_window::handle_msg ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
+    {
+        switch( msg )
+        {
+            case WM_DESTROY:
+            {
+                PostQuitMessage ( 0 );
+                open_ = false;
+            } break;
+            case WM_KEYDOWN:
+            {
+                const auto event = key_press_event ( )
+                    .set_key_code ( static_cast< keyboard::key >( w_param ) );
+
+                event_dispatcher::dispatch_key_pressed_event ( event );
+            } break;
+            case WM_KEYUP:
+            {
+                const auto event = key_release_event ( )
+                    .set_key_code ( static_cast< keyboard::key >( w_param ) );
+
+                event_dispatcher::dispatch_key_released_event ( event );
+            } break;
+            case WM_LBUTTONDOWN:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::l_button )
+                        .set_position ( points.x, points.y );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+            } break;
+            case WM_LBUTTONUP:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_release_event ( )
+                        .set_button_code ( mouse::button::l_button )
+                        .set_position ( points.x, points.y );
+
+                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                }
+            } break;
+            case WM_MBUTTONDOWN:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::scroll_button )
+                        .set_position ( points.x, points.y );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+            } break;
+            case WM_MBUTTONUP:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_release_event ( )
+                        .set_button_code ( mouse::button::scroll_button )
+                        .set_position ( points.x, points.y );
+
+                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                }
+            } break;
+            case WM_RBUTTONDOWN:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::r_button )
+                        .set_position ( points.x , points.y );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+            } break;
+            case WM_RBUTTONUP:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                if ( points.x > 0 && points.x < settings_.width_ &&
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_button_release_event ( )
+                        .set_button_code ( mouse::button::r_button )
+                        .set_position ( points.x , points.y );
+
+                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                }
+            } break;
+            case WM_XBUTTONDOWN:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                const auto button = GET_XBUTTON_WPARAM ( w_param );
+                if ( button == XBUTTON1 )
+                {
+                    if ( points.x > 0 && points.x < settings_.width_ &&
+                         points.y > 0 && points.y < settings_.height_ )
+                    {
+                        const auto event = mouse_button_press_event ( )
+                            .set_button_code ( mouse::button::side_button_1 )
+                            .set_position ( points.x, points.y );
+
+                        event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    }
+                }
+                else if ( button == XBUTTON2 )
+                {
+                    if ( points.x > 0 && points.x < settings_.width_ &&
+                         points.y > 0 && points.y < settings_.height_ )
+                    {
+                        const auto event = mouse_button_press_event ( )
+                            .set_button_code ( mouse::button::side_button_2 )
+                            .set_position ( points.x, points.y );
+
+                        event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    }
+                }
+            } break;
+            case WM_XBUTTONUP:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                const auto button = GET_XBUTTON_WPARAM ( w_param );
+                if ( button == XBUTTON1 )
+                {
+                    if ( points.x > 0 && points.x < settings_.width_ &&
+                         points.y > 0 && points.y < settings_.height_ )
+                    {
+                        const auto event = mouse_button_release_event ( )
+                            .set_button_code ( mouse::button::side_button_1 )
+                            .set_position ( points.x, points.y );
+
+                        event_dispatcher::dispatch_mouse_button_released_event ( event );
+                    }
+                }
+                else if ( button == XBUTTON2 )
+                {
+                    if ( points.x > 0 && points.x < settings_.width_ &&
+                         points.y > 0 && points.y < settings_.height_ )
+                    {
+                        const auto event = mouse_button_release_event ( )
+                            .set_button_code ( mouse::button::side_button_2 )
+                            .set_position ( points.x, points.y );
+
+                        event_dispatcher::dispatch_mouse_button_released_event ( event );
+                    }
+                }
+            } break;
+            case WM_MOUSEMOVE:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+
+                if ( points.x > 0 && points.x < settings_.width_ && 
+                     points.y > 0 && points.y < settings_.height_ )
+                {
+                    const auto event = mouse_motion_event ( )
+                        .set_position ( points.x , points.y );
+
+                    event_dispatcher::dispatch_mouse_motion_event ( event );
+                }
+            } break;
+            case WM_MOUSEWHEEL:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                if( GET_WHEEL_DELTA_WPARAM ( w_param ) > 0 )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::scroll_up )
+                        .set_position ( static_cast< int32_t >( points.x ),
+                                        static_cast< int32_t >( points.y ) );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+                else if( GET_WHEEL_DELTA_WPARAM ( w_param ) < 0 )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::scroll_down )
+                        .set_position ( static_cast< int32_t >( points.x ),
+                                        static_cast< int32_t >( points.y ) );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+            } break;
+            case WM_MOUSEHWHEEL:
+            {
+                const auto points = MAKEPOINTS ( l_param );
+                if ( GET_WHEEL_DELTA_WPARAM ( w_param ) > 0 )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::scroll_left )
+                        .set_position ( static_cast< int32_t >( points.x ) ,
+                                        static_cast< int32_t >( points.y ) );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+                else if ( GET_WHEEL_DELTA_WPARAM ( w_param ) < 0 )
+                {
+                    const auto event = mouse_button_press_event ( )
+                        .set_button_code ( mouse::button::scroll_right )
+                        .set_position ( static_cast< int32_t >( points.x ) ,
+                                        static_cast< int32_t >( points.y ) );
+
+                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                }
+            } break;
+        }
+
+        return DefWindowProc ( h_wnd, msg, w_param, l_param );
     }
 }
 #endif

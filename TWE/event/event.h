@@ -53,30 +53,46 @@ namespace TWE
     
     /*!
      * @brief An event that hold mouse button press information
-     * with the associated button code.
+     * with the associated button code and position.
      */
     struct mouse_button_press_event
     {
         mouse::button button_code_;
+        int32_t x_;
+        int32_t y_;
         
         mouse_button_press_event& set_button_code( const mouse::button button_code )
         {
             button_code_ = button_code;
             return *this;
         }
+        mouse_button_press_event& set_position ( const int32_t x, const int32_t y )
+        {
+            x_ = x;
+            y_ = y;
+            return *this;
+        }
     };
     
     /*!
      * @brief An event that hold mouse button release information
-     * with the associated button code.
+     * with the associated button code and position.
      */
     struct mouse_button_release_event
     {
         mouse::button button_code_;
+        int32_t x_;
+        int32_t y_;
         
         mouse_button_release_event& set_button_code( const mouse::button button_code )
         {
             button_code_ = button_code;
+            return *this;
+        }
+        mouse_button_release_event& set_position ( const int32_t x, const int32_t y )
+        {
+            x_ = x;
+            y_ = y;
             return *this;
         }
     };

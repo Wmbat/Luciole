@@ -20,7 +20,6 @@
 #include "base_window.h"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-#include <window.h>
 
 namespace TWE
 {
@@ -41,9 +40,14 @@ namespace TWE
         vk_return_type<VkSurfaceKHR> TWE_API create_surface ( const VkInstance& instance ) const noexcept override;
 
     private:
+        static LRESULT WINAPI handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );
+        static LRESULT WINAPI handle_msg_thunk ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );
+        LRESULT handle_msg ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );
+
+    private:
         static constexpr char* wnd_class_name_ = "TWE window";
-        HINSTANCE win_instance_ = nullptr;
-        HWND win_window_ = nullptr;
+        HINSTANCE h_inst_ = nullptr;
+        HWND h_wnd_ = nullptr;
     };
 }
 #endif

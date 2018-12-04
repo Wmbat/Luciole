@@ -43,13 +43,13 @@ namespace TWE
              * @brief Get the name of the error class.
              * @return The name of the error class.
              */
-            const char* TWE_API name( ) const noexcept override;
+            const char* name( ) const noexcept override;
             /*!
              * @brief Get the name of the Vulkan error type.
              * @param ev The Vulkan error code.
              * @return The associated name with the error code.
              */
-            std::string TWE_API message( int ev ) const override;
+            std::string message( int ev ) const override;
         };
         
     public:

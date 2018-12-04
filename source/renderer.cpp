@@ -566,7 +566,7 @@ namespace TWE
         
         vk_context_.instance_extensions_.emplace_back( VK_KHR_SURFACE_EXTENSION_NAME );
 
-#if defined( _WIN32 )
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
         vk_context_.instance_extensions_.emplace_back( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
         vk_context_.instance_extensions_.emplace_back( VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME );
