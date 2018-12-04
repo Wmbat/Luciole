@@ -47,7 +47,7 @@ namespace TWE
         std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>> p_xcb_connection_;
         xcb_screen_t* p_xcb_screen_;
         xcb_window_t xcb_window_;
-    
+        
         std::unique_ptr<xcb_intern_atom_reply_t> p_xcb_wm_delete_window_;
     };
 }

@@ -21,6 +21,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
 if( UNIX )
     set( CMAKE_CXX_FLAGS -pthread )
+    OPTION( USE_WAYLAND_WSI "Build the project using Wayland swapchain" ON )
 endif( )
 
 include_directories( external/include )
@@ -41,6 +42,7 @@ if( WIN32 )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
 elseif( UNIX )
+
     if( NOT Vulkan_FOUND )
         find_library( Vulkan_LIBRARY NAMES libvulkan HINTS  "$ENV{VULKAN_SDK}/lib" "external/libs/linux/vulkan" )
 
@@ -50,18 +52,28 @@ elseif( UNIX )
         endif( )
     endif( )
 
+    if( USE_WAYLAND_WSI )
+        find_package( Wayland REQUIRED )
 
-    find_package( XCB REQUIRED )
+        if( NOT WAYLAND_FOUND )
+            message( FATAL_ERROR "Wayland development package not found" )
+        else( )
+            message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
+        endif( )
 
-    if( NOT XCB_FOUND )
-        message( FATAL_ERROR "XCB development package not found" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR")
     else( )
-        message( STATUS ${XCB_LIBRARIES} )
-    endif( )
+        find_package( XCB REQUIRED )
 
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
+        if( NOT XCB_FOUND )
+            message( FATAL_ERROR "XCB development package not found" )
+        else( )
+            message( STATUS ${XCB_LIBRARIES} )
+        endif( )
+
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
+    endif()
 endif( )
-
 
 if( NOT Vulkan_FOUND )
     message( FATAL_ERROR "Could not find Vulkan library!" )
@@ -69,19 +81,13 @@ else( )
     message( STATUS ${Vulkan_LIBRARY} )
 endif( )
 
-#find_package( OpenAL REQUIRED )
-
-#if( NOT OPENAL_FOUND )
-#    message( FATAL_ERROR "Could not find OpenAL library! Check if installed" )
-#else( )
-#    message( STATUS ${OPENAL_LIBRARY} )
-#endif()
 
 if( MSVC )
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif( )
 
 add_library( TWE SHARED
+        source/event/event_dispatcher.cpp
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
 		source/window/base_window.cpp
@@ -89,8 +95,7 @@ add_library( TWE SHARED
         source/window/xcb_window.cpp
 		source/application.cpp
         source/log.cpp
-        source/renderer.cpp
-        source/event/event_dispatcher.cpp)
+        source/renderer.cpp )
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
@@ -103,10 +108,15 @@ set_target_properties( TWE PROPERTIES SOVERSION 1 )
 target_include_directories( TWE PUBLIC TWE )
 
 if( NOT WIN32 )
-    target_link_libraries( TWE
-            ${Vulkan_LIBRARY}
-            ${XCB_LIBRARIES}
-            ${WAYLAND_CLIENT_LIBRARIES} )
+    if( USE_WAYLAND_WSI )
+        target_link_libraries( TWE
+                ${Vulkan_LIBRARY}
+                ${WAYLAND_CLIENT_LIBRARIES} )
+    else( )
+        target_link_libraries( TWE
+                ${Vulkan_LIBRARY}
+                ${XCB_LIBRARIES} )
+    endif()
 else()
     target_link_libraries( TWE ${Vulkan_LIBRARY} )
 endif( )

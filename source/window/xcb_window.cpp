@@ -18,6 +18,11 @@
 #include "log.h"
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
+
+#define explicit c_explicit             // Avoid mixing up "explicit" with the C++11 explicit
+#include <xcb/xkb.h>
+#undef explicit
+
 namespace TWE
 {
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
@@ -74,14 +79,12 @@ namespace TWE
             XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
             XCB_EVENT_MASK_POINTER_MOTION;
     
-        /*
         xcb_xkb_use_extension( p_xcb_connection_.get(), XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION );
         
         xcb_xkb_per_client_flags( p_xcb_connection_.get(), XCB_XKB_ID_USE_CORE_KBD,
                                   XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
                                   XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
                                   0,0,0 );
-        */
         
         if( settings_.fullscreen_ )
         {
@@ -168,11 +171,6 @@ namespace TWE
         
             xcb_window_ = rhs.xcb_window_;
             rhs.xcb_window_ = 0;
-        
-            /*
-            event_handler_ = rhs.event_handler_;
-            rhs.event_handler_ = { };
-            */
             
             settings_ = rhs.settings_;
             rhs.settings_ = { };
@@ -251,7 +249,9 @@ namespace TWE
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
                 
                     const auto event = mouse_button_press_event( )
-                        .set_button_code( static_cast<mouse::button>( button_press_event->detail ) );
+                        .set_button_code( static_cast<mouse::button>( button_press_event->detail ) )
+                        .set_position( static_cast<int32_t>( button_press_event->event_x ),
+                            static_cast<int32_t>( button_press_event->event_y ) );
                     
                     event_dispatcher::dispatch_mouse_button_pressed_event( event );
                 } break;
@@ -260,7 +260,9 @@ namespace TWE
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
                 
                     const auto event = mouse_button_release_event( )
-                        .set_button_code( static_cast<mouse::button>( button_release_event->detail ) );
+                        .set_button_code( static_cast<mouse::button>( button_release_event->detail ) )
+                        .set_position( static_cast<int32_t>( button_release_event->event_y ),
+                            static_cast<int32_t>( button_release_event->event_x ) );
                     
                     event_dispatcher::dispatch_mouse_button_released_event( event );
                 } break;
