@@ -21,26 +21,46 @@
 
 #include <vulkan/vulkan.h>
 
+#include "TWE_core.h"
+
 namespace TWE
 {
+    /*!
+     * @brief An error for vulkan related problems. It inherits from
+     * std::system_error.
+     */
     class vk_error : public std::system_error
     {
     private:
-        class category;
-        
-    public:
-        vk_error( const VkResult& result, const std::string& message )
-            : system_error( result, category( ), message )
-        { }
-        
-    private:
+        /*!
+         * @brief The category of the error. Inherits from
+         * std::error_category.
+         */
         class category : public std::error_category
         {
         public:
-            const char* name( ) const noexcept override;
-            std::string message( int ev ) const override;
+            /*!
+             * @brief Get the name of the error class.
+             * @return The name of the error class.
+             */
+            const char* TWE_API name( ) const noexcept override;
+            /*!
+             * @brief Get the name of the Vulkan error type.
+             * @param ev The Vulkan error code.
+             * @return The associated name with the error code.
+             */
+            std::string TWE_API message( int ev ) const override;
         };
+        
+    public:
+        /*!
+         * @brief Ctor to create the vk_error.
+         * @param result The Vulkan error code.
+         * @param message The message to print along with the error name.
+         */
+        TWE_API vk_error( const VkResult& result, const std::string& message );
     };
+    
 }
 
 #endif //ENGINE_vk_error_H
