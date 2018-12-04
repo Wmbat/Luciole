@@ -21,7 +21,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "TWE_core.h"
+#include "../TWE_core.h"
 
 namespace TWE
 {
