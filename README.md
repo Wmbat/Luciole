@@ -2,9 +2,9 @@
 A Cross-Platform Vulkan game engine.
 
 ## GNU/Linux
-The library does not currently support Wayland nor Mir. It only support XCB.
+The library does not currently support Wayland nor Mir. It only supports XCB.
 
-You will have to find the XCB library and link against it. Here is an example on how it can be done:
+You will have to find the XCB library
 ```
     find_package( XCB REQUIRED )
 
@@ -14,20 +14,20 @@ You will have to find the XCB library and link against it. Here is an example on
         message( STATUS ${XCB_LIBRARIES} )
     endif( )
 ```
-and then, link against it
+and link against it.
 ```
     target_link_libraries( your_project
             ${XCB_LIBRARIES} )
 ```
 It does not have to be done that way though.
 
-You will also have to include the GLM headers as well as the spdlog headers from https://github.com/gabime/spdlog or you can simply grab them from the include external folder
+You will also have to include the GLM headers, which can either be found here https://glm.g-truc.net/0.9.9/index.html or, provided within the external folder. You will also have to include spdlog which can be found here https://github.com/gabime/spdlog or you can simply grab them from the include external folder.
 
 You can then include the TWE library headers located in the TWE folder and link against the libTWE.so that you build.
 
 ## How to use
 
-To start using the engine. You simply have to create a class that inherits from *TWE::application* and call its constructor. You will also have to override the *run()* function where your main loop will be located.
+To start using the engine, you simply have to create a class that inherits from *TWE::application* and call its constructor. You will also have to override the *run()* function where your main loop will be located.
 ```
 class demo : public TWE::application
 {
