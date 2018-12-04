@@ -552,11 +552,11 @@ namespace TWE
         uint32_t supported_api_version;
         if( vkEnumerateInstanceVersion( &supported_api_version ) != VK_SUCCESS )
         {
-            throw basic_error{ basic_error::flags::vk_not_supported_error, "Vulkan not Installed" };
+            throw basic_error{ basic_error::error_code::vk_not_supported_error, "Vulkan not Installed" };
         }
         if( supported_api_version != VK_API_VERSION_1_1 )
         {
-            throw basic_error{ basic_error::flags::vk_version_error, "Vulkan 1.1 not supporetd" };
+            throw basic_error{ basic_error::error_code::vk_version_error, "Vulkan 1.1 not supporetd" };
         }
         
         if constexpr( enable_debug_layers )
@@ -580,14 +580,14 @@ namespace TWE
         
         if( !check_instance_extension_support( vk_context_.instance_extensions_ ) )
         {
-            throw basic_error{ basic_error::flags::vk_instance_ext_support_error, "Instance extensions requested, but not supporetd" };
+            throw basic_error{ basic_error::error_code::vk_instance_ext_support_error, "Instance extensions requested, but not supporetd" };
         }
         
         if constexpr ( !enable_debug_layers )
         {
             if( !check_debug_layer_support( vk_context_.validation_layers_ ) )
             {
-                throw basic_error{ basic_error::flags::vk_validation_layer_support_error, "VK_LAYER_LUNARG_standard_validation not supported" };
+                throw basic_error{ basic_error::error_code::vk_validation_layer_support_error, "VK_LAYER_LUNARG_standard_validation not supported" };
             }
         }
     }
