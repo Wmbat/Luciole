@@ -28,7 +28,7 @@ namespace TWE
     {
     public:
         TWE_API win32_window ( ) = default;
-        TWE_API win32_window ( const std::string& title );
+        TWE_API explicit win32_window ( const std::string& title );
         TWE_API win32_window ( const win32_window& rhs ) = delete;
         TWE_API win32_window ( win32_window&& rhs ) noexcept;
         TWE_API ~win32_window ( );
@@ -36,7 +36,7 @@ namespace TWE
         TWE_API win32_window& operator=( const win32_window& rhs ) = delete;
         TWE_API win32_window& operator=( win32_window&& rhs ) noexcept;
 
-        virtual void TWE_API poll_events ( ) override;
+        void TWE_API poll_events ( ) override;
 
         vk_return_type<VkSurfaceKHR> TWE_API create_surface ( const VkInstance& instance ) const noexcept override;
 

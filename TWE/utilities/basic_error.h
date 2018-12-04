@@ -21,22 +21,44 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "TWE_core.h"
+
 namespace TWE
 {
+    /*!
+     * @brief An error for general TWE errors, inherits from
+     * std::system_error
+     */
     class basic_error : public std::system_error
     {
     private:
+        /*!
+         * @brief The category of the error. Inherits from
+         * std::error_category.
+         */
         class category : public std::error_category
         {
         public:
-            const char* name( ) const noexcept override;
-            std::string message( int ev ) const override;
+            /*!
+             * @brief Get the name of the error class.
+             * @return The name of the error class.
+             */
+            const char* TWE_API name( ) const noexcept override;
+            /*!
+             * @brief Get the name of the general error type.
+             * @param ev The error code.
+             * @return The associated name with the error code.
+             */
+            std::string TWE_API message( int ev ) const override;
         };
 
     public:
-        enum class flags : int
+        enum class error_code : int
         {
+            /* General engine errors. */
             engine_error = -1,
+            
+            /* General Vulkan Environment errors. */
             vk_version_error = -2,
             vk_not_supported_error = -3,
             vk_instance_ext_support_error = -4,
@@ -44,11 +66,12 @@ namespace TWE
         };
         
     public:
-        basic_error( const flags& error_flags, const std::string& message )
-            : system_error( static_cast<int>( error_flags ), category( ), message )
-        {
-        
-        }
+        /*!
+         * @brief Ctor to create the error
+         * @param code The error code.
+         * @param message The message to print alongside the error.
+         */
+        TWE_API basic_error( const error_code& code, const std::string& message );
     };
 }
 

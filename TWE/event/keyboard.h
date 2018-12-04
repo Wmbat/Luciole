@@ -24,6 +24,9 @@
 
 namespace TWE
 {
+    /*!
+     * @brief Hold the keymapping for keyboard keys.
+     */
     class keyboard
     {
     public:

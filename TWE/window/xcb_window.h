@@ -34,12 +34,12 @@ namespace TWE
         TWE_API explicit xcb_window( const std::string& title );
         TWE_API xcb_window( const xcb_window& rhs ) = delete;
         TWE_API xcb_window( xcb_window&& rhs ) noexcept;
-        TWE_API ~xcb_window( );
+        TWE_API ~xcb_window( ) override;
         
         TWE_API xcb_window& operator=( const xcb_window& rhs ) = delete;
         TWE_API xcb_window& operator=( xcb_window&& rhs ) noexcept;
     
-        virtual void TWE_API poll_events( ) override;
+        void TWE_API poll_events( ) override;
         
         vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept override;
     

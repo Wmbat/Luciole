@@ -18,6 +18,10 @@
 
 namespace TWE
 {
+    vk_error::vk_error( const VkResult& result, const std::string& message )
+        : system_error( result, category( ), message )
+    { }
+    
     const char* vk_error::category::name( ) const noexcept
     {
         return "Vulkan Error";

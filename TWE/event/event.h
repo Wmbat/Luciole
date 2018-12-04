@@ -22,6 +22,10 @@
 
 namespace TWE
 {
+    /*!
+     * @brief An event that hold key press information with
+     * the associated key code.
+     */
     struct key_press_event
     {
         keyboard::key key_code_;
@@ -32,6 +36,10 @@ namespace TWE
             return *this;
         }
     };
+    /*!
+     * @brief An event that hold key released information with
+     * the associated key code.
+     */
     struct key_release_event
     {
         keyboard::key key_code_;
@@ -43,6 +51,10 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief An event that hold mouse button press information
+     * with the associated button code.
+     */
     struct mouse_button_press_event
     {
         mouse::button button_code_;
@@ -54,6 +66,10 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief An event that hold mouse button release information
+     * with the associated button code.
+     */
     struct mouse_button_release_event
     {
         mouse::button button_code_;
@@ -65,6 +81,9 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief An event that hold mouse position information.
+     */
     struct mouse_motion_event
     {
         int32_t x_;

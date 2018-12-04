@@ -13,11 +13,19 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
+#include <utilities/basic_error.h>
+
 #include "utilities/basic_error.h"
 
 namespace TWE
 {
+    basic_error::basic_error( const basic_error::error_code& error_flags, const std::string& message )
+        : system_error( static_cast<int>( error_flags ), category( ), message )
+    {
+    
+    }
+    
     const char* basic_error::category::name( ) const noexcept
     {
         return "TWE Error";
@@ -27,20 +35,21 @@ namespace TWE
     {
         switch ( ev )
         {
-        case static_cast<int>( flags::engine_error ):
+        case static_cast<int>( error_code::engine_error ):
             return "ENGINE_ERROR";
-        case static_cast<int>( flags::vk_version_error ):
+        case static_cast<int>( error_code::vk_version_error ):
             return "VULKAN_VERSION_ERROR";
-        case static_cast<int>( flags::vk_not_supported_error ):
+        case static_cast<int>( error_code::vk_not_supported_error ):
             return "VULKAN_NOT_SUPPORTED_ERROR";
-        case static_cast<int>( flags::vk_instance_ext_support_error ):
+        case static_cast<int>( error_code::vk_instance_ext_support_error ):
             return "VULKAN_INSTANCE_EXTENTION_SUPPORT_ERROR";
-        case static_cast<int>( flags::vk_validation_layer_support_error ):
+        case static_cast<int>( error_code::vk_validation_layer_support_error ):
             return "VULKAN_VALIDATION_LAYERS_SUPPORT_ERROR";
         default:
             return "ENGINE_UNKNOWN_ERROR";
         }
     }
+    
 }
 
 

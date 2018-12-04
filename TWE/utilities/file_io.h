@@ -21,6 +21,10 @@
 #include <fstream>
 #include <vector>
 
+#include "basic_error.h"
+
+
+// TODO: Update this whole file to be better and comment.
 namespace TWE
 {
     inline const std::string read_from_file( const std::string& filepath )
