@@ -60,11 +60,11 @@ namespace TWE
         AdjustWindowRect ( &wnd_rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE );
 
         h_wnd_ = CreateWindow ( wnd_class_name_, title_.c_str ( ),
-                                     WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
-                                     settings_.x_, settings_.y_,
-                                     wnd_rect.right - wnd_rect.left,
-                                     wnd_rect.bottom - wnd_rect.top,
-                                     nullptr, nullptr, h_inst_, this );
+                                WS_OVERLAPPEDWINDOW,
+                                settings_.x_, settings_.y_,
+                                wnd_rect.right - wnd_rect.left,
+                                wnd_rect.bottom - wnd_rect.top,
+                                nullptr, nullptr, h_inst_, this );
 
         if( h_wnd_ == nullptr )
         {
@@ -194,8 +194,8 @@ namespace TWE
             {
                 const auto points = MAKEPOINTS ( l_param );
                 
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( static_cast<uint32_t>( points.x ) > 0 && static_cast<uint32_t>( points.x ) < settings_.width_ &&
+                     static_cast<uint32_t>( points.y ) > 0 && static_cast<uint32_t>( points.y ) < settings_.height_ )
                 {
                     const auto event = mouse_button_press_event ( )
                         .set_button_code ( mouse::button::l_button )
@@ -387,6 +387,25 @@ namespace TWE
                     event_dispatcher::dispatch_mouse_button_pressed_event ( event );
                 }
             } break;
+            case WM_MOVE:
+            {
+                settings_.x_ = LOWORD ( l_param );
+                settings_.y_ = HIWORD ( l_param );
+            } break;
+            case WM_SIZE:
+            {
+                if ( open_ )
+                {
+                    settings_.width_ = LOWORD ( l_param );
+                    settings_.height_ = HIWORD ( l_param );
+
+                    const auto event = framebuffer_resize_event ( )
+                        .set_size ( settings_.width_, settings_.height_ );
+
+                    event_dispatcher::dispatch_framebuffer_resize_event ( event );
+                }
+            } break;
+
         }
 
         return DefWindowProc ( h_wnd, msg, w_param, l_param );
