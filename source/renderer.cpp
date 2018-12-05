@@ -19,12 +19,11 @@
 #include <map>
 #include <renderer.h>
 
-
+#include "renderer.h"
+#include "log.h"
 #include "utilities/file_io.h"
 #include "utilities/basic_error.h"
 #include "utilities/vk_error.h"
-#include "renderer.h"
-#include "log.h"
 
 static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -91,8 +90,6 @@ namespace TWE
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() )
     {
-
-
         try
         {
             set_up();
