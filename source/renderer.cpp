@@ -42,11 +42,15 @@ namespace TWE
         }
         else if( flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
         {
-            core_warn( "Validation Layers -> {0}.", msg );
+            core_info( "Validation Layers -> {0}.", msg );
         }
         else if( flags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
             core_error( "Validation Layers -> {0}.", msg );
+        }
+        else if( flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
+        {
+            core_trace( "Validation Layers -> {0}.", msg );
         }
         
         return VK_FALSE;
@@ -111,8 +115,12 @@ namespace TWE
             core_info( "Vulkan -> Surface created." );
     
             vk_context_.gpu_ = pick_physical_device( );
-            core_info( "Vulkan -> Physical Device picked." );   // TODO: print Device info.
-    
+            
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
+            
+            core_info( "Vulkan -> Physical Device picked. {0}", properties.deviceName );   // TODO: print Device info.
+            
             vk_context_.device_ = check_vk_return_type_result( create_device( ), "create_device( )" );
             core_info( "Vulkan -> Device created." );
     
@@ -495,10 +503,10 @@ namespace TWE
         vkWaitForFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_],
             VK_TRUE, std::numeric_limits<uint64_t>::max() );
         
-        uint32_t image_index;
-        
+        uint32_t image_index = 0;
         auto result = vkAcquireNextImageKHR( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max( ),
             vk_context_.image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index );
+        
         try
         {
             if( result == VK_ERROR_OUT_OF_DATE_KHR )
@@ -792,7 +800,8 @@ namespace TWE
             nullptr,                                                                // pNext
             VK_DEBUG_REPORT_WARNING_BIT_EXT |                                       // flags
             VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_ERROR_BIT_EXT,
+            VK_DEBUG_REPORT_ERROR_BIT_EXT |
+            VK_DEBUG_REPORT_DEBUG_BIT_EXT,
             debug_callback_function,                                                // pfnCallback
             nullptr                                                                 // pUserData
         };
@@ -1314,11 +1323,13 @@ namespace TWE
             &colour_blend_attachment_state,                                         // pAttachments
             { 0.0f, 0.0f, 0.0f, 0.0f }                                              // blendConstants
         };
+        /*
         const VkDynamicState dynamic_states[]
         {
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_LINE_WIDTH
         };
+         */
         const VkPipelineDynamicStateCreateInfo dynamic_state_create_info
         {
             VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,                   // sType
@@ -1343,7 +1354,7 @@ namespace TWE
             &multisample_state_create_info,                                         // pMultisampleState
             nullptr,                                                                // pDepthStencilState
             &colour_blend_state_create_info,                                        // pColorBlendState
-            &dynamic_state_create_info,                                             // pDynamicState
+            nullptr,                                                                // pDynamicState
             vk_context_.graphics_pipeline_layout_,                                  // layout
             vk_context_.render_pass_,                                               // renderPass
             0,                                                                      // subpass
