@@ -7,7 +7,7 @@
       "inheritEnvironments": [
         "msvc_x64_x64"
       ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "buildRoot": "${env.USERPROFILE}\\Documents\\programming\\cpp\\TWE\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",

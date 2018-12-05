@@ -71,6 +71,14 @@ namespace TWE
             const std::shared_ptr<mouse_motion_listener>& p_listener );
         /*!
          * @brief Add a shared_ptr to an object that inherits from
+         * window_close_listener to listen for a window close event.
+         * @param p_listener Shared_ptr to the object than inherits from
+         * window_close_listener.
+         */
+        void TWE_API add_window_close_listener ( 
+            const std::shared_ptr<window_close_listener>& p_listener );
+        /*!
+         * @brief Add a shared_ptr to an object that inherits from
          * framebuffer_resize_listener to listen for framebuffer resizes.
          * @param p_listener A shared_ptr to the object that inherits from
          * framebuffer_resize_listener.
@@ -125,6 +133,13 @@ namespace TWE
         void TWE_API remove_mouse_motion_listener(
             const std::shared_ptr<mouse_motion_listener>& p_listener );
         /*!
+         * @brief Remove a window close listener from the vector of listeners.
+         * @param p_listener Shared_ptr to a window_close_listener that is to
+         * be removed if it is present in the window close listener vector.
+         */
+        void TWE_API remove_window_close_listener ( 
+            const std::shared_ptr<window_close_listener>& p_listener );
+        /*!
          * @brief Remove a framebuffer resize listener from the vector
          * of listeners.
          * @param p_listener The shared_ptr to a framebuffer_resize_listener
@@ -165,6 +180,12 @@ namespace TWE
          */
         void TWE_API dispatch_mouse_motion_event( const mouse_motion_event& event );
         /*!
+         * @brief Dispatch the window close event to all the 
+         * window close event listeners.
+         * @param event The window close event to dispatch.
+         */
+        void TWE_API dispatch_window_close_event ( const window_close_event& event );
+        /*!
          * @brief Dispatch the framebuffer resize event to all the
          * framebuffer resize event listeners.
          * @param event The framebuffer resize event to dispatch.
@@ -182,6 +203,8 @@ namespace TWE
         std::vector<std::shared_ptr<mouse_button_released_listener>> mouse_button_release_listeners_;
         /* vector of mouse_motion_listeners. */
         std::vector<std::shared_ptr<mouse_motion_listener>> mouse_motion_listeners_;
+        /* vector of window close listeners. */
+        std::vector<std::shared_ptr<window_close_listener>> window_close_listeners_;
         /* vector of framebuffer resize listeners. */
         std::vector<std::shared_ptr<framebuffer_resize_listener>> framebuffer_resize_listeners_;
     };

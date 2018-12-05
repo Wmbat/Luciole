@@ -91,11 +91,26 @@ namespace TWE
     {
     public:
         /*!
-         * @brief Virtual function to be overriden by the intheritor to
+         * @brief Virtual function to be overriden by the inheritor to
          * define the desired behaviour at the mouse motion event
          * @param event The event to handle.
          */
         virtual void execute( const mouse_motion_event& event ) = 0;
+    };
+
+    /*!
+     * @brief An interface that allows for listener to
+     * windown close events dispatched by an event dispatcher.
+     */
+    class window_close_listener
+    {
+    public:
+        /*!
+         * @brief Virtual to function to be overriden by the inheritor to
+         * define the desired behaviour when the window close event is launched.
+         * @param event The event to handle.
+         */
+        virtual void execute ( const window_close_event& event ) = 0;
     };
     
     /*!
