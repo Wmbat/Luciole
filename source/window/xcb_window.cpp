@@ -193,11 +193,21 @@ namespace TWE
                     if ( message_event->data.data32[0] == p_xcb_wm_delete_window_->atom )
                     {
                         open_ = false;
+                        
+                        const auto event = window_close_event( )
+                            .set_bool( true );
+                        
+                        event_dispatcher::dispatch_window_close_event( event );
                     }
                 } break;
                 case XCB_DESTROY_NOTIFY:
                 {
                     open_ = false;
+    
+                    const auto event = window_close_event( )
+                        .set_bool( true );
+    
+                    event_dispatcher::dispatch_window_close_event( event );
                 } break;
                 case XCB_CONFIGURE_NOTIFY:
                 {
@@ -217,24 +227,6 @@ namespace TWE
     
                         event_dispatcher::dispatch_framebuffer_resize_event( event );
                     }
-                } break;
-                case XCB_FOCUS_IN:
-                {
-                    const auto *focus_in_event = reinterpret_cast< const xcb_focus_in_event_t * >( e );
-                
-                    //const auto focus_in = event ( )
-                    //    .set_type ( event::type::window_focus_in );
-                
-                    //event_handler_.push_event ( focus_in );
-                } break;
-                case XCB_FOCUS_OUT:
-                {
-                    const auto *focus_out_event = reinterpret_cast<const xcb_focus_out_event_t *>( e );
-                
-                    //const auto focus_out = event( )
-                    //    .set_type( event::type::window_focus_out );
-                
-                    //event_handler_.push_event( focus_out );
                 } break;
                 case XCB_KEY_PRESS:
                 {

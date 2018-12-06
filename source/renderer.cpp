@@ -19,6 +19,7 @@
 #include <map>
 #include <renderer.h>
 
+
 #include "renderer.h"
 #include "log.h"
 #include "utilities/file_io.h"
@@ -108,8 +109,20 @@ namespace TWE
             core_info( "Vulkan -> Surface created." );
     
             vk_context_.gpu_ = pick_physical_device( );
-            core_info( "Vulkan -> Physical Device picked." );   // TODO: print Device info.
+            
+            /* Get GPU info. */
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
     
+            VkPhysicalDeviceDriverPropertiesKHR driver_properties;
+            VkPhysicalDeviceProperties2 properties_2;
+            properties_2.pNext = &driver_properties;
+    
+            // vkGetPhysicalDeviceProperties2KHR( vk_context_.gpu_, &properties_2 );
+    
+            core_info( "Vulkan -> Physical Device picked: {0} {1]", properties.deviceName, driver_properties.driverName );
+            
+            
             vk_context_.device_ = check_vk_return_type_result( create_device( ), "create_device( )" );
             core_info( "Vulkan -> Device created." );
     
@@ -709,6 +722,7 @@ namespace TWE
         }
         
         vk_context_.instance_extensions_.emplace_back( VK_KHR_SURFACE_EXTENSION_NAME );
+        vk_context_.instance_extensions_.emplace_back( "VK_KHR_get_physical_device_properties2" );
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
         vk_context_.instance_extensions_.emplace_back( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
@@ -721,6 +735,7 @@ namespace TWE
         vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_standard_validation" );
         
         vk_context_.device_extensions_.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
+        vk_context_.device_extensions_.emplace_back( "VK_KHR_driver_properties" );
         
         if( !check_instance_extension_support( vk_context_.instance_extensions_ ) )
         {
