@@ -27,7 +27,6 @@ namespace TWE
         core_info ( "Using Win32 for window creation." );
 
         title_ = title;
-        open_ = true;
 
         h_inst_ = GetModuleHandle ( NULL );
 
@@ -65,11 +64,12 @@ namespace TWE
                                 wnd_rect.right - wnd_rect.left,
                                 wnd_rect.bottom - wnd_rect.top,
                                 nullptr, nullptr, h_inst_, this );
-
         if( h_wnd_ == nullptr )
         {
             UnregisterClass ( wnd_class_name_, h_inst_ );
         }
+
+        open_ = true;
 
         ShowWindow ( h_wnd_, SW_SHOWDEFAULT );
         UpdateWindow ( h_wnd_ );
@@ -173,8 +173,14 @@ namespace TWE
         {
             case WM_DESTROY:
             {
-                PostQuitMessage ( 0 );
                 open_ = false;
+
+                const auto event = window_close_event ( )
+                    .set_bool ( true );
+
+                event_dispatcher::dispatch_window_close_event ( event );
+
+                PostQuitMessage ( 0 );
             } break;
             case WM_KEYDOWN:
             {
@@ -394,7 +400,8 @@ namespace TWE
             } break;
             case WM_SIZE:
             {
-                if ( open_ )
+                if ( settings_.width_ != LOWORD ( l_param ) || 
+                     settings_.height_ != HIWORD ( l_param ) )
                 {
                     settings_.width_ = LOWORD ( l_param );
                     settings_.height_ = HIWORD ( l_param );

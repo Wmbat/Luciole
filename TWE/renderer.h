@@ -28,7 +28,7 @@
 
 namespace TWE
 {
-    class renderer : public framebuffer_resize_listener
+    class renderer : public framebuffer_resize_listener, public window_close_listener
     {
     public:
         struct graphics_pipeline_data;
@@ -54,6 +54,7 @@ namespace TWE
         void TWE_API record_draw_calls( );
         
         void TWE_API execute( const framebuffer_resize_event& event ) override;
+        void TWE_API execute( const window_close_event& event ) override;
     
     private:
         void recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data );
@@ -128,6 +129,8 @@ namespace TWE
     private:
         uint32_t window_width_;
         uint32_t window_height_;
+
+        bool is_window_closed_ = false;
         bool framebuffer_resized_ = false;
         
         size_t current_frame_ = 0;

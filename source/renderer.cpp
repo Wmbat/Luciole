@@ -486,92 +486,99 @@ namespace TWE
         window_height_ = event.y_;
         framebuffer_resized_ = true;
     }
+    void renderer::execute ( const window_close_event& event )
+    {
+        is_window_closed_ = event.is_window_closed_;
+    }
     
     void renderer::draw_frame( const TWE::renderer::graphics_pipeline_data &data )
     {
-        vkWaitForFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_],
-            VK_TRUE, std::numeric_limits<uint64_t>::max() );
-        
-        uint32_t image_index;
-        
-        auto result = vkAcquireNextImageKHR( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max( ),
-            vk_context_.image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index );
-        try
+        if ( !is_window_closed_ )
         {
-            if( result == VK_ERROR_OUT_OF_DATE_KHR )
+            vkWaitForFences ( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_],
+                              VK_TRUE, std::numeric_limits<uint64_t>::max ( ) );
+
+            uint32_t image_index;
+
+            auto result = vkAcquireNextImageKHR ( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max ( ),
+                                                  vk_context_.image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index );
+            try
             {
-                recreate_swapchain( data );
+                if ( result == VK_ERROR_OUT_OF_DATE_KHR )
+                {
+                    recreate_swapchain ( data );
+                }
+                else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+                {
+                    throw vk_error{ result, "Failed to acquire swapchain image" };
+                }
             }
-            else if( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+            catch ( const vk_error& e )
             {
-                throw vk_error{ result, "Failed to acquire swapchain image" };
+                core_error ( e.what ( ) );
             }
-        }
-        catch( const vk_error& e )
-        {
-            core_error( e.what() );
-        }
-            
-        const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        const VkSubmitInfo submit_info
-        {
-            VK_STRUCTURE_TYPE_SUBMIT_INFO,                                          // sType
-            nullptr,                                                                // pNext
-            1,                                                                      // waitSemaphoreCount
-            &vk_context_.image_available_semaphores_[current_frame_],               // pWaitSemaphores
-            wait_stages,                                                            // pWaitDstStageMask
-            1,                                                                      // commandBufferCount
-            &vk_context_.command_buffers_[image_index],                             // pCommandBuffers
-            1,                                                                      // signalSemaphoreCount
-            &vk_context_.render_finished_semaphores_[current_frame_]                // pSignalSemaphores
-        };
-    
-        vkResetFences( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_] );
-    
-        try
-        {
-            check_vk_return_result(
-                vkQueueSubmit( vk_context_.graphics_queue_, 1, &submit_info,
+
+            const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            const VkSubmitInfo submit_info
+            {
+                VK_STRUCTURE_TYPE_SUBMIT_INFO,                                          // sType
+                nullptr,                                                                // pNext
+                1,                                                                      // waitSemaphoreCount
+                &vk_context_.image_available_semaphores_[current_frame_],               // pWaitSemaphores
+                wait_stages,                                                            // pWaitDstStageMask
+                1,                                                                      // commandBufferCount
+                &vk_context_.command_buffers_[image_index],                             // pCommandBuffers
+                1,                                                                      // signalSemaphoreCount
+                &vk_context_.render_finished_semaphores_[current_frame_]                // pSignalSemaphores
+            };
+
+            vkResetFences ( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_] );
+
+            try
+            {
+                check_vk_return_result (
+                    vkQueueSubmit ( vk_context_.graphics_queue_, 1, &submit_info,
                     vk_context_.in_flight_fences_[current_frame_] ),
-                "Failed to submit draw command buffer!" );
-        }
-        catch( const vk_error& e )
-        {
-            core_error( e.what() );
-        }
-        
-        VkPresentInfoKHR present_info
-        {
-            VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,                                     // sType
-            nullptr,                                                                // pNext
-            1,                                                                      // waitSemaphoreCount
-            &vk_context_.render_finished_semaphores_[current_frame_],               // pWaitSemaphores
-            1,                                                                      // swapchainCount
-            &vk_context_.swapchain_,                                                // pSwapchains
-            &image_index,                                                           // pImageIndices
-            nullptr                                                                 // pResults
-        };
-    
-        result = vkQueuePresentKHR( vk_context_.present_queue_, &present_info );
-        
-        try
-        {
-            if( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized_ )
-            {
-                framebuffer_resized_ = false;
-                recreate_swapchain( data );
+                    "Failed to submit draw command buffer!" );
             }
-            else if( result != VK_SUCCESS )
+            catch ( const vk_error& e )
             {
-                throw vk_error{ result, "failed to present swapchain image." };
+                core_error ( e.what ( ) );
             }
+
+            VkPresentInfoKHR present_info
+            {
+                VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,                                     // sType
+                nullptr,                                                                // pNext
+                1,                                                                      // waitSemaphoreCount
+                &vk_context_.render_finished_semaphores_[current_frame_],               // pWaitSemaphores
+                1,                                                                      // swapchainCount
+                &vk_context_.swapchain_,                                                // pSwapchains
+                &image_index,                                                           // pImageIndices
+                nullptr                                                                 // pResults
+            };
+
+            result = vkQueuePresentKHR ( vk_context_.present_queue_, &present_info );
+
+            try
+            {
+                if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized_ )
+                {
+                    framebuffer_resized_ = false;
+                    recreate_swapchain ( data );
+                }
+                else if ( result != VK_SUCCESS )
+                {
+                    throw vk_error{ result, "failed to present swapchain image." };
+                }
+            }
+            catch ( const vk_error& e )
+            {
+                core_error ( e.what ( ) );
+            }
+
+            current_frame_ = ( ++current_frame_ ) % MAX_FRAMES_IN_FLIGHT;
         }
-        catch( const vk_error& e )
-        {
-            core_error( e.what( ));
-        }
-    
-        current_frame_ = ( ++current_frame_ ) % MAX_FRAMES_IN_FLIGHT;
     }
     
     void renderer::recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data )
@@ -1311,11 +1318,13 @@ namespace TWE
             &colour_blend_attachment_state,                                         // pAttachments
             { 0.0f, 0.0f, 0.0f, 0.0f }                                              // blendConstants
         };
+        /*
         const VkDynamicState dynamic_states[]
         {
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_LINE_WIDTH
         };
+        */
         const VkPipelineDynamicStateCreateInfo dynamic_state_create_info
         {
             VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,                   // sType
@@ -1340,7 +1349,7 @@ namespace TWE
             &multisample_state_create_info,                                         // pMultisampleState
             nullptr,                                                                // pDepthStencilState
             &colour_blend_state_create_info,                                        // pColorBlendState
-            &dynamic_state_create_info,                                             // pDynamicState
+            nullptr,                                                                // pDynamicState
             vk_context_.graphics_pipeline_layout_,                                  // layout
             vk_context_.render_pass_,                                               // renderPass
             0,                                                                      // subpass

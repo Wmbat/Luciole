@@ -112,7 +112,21 @@ namespace TWE
             return *this;
         }
     };
-    
+
+    /*!
+     * @brief An event to pass information regarding the window closing.
+     */
+    struct window_close_event
+    {
+        bool is_window_closed_;
+
+        window_close_event& set_bool ( const bool is_closed )
+        {
+            is_window_closed_ = is_closed;
+            return *this;
+        }
+    };
+   
     /*!
      * @brief An event to pass information regarding a frame buffer resize.
      */

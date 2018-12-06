@@ -83,6 +83,17 @@ namespace TWE
             mouse_motion_listeners_.emplace_back( p_listener );
         }
     }
+    void event_dispatcher::add_window_close_listener ( 
+        const std::shared_ptr<window_close_listener>& p_listener )
+    {
+        if ( window_close_listeners_.cend ( ) ==
+             std::find_if ( window_close_listeners_.cbegin ( ), window_close_listeners_.cend ( ),
+             [p_listener]( const std::shared_ptr<window_close_listener>& p_list )
+            { return p_listener == p_list; } ) )
+        {
+            window_close_listeners_.emplace_back ( p_listener );
+        }
+    }
     void event_dispatcher::add_framebuffer_resize_listener(
         const std::shared_ptr<TWE::framebuffer_resize_listener>& p_listener )
     {
@@ -165,8 +176,22 @@ namespace TWE
             mouse_motion_listeners_.erase( it );
         }
     }
+    void event_dispatcher::remove_window_close_listener (
+        const std::shared_ptr<window_close_listener>& p_listener )
+    {
+        /* Find if p_listener is in the vector. */
+        const auto it = std::find_if( window_close_listeners_.cbegin( ), window_close_listeners_.cend( ),
+            [p_listener]( const std::shared_ptr<window_close_listener>& p_list )
+            { return p_listener == p_list; } );
+
+        /* If present, remove it. */
+        if ( it != window_close_listeners_.cend ( ) )
+        {
+            window_close_listeners_.erase ( it );
+        }
+    }
     void event_dispatcher::remove_framebuffer_resize_listener(
-        const std::shared_ptr<TWE::framebuffer_resize_listener>& p_listener )
+        const std::shared_ptr<framebuffer_resize_listener>& p_listener )
     {
         /* Find if p_listener is in vector. */
         const auto it = std::find_if( framebuffer_resize_listeners_.cbegin(), framebuffer_resize_listeners_.cend( ),
@@ -215,7 +240,14 @@ namespace TWE
             p_listener->execute( event );
         }
     }
-    void event_dispatcher::dispatch_framebuffer_resize_event( const TWE::framebuffer_resize_event& event )
+    void event_dispatcher::dispatch_window_close_event ( const window_close_event& event )
+    {
+        for ( auto& p_listener : window_close_listeners_ )
+        {
+            p_listener->execute ( event );
+        }
+    }
+    void event_dispatcher::dispatch_framebuffer_resize_event( const framebuffer_resize_event& event )
     {
         for( auto& p_listener : framebuffer_resize_listeners_ )
         {
