@@ -92,11 +92,13 @@ add_library( TWE SHARED
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
 		source/window/base_window.cpp
+        source/window/wayland_window.cpp
 		source/window/win32_window.cpp
         source/window/xcb_window.cpp
 		source/application.cpp
         source/log.cpp
-        source/renderer.cpp TWE/window/wayland_window.h source/window/wayland_window.cpp TWE/threads/thread_pool.h)
+        source/renderer.cpp
+        )
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
