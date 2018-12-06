@@ -96,7 +96,7 @@ add_library( TWE SHARED
         source/window/xcb_window.cpp
 		source/application.cpp
         source/log.cpp
-        source/renderer.cpp TWE/window/wayland_window.h source/window/wayland_window.cpp)
+        source/renderer.cpp TWE/window/wayland_window.h source/window/wayland_window.cpp TWE/threads/thread_pool.h)
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )

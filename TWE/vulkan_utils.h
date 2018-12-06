@@ -19,7 +19,11 @@
 
 #include <string>
 
-#include <vulkan/vulkan.h>
+#ifndef VULKAN_HPP_NO_EXCEPTIONS
+#define VULKAN_HPP_NO_EXCEPTIONS
+#endif
+
+#include <vulkan/vulkan.hpp>
 
 #include "utilities/vk_error.h"
 
@@ -32,18 +36,6 @@ namespace TWE
 #endif
     
     /**
-     *  @brief Returns a struct holding the desired object and a bool
-     *  to check whether it's creation was successful.
-     *  @tparam T, The desired object type.
-     */
-    template<typename T>
-    struct vk_return_type
-    {
-        VkResult result_;
-        T value_;
-    };
-    
-    /**
      *  @brief Helper function to check if an object was successfully created. Throws
      *  an exception if it is not, otherwise, returns the desired object.
      *  @tparam T, The desired object type.
@@ -52,15 +44,15 @@ namespace TWE
      *  @return The successfully creation object.
      */
     template<typename T>
-    inline const T check_vk_return_type_result( const vk_return_type<T> &return_obj, const std::string& message )
+    inline const T check_vk_result_value( const vk::ResultValue<T> &return_obj, const std::string& message )
     {
-        if( return_obj.result_ != VK_SUCCESS )
+        if( return_obj.result != vk::Result::eSuccess )
         {
-            throw vk_error{ return_obj.result_, message };
+            throw vk_error{ return_obj.result, message };
         }
         else
         {
-            return std::move( return_obj.value_ );
+            return std::move( return_obj.value );
         }
     }
     
@@ -70,9 +62,9 @@ namespace TWE
      *  @param result, The result to check.
      *  @param error_msg, The message to display in case of error.
      */
-    inline void check_vk_return_result( const VkResult result, const std::string& msg )
+    inline void check_vk_value( const vk::Result& result, const std::string& msg )
     {
-        if( result != VK_SUCCESS )
+        if( result != vk::Result::eSuccess )
         {
             throw vk_error{ result, msg };
         }

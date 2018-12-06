@@ -19,7 +19,6 @@
 #include <map>
 #include <renderer.h>
 
-
 #include "renderer.h"
 #include "log.h"
 #include "utilities/file_io.h"
@@ -51,7 +50,7 @@ namespace TWE
         
         return VK_FALSE;
     }
-    VKAPI_ATTR VkResult VKAPI_CALL vk_create_debug_callback( VkInstance instance,
+    VKAPI_ATTR VkResult VKAPI_CALL create_debug_report_callback( VkInstance instance,
         const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
         const VkAllocationCallbacks* pAllocator,
         VkDebugReportCallbackEXT* pCallback )
@@ -68,7 +67,7 @@ namespace TWE
             return VK_ERROR_EXTENSION_NOT_PRESENT;
         }
     }
-    VKAPI_ATTR void VKAPI_CALL vk_destroy_debug_callback( VkInstance instance,
+    VKAPI_ATTR void VKAPI_CALL vk_destroy_debug_report_callback( VkInstance instance,
         VkDebugReportCallbackEXT callback,
         const VkAllocationCallbacks* pAllocator )
     {
@@ -93,18 +92,18 @@ namespace TWE
             
             core_info( "Using Vulkan for rendering." );
             
-            vk_context_.instance_ = check_vk_return_type_result(
+            vk_context_.instance_ = check_vk_result_value(
                 create_instance( app_name, app_version ), "create_instance( )" );
             core_info( "Vulkan -> Instance created." );
     
             if constexpr( enable_debug_layers )
             {
-                vk_context_.debug_report_ = check_vk_return_type_result(
+                vk_context_.debug_report_ = check_vk_result_value(
                     create_debug_report( ), "create_debug_report( )" );
                 core_info( "Vulkan -> Debug Report Callback created." );
             }
-    
-            vk_context_.surface_ = check_vk_return_type_result(
+            
+            vk_context_.surface_ = check_vk_result_value(
                 create_surface( p_wnd ), "create_surface( )" );
             core_info( "Vulkan -> Surface created." );
     
@@ -118,46 +117,46 @@ namespace TWE
             VkPhysicalDeviceProperties2 properties_2;
             properties_2.pNext = &driver_properties;
     
-            // vkGetPhysicalDeviceProperties2KHR( vk_context_.gpu_, &properties_2 );
+            //vkGetPhysicalDeviceProperties2KHR( vk_context_.gpu_, &properties_2 );
     
             core_info( "Vulkan -> Physical Device picked: {0} {1]", properties.deviceName, driver_properties.driverName );
             
             
-            vk_context_.device_ = check_vk_return_type_result( create_device( ), "create_device( )" );
+            vk_context_.device_ = check_vk_result_value(
+                create_device( ), "create_device( )" );
             core_info( "Vulkan -> Device created." );
     
             /* Get the graphics queue and the present queue. */
-            const auto queue_family_indices = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
-            vkGetDeviceQueue( vk_context_.device_, queue_family_indices.graphic_family_.value(), 0, &vk_context_.graphics_queue_ );
-            vkGetDeviceQueue( vk_context_.device_, queue_family_indices.present_family_.value(), 0, &vk_context_.present_queue_ );
-    
-            core_info( "Vulkan -> Physical Device Graphics Queue. ID: {0:d}.", queue_family_indices.graphic_family_.value() );
-            core_info( "Vulkan -> Physical Device Present Queue. ID: {0:d}.", queue_family_indices.present_family_.value() );
-            core_info( "Vulkan -> Physical Device Compute Queue. ID: {0:d}.", queue_family_indices.compute_family_.value() );
+            const auto queue_families = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
+            vk_context_.graphics_queue_ = vk_context_.device_.getQueue( queue_families.graphic_family_.value(), 0 );
+            vk_context_.present_queue_ = vk_context_.device_.getQueue( queue_families.present_family_.value(), 0 );
+            
+            core_info( "Vulkan -> Physical Device Graphics Queue. ID: {0:d}.", queue_families.graphic_family_.value() );
+            core_info( "Vulkan -> Physical Device Present Queue. ID: {0:d}.", queue_families.present_family_.value() );
     
             vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& semaphore : vk_context_.image_available_semaphores_ )
             {
-                semaphore = check_vk_return_type_result( create_semaphore(), "create_semaphore( )" );
+                semaphore = check_vk_result_value( create_semaphore(), "create_semaphore( )" );
             }
             core_info( "Vulkan -> Image Available Semaphores created" );
 
             vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& semaphore : vk_context_.render_finished_semaphores_ )
             {
-                semaphore = check_vk_return_type_result( create_semaphore(), "create_semaphore( )" );
+                semaphore = check_vk_result_value( create_semaphore(), "create_semaphore( )" );
             }
             core_info( "Vulkan -> Render Finished Semaphore." );
             
             vk_context_.in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& fence : vk_context_.in_flight_fences_ )
             {
-                fence = check_vk_return_type_result( create_fence(), "create_fence( )" );
+                fence = check_vk_result_value( create_fence(), "create_fence( )" );
             }
             core_info( "Vulkan -> In flight fences created." );
             
-            vk_context_.command_pool_ = check_vk_return_type_result(
-                create_command_pool( queue_family_indices.graphic_family_.value() ),
+            vk_context_.command_pool_ = check_vk_result_value(
+                create_command_pool( queue_families.graphic_family_.value() ),
                 "create_command_pool( )" );
             core_info( "Vulkan -> Command Pool created" );
     
@@ -177,37 +176,37 @@ namespace TWE
             }
     
     
-            vk_context_.swapchain_ = check_vk_return_type_result(
-                create_swapchain( queue_family_indices, present_mode, swapchain_support_details.capabilities_,
+            vk_context_.swapchain_ = check_vk_result_value(
+                create_swapchain( queue_families, present_mode, swapchain_support_details.capabilities_,
                                   image_count ), "create_swapchain( )" );
             core_info( "Vulkan -> Swapchain created." );
     
-            vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, nullptr );
-            vk_context_.swapchain_image_.resize( image_count );
-            vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, vk_context_.swapchain_image_.data( ) );
+            vk_context_.swapchain_image_ = check_vk_result_value(
+                vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_ ),
+                "Failed to retrieve swapchain images." );
             core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
     
             vk_context_.swapchain_image_views_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_image_views_[i] = check_vk_return_type_result(
+                vk_context_.swapchain_image_views_[i] = check_vk_result_value(
                     create_image_view( vk_context_.swapchain_image_[i] ), "create_image_view( )" );
             }
             core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
     
     
-            vk_context_.command_buffers_ = check_vk_return_type_result(
+            vk_context_.command_buffers_ = check_vk_result_value(
                 create_command_buffers( image_count ), "create_command_buffers( )" );
             core_info( "Vulkan -> Command Buffers created. Count: {0:d}.", image_count );
             
-            vk_context_.render_pass_ = check_vk_return_type_result(
+            vk_context_.render_pass_ = check_vk_result_value(
                 create_render_pass( ), "create_render_pass( )" );
             core_info( "Vulkan -> Render Pass created." );
     
             vk_context_.swapchain_framebuffers_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_framebuffers_[i] = check_vk_return_type_result(
+                vk_context_.swapchain_framebuffers_[i] = check_vk_result_value(
                     create_framebuffer( vk_context_.swapchain_image_views_[i] ), "create_framebuffer( )" );
             }
             core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
@@ -228,18 +227,12 @@ namespace TWE
     renderer::~renderer( )
     {
         vkDeviceWaitIdle( vk_context_.device_ );
-        
-        if ( vk_context_.graphics_pipeline_ != VK_NULL_HANDLE )
-        {
-            vkDestroyPipeline( vk_context_.device_, vk_context_.graphics_pipeline_, nullptr );
-            core_info( "Vulkan -> Pipeline destroyed." );
-        }
     
-        if ( vk_context_.graphics_pipeline_layout_ != VK_NULL_HANDLE )
-        {
-            vkDestroyPipelineLayout( vk_context_.device_, vk_context_.graphics_pipeline_layout_, nullptr );
-            core_info( "Vulkan -> Pipeline Layout destroyed." );
-        }
+        vk_context_.device_.destroyPipeline( vk_context_.graphics_pipeline_ );
+        core_info( "Vulkan -> Pipeline destroyed." );
+    
+        vk_context_.device_.destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
+        core_info( "Vulkan -> Pipeline Layout destroyed." );
     
         for ( auto &framebuffer : vk_context_.swapchain_framebuffers_ )
         {
@@ -247,87 +240,57 @@ namespace TWE
         }
         core_info( "Vulkan -> Swapchain Framebuffer destroyed." );
     
-        if ( vk_context_.render_pass_ != VK_NULL_HANDLE )
-        {
-            vkDestroyRenderPass( vk_context_.device_, vk_context_.render_pass_, nullptr );
-            core_info( "Vulkan -> Render Pass destroyed." );
-        }
+        vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
+        core_info( "Vulkan -> Render Pass destroyed." );
     
         for ( auto &image_view : vk_context_.swapchain_image_views_ )
         {
-            if ( image_view != VK_NULL_HANDLE )
-            {
-                vkDestroyImageView( vk_context_.device_, image_view, nullptr );
-            }
+            vk_context_.device_.destroyImageView( image_view );
         }
         core_info( "Vulkan -> Swapchain Image Views destroyed" );
     
-        if ( vk_context_.swapchain_ != VK_NULL_HANDLE )
-        {
-            vkDestroySwapchainKHR( vk_context_.device_, vk_context_.swapchain_, nullptr );
-            core_info( "Vulkan -> Swapchain destroyed." );
-        }
-        
+        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_ );
+        core_info( "Vulkan -> Swapchain destroyed." );
+    
         if( !vk_context_.command_buffers_.empty() )
         {
-            vkFreeCommandBuffers( vk_context_.device_, vk_context_.command_pool_,
-                static_cast<uint32_t>( vk_context_.command_buffers_.size() ), vk_context_.command_buffers_.data() );
+            vk_context_.device_.freeCommandBuffers( vk_context_.command_pool_, vk_context_.command_buffers_ );
             core_info( "Vulkan -> Command Buffers freed." );
         }
         
-        if( vk_context_.command_pool_ != VK_NULL_HANDLE )
-        {
-            vkDestroyCommandPool( vk_context_.device_, vk_context_.command_pool_, nullptr );
-            core_info( "Vulkan -> Command Pool destroyed." );
-        }
+        vk_context_.device_.destroyCommandPool( vk_context_.command_pool_ );
+        core_info( "Vulkan -> Command Pool destroyed." );
         
         for( auto& fence : vk_context_.in_flight_fences_ )
         {
-            if( fence != VK_NULL_HANDLE )
-            {
-                vkDestroyFence( vk_context_.device_, fence, nullptr );
-            }
+            vk_context_.device_.destroyFence( fence );
         }
         core_info( "Vulkan -> In flight fences destroyed." );
         
         for( auto& semaphore : vk_context_.image_available_semaphores_ )
         {
-            if( semaphore != VK_NULL_HANDLE )
-            {
-                vkDestroySemaphore( vk_context_.device_, semaphore, nullptr );
-            }
+            vk_context_.device_.destroySemaphore( semaphore );
         }
         core_info( "Vulkan -> Image Available Semaphores destroyed." );
         
         for( auto& semaphore : vk_context_.render_finished_semaphores_ )
         {
-            if( semaphore != VK_NULL_HANDLE )
-            {
-                vkDestroySemaphore( vk_context_.device_, semaphore, nullptr );
-            }
+            vk_context_.device_.destroySemaphore( semaphore );
         }
         core_info( "Vulkan -> Render Finished Semaphores destroyed." );
     
-        if ( vk_context_.device_ != VK_NULL_HANDLE )
-        {
-            vkDestroyDevice( vk_context_.device_, nullptr );
-            core_info( "Vulkan -> Device destroyed." );
-        }
+        
+        vk_context_.device_.destroy( );
+        core_info( "Vulkan -> Device destroyed." );
     
         if constexpr ( enable_debug_layers )
         {
-            if ( vk_context_.debug_report_ != VK_NULL_HANDLE )
-            {
-                vk_destroy_debug_callback( vk_context_.instance_, vk_context_.debug_report_, nullptr );
-                core_info( "Vulkan -> Debug Report Callback destroyed." );
-            }
+            vk_destroy_debug_report_callback( vk_context_.instance_, vk_context_.debug_report_, nullptr );
+            core_info( "Vulkan -> Debug Report Callback destroyed." );
         }
     
-        if( vk_context_.instance_ != VK_NULL_HANDLE )
-        {
-            vkDestroyInstance( vk_context_.instance_, nullptr );
-            core_info( "Vulkan -> Instance destroyed." );
-        }
+        vk_context_.instance_.destroy( );
+        core_info( "Vulkan -> Instance destroyed." );
     }
     
     renderer& renderer::operator=( renderer&& rhs ) noexcept
@@ -335,35 +298,35 @@ namespace TWE
         if( this != &rhs )
         {
             vk_context_.instance_ = rhs.vk_context_.instance_;
-            rhs.vk_context_.instance_ = VK_NULL_HANDLE;
+            rhs.vk_context_.instance_ = vk::Instance( );
         
             if constexpr( enable_debug_layers )
             {
                 vk_context_.debug_report_ = rhs.vk_context_.debug_report_;
-                rhs.vk_context_.debug_report_ = VK_NULL_HANDLE;
+                rhs.vk_context_.debug_report_ = vk::DebugReportCallbackEXT( );
             }
     
             vk_context_.surface_ = rhs.vk_context_.surface_;
-            rhs.vk_context_.surface_ = VK_NULL_HANDLE;
+            rhs.vk_context_.surface_ = vk::SurfaceKHR( );
     
             vk_context_.gpu_ = rhs.vk_context_.gpu_;
-            rhs.vk_context_.gpu_ = VK_NULL_HANDLE;
+            rhs.vk_context_.gpu_ = vk::PhysicalDevice( );
     
             vk_context_.device_ = rhs.vk_context_.device_;
-            rhs.vk_context_.device_ = VK_NULL_HANDLE;
+            rhs.vk_context_.device_ = vk::Device( );
     
             vk_context_.graphics_queue_ = rhs.vk_context_.graphics_queue_;
-            rhs.vk_context_.graphics_queue_ = VK_NULL_HANDLE;
+            rhs.vk_context_.graphics_queue_ = vk::Queue( );
     
             vk_context_.present_queue_ = rhs.vk_context_.present_queue_;
-            rhs.vk_context_.present_queue_ = VK_NULL_HANDLE;
+            rhs.vk_context_.present_queue_ = vk::Queue( );
             
             vk_context_.image_available_semaphores_ = std::move( rhs.vk_context_.image_available_semaphores_ );
             vk_context_.render_finished_semaphores_ = std::move( rhs.vk_context_.render_finished_semaphores_ );
             vk_context_.in_flight_fences_ = std::move( rhs.vk_context_.in_flight_fences_ );
     
             vk_context_.command_pool_ = rhs.vk_context_.command_pool_;
-            rhs.vk_context_.command_pool_ = VK_NULL_HANDLE;
+            rhs.vk_context_.command_pool_ = vk::CommandPool( );
     
             vk_context_.command_buffers_ = std::move( rhs.vk_context_.command_buffers_ );
             
@@ -371,24 +334,24 @@ namespace TWE
             rhs.vk_context_.surface_format_ = { };
     
             vk_context_.swapchain_ = rhs.vk_context_.swapchain_;
-            rhs.vk_context_.swapchain_ = VK_NULL_HANDLE;
+            rhs.vk_context_.swapchain_ = vk::SwapchainKHR( );
     
             vk_context_.swapchain_image_ = std::move( rhs.vk_context_.swapchain_image_ );
             vk_context_.swapchain_image_views_ = std::move( rhs.vk_context_.swapchain_image_views_ );
     
             vk_context_.swapchain_extent_ = rhs.vk_context_.swapchain_extent_;
-            rhs.vk_context_.swapchain_extent_ = { };
+            rhs.vk_context_.swapchain_extent_ = vk::Extent2D( );
     
             vk_context_.render_pass_ = rhs.vk_context_.render_pass_;
-            rhs.vk_context_.render_pass_ = VK_NULL_HANDLE;
+            rhs.vk_context_.render_pass_ = vk::RenderPass( );
     
             vk_context_.swapchain_framebuffers_ = std::move( rhs.vk_context_.swapchain_framebuffers_ );
     
             vk_context_.graphics_pipeline_layout_ = rhs.vk_context_.graphics_pipeline_layout_;
-            rhs.vk_context_.graphics_pipeline_layout_ = VK_NULL_HANDLE;
+            rhs.vk_context_.graphics_pipeline_layout_ = vk::PipelineLayout( );
     
             vk_context_.graphics_pipeline_ = rhs.vk_context_.graphics_pipeline_;
-            rhs.vk_context_.graphics_pipeline_ = VK_NULL_HANDLE;
+            rhs.vk_context_.graphics_pipeline_ = vk::Pipeline( );
     
             vk_context_.instance_extensions_ = std::move( rhs.vk_context_.instance_extensions_ );
             vk_context_.device_extensions_ = std::move( rhs.vk_context_.device_extensions_ );
@@ -400,53 +363,43 @@ namespace TWE
     
     void renderer::setup_graphics_pipeline( const TWE::renderer::graphics_pipeline_data &data )
     {
-        auto vertex_shader = check_vk_return_type_result(
+        auto vertex_shader = check_vk_result_value(
             create_shader_module( data.vertex_shader_filepath ),
             "create_shader_module( ) -> Vertex Shader" );
-        
+    
         core_info( "Vulkan -> Vertex Shader Module Created from: {}.", data.vertex_shader_filepath );
-        
-        auto fragment_shader = check_vk_return_type_result(
+    
+        auto fragment_shader = check_vk_result_value(
             create_shader_module( data.fragment_shader_filepath ),
             "create_shader_module( ) -> Fragment Shader" );
-        
+    
         core_info( "Vulkan -> Fragment Shader Module Created from: {}.", data.fragment_shader_filepath );
+    
+        const auto vertex_shader_stage = vk::PipelineShaderStageCreateInfo( )
+            .setStage( vk::ShaderStageFlagBits::eVertex )
+            .setModule( vertex_shader )
+            .setPName( "main" );
         
-        const VkPipelineShaderStageCreateInfo shader_stages[]
-        {
-            {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,                // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                VK_SHADER_STAGE_VERTEX_BIT,                                         // stage
-                vertex_shader,                                                      // module
-                "main",                                                             // pName
-                nullptr                                                             // pSpecialization
-            },
-            {
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,                // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                VK_SHADER_STAGE_FRAGMENT_BIT,                                       // stage
-                fragment_shader,                                                    // module
-                "main",                                                             // pName
-                nullptr                                                             // pSpecialization
-            }
-        };
+        const auto fragment_shader_stage = vk::PipelineShaderStageCreateInfo( )
+            .setStage( vk::ShaderStageFlagBits::eFragment )
+            .setModule( fragment_shader )
+            .setPName( "main" );
         
-        vk_context_.graphics_pipeline_layout_ = check_vk_return_type_result(
+        const vk::PipelineShaderStageCreateInfo shader_stages[] = { vertex_shader_stage, fragment_shader_stage };
+        
+        vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
         
         core_info( "Vulkan -> Graphics Pipeline Layout created." );
         
-        vk_context_.graphics_pipeline_ = check_vk_return_type_result(
+        vk_context_.graphics_pipeline_ = check_vk_result_value(
             create_graphics_pipeline( 2, shader_stages ),
             "create_graphics_pipeline( )" );
         
         core_info( "Vulkan -> Graphics Pipeline created." );
         
-        vkDestroyShaderModule( vk_context_.device_, vertex_shader, nullptr );
-        vkDestroyShaderModule( vk_context_.device_, fragment_shader, nullptr );
+        vk_context_.device_.destroyShaderModule( vertex_shader );
+        vk_context_.device_.destroyShaderModule( fragment_shader );
         
         core_info( "Vulkan -> Vertex Shader Module Destroyed." );
         core_info( "Vulkan -> Fragment Shader Module Destroyed." );
@@ -455,42 +408,34 @@ namespace TWE
     {
         for( auto i = 0; i < vk_context_.command_buffers_.size(); ++i )
         {
-            const VkCommandBufferBeginInfo begin_info
-                {
-                    VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,                        // sType
-                    nullptr,                                                            // pNext
-                    VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,                       // flags
-                    nullptr                                                             // pInheritanceInfo
-                };
+            const auto begin_info = vk::CommandBufferBeginInfo( )
+                .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
             
-            check_vk_return_result(
-                vkBeginCommandBuffer( vk_context_.command_buffers_[i], &begin_info ),
-                "Failed to begin recording Command Buffer." );
+            check_vk_value( vk_context_.command_buffers_[i].begin( begin_info ),
+                "Failed to begin recording Command buffer." );
             
-            const VkClearValue clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+            const auto clear_value_colour = vk::ClearColorValue( )
+                .setFloat32( { 0.0f, 0.0f, 0.0f, 1.0f } );
             
-            const VkRenderPassBeginInfo rp_begin_info
-                {
-                    VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,                           // sType
-                    nullptr,                                                            // pNext
-                    vk_context_.render_pass_,                                           // renderPass
-                    vk_context_.swapchain_framebuffers_[i],                             // framebuffer
-                    { { 0, 0 }, vk_context_.swapchain_extent_ },                        // renderArea
-                    1,                                                                  // clearValueCount
-                    &clear_colour                                                       // pClearValues
-                };
+            const auto clear_value = vk::ClearValue( )
+                .setColor( clear_value_colour );
             
-            vkCmdBeginRenderPass( vk_context_.command_buffers_[i], &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+            const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
+                .setFramebuffer( vk_context_.swapchain_framebuffers_[i] )
+                .setRenderPass( vk_context_.render_pass_ )
+                .setClearValueCount( 1 )
+                .setPClearValues( &clear_value )
+                .setRenderArea( { { 0, 0 }, vk_context_.swapchain_extent_ } );
+    
+            vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
+    
+            vk_context_.command_buffers_[i].bindPipeline( vk::PipelineBindPoint::eGraphics, vk_context_.graphics_pipeline_ );
+    
+            vk_context_.command_buffers_[i].draw( 3, 1, 0, 0 );
+    
+            vk_context_.command_buffers_[i].endRenderPass( );
             
-            vkCmdBindPipeline( vk_context_.command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_context_.graphics_pipeline_ );
-            
-            vkCmdDraw( vk_context_.command_buffers_[i], 3, 1, 0, 0 );
-            
-            vkCmdEndRenderPass( vk_context_.command_buffers_[i] );
-            
-            check_vk_return_result(
-                vkEndCommandBuffer( vk_context_.command_buffers_[i] ),
-                "Failed to record Command Buffer" );
+            check_vk_value( vk_context_.command_buffers_[i].end( ), "Failed to record Command Buffer" );
         }
     }
     void renderer::execute( const framebuffer_resize_event& event )
@@ -508,20 +453,19 @@ namespace TWE
     {
         if ( !is_window_closed_ )
         {
-            vkWaitForFences ( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_],
-                              VK_TRUE, std::numeric_limits<uint64_t>::max ( ) );
+            vk_context_.device_.waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_],
+                VK_TRUE, std::numeric_limits<uint64_t>::max() );
 
-            uint32_t image_index;
-
-            auto result = vkAcquireNextImageKHR ( vk_context_.device_, vk_context_.swapchain_, std::numeric_limits<uint64_t>::max ( ),
-                                                  vk_context_.image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index );
+            auto [result, image_index] = vk_context_.device_.acquireNextImageKHR( vk_context_.swapchain_, std::numeric_limits<uint64_t>::max(),
+                vk_context_.image_available_semaphores_[current_frame_],{} );
+            
             try
             {
-                if ( result == VK_ERROR_OUT_OF_DATE_KHR )
+                if ( result == vk::Result::eErrorOutOfDateKHR )
                 {
                     recreate_swapchain ( data );
                 }
-                else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+                else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
                 {
                     throw vk_error{ result, "Failed to acquire swapchain image" };
                 }
@@ -531,27 +475,22 @@ namespace TWE
                 core_error ( e.what ( ) );
             }
 
-            const VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-            const VkSubmitInfo submit_info
-            {
-                VK_STRUCTURE_TYPE_SUBMIT_INFO,                                          // sType
-                nullptr,                                                                // pNext
-                1,                                                                      // waitSemaphoreCount
-                &vk_context_.image_available_semaphores_[current_frame_],               // pWaitSemaphores
-                wait_stages,                                                            // pWaitDstStageMask
-                1,                                                                      // commandBufferCount
-                &vk_context_.command_buffers_[image_index],                             // pCommandBuffers
-                1,                                                                      // signalSemaphoreCount
-                &vk_context_.render_finished_semaphores_[current_frame_]                // pSignalSemaphores
-            };
+            const vk::PipelineStageFlags wait_stages[] = { vk::PipelineStageFlagBits ::eColorAttachmentOutput };
+            const auto submit_info = vk::SubmitInfo( )
+                .setPWaitDstStageMask( wait_stages )
+                .setWaitSemaphoreCount( 1 )
+                .setPWaitSemaphores( &vk_context_.image_available_semaphores_[current_frame_] )
+                .setSignalSemaphoreCount( 1 )
+                .setPSignalSemaphores( &vk_context_.render_finished_semaphores_[current_frame_] )
+                .setCommandBufferCount( 1 )
+                .setPCommandBuffers( &vk_context_.command_buffers_[image_index] );
 
-            vkResetFences ( vk_context_.device_, 1, &vk_context_.in_flight_fences_[current_frame_] );
+            vk_context_.device_.resetFences( 1, &vk_context_.in_flight_fences_[current_frame_] );
 
             try
             {
-                check_vk_return_result (
-                    vkQueueSubmit ( vk_context_.graphics_queue_, 1, &submit_info,
-                    vk_context_.in_flight_fences_[current_frame_] ),
+                check_vk_value ( vk_context_.graphics_queue_.submit( 1, &submit_info,
+                        vk_context_.in_flight_fences_[current_frame_] ),
                     "Failed to submit draw command buffer!" );
             }
             catch ( const vk_error& e )
@@ -559,28 +498,24 @@ namespace TWE
                 core_error ( e.what ( ) );
             }
 
-            VkPresentInfoKHR present_info
-            {
-                VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,                                     // sType
-                nullptr,                                                                // pNext
-                1,                                                                      // waitSemaphoreCount
-                &vk_context_.render_finished_semaphores_[current_frame_],               // pWaitSemaphores
-                1,                                                                      // swapchainCount
-                &vk_context_.swapchain_,                                                // pSwapchains
-                &image_index,                                                           // pImageIndices
-                nullptr                                                                 // pResults
-            };
+            const auto present_info = vk::PresentInfoKHR( )
+                .setWaitSemaphoreCount( 1 )
+                .setPWaitSemaphores( &vk_context_.render_finished_semaphores_[current_frame_] )
+                .setSwapchainCount( 1 )
+                .setPSwapchains( &vk_context_.swapchain_ )
+                .setPImageIndices( &image_index );
 
-            result = vkQueuePresentKHR ( vk_context_.present_queue_, &present_info );
+            result = vk_context_.present_queue_.presentKHR( present_info );
 
             try
             {
-                if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized_ )
+                if ( result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR ||
+                    framebuffer_resized_ )
                 {
                     framebuffer_resized_ = false;
                     recreate_swapchain ( data );
                 }
-                else if ( result != VK_SUCCESS )
+                else if ( result != vk::Result::eSuccess )
                 {
                     throw vk_error{ result, "failed to present swapchain image." };
                 }
@@ -615,36 +550,36 @@ namespace TWE
         }
     
     
-        vk_context_.swapchain_ = check_vk_return_type_result(
+        vk_context_.swapchain_ = check_vk_result_value(
             create_swapchain( queue_family_indices, present_mode, swapchain_support_details.capabilities_,
                               image_count ), "create_swapchain( )" );
         core_info( "Vulkan -> Swapchain created." );
     
-        vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, nullptr );
-        vk_context_.swapchain_image_.resize( image_count );
-        vkGetSwapchainImagesKHR( vk_context_.device_, vk_context_.swapchain_, &image_count, vk_context_.swapchain_image_.data( ) );
+        vk_context_.swapchain_image_ = check_vk_result_value(
+            vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_ ),
+            "Failed to retrieve swapchain images." );
         core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
     
         vk_context_.swapchain_image_views_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_image_views_[i] = check_vk_return_type_result(
+            vk_context_.swapchain_image_views_[i] = check_vk_result_value(
                 create_image_view( vk_context_.swapchain_image_[i] ), "create_image_view( )" );
         }
         core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
         
-        vk_context_.command_buffers_ = check_vk_return_type_result(
+        vk_context_.command_buffers_ = check_vk_result_value(
             create_command_buffers( image_count ), "create_command_buffers( )" );
         core_info( "Vulkan -> Command Buffers created. Count: {0:d}.", image_count );
     
-        vk_context_.render_pass_ = check_vk_return_type_result(
+        vk_context_.render_pass_ = check_vk_result_value(
             create_render_pass( ), "create_render_pass( )" );
         core_info( "Vulkan -> Render Pass created." );
     
         vk_context_.swapchain_framebuffers_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_framebuffers_[i] = check_vk_return_type_result(
+            vk_context_.swapchain_framebuffers_[i] = check_vk_result_value(
                 create_framebuffer( vk_context_.swapchain_image_views_[i] ), "create_framebuffer( )" );
         }
         core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
@@ -654,51 +589,36 @@ namespace TWE
     }
     void renderer::cleanup_swapchain( )
     {
-        vkDeviceWaitIdle( vk_context_.device_ );
+        vk_context_.device_.waitIdle( );
         
-        if ( vk_context_.graphics_pipeline_ != VK_NULL_HANDLE )
-        {
-            vkDestroyPipeline( vk_context_.device_, vk_context_.graphics_pipeline_, nullptr );
-            core_info( "Vulkan -> Pipeline destroyed." );
-        }
-    
-        if ( vk_context_.graphics_pipeline_layout_ != VK_NULL_HANDLE )
-        {
-            vkDestroyPipelineLayout( vk_context_.device_, vk_context_.graphics_pipeline_layout_, nullptr );
-            core_info( "Vulkan -> Pipeline Layout destroyed." );
-        }
+        vk_context_.device_.destroyPipeline( vk_context_.graphics_pipeline_ );
+        core_info( "Vulkan -> Pipeline destroyed." );
+        
+        vk_context_.device_.destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
+        core_info( "Vulkan -> Pipeline Layout destroyed." );
     
         for ( auto &framebuffer : vk_context_.swapchain_framebuffers_ )
         {
-            vkDestroyFramebuffer( vk_context_.device_, framebuffer, nullptr );
+            vk_context_.device_.destroyFramebuffer( framebuffer );
         }
         core_info( "Vulkan -> Swapchain Framebuffer destroyed." );
     
-        if ( vk_context_.render_pass_ != VK_NULL_HANDLE )
-        {
-            vkDestroyRenderPass( vk_context_.device_, vk_context_.render_pass_, nullptr );
-            core_info( "Vulkan -> Render Pass destroyed." );
-        }
+        vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
+        core_info( "Vulkan -> Render Pass destroyed." );
     
         for ( auto &image_view : vk_context_.swapchain_image_views_ )
         {
-            if ( image_view != VK_NULL_HANDLE )
-            {
-                vkDestroyImageView( vk_context_.device_, image_view, nullptr );
-            }
+            vk_context_.device_.destroyImageView( image_view );
         }
         core_info( "Vulkan -> Swapchain Image Views destroyed" );
     
-        if ( vk_context_.swapchain_ != VK_NULL_HANDLE )
-        {
-            vkDestroySwapchainKHR( vk_context_.device_, vk_context_.swapchain_, nullptr );
-            core_info( "Vulkan -> Swapchain destroyed." );
-        }
+        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_ );
+        core_info( "Vulkan -> Swapchain destroyed." );
+    
     
         if( !vk_context_.command_buffers_.empty() )
         {
-            vkFreeCommandBuffers( vk_context_.device_, vk_context_.command_pool_,
-                                  static_cast<uint32_t>( vk_context_.command_buffers_.size() ), vk_context_.command_buffers_.data() );
+            vk_context_.device_.freeCommandBuffers( vk_context_.command_pool_, vk_context_.command_buffers_ );
             core_info( "Vulkan -> Command Buffers freed." );
         }
     }
@@ -751,90 +671,73 @@ namespace TWE
         }
     }
     
-    const vk_return_type<VkInstance> renderer::create_instance( const std::string& app_name,
+    const vk::ResultValue<vk::Instance> renderer::create_instance( const std::string& app_name,
         uint32_t app_version ) const noexcept
     {
-        VkInstance instance = VK_NULL_HANDLE;
-        
-        const VkApplicationInfo app_info =
-        {
-            VK_STRUCTURE_TYPE_APPLICATION_INFO,                                     // sType
-            nullptr,                                                                // pNext
-            app_name.c_str( ),                                                      // pApplicationName
-            app_version,                                                            // applicationVersion
-            "The Wombat Engine",                                                    // pEngineName
-            VK_MAKE_VERSION( 0, 0, 2 ),                                             // engineVersion
-            VK_API_VERSION_1_1,                                                     // apiVersion
-        };
+        const auto app_info = vk::ApplicationInfo( )
+            .setApiVersion( VK_API_VERSION_1_1 )
+            .setEngineVersion( VK_MAKE_VERSION( 0, 0, 2 ) )
+            .setPEngineName( "The Wombat Engine" )
+            .setApplicationVersion( app_version )
+            .setPApplicationName( app_name.c_str( ) );
         
         if constexpr( enable_debug_layers )
         {
-            const VkInstanceCreateInfo create_info =
-            {
-                VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,                             // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                &app_info,                                                          // pApplicationInfo
-                static_cast<uint32_t>( vk_context_.validation_layers_.size() ),     // enabledLayerCount
-                vk_context_.validation_layers_.data(),                              // ppEnabledLayerNames
-                static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),   // enabledExtensionCount
-                vk_context_.instance_extensions_.data(),                            // ppEnabledExtensionNames
-            };
-            
-            return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
+            const auto create_info = vk::InstanceCreateInfo( )
+                .setPApplicationInfo( &app_info )
+                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.instance_extensions_.size( ) ) )
+                .setPpEnabledExtensionNames( vk_context_.instance_extensions_.data() )
+                .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size() ) )
+                .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
+                
+            return vk::createInstance( create_info );
         }
         else
         {
-            const VkInstanceCreateInfo create_info =
-            {
-                VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,                             // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                &app_info,                                                          // pApplicationInfo
-                0,                                                                  // enabledLayerCount
-                nullptr,                                                            // ppEnabledLayerNames
-                static_cast<uint32_t>( vk_context_.instance_extensions_.size() ),   // enabledExtensionCount
-                vk_context_.instance_extensions_.data(),                            // ppEnabledExtensionNames
-            };
-            
-            return { vkCreateInstance( &create_info, nullptr, &instance ), instance };
+            const auto create_info = vk::InstanceCreateInfo( )
+                .setPApplicationInfo( &app_info )
+                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.instance_extensions_.size( ) ) )
+                .setPpEnabledExtensionNames( vk_context_.instance_extensions_.data() )
+                .setEnabledLayerCount( 0 )
+                .setPpEnabledLayerNames( nullptr );
+    
+            return vk::createInstance( create_info );
         }
     }
     
-    const vk_return_type<VkDebugReportCallbackEXT> renderer::create_debug_report( ) const noexcept
+    const vk::ResultValue<vk::DebugReportCallbackEXT> renderer::create_debug_report( ) const noexcept
     {
         VkDebugReportCallbackEXT debug_report;
-        
+    
         const VkDebugReportCallbackCreateInfoEXT create_info
-        {
-            VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,                // sType
-            nullptr,                                                                // pNext
-            VK_DEBUG_REPORT_WARNING_BIT_EXT |                                       // flags
-            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_ERROR_BIT_EXT,
-            debug_callback_function,                                                // pfnCallback
-            nullptr                                                                 // pUserData
-        };
+            {
+                VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,    // sType
+                nullptr,                                                    // pNext
+                VK_DEBUG_REPORT_ERROR_BIT_EXT |                             // flags
+                VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT,
+                debug_callback_function,                                    // pfnCallback
+                nullptr                                                     // pUserData
+            };
         
-        return { vk_create_debug_callback( vk_context_.instance_, &create_info, nullptr, &debug_report ), debug_report };
+        
+        auto result = ( vk::Result ) create_debug_report_callback( vk_context_.instance_, &create_info,
+                                                                   nullptr, &debug_report );
+        
+        return { result, debug_report };
     }
     
-    const vk_return_type<VkSurfaceKHR> renderer::create_surface( const base_window* p_wnd ) const noexcept
+    const vk::ResultValue<vk::SurfaceKHR> renderer::create_surface( const base_window* p_wnd ) const noexcept
     {
         return p_wnd->create_surface( vk_context_.instance_ );
     }
     
     const VkPhysicalDevice renderer::pick_physical_device( ) const noexcept
     {
-        VkPhysicalDevice device = VK_NULL_HANDLE;
-        
-        std::multimap<uint32_t, VkPhysicalDevice> candidates;
-        
-        uint32_t num_devices = 0;
-        vkEnumeratePhysicalDevices( vk_context_.instance_, &num_devices, nullptr );
-        
-        std::vector<VkPhysicalDevice> available_devices( num_devices );
-        vkEnumeratePhysicalDevices( vk_context_.instance_, &num_devices, available_devices.data( ));
+        std::multimap<uint32_t, vk::PhysicalDevice> candidates;
+    
+        auto available_devices = check_vk_result_value(
+            vk_context_.instance_.enumeratePhysicalDevices(), "Failed to enumerate physical devices." );
         
         for ( auto &physical_device : available_devices )
         {
@@ -842,14 +745,13 @@ namespace TWE
             {
                 uint32_t score = 0;
                 
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties( physical_device, &properties );
+                auto properties = physical_device.getProperties( );
                 
-                if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+                if ( properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu )
                 {
                     score += 2;
                 }
-                else if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU )
+                else if ( properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu )
                 {
                     score += 1;
                 }
@@ -868,15 +770,13 @@ namespace TWE
         }
         else
         {
-            return VK_NULL_HANDLE;
+            return { };
         }
     }
     
-    const vk_return_type<VkDevice> renderer::create_device( ) const noexcept
+    const vk::ResultValue<vk::Device> renderer::create_device( ) const noexcept
     {
-        VkDevice device;
-        
-        auto queue_families = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
+        const auto queue_families = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
         std::set<uint32_t> unique_queue_family;
         
         if ( queue_families.graphic_family_.has_value() )
@@ -894,485 +794,318 @@ namespace TWE
             unique_queue_family.insert( queue_families.present_family_.value() );
         }
         
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
         queue_create_infos.reserve( unique_queue_family.size() );
         
-        float priority = 1.0f;
+        const float priority = 1.0f;
         for( const auto& queue_family : unique_queue_family )
         {
-            const VkDeviceQueueCreateInfo create_info
-            {
-                VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,                         // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                queue_family,                                                       // queueFamilyIndex
-                1,                                                                  // queueCount
-                &priority                                                           // pQueuePriorities
-            };
+            const auto create_info = vk::DeviceQueueCreateInfo( )
+                .setPQueuePriorities( &priority )
+                .setQueueCount( 1 )
+                .setQueueFamilyIndex( queue_family );
             
             queue_create_infos.emplace_back( create_info );
         }
         
-        VkPhysicalDeviceFeatures features;
-        vkGetPhysicalDeviceFeatures( vk_context_.gpu_, &features );
-
+        const auto features = vk_context_.gpu_.getFeatures( );
+        
         if constexpr( enable_debug_layers )
         {
-            const VkDeviceCreateInfo create_info
-            {
-                VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,                               // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                static_cast<uint32_t>( queue_create_infos.size() ),                 // queueCreateInfoCount
-                queue_create_infos.data(),                                          // pQueueCreateInfos
-                static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ),    // enabledLayerCount
-                vk_context_.validation_layers_.data(),                              // ppEnabledLayerNames
-                static_cast<uint32_t>( vk_context_.device_extensions_.size() ),     // enabledExtensionCount
-                vk_context_.device_extensions_.data(),                              // ppEnabledExtensionNames
-                &features                                                           // pEnabledFeatures
-            };
-    
-            return { vkCreateDevice( vk_context_.gpu_, &create_info, nullptr, &device), device };
+            const auto create_info = vk::DeviceCreateInfo( )
+                .setPEnabledFeatures( &features )
+                .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
+                .setPQueueCreateInfos( queue_create_infos.data() )
+                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )
+                .setPpEnabledExtensionNames( vk_context_.device_extensions_.data( ) )
+                .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ) )
+                .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
+            
+            return vk_context_.gpu_.createDevice( create_info );
         }
         else
         {
-            const VkDeviceCreateInfo create_info
-            {
-                VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,                               // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags 
-                static_cast<uint32_t>( queue_create_infos.size() ),                 // queueCreateInfoCount
-                queue_create_infos.data(),                                          // pQueueCreateInfos
-                0,                                                                  // enabledLayerCount
-                nullptr,                                                            // ppEnabledLayerNames
-                static_cast<uint32_t>( vk_context_.device_extensions_.size() ),     // enabledExtensionCount
-                vk_context_.device_extensions_.data(),                              // ppEnabledExtensionNames
-                &features                                                           // pEnabledFeatures
-            };
+            const auto create_info = vk::DeviceCreateInfo( )
+                .setPEnabledFeatures( &features )
+                .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
+                .setPQueueCreateInfos( queue_create_infos.data() )
+                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )
+                .setPpEnabledExtensionNames( vk_context_.device_extensions_.data( ) )
+                .setEnabledLayerCount( 0 )
+                .setPpEnabledLayerNames( nullptr );
     
-            return { vkCreateDevice( vk_context_.gpu_, &create_info, nullptr, &device), device };
+            return vk_context_.gpu_.createDevice( create_info );
         }
     }
     
-    const vk_return_type<VkSemaphore> renderer::create_semaphore( ) const noexcept
+    const vk::ResultValue<vk::Semaphore> renderer::create_semaphore( ) const noexcept
     {
-        VkSemaphore semaphore_ = VK_NULL_HANDLE;
+        const auto create_info = vk::SemaphoreCreateInfo( );
         
-        const VkSemaphoreCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,                                // sType
-            nullptr,                                                                // pNext
-            { }                                                                     // flags
-        };
-        
-        return { vkCreateSemaphore( vk_context_.device_, &create_info, nullptr, &semaphore_ ), semaphore_ };
+        return vk_context_.device_.createSemaphore( create_info );
     }
     
-    const vk_return_type<VkFence> renderer::create_fence( ) const noexcept
+    const vk::ResultValue<vk::Fence> renderer::create_fence( ) const noexcept
     {
-        VkFence fence = VK_NULL_HANDLE;
+        const auto create_info = vk::FenceCreateInfo( )
+            .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
-        const VkFenceCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,                                    // sType
-            nullptr,                                                                // pNext
-            VK_FENCE_CREATE_SIGNALED_BIT                                            // flags
-        };
-        
-        return { vkCreateFence( vk_context_.device_, &create_info, nullptr, &fence ), fence };
+        return vk_context_.device_.createFence( create_info );
     }
     
-    const vk_return_type<VkCommandPool> renderer::create_command_pool( uint32_t queue_family ) const noexcept
+    const vk::ResultValue<vk::CommandPool> renderer::create_command_pool( uint32_t queue_family ) const noexcept
     {
-        VkCommandPool command_pool = VK_NULL_HANDLE;
+        const auto create_info = vk::CommandPoolCreateInfo( )
+            .setQueueFamilyIndex( queue_family );
         
-        const VkCommandPoolCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,                             // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            queue_family                                                            // queueFamilyIndex 
-        };
-        
-        return { vkCreateCommandPool( vk_context_.device_, &create_info, nullptr, &command_pool ), command_pool };
+        return vk_context_.device_.createCommandPool( create_info );
     }
     
-    const vk_return_type<std::vector<VkCommandBuffer>> renderer::create_command_buffers( uint32_t count ) const noexcept
+    const vk::ResultValue<std::vector<vk::CommandBuffer>> renderer::create_command_buffers( uint32_t count ) const noexcept
     {
-        std::vector<VkCommandBuffer> command_buffers( count );
+        const auto allocate_info = vk::CommandBufferAllocateInfo( )
+            .setCommandPool( vk_context_.command_pool_ )
+            .setCommandBufferCount( count )
+            .setLevel( vk::CommandBufferLevel::ePrimary );
         
-        const VkCommandBufferAllocateInfo allocate_info
-        {
-            VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,                         // sType
-            nullptr,                                                                // pNext
-            vk_context_.command_pool_,                                              // commandPool
-            VK_COMMAND_BUFFER_LEVEL_PRIMARY,                                        // level 
-            count                                                                   // commandBufferCount 
-        };
-        
-        return { vkAllocateCommandBuffers( vk_context_.device_, &allocate_info, command_buffers.data() ), command_buffers };
+        return vk_context_.device_.allocateCommandBuffers( allocate_info );
     }
 
-    const vk_return_type<VkSwapchainKHR> renderer::create_swapchain( const queue_family_indices_type& queue_family_indices_,
-        const VkPresentModeKHR& present_mode_, const VkSurfaceCapabilitiesKHR& capabilities_,
-        uint32_t image_count_ ) const noexcept
+    const vk::ResultValue<vk::SwapchainKHR> renderer::create_swapchain( const queue_family_indices_type& queue_family_indices,
+        const vk::PresentModeKHR & present_mode, const vk::SurfaceCapabilitiesKHR& capabilities,
+        uint32_t image_count ) const noexcept
     {
         VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     
-        const uint32_t queue_family_indices[] = {
-            queue_family_indices_.graphic_family_.value( ),
-            queue_family_indices_.present_family_.value( )
+        const uint32_t queue_fam[] = {
+            queue_family_indices.graphic_family_.value( ),
+            queue_family_indices.present_family_.value( )
         };
     
-        if ( queue_family_indices_.graphic_family_ !=
-             queue_family_indices_.present_family_ )
+        if ( queue_family_indices.graphic_family_ !=
+             queue_family_indices.present_family_ )
         {
-            const VkSwapchainCreateInfoKHR create_info
-            {
-                VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,                        // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags 
-                vk_context_.surface_,                                               // surface 
-                image_count_,                                                       // minImageCount
-                vk_context_.surface_format_.format,                                 // imageFormat
-                vk_context_.surface_format_.colorSpace,                             // imageColorSpace
-                vk_context_.swapchain_extent_,                                      // imageExtent
-                1,                                                                  // imageArrayLayers
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,                                // imageUsage
-                VK_SHARING_MODE_CONCURRENT,                                         // imageSharingMode 
-                2,                                                                  // queueFamilyIndexCount
-                queue_family_indices,                                               // pQueueFamilyIndices
-                capabilities_.currentTransform,                                     // preTransform 
-                VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,                                  // compositeAlpha
-                present_mode_,                                                      // presentMode
-                VK_TRUE,                                                            // clipped 
-                VK_NULL_HANDLE                                                      // oldSwapchain
-            };
-        
-            return { vkCreateSwapchainKHR( vk_context_.device_, &create_info, nullptr, &swapchain ), swapchain };
+            const auto create_info = vk::SwapchainCreateInfoKHR( )
+                .setSurface( vk_context_.surface_ )
+                .setPresentMode( present_mode )
+                .setImageFormat( vk_context_.surface_format_.format )
+                .setImageColorSpace( vk_context_.surface_format_.colorSpace )
+                .setImageExtent( vk_context_.swapchain_extent_ )
+                .setImageArrayLayers( 1 )
+                .setImageUsage( vk::ImageUsageFlagBits::eColorAttachment )
+                .setImageSharingMode( vk::SharingMode::eConcurrent )
+                .setMinImageCount( image_count )
+                .setQueueFamilyIndexCount( 2 )
+                .setPQueueFamilyIndices( queue_fam )
+                .setPreTransform( capabilities.currentTransform )
+                .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
+                .setClipped( VK_TRUE );
+                
+            
+            return vk_context_.device_.createSwapchainKHR( create_info );
         }
         else
         {
-            const VkSwapchainCreateInfoKHR create_info
-            {
-                VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,                        // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                vk_context_.surface_,                                               // surface
-                image_count_,                                                       // minImageCount
-                vk_context_.surface_format_.format,                                 // imageFormat
-                vk_context_.surface_format_.colorSpace,                             // imageColorSpace
-                vk_context_.swapchain_extent_,                                      // imageExtent
-                1,                                                                  // imageArrayLayers
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,                                // imageUsage
-                VK_SHARING_MODE_EXCLUSIVE,                                          // imageSharingMode
-                0,                                                                  // queueFamilyIndexCount
-                nullptr,                                                            // pQueueFamilyIndices
-                capabilities_.currentTransform,                                     // preTransform
-                VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,                                  // compositeAlpha
-                present_mode_,                                                      // presentMode
-                VK_TRUE,                                                            // clipped
-                VK_NULL_HANDLE                                                      // oldSwapchain
-            };
-        
-            return { vkCreateSwapchainKHR( vk_context_.device_, &create_info, nullptr, &swapchain ), swapchain };
+            const auto create_info = vk::SwapchainCreateInfoKHR( )
+                .setSurface( vk_context_.surface_ )
+                .setPresentMode( present_mode )
+                .setImageFormat( vk_context_.surface_format_.format )
+                .setImageColorSpace( vk_context_.surface_format_.colorSpace )
+                .setImageExtent( vk_context_.swapchain_extent_ )
+                .setImageArrayLayers( 1 )
+                .setImageUsage( vk::ImageUsageFlagBits::eColorAttachment )
+                .setImageSharingMode( vk::SharingMode::eExclusive )
+                .setMinImageCount( image_count )
+                .setQueueFamilyIndexCount( 0 )
+                .setPQueueFamilyIndices( nullptr )
+                .setPreTransform( capabilities.currentTransform )
+                .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
+                .setClipped( VK_TRUE );
+            
+            
+            return vk_context_.device_.createSwapchainKHR( create_info );
         }
     }
 
-    const vk_return_type<VkImageView> renderer::create_image_view( const VkImage& image ) const noexcept
+    const vk::ResultValue<vk::ImageView> renderer::create_image_view( const vk::Image& image ) const noexcept
     {
         VkImageView image_view = VK_NULL_HANDLE;
     
-        const VkComponentMapping mapping
-        {
-            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // r 
-            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // g 
-            VK_COMPONENT_SWIZZLE_IDENTITY,                                          // b
-            VK_COMPONENT_SWIZZLE_IDENTITY                                           // a
-        };
-        const VkImageSubresourceRange subresource_range
-        {
-            VK_IMAGE_ASPECT_COLOR_BIT,                                              // aspectMask
-            0,                                                                      // baseMipLevel
-            1,                                                                      // levelCount
-            0,                                                                      // baseArrayLayer
-            1                                                                       // layerCount
-        };
-        const VkImageViewCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,                               // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            image,                                                                  // image
-            VK_IMAGE_VIEW_TYPE_2D,                                                  // viewType
-            vk_context_.surface_format_.format,                                     // format
-            mapping,                                                                // components
-            subresource_range                                                       // subresourceRange
-        };
-    
-        return { vkCreateImageView( vk_context_.device_, &create_info, nullptr, &image_view ), image_view };
+        const auto mapping = vk::ComponentMapping( )
+            .setR( vk::ComponentSwizzle::eIdentity )
+            .setG( vk::ComponentSwizzle::eIdentity )
+            .setB( vk::ComponentSwizzle::eIdentity )
+            .setA( vk::ComponentSwizzle::eIdentity );
+        
+        const auto subresources_range = vk::ImageSubresourceRange( )
+            .setAspectMask( vk::ImageAspectFlagBits::eColor )
+            .setBaseMipLevel( 0 )
+            .setLevelCount( 1 )
+            .setBaseArrayLayer( 0 )
+            .setLayerCount( 1 );
+        
+        const auto create_info = vk::ImageViewCreateInfo( )
+            .setFormat( vk_context_.surface_format_.format )
+            .setComponents( mapping )
+            .setSubresourceRange( subresources_range )
+            .setImage( image )
+            .setViewType( vk::ImageViewType::e2D );
+        
+        return vk_context_.device_.createImageView( create_info );
     }
     
-    const vk_return_type<VkFramebuffer> renderer::create_framebuffer( const VkImageView& image_view ) const noexcept
+    const vk::ResultValue<vk::Framebuffer> renderer::create_framebuffer( const vk::ImageView& image_view ) const noexcept
     {
-        VkFramebuffer framebuffer = VK_NULL_HANDLE;
+        const auto create_info = vk::FramebufferCreateInfo( )
+            .setRenderPass( vk_context_.render_pass_ )
+            .setWidth( vk_context_.swapchain_extent_.width )
+            .setHeight( vk_context_.swapchain_extent_.height )
+            .setAttachmentCount( 1 )
+            .setPAttachments( &image_view )
+            .setLayers( 1 );
         
-        const VkFramebufferCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,                              // sType 
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            vk_context_.render_pass_,                                               // renderPass 
-            1,                                                                      // attachmentCount
-            &image_view,                                                            // pAttachments
-            vk_context_.swapchain_extent_.width,                                    // width
-            vk_context_.swapchain_extent_.height,                                   // height
-            1                                                                       // layers
-        };
-        
-        return { vkCreateFramebuffer( vk_context_.device_, &create_info, nullptr, &framebuffer ), framebuffer };
+        return vk_context_.device_.createFramebuffer( create_info );
     }
     
-    const vk_return_type<VkRenderPass> renderer::create_render_pass( ) const noexcept
+    const vk::ResultValue<vk::RenderPass> renderer::create_render_pass( ) const noexcept
     {
-        VkRenderPass render_pass = VK_NULL_HANDLE;
+        const auto colour_attachment = vk::AttachmentDescription( )
+            .setFormat( vk_context_.surface_format_.format )
+            .setSamples( vk::SampleCountFlagBits::e1 )
+            .setLoadOp( vk::AttachmentLoadOp::eClear )
+            .setStoreOp( vk::AttachmentStoreOp::eStore )
+            .setStencilLoadOp( vk::AttachmentLoadOp::eDontCare )
+            .setStencilStoreOp( vk::AttachmentStoreOp::eDontCare )
+            .setInitialLayout( vk::ImageLayout::eUndefined )
+            .setFinalLayout( vk::ImageLayout::ePresentSrcKHR );
         
-        const VkAttachmentDescription colour_attachment
-        {
-            { },                                                                    // flags
-            vk_context_.surface_format_.format,                                     // format
-            VK_SAMPLE_COUNT_1_BIT,                                                  // samples
-            VK_ATTACHMENT_LOAD_OP_CLEAR,                                            // loadOp
-            VK_ATTACHMENT_STORE_OP_STORE,                                           // storeOp
-            VK_ATTACHMENT_LOAD_OP_DONT_CARE,                                        // stencilLoadOp
-            VK_ATTACHMENT_STORE_OP_DONT_CARE,                                       // stencilStoreOp
-            VK_IMAGE_LAYOUT_UNDEFINED,                                              // initialLayout
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR                                         // finalLayout
-        };
+        const auto colour_attachment_ref = vk::AttachmentReference( )
+            .setAttachment( 0 )
+            .setLayout( vk::ImageLayout::eColorAttachmentOptimal );
+            
+        const auto subpass_description = vk::SubpassDescription( )
+            .setPipelineBindPoint( vk::PipelineBindPoint::eGraphics )
+            .setColorAttachmentCount( 1 )
+            .setPColorAttachments( &colour_attachment_ref );
         
-        const VkAttachmentReference colour_attachment_ref
-        {
-            0,                                                                      // attachment
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL                                // 
-        };
+        const auto dependency = vk::SubpassDependency( )
+            .setSrcSubpass( VK_SUBPASS_EXTERNAL )
+            .setDstSubpass( 0 )
+            .setSrcStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+            .setDstStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+            .setSrcAccessMask( vk::AccessFlags() )
+            .setDstAccessMask( vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite );
         
-        const VkSubpassDescription subpass_description
-        {
-            { },                                                                    // flags
-            VK_PIPELINE_BIND_POINT_GRAPHICS,                                        // pipelineBindPoint
-            0,                                                                      // inputAttachmentCount
-            nullptr,                                                                // pInputAttachments
-            1,                                                                      // colorAttachmentCount
-            &colour_attachment_ref,                                                 // pColorAttachments
-            nullptr,                                                                // pResolveAttachments
-            nullptr,                                                                // pDepthStencilAttachment
-            0,                                                                      // preserveAttachmentCount
-            nullptr                                                                 // pPreserveAttachments
-        };
-    
-        const VkSubpassDependency dependency
-        {
-            VK_SUBPASS_EXTERNAL,                                                    // srcSubpass
-            0,                                                                      // dstSubpass
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,                          // srcStageMask
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,                          // dstStageMask
-            0,                                                                      // srcAccessMask
-            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |                                   // dstAccessMask
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,          
-            { }                                                                     // dependencyFlags
-        };
+        const auto create_info = vk::RenderPassCreateInfo( )
+            .setAttachmentCount( 1 )
+            .setPAttachments( &colour_attachment )
+            .setSubpassCount( 1 )
+            .setPSubpasses( &subpass_description )
+            .setDependencyCount( 1 )
+            .setPDependencies( &dependency );
         
-        const VkRenderPassCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,                              // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            1,                                                                      // attachmentCount
-            &colour_attachment,                                                     // pAttachments
-            1,                                                                      // subpassCount
-            &subpass_description,                                                   // pSubpasses
-            1,                                                                      // dependencyCount
-            &dependency                                                             // pDependencies
-        };
-        
-        return { vkCreateRenderPass( vk_context_.device_, &create_info, nullptr, &render_pass ), render_pass };
+        return vk_context_.device_.createRenderPass( create_info );
     }
     
-    const vk_return_type<VkShaderModule> renderer::create_shader_module( const std::string& filepath ) const noexcept
+    const vk::ResultValue<vk::ShaderModule> renderer::create_shader_module( const std::string& filepath ) const noexcept
     {
-        VkShaderModule shader_module = VK_NULL_HANDLE;
-        
         const std::string shader_code = read_from_binary_file( filepath );
         
-        const VkShaderModuleCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,                            // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            shader_code.size(),                                                     // codeSize
-            reinterpret_cast<const uint32_t*>( shader_code.data() )                 // pCode
-        };
+        const auto create_info = vk::ShaderModuleCreateInfo( )
+            .setCodeSize( shader_code.size( ) )
+            .setPCode( reinterpret_cast<const uint32_t*>( shader_code.data() ) );
         
-        return { vkCreateShaderModule( vk_context_.device_, &create_info, nullptr, &shader_module ), shader_module };
+        return vk_context_.device_.createShaderModule( create_info );
     }
     
-    const vk_return_type<VkPipelineLayout> renderer::create_pipeline_layout( ) const noexcept
+    const vk::ResultValue<vk::PipelineLayout> renderer::create_pipeline_layout( ) const noexcept
     {
-        VkPipelineLayout layout = VK_NULL_HANDLE;
+        const auto create_info = vk::PipelineLayoutCreateInfo( );
         
-        const VkPipelineLayoutCreateInfo create_info
-            {
-                VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,                      // sType
-                nullptr,                                                            // pNext
-                { },                                                                // flags
-                0,                                                                  // setLayoutCount
-                nullptr,                                                            // pSetLayouts
-                0,                                                                  // pushConstantRangeCount
-                nullptr                                                             // pPushConstantRanges
-            };
-        
-        return { vkCreatePipelineLayout( vk_context_.device_, &create_info, nullptr, &layout ), layout };
+        return vk_context_.device_.createPipelineLayout( create_info );
     }
     
-    const vk_return_type<VkPipeline> renderer::create_graphics_pipeline( std::uint32_t stage_count,
-        const VkPipelineShaderStageCreateInfo* p_stages ) const noexcept
+    const vk::ResultValue<vk::Pipeline> renderer::create_graphics_pipeline( std::uint32_t stage_count,
+        const vk::PipelineShaderStageCreateInfo* p_stages ) const noexcept
     {
-        VkPipeline pipeline = VK_NULL_HANDLE;
+        const auto vertex_input_state_create_info = vk::PipelineVertexInputStateCreateInfo( );
         
-        const VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,              // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            0,                                                                      // vertexBindingDescriptionCount
-            nullptr,                                                                // pVertexBindingDescriptions
-            0,                                                                      // vertexAttributeDescriptionCount
-            nullptr                                                                 // pVertexAttributeDescriptions
-        };
-        const VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info
-        {
-            // Test with primitiveRestartEnable = VK_TRUE and topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
-            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,            // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,                                    // topology
-            VK_FALSE                                                                // primitiveRestartEnable
-        };
-        const VkViewport viewport
-        {
-            0.0f,                                                                   // x
-            0.0f,                                                                   // y
-            static_cast<float>( vk_context_.swapchain_extent_.width ),              // width
-            static_cast<float>( vk_context_.swapchain_extent_.height ),             // height
-            0.0f,                                                                   // minDepth
-            1.0f                                                                    // maxDepth
-        };
-        const VkRect2D scissors
-        {
-            { 0, 0 },                                                               // offset
-            vk_context_.swapchain_extent_                                           // extent
-        };
-        const VkPipelineViewportStateCreateInfo viewport_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,                  // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            1,                                                                      // viewportCount
-            &viewport,                                                              // pViewports
-            1,                                                                      // scissorCount
-            &scissors                                                               // pScissors
-        };
-        const VkPipelineRasterizationStateCreateInfo rasterization_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,             // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            VK_FALSE,                                                               // depthClampEnable
-            VK_FALSE,                                                               // rasterizerDiscardEnable
-            VK_POLYGON_MODE_FILL,                                                   // polygonMode
-            VK_CULL_MODE_BACK_BIT,                                                  // cullMode
-            VK_FRONT_FACE_CLOCKWISE,                                                // frontFace
-            VK_FALSE,                                                               // depthBiasEnable
-            0.0f,                                                                   // depthBiasConstantFactor
-            0.0f,                                                                   // depthBiasClamp
-            0.0f,                                                                   // depthBiasSlopeFactor
-            1.0f                                                                    // lineWidth
-        };
-        const VkPipelineMultisampleStateCreateInfo multisample_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,               // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            VK_SAMPLE_COUNT_1_BIT,                                                  // rasterizationSamples
-            VK_FALSE,                                                               // sampleShadingEnable
-            1.0f,                                                                   // minSampleShading
-            nullptr,                                                                // pSampleMask
-            VK_FALSE,                                                               // alphaToCoverageEnable
-            VK_FALSE                                                                // alphaToOneEnable
-        };
-        const VkPipelineColorBlendAttachmentState colour_blend_attachment_state
-        {
-            VK_FALSE,                                                               // blendEnable
-            VK_BLEND_FACTOR_ONE,                                                    // srcColorBlendFactor
-            VK_BLEND_FACTOR_ZERO,                                                   // dstColorBlendFactor
-            VK_BLEND_OP_ADD,                                                        // colorBlendOp
-            VK_BLEND_FACTOR_ONE,                                                    // srcAlphaBlendFactor
-            VK_BLEND_FACTOR_ZERO,                                                   // dstAlphaBlendFactor
-            VK_BLEND_OP_ADD,                                                        // alphaBlendOp
-            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |                   // colorWriteMask
-            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-        };
-        const VkPipelineColorBlendStateCreateInfo colour_blend_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,               // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            VK_FALSE,                                                               // logicOpEnable
-            VK_LOGIC_OP_COPY,                                                       // logicOp
-            1,                                                                      // attachmentCount
-            &colour_blend_attachment_state,                                         // pAttachments
-            { 0.0f, 0.0f, 0.0f, 0.0f }                                              // blendConstants
-        };
-        /*
-        const VkDynamicState dynamic_states[]
-        {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_LINE_WIDTH
-        };
-        */
-        const VkPipelineDynamicStateCreateInfo dynamic_state_create_info
-        {
-            VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,                   // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            0,                                                                      // dynamicStateCount
-            nullptr                                                                 // pDynamicStates
-        };
+        const auto input_assembly_state_create_info = vk::PipelineInputAssemblyStateCreateInfo( )
+            .setTopology( vk::PrimitiveTopology::eTriangleList )
+            .setPrimitiveRestartEnable( VK_FALSE );
         
-        const VkGraphicsPipelineCreateInfo create_info
-        {
-            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,                        // sType
-            nullptr,                                                                // pNext
-            { },                                                                    // flags
-            stage_count,                                                            // stageCount
-            p_stages,                                                               // pStages
-            &vertex_input_state_create_info,                                        // pVertexInputState
-            &input_assembly_state_create_info,                                      // pInputAssemblyState
-            nullptr,                                                                // pTessellationState
-            &viewport_state_create_info,                                            // pViewportState
-            &rasterization_state_create_info,                                       // pRasterizationState
-            &multisample_state_create_info,                                         // pMultisampleState
-            nullptr,                                                                // pDepthStencilState
-            &colour_blend_state_create_info,                                        // pColorBlendState
-            nullptr,                                                                // pDynamicState
-            vk_context_.graphics_pipeline_layout_,                                  // layout
-            vk_context_.render_pass_,                                               // renderPass
-            0,                                                                      // subpass
-            VK_NULL_HANDLE,                                                         // basePipelineHandle
-            -1                                                                      // basePipelineIndex
-        };
+        const auto viewport = vk::Viewport( )
+            .setX( 0.0f )
+            .setY( 0.0f )
+            .setWidth( static_cast<float>( vk_context_.swapchain_extent_.width ) )
+            .setHeight( static_cast<float>( vk_context_.swapchain_extent_.height ) )
+            .setMinDepth( 0.0f )
+            .setMaxDepth( 1.0f );
         
-        return { vkCreateGraphicsPipelines( vk_context_.device_, nullptr, 1, &create_info, nullptr, &pipeline ), pipeline };
+        const auto scissors = vk::Rect2D( )
+            .setOffset( { 0, 0 } )
+            .setExtent( vk_context_.swapchain_extent_ );
+        
+        const auto viewport_state_create_info = vk::PipelineViewportStateCreateInfo( )
+            .setViewportCount( 1 )
+            .setPViewports( &viewport )
+            .setScissorCount( 1 )
+            .setPScissors( &scissors );
+
+        const auto rasterization_state_create_info = vk::PipelineRasterizationStateCreateInfo( )
+            .setDepthClampEnable( VK_FALSE )
+            .setRasterizerDiscardEnable( VK_FALSE )
+            .setPolygonMode( vk::PolygonMode::eFill )
+            .setCullMode( vk::CullModeFlagBits::eBack )
+            .setFrontFace( vk::FrontFace::eClockwise )
+            .setDepthBiasEnable( VK_FALSE )
+            .setDepthBiasConstantFactor( 0.0f )
+            .setDepthBiasClamp( 0.0f )
+            .setDepthBiasSlopeFactor( 0.0f )
+            .setLineWidth( 1.0f );
+        
+        const auto multisample_state_create_info = vk::PipelineMultisampleStateCreateInfo( )
+            .setRasterizationSamples( vk::SampleCountFlagBits::e1 )
+            .setSampleShadingEnable( VK_FALSE )
+            .setMinSampleShading( 1.0f )
+            .setPSampleMask( nullptr )
+            .setAlphaToCoverageEnable( VK_FALSE )
+            .setAlphaToOneEnable( VK_FALSE );
+        
+        const auto colour_blend_attachment_state = vk::PipelineColorBlendAttachmentState( )
+            .setBlendEnable( VK_FALSE )
+            .setSrcColorBlendFactor( vk::BlendFactor::eOne )
+            .setDstColorBlendFactor( vk::BlendFactor::eZero )
+            .setColorBlendOp( vk::BlendOp::eAdd )
+            .setSrcAlphaBlendFactor( vk::BlendFactor::eOne )
+            .setDstAlphaBlendFactor( vk::BlendFactor::eZero )
+            .setAlphaBlendOp( vk::BlendOp::eAdd )
+            .setColorWriteMask( vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA );
+
+        const auto colour_blend_state_create_info = vk::PipelineColorBlendStateCreateInfo( )
+            .setLogicOpEnable( VK_FALSE )
+            .setLogicOp( vk::LogicOp::eCopy )
+            .setAttachmentCount( 1 )
+            .setPAttachments( &colour_blend_attachment_state )
+            .setBlendConstants( { 0.0f, 0.0f, 0.0f, 0.0f } );
+        
+        const auto dynamic_state_create_info = vk::PipelineDynamicStateCreateInfo( );
+        
+        const auto create_info = vk::GraphicsPipelineCreateInfo( )
+            .setLayout( vk_context_.graphics_pipeline_layout_ )
+            .setRenderPass( vk_context_.render_pass_ )
+            .setStageCount( stage_count )
+            .setPStages( p_stages )
+            .setPVertexInputState( &vertex_input_state_create_info )
+            .setPInputAssemblyState( &input_assembly_state_create_info )
+            .setPViewportState( &viewport_state_create_info )
+            .setPRasterizationState( &rasterization_state_create_info )
+            .setPMultisampleState( &multisample_state_create_info )
+            .setPColorBlendState( &colour_blend_state_create_info )
+            .setBasePipelineIndex( -1 );
+        
+        return vk_context_.device_.createGraphicsPipeline( { }, create_info );
     }
     
     bool renderer::check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept
@@ -1435,26 +1168,22 @@ namespace TWE
         return true;
     }
     
-    bool renderer::is_physical_device_suitable( const VkSurfaceKHR& surface, const VkPhysicalDevice& physical_device,
+    bool renderer::is_physical_device_suitable( const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device,
         const std::vector<const char*>& device_extensions ) const noexcept
     {
-        auto indices = find_queue_family_indices( surface, physical_device );
-        
-        return indices.is_complete() &&
+        return find_queue_family_indices( surface, physical_device ).is_complete() &&
                check_physical_device_extension_support( physical_device, device_extensions ) &&
                is_swapchain_adequate( surface, physical_device );
     }
     
-    bool renderer::check_physical_device_extension_support( const VkPhysicalDevice &physical_device,
+    bool renderer::check_physical_device_extension_support( const vk::PhysicalDevice &physical_device,
         const std::vector<const char*>& device_extensions ) const noexcept
     {
         std::set<std::string> required_extensions( device_extensions.cbegin(), device_extensions.cend() );
         
-        uint32_t count;
-        vkEnumerateDeviceExtensionProperties( physical_device, nullptr, &count, nullptr );
-        
-        std::vector<VkExtensionProperties> properties( count );
-        vkEnumerateDeviceExtensionProperties( physical_device, nullptr, &count, properties.data() );
+        const auto properties = check_vk_result_value(
+            physical_device.enumerateDeviceExtensionProperties( ),
+            "Failed to enumerate Physical Device Extension Properties." );
         
         for( const auto& property : properties )
         {
@@ -1465,33 +1194,28 @@ namespace TWE
     }
     
     const renderer::queue_family_indices_type renderer::find_queue_family_indices(
-        const VkSurfaceKHR &surface,
-        const VkPhysicalDevice &physical_device ) const noexcept
+        const vk::SurfaceKHR& surface, const vk::PhysicalDevice &physical_device ) const noexcept
     {
         queue_family_indices_type indices;
-        
-        uint32_t count;
-        vkGetPhysicalDeviceQueueFamilyProperties( physical_device, &count, nullptr );
-        
-        std::vector<VkQueueFamilyProperties> queue_properties( count );
-        vkGetPhysicalDeviceQueueFamilyProperties( physical_device, &count, queue_properties.data() );
+    
+        auto queue_properties = physical_device.getQueueFamilyProperties( );
         
         int i = 0;
         for( const auto& queue_property : queue_properties )
         {
             if( queue_property.queueCount > 0 )
             {
-                if ( queue_property.queueFlags & VK_QUEUE_GRAPHICS_BIT )
+                if ( queue_property.queueFlags & vk::QueueFlagBits::eGraphics )
                 {
                     indices.graphic_family_ = i;
                 }
-                if ( queue_property.queueFlags & VK_QUEUE_COMPUTE_BIT )
+                if ( queue_property.queueFlags & vk::QueueFlagBits::eCompute )
                 {
                     indices.compute_family_ = i;
                 }
                 
-                VkBool32 present_support;
-                vkGetPhysicalDeviceSurfaceSupportKHR( physical_device, i, surface, &present_support );
+                const auto present_support = check_vk_result_value(
+                    physical_device.getSurfaceSupportKHR( i, surface ), "Failed to retrieve Surface support." );
                 
                 if ( present_support )
                 {
@@ -1505,71 +1229,49 @@ namespace TWE
         return indices;
     }
     
-    bool renderer::is_swapchain_adequate( const VkSurfaceKHR& surface, const VkPhysicalDevice& physical_device ) const noexcept
+    bool renderer::is_swapchain_adequate( const vk::SurfaceKHR& surface, const vk::PhysicalDevice &physical_device ) const noexcept
     {
-        uint32_t format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR( physical_device, surface, &format_count, nullptr );
+        const auto surface_formats = check_vk_result_value(
+            physical_device.getSurfaceFormatsKHR( surface ), "Failed to retrieve Surface Formats." );
         
-        std::vector<VkSurfaceFormatKHR> surface_formats( format_count );
-        vkGetPhysicalDeviceSurfaceFormatsKHR( physical_device, surface, &format_count, surface_formats.data() );
-        
-        
-        uint32_t present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR( physical_device, surface, &present_mode_count, nullptr );
-        
-        std::vector<VkPresentModeKHR> present_modes( present_mode_count );
-        vkGetPhysicalDeviceSurfacePresentModesKHR( physical_device, surface, &present_mode_count, present_modes.data() );
+        const auto present_modes = check_vk_result_value(
+            physical_device.getSurfacePresentModesKHR( surface ), "Failed to retrieve Surface Present modes." );
         
         return !surface_formats.empty() && !present_modes.empty();
     }
     
-    const renderer::swapchain_support_details_type renderer::query_swapchain_support( const VkSurfaceKHR& surface,
-        const VkPhysicalDevice& physical_device ) const noexcept
+    const renderer::swapchain_support_details_type renderer::query_swapchain_support( const vk::SurfaceKHR& surface,
+        const vk::PhysicalDevice &physical_device ) const noexcept
     {
         swapchain_support_details_type details;
 
-        /* Get the capabilities. */
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR( physical_device, surface, &details.capabilities_ );
+        details.capabilities_ = check_vk_result_value(
+            physical_device.getSurfaceCapabilitiesKHR( surface ), "Failed to retrieve Surface Capabilities." );
+        
+        details.formats_ = check_vk_result_value(
+            physical_device.getSurfaceFormatsKHR( surface ), "Failed to retrieve Surface Formats." );
 
-        /* Get the number of formats. */
-        uint32_t format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR( physical_device, surface, &format_count, nullptr );
-
-        /* if more than 0 formats, resize and save them in details. */
-        if( format_count != 0 )
-        {
-            details.formats_.resize( format_count );
-            vkGetPhysicalDeviceSurfaceFormatsKHR( physical_device, surface, &format_count, details.formats_.data() );
-        }
-
-        /* Get the number of present modes. */
-        uint32_t present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR( physical_device, surface, &present_mode_count, nullptr );
-
-        /* If not 0, resize and save them in details. */
-        if( present_mode_count != 0 )
-        {
-            details.present_modes_.resize( present_mode_count );
-            vkGetPhysicalDeviceSurfacePresentModesKHR( physical_device, surface, &present_mode_count, details.present_modes_.data() );
-        }
+        details.present_modes_ = check_vk_result_value(
+            physical_device.getSurfacePresentModesKHR( surface ), "Failed to retrieve Surface Present Modes." );
 
         return details;
     }
 
-    const VkSurfaceFormatKHR renderer::choose_swapchain_surface_format(
-            const std::vector<VkSurfaceFormatKHR> &available_formats ) const noexcept
+    const vk::SurfaceFormatKHR renderer::choose_swapchain_surface_format(
+            const std::vector<vk::SurfaceFormatKHR> &available_formats ) const noexcept
     {
-        if ( available_formats.size( ) == 1 && available_formats[0].format == VK_FORMAT_UNDEFINED )
+        if ( available_formats.size( ) == 1 && available_formats[0].format == vk::Format::eUndefined )
         {
-            return { VK_FORMAT_R8G8B8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+            return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
         }
     
-        const auto iter = std::find_if( available_formats.cbegin( ), available_formats.cend( ),
-                                        []( const VkSurfaceFormatKHR &format )
-                                        {
-                                            return format.format == VK_FORMAT_B8G8R8A8_UNORM &&
-                                                   format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-                                        } );
+        const auto iter =
+            std::find_if( available_formats.cbegin( ), available_formats.cend( ),
+                          []( const vk::SurfaceFormatKHR& format )
+                          {
+                              return format.format == vk::Format::eB8G8R8A8Unorm &&
+                                     format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
+                          } );
     
         if ( iter != available_formats.cend( ))
         {
@@ -1581,26 +1283,27 @@ namespace TWE
         }
     }
 
-    const VkPresentModeKHR renderer::choose_swapchain_present_mode(
-            const std::vector<VkPresentModeKHR> &available_present_modes ) const noexcept
+    const vk::PresentModeKHR renderer::choose_swapchain_present_mode(
+            const std::vector<vk::PresentModeKHR> &available_present_modes ) const noexcept
     {
-        const auto iter = std::find_if( available_present_modes.cbegin( ), available_present_modes.cend( ),
-                                        []( const VkPresentModeKHR &present_mode )
-                                        {
-                                            return present_mode == VK_PRESENT_MODE_MAILBOX_KHR;
-                                        } );
+        const auto iter =
+            std::find_if( available_present_modes.cbegin( ), available_present_modes.cend( ),
+                          []( const vk::PresentModeKHR& present_mode )
+                          {
+                              return present_mode == vk::PresentModeKHR::eMailbox;
+                          } );
     
-        if ( iter != available_present_modes.cend( ) )
+        if ( iter != available_present_modes.cend( ))
         {
             return *iter;
         }
         else
         {
-            return VK_PRESENT_MODE_FIFO_KHR;
+            return vk::PresentModeKHR::eFifo;
         }
     }
 
-    const VkExtent2D renderer::choose_swapchain_extent( const VkSurfaceCapabilitiesKHR &capabilities ) const noexcept
+    const vk::Extent2D renderer::choose_swapchain_extent( const vk::SurfaceCapabilitiesKHR &capabilities ) const noexcept
     {
         if ( capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max( ) )
         {

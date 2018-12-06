@@ -19,7 +19,7 @@
 
 #include <system_error>
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "../TWE_core.h"
 
@@ -58,7 +58,7 @@ namespace TWE
          * @param result The Vulkan error code.
          * @param message The message to print along with the error name.
          */
-        TWE_API vk_error( const VkResult& result, const std::string& message );
+        TWE_API vk_error( const vk::Result& result, const std::string& message );
     };
     
 }

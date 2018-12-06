@@ -284,20 +284,13 @@ namespace TWE
         }
     }
     
-    vk_return_type<VkSurfaceKHR> xcb_window::create_surface( const VkInstance& instance ) const noexcept
+    vk::ResultValue<vk::SurfaceKHR> xcb_window::create_surface( const vk::Instance& instance ) const noexcept
     {
-        VkSurfaceKHR surface = VK_NULL_HANDLE;
+        const auto create_info = vk::XcbSurfaceCreateInfoKHR( )
+            .setConnection( p_xcb_connection_.get() )
+            .setWindow( xcb_window_ );
         
-        const VkXcbSurfaceCreateInfoKHR create_info
-        {
-            VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,              // sType
-            nullptr,                                                    // pNext
-            { },                                                        // flags
-            p_xcb_connection_.get(),                                    // connection
-            xcb_window_                                                 // window
-        };
-    
-        return { vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ), surface };
+        return instance.createXcbSurfaceKHR( create_info );
     }
 }
 #endif

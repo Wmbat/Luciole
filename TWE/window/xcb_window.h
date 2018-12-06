@@ -40,8 +40,8 @@ namespace TWE
         TWE_API xcb_window& operator=( xcb_window&& rhs ) noexcept;
     
         void TWE_API poll_events( ) override;
-        
-        vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept override;
+    
+        vk::ResultValue<vk::SurfaceKHR> TWE_API create_surface( const vk::Instance& instance ) const noexcept override;
     
     private:
         std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>> p_xcb_connection_;

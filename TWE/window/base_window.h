@@ -34,7 +34,7 @@ namespace TWE
     
         bool TWE_API is_open( ) const noexcept;
     
-        virtual vk_return_type<VkSurfaceKHR> TWE_API create_surface( const VkInstance& instance ) const noexcept = 0;
+        virtual vk::ResultValue<vk::SurfaceKHR> TWE_API create_surface( const vk::Instance& instance ) const noexcept = 0;
     
         uint32_t TWE_API get_width( ) const noexcept;
         uint32_t TWE_API get_height( ) const noexcept;
