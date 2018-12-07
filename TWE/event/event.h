@@ -23,7 +23,11 @@
 namespace TWE
 {
     /*!
-     * @brief An event struct that holds the data of a key event.
+     * @brief A struct to hold the information of the key event.
+     * @var code_ -> A keyboard::key enum value corresponding to which key
+     * was pressed or released.
+     * @var state_ -> A keyboard::key_state enum value corresponding to whether
+     * the key was pressed or released
      */
     struct key_event
     {
@@ -42,6 +46,15 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief Holds the information of the mouse button event.
+     * @var code_ -> A mouse::button enum value corresponding to which
+     * mouse button was pressed or released.
+     * @var state_ -> A mouse::button_state enum value to query whether
+     * the button was pressed or released.
+     * @var position_ -> A glm::i32vec2 to keep track of where, in the window screen,
+     * was the button pressed or released.
+     */
     struct mouse_button_event
     {
         mouse::button code_;
@@ -65,6 +78,11 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief Holds the information of mouse movements on the window space.
+     * @var position_ -> A glm::i32vec2 to keep track of where, in the window scree,
+     * is the mouse.
+     */
     struct mouse_motion_event
     {
         glm::i32vec2 position_;
@@ -76,6 +94,12 @@ namespace TWE
         }
     };
 
+    /*!
+     * @brief Hold information regarding the window is closed.
+     * @var is_closed_ -> A boolean value to state whether the window
+     * is closed or not. Where TRUE means the window is closed and FALSE
+     * means the window is still open.
+     */
     struct window_close_event
     {
         bool is_closed_;
@@ -87,6 +111,10 @@ namespace TWE
         }
     };
     
+    /*!
+     * @brief Hold information regarding the size of the framebuffer.
+     * @var size_ -> A glm::u32vec2 to hold the new size of the framebuffer.
+     */
     struct framebuffer_resize_event
     {
         glm::u32vec2 size_;

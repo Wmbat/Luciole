@@ -32,21 +32,41 @@ namespace TWE
          * @brief Virtual function to be overriden by the inheritor of
          * the interface. It allows for each listener to have a different
          * behaviour for a single event.
-         * @param event The event that was received.
+         * @public
+         * @param event -> The event received from the dispatcher.
          */
         virtual void on_key_event( const key_event& event ) = 0;
     };
     
+    /*!
+     * @brief An interface to allow for the listening to mouse
+     * button events dispatched by an event dispatcher.
+     */
     class i_mouse_button_listener
     {
     public:
+        /*!
+         * @brief A Virtual function to be overriden by the inheritor of
+         * the interface, It allows for each listener to have a different
+         * behaviour for the event.
+         * @public
+         * @param event -> The event received from the dispatcher.
+         */
         virtual void on_mouse_button_event( const mouse_button_event& event ) = 0;
     };
     
     
+    /*!
+     * @brief An interface to allow for the listening to mouse motion
+     * on the window from an event dispatcher
+     */
     class i_mouse_motion_listener
     {
     public:
+        /*!
+         * @brief
+         * @param event -> The event received from the dispatcher
+         */
         virtual void on_mouse_motion( const mouse_motion_event& event ) = 0;
     };
 
