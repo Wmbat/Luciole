@@ -195,7 +195,7 @@ namespace TWE
                         open_ = false;
                         
                         const auto event = window_close_event( )
-                            .set_bool( true );
+                            .set_is_closed( true );
                         
                         event_dispatcher::dispatch_window_close_event( event );
                     }
@@ -205,26 +205,26 @@ namespace TWE
                     open_ = false;
     
                     const auto event = window_close_event( )
-                        .set_bool( true );
+                        .set_is_closed( true );
     
                     event_dispatcher::dispatch_window_close_event( event );
                 } break;
                 case XCB_CONFIGURE_NOTIFY:
                 {
                     const auto *motion_event = reinterpret_cast<const xcb_configure_notify_event_t *>( e );
-                    
+    
                     settings_.x_ = static_cast<uint32_t>( motion_event->x );
                     settings_.y_ = static_cast<uint32_t>( motion_event->y );
-                    
-                    if( settings_.width_ != static_cast<uint32_t>( motion_event->width ) &&
-                        settings_.height_ != static_cast<uint32_t>( motion_event->height ) )
+    
+                    if ( settings_.width_ != static_cast<uint32_t>( motion_event->width ) &&
+                         settings_.height_ != static_cast<uint32_t>( motion_event->height ))
                     {
                         settings_.width_ = static_cast<uint32_t>( motion_event->width );
                         settings_.height_ = static_cast<uint32_t>( motion_event->height );
-                        
+        
                         const auto event = framebuffer_resize_event( )
-                            .set_size( settings_.width_, settings_.height_ );
-    
+                            .set_size( { settings_.width_, settings_.height_ } );
+        
                         event_dispatcher::dispatch_framebuffer_resize_event( event );
                     }
                 } break;
@@ -232,50 +232,60 @@ namespace TWE
                 {
                     const auto *xcb_key_press = reinterpret_cast<const xcb_key_press_event_t *>( e );
                 
-                    const auto event = key_press_event( )
-                        .set_key_code( static_cast<keyboard::key>( xcb_key_press->detail ) );
+                    const auto event = key_event( )
+                        .set_code( static_cast<keyboard::key>( xcb_key_press->detail ) )
+                        .set_state( keyboard::key_state::pressed );
                     
-                    event_dispatcher::dispatch_key_pressed_event( event );
+                    event_dispatcher::dispatch_key_event( event );
                 } break;
                 case XCB_KEY_RELEASE:
                 {
                     const auto *xcb_key_release = reinterpret_cast<const xcb_key_release_event_t *>( e );
                 
-                    const auto event = key_release_event( )
-                        .set_key_code( static_cast<keyboard::key>( xcb_key_release->detail ) );
+                    const auto event = key_event( )
+                        .set_code( static_cast<keyboard::key>( xcb_key_release->detail ) )
+                        .set_state( keyboard::key_state::released );
                 
-                    event_dispatcher::dispatch_key_released_event( event );
+                    event_dispatcher::dispatch_key_event( event );
                 } break;
                 case XCB_BUTTON_PRESS:
                 {
                     const auto *button_press_event = reinterpret_cast<const xcb_button_press_event_t *>( e );
-                
-                    const auto event = mouse_button_press_event( )
-                        .set_button_code( static_cast<mouse::button>( button_press_event->detail ) )
-                        .set_position( static_cast<int32_t>( button_press_event->event_x ),
-                            static_cast<int32_t>( button_press_event->event_y ) );
-                    
-                    event_dispatcher::dispatch_mouse_button_pressed_event( event );
+    
+                    const auto event = mouse_button_event( )
+                        .set_code( static_cast<mouse::button>( button_press_event->detail ))
+                        .set_state( mouse::button_state::pressed )
+                        .set_position( {
+                                           static_cast<int32_t>( button_press_event->event_x ),
+                                           static_cast<int32_t>( button_press_event->event_y )
+                                       } );
+    
+                    event_dispatcher::dispatch_mouse_button_event( event );
                 } break;
                 case XCB_BUTTON_RELEASE:
                 {
                     const auto *button_release_event = reinterpret_cast<const xcb_button_release_event_t *>( e );
-                
-                    const auto event = mouse_button_release_event( )
-                        .set_button_code( static_cast<mouse::button>( button_release_event->detail ) )
-                        .set_position( static_cast<int32_t>( button_release_event->event_y ),
-                            static_cast<int32_t>( button_release_event->event_x ) );
-                    
-                    event_dispatcher::dispatch_mouse_button_released_event( event );
+    
+                    const auto event = mouse_button_event( )
+                        .set_code( static_cast<mouse::button>( button_release_event->detail ))
+                        .set_state( mouse::button_state::pressed )
+                        .set_position( {
+                                           static_cast<int32_t>( button_release_event->event_x ),
+                                           static_cast<int32_t>( button_release_event->event_y )
+                                       } );
+    
+                    event_dispatcher::dispatch_mouse_button_event( event );
                 } break;
                 case XCB_MOTION_NOTIFY:
                 {
                     const auto *cursor_motion = reinterpret_cast<const xcb_motion_notify_event_t *>( e );
-                
+    
                     const auto event = mouse_motion_event( )
-                        .set_position( static_cast<int32_t>( cursor_motion->event_x ),
-                            static_cast<int32_t>( cursor_motion->event_y ) );
-                    
+                        .set_position( {
+                                           static_cast<int32_t>( cursor_motion->event_x ),
+                                           static_cast<int32_t>( cursor_motion->event_y )
+                                       } );
+    
                     event_dispatcher::dispatch_mouse_motion_event( event );
                 } break;
             }

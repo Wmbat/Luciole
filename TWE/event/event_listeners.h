@@ -22,110 +22,44 @@
 namespace TWE
 {
     /*!
-     * @brief An interface to allow for listening to
-     * key press events dispatched by an event dispatcher.
+     * @brief An interface to allow for the listening to a
+     * key event dispatched by an event dispatcher.
      */
-    class key_pressed_listener
+    class i_key_listener
     {
     public:
         /*!
-         * @brief Virtual function to be overriden the by inheritor to
-         * define the desired behaviour at the key press.
-         * @param event The event to handle.
+         * @brief Virtual function to be overriden by the inheritor of
+         * the interface. It allows for each listener to have a different
+         * behaviour for a single event.
+         * @param event The event that was received.
          */
-        virtual void execute( const key_press_event& event ) = 0;
+        virtual void on_key_event( const key_event& event ) = 0;
     };
     
-    /*!
-     * @brief An interface that allows for listening to
-     * key release events dispatched by an event dispatcher.
-     */
-    class key_released_listener
+    class i_mouse_button_listener
     {
     public:
-        /*!
-         * @brief Virtual function to be overriden the by inheritor to
-         * define the desired behaviour at the key release.
-         * @param event The event to handle.
-         */
-        virtual void execute( const key_release_event& event ) = 0;
+        virtual void on_mouse_button_event( const mouse_button_event& event ) = 0;
     };
     
-    /*!
-     * @brief An interface that allows for listening to
-     * mouse button press events dispatched by an event
-     * dispatcher.
-     */
-    class mouse_button_pressed_listener
-    {
-    public:
-        /*!
-         * @brief Virtual function to be overriden by the inheritor to
-         * define the desired behaviour at the mouse button press.
-         * @param event The event to handle.
-         */
-        virtual void execute( const mouse_button_press_event& event ) = 0;
-    };
     
-    /*!
-     * @brief An interface that allows for listening to
-     * mouse button release events dispatched by an event
-     * dispatcher.
-     */
-    class mouse_button_released_listener
+    class i_mouse_motion_listener
     {
     public:
-        /*!
-         * @brief Virtual function to be overriden by the inheritor to
-         * define the desired behaviour at the mouse button release.
-         * @param event The event to handle.
-         */
-        virtual void execute( const mouse_button_release_event& event ) = 0;
-    };
-    
-    /*!
-     * @brief An interface that allows for listening to
-     * mouse motion events dispatched by an event dispatcher.
-     */
-    class mouse_motion_listener
-    {
-    public:
-        /*!
-         * @brief Virtual function to be overriden by the inheritor to
-         * define the desired behaviour at the mouse motion event
-         * @param event The event to handle.
-         */
-        virtual void execute( const mouse_motion_event& event ) = 0;
+        virtual void on_mouse_motion( const mouse_motion_event& event ) = 0;
     };
 
-    /*!
-     * @brief An interface that allows for listener to
-     * windown close events dispatched by an event dispatcher.
-     */
-    class window_close_listener
+    class i_window_close_listener
     {
     public:
-        /*!
-         * @brief Virtual to function to be overriden by the inheritor to
-         * define the desired behaviour when the window close event is launched.
-         * @param event The event to handle.
-         */
-        virtual void execute ( const window_close_event& event ) = 0;
+        virtual void on_window_close ( const window_close_event& event ) = 0;
     };
     
-    /*!
-     * @brief An interface that allows for listening to
-     * framebuffer resize events dispatched by an event dispatcher.
-     */
-     class framebuffer_resize_listener
+     class i_framebuffer_resize_listener
      {
      public:
-         /*!
-          * @brief Virtual function to be overriden by the inheritor to
-          * define the desired behaviour at the framebuffer resize event
-          * @param event The event to handle.
-          */
-         virtual void execute( const framebuffer_resize_event& event ) = 0;
+         virtual void on_framebuffer_resize( const framebuffer_resize_event& event ) = 0;
      };
 }
 #endif //TWE_I_EVENT_LISTENER_H

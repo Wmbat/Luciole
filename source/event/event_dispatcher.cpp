@@ -23,235 +23,206 @@
 
 namespace TWE
 {
-    void event_dispatcher::add_key_pressed_listener(
-        const std::shared_ptr<key_pressed_listener>& p_listener )
+    void event_dispatcher::add_key_listener(
+        const std::shared_ptr<i_key_listener>& sp_listener )
     {
-        /* Find if listener is not already in vector. */
-        if ( key_press_listeners_.cend( ) ==
-             std::find_if( key_press_listeners_.cbegin( ),key_press_listeners_.cend( ),
-                 [p_listener]( const std::shared_ptr<key_pressed_listener> &p_lis )
-                 { return p_listener == p_lis; } ) )
+        const auto it = std::find_if( wp_key_listeners_.cbegin( ), wp_key_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_key_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it == wp_key_listeners_.cend( ))
         {
-            key_press_listeners_.emplace_back( p_listener );
+            wp_key_listeners_.emplace_back( std::weak_ptr<i_key_listener>( sp_listener ));
         }
     }
-    void event_dispatcher::add_key_released_listener(
-        const std::shared_ptr<key_released_listener>& p_listener )
+    void event_dispatcher::remove_key_listener(
+        const std::shared_ptr<i_key_listener>& sp_listener )
     {
-        /* Find if listener is not already in vector. */
-        if ( key_release_listeners_.cend( ) ==
-             std::find_if( key_release_listeners_.cbegin( ),key_release_listeners_.cend( ),
-                 [p_listener]( const std::shared_ptr<key_released_listener> &p_lis )
-                 { return p_listener == p_lis; } ) )
+        const auto it = std::find_if( wp_key_listeners_.cbegin( ), wp_key_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_key_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it != wp_key_listeners_.cend( ))
         {
-            key_release_listeners_.emplace_back( p_listener );
+            wp_key_listeners_.erase( it );
         }
     }
-    void event_dispatcher::add_mouse_button_pressed_listener(
-        const std::shared_ptr<mouse_button_pressed_listener>& p_listener )
+
+    
+    
+    void event_dispatcher::add_mouse_button_listener( const std::shared_ptr<TWE::i_mouse_button_listener>& sp_listener )
     {
-        /* Find if listener is not already in vector. */
-        if( mouse_button_press_listeners_.cend( ) ==
-            std::find_if( mouse_button_press_listeners_.cbegin(), mouse_button_press_listeners_.cend(),
-                [p_listener]( const std::shared_ptr<mouse_button_pressed_listener>& p_lis)
-                { return p_listener == p_lis; } ) )
+        const auto it = std::find_if( wp_mouse_button_listeners_.cbegin( ), wp_mouse_button_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_mouse_button_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it == wp_mouse_button_listeners_.cend( ) )
         {
-            mouse_button_press_listeners_.emplace_back( p_listener );
+            wp_mouse_button_listeners_.emplace_back( std::weak_ptr<i_mouse_button_listener>( sp_listener ));
         }
     }
-    void event_dispatcher::add_mouse_button_released_listener(
-        const std::shared_ptr<mouse_button_released_listener>& p_listener )
+    void event_dispatcher::remove_mouse_button_listener(
+        const std::shared_ptr<TWE::i_mouse_button_listener>& sp_listener )
     {
-        /* Find if listener is not already in vector. */
-        if( mouse_button_release_listeners_.cend( ) ==
-            std::find_if( mouse_button_release_listeners_.cbegin(), mouse_button_release_listeners_.cend(),
-                [p_listener]( const std::shared_ptr<mouse_button_released_listener>& p_lis )
-                { return p_listener == p_lis; } ) )
+        const auto it = std::find_if( wp_mouse_button_listeners_.cbegin( ), wp_mouse_button_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_mouse_button_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it != wp_mouse_button_listeners_.cend( ) )
         {
-            mouse_button_release_listeners_.emplace_back( p_listener );
+            wp_mouse_button_listeners_.erase( it );
         }
     }
+
+    
     void event_dispatcher::add_mouse_motion_listener(
-        const std::shared_ptr<mouse_motion_listener>& p_listener )
+        const std::shared_ptr<i_mouse_motion_listener>& sp_listener )
     {
-        /* Find if listener is not already in vector. */
-        if( mouse_motion_listeners_.cend( ) ==
-            std::find_if( mouse_motion_listeners_.cbegin(), mouse_motion_listeners_.cend(),
-                [p_listener]( const std::shared_ptr<mouse_motion_listener>& p_list )
-                { return p_listener == p_list; } ) )
-        {
-            mouse_motion_listeners_.emplace_back( p_listener );
-        }
-    }
-    void event_dispatcher::add_window_close_listener ( 
-        const std::shared_ptr<window_close_listener>& p_listener )
-    {
-        if ( window_close_listeners_.cend ( ) ==
-             std::find_if ( window_close_listeners_.cbegin ( ), window_close_listeners_.cend ( ),
-             [p_listener]( const std::shared_ptr<window_close_listener>& p_list )
-            { return p_listener == p_list; } ) )
-        {
-            window_close_listeners_.emplace_back ( p_listener );
-        }
-    }
-    void event_dispatcher::add_framebuffer_resize_listener(
-        const std::shared_ptr<TWE::framebuffer_resize_listener>& p_listener )
-    {
-        /* Find if p_listener is not already in vector. */
-        if( framebuffer_resize_listeners_.cend( ) ==
-            std::find_if( framebuffer_resize_listeners_.cbegin(), framebuffer_resize_listeners_.cend(),
-                [p_listener]( const std::shared_ptr<framebuffer_resize_listener>& p_list )
-                { return p_listener == p_list; } ) )
-        {
-            framebuffer_resize_listeners_.emplace_back( p_listener );
-        }
-    }
+        const auto it = std::find_if( wp_mouse_motion_listeners_.cbegin( ), wp_mouse_motion_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_mouse_motion_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
     
-    
-    void event_dispatcher::remove_key_pressed_listener( const std::shared_ptr<key_pressed_listener>& p_listener )
-    {
-        /* Find if p_listeners in present */
-        const auto it = std::find_if( key_press_listeners_.cbegin( ),key_press_listeners_.cend( ),
-            [p_listener]( const std::shared_ptr<key_pressed_listener> &p_lis )
-            { return p_listener == p_lis; } );
-    
-        /* If present, remove it */
-        if( it != key_press_listeners_.cend() )
+        if ( it == wp_mouse_motion_listeners_.cend( ))
         {
-            key_press_listeners_.erase( it );
-        }
-    }
-    void event_dispatcher::remove_key_released_listener( const std::shared_ptr<key_released_listener>& p_listener )
-    {
-        /* Find if p_listeners in present */
-        const auto it = std::find_if( key_release_listeners_.cbegin( ),key_release_listeners_.cend( ),
-            [p_listener]( const std::shared_ptr<key_released_listener> &p_lis )
-            { return p_listener == p_lis; } );
-    
-        /* If present, remove it */
-        if( it != key_release_listeners_.cend() )
-        {
-            key_release_listeners_.erase( it );
-        }
-    }
-    void event_dispatcher::remove_mouse_button_pressed_listener(
-        const std::shared_ptr<mouse_button_pressed_listener>& p_listener )
-    {
-        /* Find if p_listeners in present */
-        const auto it = std::find_if( mouse_button_press_listeners_.cbegin(), mouse_button_press_listeners_.cend(),
-            [p_listener]( const std::shared_ptr<mouse_button_pressed_listener>& p_list )
-            { return p_listener == p_list;} );
-    
-        /* If present, remove it */
-        if( it != mouse_button_press_listeners_.cend() )
-        {
-            mouse_button_press_listeners_.erase( it );
-        }
-    }
-    void event_dispatcher::remove_mouse_button_released_listener(
-        const std::shared_ptr<mouse_button_released_listener>& p_listeners )
-    {
-        /* Find if p_listeners in present */
-        const auto it = std::find_if( mouse_button_release_listeners_.cbegin( ), mouse_button_release_listeners_.cend(),
-            [p_listeners]( const std::shared_ptr<mouse_button_released_listener>& p_list )
-            { return p_listeners == p_list;} );
-    
-        /* If present, remove it */
-        if( it != mouse_button_release_listeners_.cend() )
-        {
-            mouse_button_release_listeners_.erase( it );
+            wp_mouse_motion_listeners_.emplace_back( std::weak_ptr<i_mouse_motion_listener>( sp_listener ));
         }
     }
     void event_dispatcher::remove_mouse_motion_listener(
-        const std::shared_ptr<mouse_motion_listener>& p_listeners )
+        const std::shared_ptr<i_mouse_motion_listener>& sp_listener )
     {
-        /* Find if p_listeners in present */
-        const auto it = std::find_if( mouse_motion_listeners_.cbegin(), mouse_motion_listeners_.cend(),
-            [p_listeners]( const std::shared_ptr<mouse_motion_listener>& p_list )
-            { return p_listeners == p_list; } );
-        
-        /* If present, remove it */
-        if( it != mouse_motion_listeners_.cend( ) )
-        {
-            mouse_motion_listeners_.erase( it );
-        }
-    }
-    void event_dispatcher::remove_window_close_listener (
-        const std::shared_ptr<window_close_listener>& p_listener )
-    {
-        /* Find if p_listener is in the vector. */
-        const auto it = std::find_if( window_close_listeners_.cbegin( ), window_close_listeners_.cend( ),
-            [p_listener]( const std::shared_ptr<window_close_listener>& p_list )
-            { return p_listener == p_list; } );
+        const auto it = std::find_if( wp_mouse_motion_listeners_.cbegin( ), wp_mouse_motion_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_mouse_motion_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
 
-        /* If present, remove it. */
-        if ( it != window_close_listeners_.cend ( ) )
+        if ( it != wp_mouse_motion_listeners_.cend( ))
         {
-            window_close_listeners_.erase ( it );
-        }
-    }
-    void event_dispatcher::remove_framebuffer_resize_listener(
-        const std::shared_ptr<framebuffer_resize_listener>& p_listener )
-    {
-        /* Find if p_listener is in vector. */
-        const auto it = std::find_if( framebuffer_resize_listeners_.cbegin(), framebuffer_resize_listeners_.cend( ),
-            [p_listener]( const std::shared_ptr<framebuffer_resize_listener>& p_list )
-            { return p_listener == p_list; } );
-        
-        /* If present, remove it */
-        if( it != framebuffer_resize_listeners_.cend() )
-        {
-            framebuffer_resize_listeners_.erase( it );
+            wp_mouse_motion_listeners_.erase( it );
         }
     }
     
-    void event_dispatcher::dispatch_key_pressed_event( const key_press_event& event )
+    
+    void event_dispatcher::add_window_close_listener(
+        const std::shared_ptr<TWE::i_window_close_listener>& sp_listener )
     {
-        for( auto& p_listener : key_press_listeners_ )
+        const auto it = std::find_if( wp_window_close_listeners_.cbegin( ), wp_window_close_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_window_close_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it == wp_window_close_listeners_.cend( ))
         {
-            p_listener->execute( event );
+            wp_window_close_listeners_.emplace_back( std::weak_ptr<i_window_close_listener>( sp_listener ));
         }
     }
-    void event_dispatcher::dispatch_key_released_event( const key_release_event& event )
+    void event_dispatcher::remove_window_close_listener(
+        const std::shared_ptr<TWE::i_window_close_listener>& sp_listener )
     {
-        for( auto& p_listener : key_release_listeners_ )
+        const auto it = std::find_if( wp_window_close_listeners_.cbegin( ), wp_window_close_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_window_close_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it != wp_window_close_listeners_.cend( ))
         {
-            p_listener->execute( event );
+            wp_window_close_listeners_.erase( it );
         }
     }
-    void event_dispatcher::dispatch_mouse_button_pressed_event( const mouse_button_press_event& event )
+    
+
+    void event_dispatcher::add_framebuffer_resize_listener(
+        const std::shared_ptr<TWE::i_framebuffer_resize_listener>& sp_listener )
     {
-        for( auto& p_listener : mouse_button_press_listeners_ )
+        const auto it = std::find_if( wp_framebuffer_resize_listeners_.cbegin( ),
+                                      wp_framebuffer_resize_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_framebuffer_resize_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it == wp_framebuffer_resize_listeners_.cend( ))
         {
-            p_listener->execute( event );
+            wp_framebuffer_resize_listeners_.emplace_back( std::weak_ptr<i_framebuffer_resize_listener>( sp_listener ));
         }
     }
-    void event_dispatcher::dispatch_mouse_button_released_event( const mouse_button_release_event& event )
+    void event_dispatcher::remove_framebuffer_resize_listener(
+        const std::shared_ptr<TWE::i_framebuffer_resize_listener>& sp_listener )
     {
-        for( auto& p_listener : mouse_button_release_listeners_ )
+        const auto it = std::find_if( wp_framebuffer_resize_listeners_.cbegin( ),
+                                      wp_framebuffer_resize_listeners_.cend( ),
+                                      [sp_listener]( const std::weak_ptr<i_framebuffer_resize_listener>& wp_listener )
+                                      { return sp_listener == wp_listener.lock( ); } );
+    
+        if ( it != wp_framebuffer_resize_listeners_.cend( ))
         {
-            p_listener->execute( event );
+            wp_framebuffer_resize_listeners_.erase( it );
         }
     }
-    void event_dispatcher::dispatch_mouse_motion_event( const mouse_motion_event& event )
+    
+    
+    void event_dispatcher::dispatch_key_event( const key_event& event )
     {
-        for( auto& p_listener : mouse_motion_listeners_ )
+        for( auto& wp_listener : wp_key_listeners_ )
         {
-            p_listener->execute( event );
+            if( auto sp_listener = wp_listener.lock() )
+            {
+                sp_listener->on_key_event( event );
+            }
+            else
+            {
+                remove_key_listener( sp_listener );
+            }
         }
     }
-    void event_dispatcher::dispatch_window_close_event ( const window_close_event& event )
+    void event_dispatcher::dispatch_mouse_button_event( const TWE::mouse_button_event& event )
     {
-        for ( auto& p_listener : window_close_listeners_ )
+        for( auto& wp_listener : wp_mouse_button_listeners_ )
         {
-            p_listener->execute ( event );
+            if( auto sp_listener = wp_listener.lock() )
+            {
+                sp_listener->on_mouse_button_event( event );
+            }
+            else
+            {
+                remove_mouse_button_listener( sp_listener );
+            }
         }
     }
-    void event_dispatcher::dispatch_framebuffer_resize_event( const framebuffer_resize_event& event )
+    void event_dispatcher::dispatch_mouse_motion_event( const TWE::mouse_motion_event& event )
     {
-        for( auto& p_listener : framebuffer_resize_listeners_ )
+        for ( auto& wp_listener : wp_mouse_motion_listeners_ )
         {
-            p_listener->execute( event );
+            if( auto sp_listener = wp_listener.lock() )
+            {
+                sp_listener->on_mouse_motion( event );
+            }
+            else
+            {
+                remove_mouse_motion_listener( sp_listener );
+            }
+        }
+    }
+    void event_dispatcher::dispatch_window_close_event( const TWE::window_close_event& event )
+    {
+        for ( auto& wp_listener : wp_window_close_listeners_ )
+        {
+            if( auto sp_listener = wp_listener.lock() )
+            {
+                sp_listener->on_window_close( event );
+            }
+            else
+            {
+                remove_window_close_listener( sp_listener );
+            }
+        }
+    }
+    void event_dispatcher::dispatch_framebuffer_resize_event( const TWE::framebuffer_resize_event& event )
+    {
+        for( auto& wp_listener : wp_framebuffer_resize_listeners_ )
+        {
+            if( auto sp_listener = wp_listener.lock() )
+            {
+                sp_listener->on_framebuffer_resize( event );
+            }
+            else
+            {
+                remove_framebuffer_resize_listener( sp_listener );
+            }
         }
     }
 }

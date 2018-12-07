@@ -30,6 +30,13 @@ namespace TWE
     class keyboard
     {
     public:
+        enum class key_state : std::int32_t
+        {
+            invalid = -1,
+            pressed = 0,
+            released = 1
+        };
+        
         enum class key : std::int32_t
         {
             invalid = -1,

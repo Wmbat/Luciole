@@ -438,15 +438,15 @@ namespace TWE
             check_vk_value( vk_context_.command_buffers_[i].end( ), "Failed to record Command Buffer" );
         }
     }
-    void renderer::execute( const framebuffer_resize_event& event )
+    void renderer::on_window_close ( const window_close_event& event )
     {
-        window_width_ = event.x_;
-        window_height_ = event.y_;
-        framebuffer_resized_ = true;
+        is_window_closed_ = event.is_closed_;
     }
-    void renderer::execute ( const window_close_event& event )
+    void renderer::on_framebuffer_resize( const TWE::framebuffer_resize_event& event )
     {
-        is_window_closed_ = event.is_window_closed_;
+        window_width_ = event.size_.x;
+        window_height_ = event.size_.y;
+        framebuffer_resized_ = true;
     }
     
     void renderer::draw_frame( const TWE::renderer::graphics_pipeline_data &data )

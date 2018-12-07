@@ -23,122 +23,77 @@
 namespace TWE
 {
     /*!
-     * @brief An event that hold key press information with
-     * the associated key code.
+     * @brief An event struct that holds the data of a key event.
      */
-    struct key_press_event
+    struct key_event
     {
-        keyboard::key key_code_;
-    
-        key_press_event& set_key_code( const keyboard::key key_code )
-        {
-            key_code_ = key_code;
-            return *this;
-        }
-    };
-    /*!
-     * @brief An event that hold key released information with
-     * the associated key code.
-     */
-    struct key_release_event
-    {
-        keyboard::key key_code_;
+        keyboard::key code_;
+        keyboard::key_state state_;
         
-        key_release_event& set_key_code( const keyboard::key key_code )
+        key_event& set_code( const keyboard::key key_code )
         {
-            key_code_ = key_code;
+            code_ = key_code;
+            return *this;
+        }
+        key_event& set_state( const keyboard::key_state key_state )
+        {
+            state_ = key_state;
             return *this;
         }
     };
     
-    /*!
-     * @brief An event that hold mouse button press information
-     * with the associated button code and position.
-     */
-    struct mouse_button_press_event
+    struct mouse_button_event
     {
-        mouse::button button_code_;
-        int32_t x_;
-        int32_t y_;
+        mouse::button code_;
+        mouse::button_state state_;
+        glm::i32vec2 position_;
         
-        mouse_button_press_event& set_button_code( const mouse::button button_code )
+        mouse_button_event& set_code( const mouse::button button_code )
         {
-            button_code_ = button_code;
+            code_ = button_code;
             return *this;
         }
-        mouse_button_press_event& set_position ( const int32_t x, const int32_t y )
+        mouse_button_event& set_state( const mouse::button_state button_state )
         {
-            x_ = x;
-            y_ = y;
+            state_ = button_state;
+            return *this;
+        }
+        mouse_button_event& set_position( const glm::i32vec2& position )
+        {
+            position_ = position;
             return *this;
         }
     };
     
-    /*!
-     * @brief An event that hold mouse button release information
-     * with the associated button code and position.
-     */
-    struct mouse_button_release_event
-    {
-        mouse::button button_code_;
-        int32_t x_;
-        int32_t y_;
-        
-        mouse_button_release_event& set_button_code( const mouse::button button_code )
-        {
-            button_code_ = button_code;
-            return *this;
-        }
-        mouse_button_release_event& set_position ( const int32_t x, const int32_t y )
-        {
-            x_ = x;
-            y_ = y;
-            return *this;
-        }
-    };
-    
-    /*!
-     * @brief An event that hold mouse position information.
-     */
     struct mouse_motion_event
     {
-        int32_t x_;
-        int32_t y_;
+        glm::i32vec2 position_;
         
-        mouse_motion_event& set_position( const int32_t x, const int32_t y )
+        mouse_motion_event& set_position( const glm::i32vec2& position )
         {
-            x_ = x;
-            y_ = y;
+            position_ = position;
             return *this;
         }
     };
 
-    /*!
-     * @brief An event to pass information regarding the window closing.
-     */
     struct window_close_event
     {
-        bool is_window_closed_;
+        bool is_closed_;
 
-        window_close_event& set_bool ( const bool is_closed )
+        window_close_event& set_is_closed ( const bool is_closed )
         {
-            is_window_closed_ = is_closed;
+            is_closed_ = is_closed;
             return *this;
         }
     };
-   
-    /*!
-     * @brief An event to pass information regarding a frame buffer resize.
-     */
+    
     struct framebuffer_resize_event
     {
-        uint32_t x_;
-        uint32_t y_;
+        glm::u32vec2 size_;
         
-        framebuffer_resize_event& set_size( const uint32_t x, const uint32_t y )
+        framebuffer_resize_event& set_size( const glm::u32vec2& size )
         {
-            x_ = x;
-            y_ = y;
+            size_ = size;
             return *this;
         }
     };

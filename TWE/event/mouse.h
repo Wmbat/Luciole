@@ -33,6 +33,13 @@ namespace TWE
     class mouse
     {
     public:
+        enum class button_state : std::int32_t
+        {
+            invalid = -1,
+            pressed = 0,
+            released = 1
+        };
+        
         enum class button : std::int32_t
         {
             invalid = -1,
