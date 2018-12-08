@@ -18,8 +18,8 @@
 #define BASE_WINDOW_H
 
 
-#include "../event/event.h"
-#include "../event/event_dispatcher.h"
+#include "event/event.h"
+#include "event/event_dispatcher.h"
 #include "../TWE_core.h"
 #include "../vulkan_utils.h"
 

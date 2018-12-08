@@ -22,7 +22,7 @@
 
 #include "event.h"
 #include "event_listeners.h"
-#include "../TWE_core.h"
+#include "../../TWE_core.h"
 
 namespace TWE
 {

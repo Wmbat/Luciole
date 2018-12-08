@@ -81,7 +81,7 @@ namespace TWE
     }
     
     
-    renderer::renderer( const base_window* p_wnd, const std::string& app_name, uint32_t app_version )
+    renderer::renderer( base_window* p_wnd, const std::string& app_name, uint32_t app_version )
         :
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() )

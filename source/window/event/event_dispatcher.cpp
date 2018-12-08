@@ -15,10 +15,10 @@
  */
 
 #include <algorithm>
-#include <event/event_dispatcher.h>
+#include <window/event/event_dispatcher.h>
 
 
-#include "event/event_dispatcher.h"
+#include "window/event/event_dispatcher.h"
 #include "log.h"
 
 namespace TWE

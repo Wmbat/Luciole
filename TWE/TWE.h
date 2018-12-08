@@ -19,7 +19,9 @@
 
 #include <memory>
 
-#include "event/event_listeners.h"
+#include "window/event/event.h"
+#include "window/event/event_dispatcher.h"
+#include "window/event/event_listeners.h"
 #include "application.h"
 #include "log.h"
 

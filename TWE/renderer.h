@@ -24,9 +24,10 @@
 #endif
 
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 
 #include "TWE_core.h"
-#include "event/event_listeners.h"
+#include "window/event/event_listeners.h"
 #include "window/base_window.h"
 
 
@@ -42,7 +43,7 @@ namespace TWE
         struct swapchain_support_details_type;
 
     public:
-        TWE_API renderer( const base_window* p_window, const std::string& app_name, uint32_t app_version );
+        TWE_API renderer( base_window* p_window, const std::string& app_name, uint32_t app_version );
         renderer( const renderer& renderer ) noexcept = delete;
         TWE_API renderer( renderer&& renderer ) noexcept;
         TWE_API ~renderer( );

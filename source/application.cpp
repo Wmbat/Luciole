@@ -38,7 +38,5 @@ namespace TWE
 #endif
         
         p_renderer_ = std::make_shared<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
-        p_wnd_->add_framebuffer_resize_listener( p_renderer_ );
-        p_wnd_->add_window_close_listener ( p_renderer_ );
     }
 }
