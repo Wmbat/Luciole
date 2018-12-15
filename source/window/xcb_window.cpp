@@ -197,7 +197,7 @@ namespace TWE
                         const auto event = window_close_event( )
                             .set_is_closed( true );
                         
-                        event_dispatcher::dispatch_window_close_event( event );
+                        window_close_event_.dispatch_event( event );
                     }
                 } break;
                 case XCB_DESTROY_NOTIFY:
@@ -207,7 +207,7 @@ namespace TWE
                     const auto event = window_close_event( )
                         .set_is_closed( true );
     
-                    event_dispatcher::dispatch_window_close_event( event );
+                    window_close_event_.dispatch_event( event );
                 } break;
                 case XCB_CONFIGURE_NOTIFY:
                 {
@@ -225,7 +225,7 @@ namespace TWE
                         const auto event = framebuffer_resize_event( )
                             .set_size( { settings_.width_, settings_.height_ } );
         
-                        event_dispatcher::dispatch_framebuffer_resize_event( event );
+                        frame_buffer_resize_event_.dispatch_event( event );
                     }
                 } break;
                 case XCB_KEY_PRESS:
@@ -236,7 +236,7 @@ namespace TWE
                         .set_code( static_cast<keyboard::key>( xcb_key_press->detail ) )
                         .set_state( keyboard::key_state::pressed );
                     
-                    event_dispatcher::dispatch_key_event( event );
+                    key_event_.dispatch_event( event );
                 } break;
                 case XCB_KEY_RELEASE:
                 {
@@ -246,7 +246,7 @@ namespace TWE
                         .set_code( static_cast<keyboard::key>( xcb_key_release->detail ) )
                         .set_state( keyboard::key_state::released );
                 
-                    event_dispatcher::dispatch_key_event( event );
+                    key_event_.dispatch_event( event );
                 } break;
                 case XCB_BUTTON_PRESS:
                 {
@@ -259,8 +259,8 @@ namespace TWE
                                            static_cast<int32_t>( button_press_event->event_x ),
                                            static_cast<int32_t>( button_press_event->event_y )
                                        } );
-    
-                    event_dispatcher::dispatch_mouse_button_event( event );
+                    
+                    mouse_button_event_.dispatch_event( event );
                 } break;
                 case XCB_BUTTON_RELEASE:
                 {
@@ -274,7 +274,7 @@ namespace TWE
                                            static_cast<int32_t>( button_release_event->event_y )
                                        } );
     
-                    event_dispatcher::dispatch_mouse_button_event( event );
+                    mouse_button_event_.dispatch_event( event );
                 } break;
                 case XCB_MOTION_NOTIFY:
                 {
@@ -286,7 +286,7 @@ namespace TWE
                                            static_cast<int32_t>( cursor_motion->event_y )
                                        } );
     
-                    event_dispatcher::dispatch_mouse_motion_event( event );
+                    mouse_motion_event_.dispatch_event( event );
                 } break;
             }
         

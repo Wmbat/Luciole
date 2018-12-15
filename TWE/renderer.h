@@ -19,21 +19,14 @@
 
 #include <optional>
 
-#ifndef VULKAN_HPP_NO_EXCEPTIONS
-#define VULKAN_HPP_NO_EXCEPTIONS
-#endif
-
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan.h>
-
 #include "TWE_core.h"
-#include "window/event/event_listeners.h"
+#include "vulkan_utils.h"
 #include "window/base_window.h"
 
 
 namespace TWE
 {
-    class renderer : public i_window_close_listener, public i_framebuffer_resize_listener
+    class renderer
     {
     public:
         struct graphics_pipeline_data;
@@ -57,8 +50,8 @@ namespace TWE
         
         void TWE_API record_draw_calls( );
         
-        void TWE_API on_window_close( const window_close_event& event ) override;
-        void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event ) override;
+        void TWE_API on_window_close( const window_close_event& event );
+        void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event );
     
     private:
         void recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data );

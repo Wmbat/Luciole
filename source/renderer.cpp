@@ -86,6 +86,9 @@ namespace TWE
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() )
     {
+        p_wnd->add_window_close_listener( window_close_event_delg( *this, &renderer::on_window_close ) );
+        p_wnd->add_framebuffer_resize_listener( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
+        
         try
         {
             set_up();
@@ -113,13 +116,7 @@ namespace TWE
             VkPhysicalDeviceProperties properties;
             vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
     
-            VkPhysicalDeviceDriverPropertiesKHR driver_properties;
-            VkPhysicalDeviceProperties2 properties_2;
-            properties_2.pNext = &driver_properties;
-    
-            //vkGetPhysicalDeviceProperties2KHR( vk_context_.gpu_, &properties_2 );
-    
-            core_info( "Vulkan -> Physical Device picked: {0} {1]", properties.deviceName, driver_properties.driverName );
+            core_info( "Vulkan -> Physical Device picked: {0}", properties.deviceName );
             
             
             vk_context_.device_ = check_vk_result_value(
@@ -504,9 +501,9 @@ namespace TWE
                 .setSwapchainCount( 1 )
                 .setPSwapchains( &vk_context_.swapchain_ )
                 .setPImageIndices( &image_index );
-
+            
             result = vk_context_.present_queue_.presentKHR( present_info );
-
+            
             try
             {
                 if ( result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR ||
@@ -642,7 +639,6 @@ namespace TWE
         }
         
         vk_context_.instance_extensions_.emplace_back( VK_KHR_SURFACE_EXTENSION_NAME );
-        vk_context_.instance_extensions_.emplace_back( "VK_KHR_get_physical_device_properties2" );
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
         vk_context_.instance_extensions_.emplace_back( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
@@ -652,17 +648,16 @@ namespace TWE
         vk_context_.instance_extensions_.emplace_back( VK_KHR_XCB_SURFACE_EXTENSION_NAME );
 #endif
         
-        vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_standard_validation" );
+        vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_core_validation" );
         
         vk_context_.device_extensions_.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
-        vk_context_.device_extensions_.emplace_back( "VK_KHR_driver_properties" );
         
         if( !check_instance_extension_support( vk_context_.instance_extensions_ ) )
         {
             throw basic_error{ basic_error::error_code::vk_instance_ext_support_error, "Instance extensions requested, but not supporetd" };
         }
         
-        if constexpr ( !enable_debug_layers )
+        if constexpr ( enable_debug_layers )
         {
             if( !check_debug_layer_support( vk_context_.validation_layers_ ) )
             {
@@ -1140,11 +1135,9 @@ namespace TWE
     
     bool renderer::check_debug_layer_support( const std::vector<const char*>& debug_layers ) const noexcept
     {
-        uint32_t count;
-        vkEnumerateInstanceLayerProperties( &count, nullptr );
-        
-        std::vector<VkLayerProperties> available_layers( count );
-        vkEnumerateInstanceLayerProperties( &count, available_layers.data() );
+        std::vector<vk::LayerProperties> available_layers = check_vk_result_value(
+            vk::enumerateInstanceLayerProperties( ),
+            "Failed to retrieve Instance Layer Properties.");
         
         for( const auto& layer : debug_layers )
         {
@@ -1293,7 +1286,7 @@ namespace TWE
                               return present_mode == vk::PresentModeKHR::eMailbox;
                           } );
     
-        if ( iter != available_present_modes.cend( ))
+        if ( iter != available_present_modes.cend( ) )
         {
             return *iter;
         }

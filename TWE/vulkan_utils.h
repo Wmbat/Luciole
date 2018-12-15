@@ -19,10 +19,8 @@
 
 #include <string>
 
-#ifndef VULKAN_HPP_NO_EXCEPTIONS
 #define VULKAN_HPP_NO_EXCEPTIONS
-#endif
-
+#define VULKAN_HPP_ASSERT
 #include <vulkan/vulkan.hpp>
 
 #include "utilities/vk_error.h"

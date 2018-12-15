@@ -19,9 +19,10 @@
 
 #include <memory>
 
-#include "window/event/event.h"
-#include "window/event/event_dispatcher.h"
-#include "window/event/event_listeners.h"
+#define VULKAN_HPP_NO_EXCEPTIONS
+#define VULKAN_HPP_ASSERT
+#include <vulkan/vulkan.hpp>
+
 #include "application.h"
 #include "log.h"
 

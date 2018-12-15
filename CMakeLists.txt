@@ -88,7 +88,6 @@ if( MSVC )
 endif( )
 
 add_library( TWE SHARED
-        source/window/event/event_dispatcher.cpp
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
 		source/window/base_window.cpp

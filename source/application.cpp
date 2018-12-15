@@ -14,8 +14,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <application.h>
-
 #include "application.h"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
