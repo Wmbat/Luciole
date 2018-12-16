@@ -18,6 +18,7 @@
 #include <set>
 #include <map>
 #include <renderer.h>
+#include <vertex.h>
 
 #include "renderer.h"
 #include "log.h"
@@ -86,8 +87,8 @@ namespace TWE
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() )
     {
-        p_wnd->add_window_close_listener( window_close_event_delg( *this, &renderer::on_window_close ) );
-        p_wnd->add_framebuffer_resize_listener( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
+        p_wnd->add_listener( window_close_event_delg( *this, &renderer::on_window_close ) );
+        p_wnd->add_listener( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
         
         try
         {
@@ -358,19 +359,19 @@ namespace TWE
         return *this;
     }
     
-    void renderer::setup_graphics_pipeline( const TWE::renderer::graphics_pipeline_data &data )
+    void renderer::setup_graphics_pipeline( const shader_data_type &data )
     {
         auto vertex_shader = check_vk_result_value(
-            create_shader_module( data.vertex_shader_filepath ),
+            create_shader_module( data.vertex_shader_filepath_ ),
             "create_shader_module( ) -> Vertex Shader" );
     
-        core_info( "Vulkan -> Vertex Shader Module Created from: {}.", data.vertex_shader_filepath );
+        core_info( "Vulkan -> Vertex Shader Module Created from: {}.", data.vertex_shader_filepath_ );
     
         auto fragment_shader = check_vk_result_value(
-            create_shader_module( data.fragment_shader_filepath ),
+            create_shader_module( data.fragment_shader_filepath_ ),
             "create_shader_module( ) -> Fragment Shader" );
     
-        core_info( "Vulkan -> Fragment Shader Module Created from: {}.", data.fragment_shader_filepath );
+        core_info( "Vulkan -> Fragment Shader Module Created from: {}.", data.fragment_shader_filepath_ );
     
         const auto vertex_shader_stage = vk::PipelineShaderStageCreateInfo( )
             .setStage( vk::ShaderStageFlagBits::eVertex )
@@ -384,13 +385,38 @@ namespace TWE
         
         const vk::PipelineShaderStageCreateInfo shader_stages[] = { vertex_shader_stage, fragment_shader_stage };
         
+        const auto binding_description = vk::VertexInputBindingDescription( )
+            .setBinding( 0 )    // vertex buffer
+            .setStride( sizeof( vertex ) )
+            .setInputRate( vk::VertexInputRate::eVertex );
+        
+        const auto position_attrib = vk::VertexInputAttributeDescription( )
+            .setBinding( data.vertex_position_binding_ )
+            .setLocation( data.vertex_position_location_ )
+            .setFormat( vk::Format::eR32G32B32Sfloat )
+            .setOffset( static_cast<uint32_t>( offsetof( vertex, vertex::position_ ) ) );
+        
+        const auto colour_attrib = vk::VertexInputAttributeDescription( )
+            .setBinding( data.vertex_colour_binding_ )
+            .setLocation( data.vertex_colour_location_ )
+            .setFormat( vk::Format::eR32G32B32A32Sfloat )
+            .setOffset( static_cast<uint32_t>( offsetof( vertex, vertex::colour_ ) ) );
+        
+        const vk::VertexInputAttributeDescription vertex_input_attribs[] = { position_attrib, colour_attrib };
+        
+        const auto vertex_input_info = vk::PipelineVertexInputStateCreateInfo( )
+            .setVertexBindingDescriptionCount( 1 )
+            .setPVertexBindingDescriptions( &binding_description )
+            .setVertexAttributeDescriptionCount( 2 )
+            .setPVertexAttributeDescriptions( vertex_input_attribs );
+        
         vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
         
         core_info( "Vulkan -> Graphics Pipeline Layout created." );
         
         vk_context_.graphics_pipeline_ = check_vk_result_value(
-            create_graphics_pipeline( 2, shader_stages ),
+            create_graphics_pipeline( vertex_input_info, 2, shader_stages ),
             "create_graphics_pipeline( )" );
         
         core_info( "Vulkan -> Graphics Pipeline created." );
@@ -446,7 +472,7 @@ namespace TWE
         framebuffer_resized_ = true;
     }
     
-    void renderer::draw_frame( const TWE::renderer::graphics_pipeline_data &data )
+    void renderer::draw_frame( const TWE::renderer::shader_data_type &data )
     {
         if ( !is_window_closed_ )
         {
@@ -526,7 +552,7 @@ namespace TWE
         }
     }
     
-    void renderer::recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data )
+    void renderer::recreate_swapchain( const shader_data_type &data )
     {
         cleanup_swapchain();
         
@@ -1020,11 +1046,11 @@ namespace TWE
         return vk_context_.device_.createPipelineLayout( create_info );
     }
     
-    const vk::ResultValue<vk::Pipeline> renderer::create_graphics_pipeline( std::uint32_t stage_count,
+    const vk::ResultValue<vk::Pipeline> renderer::create_graphics_pipeline(
+        const vk::PipelineVertexInputStateCreateInfo vertex_input_info,
+        std::uint32_t stage_count,
         const vk::PipelineShaderStageCreateInfo* p_stages ) const noexcept
     {
-        const auto vertex_input_state_create_info = vk::PipelineVertexInputStateCreateInfo( );
-        
         const auto input_assembly_state_create_info = vk::PipelineInputAssemblyStateCreateInfo( )
             .setTopology( vk::PrimitiveTopology::eTriangleList )
             .setPrimitiveRestartEnable( VK_FALSE );
@@ -1092,7 +1118,7 @@ namespace TWE
             .setRenderPass( vk_context_.render_pass_ )
             .setStageCount( stage_count )
             .setPStages( p_stages )
-            .setPVertexInputState( &vertex_input_state_create_info )
+            .setPVertexInputState( &vertex_input_info )
             .setPInputAssemblyState( &input_assembly_state_create_info )
             .setPViewportState( &viewport_state_create_info )
             .setPRasterizationState( &rasterization_state_create_info )

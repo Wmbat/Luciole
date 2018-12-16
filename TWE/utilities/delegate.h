@@ -1,6 +1,6 @@
 /*!
  * I, wmbat, did not make this and the code found within deletegates.hpp does not belong
- * to me, here below is a link to the code.
+ * to me, here below is a link to the original code.
  * https://codereview.stackexchange.com/questions/14730/impossibly-fast-delegate-in-c11
  */
 
@@ -47,16 +47,14 @@ namespace TWE
             delegate( )
         { }
         
-        template<class C, typename =
-        typename ::std::enable_if<::std::is_class<C>{ }>::type>
+        template<class C, typename = std::enable_if_t<std::is_class<C>{ }>>
         explicit delegate( C const *const o ) noexcept
             :
             object_ptr_( const_cast<C *>( o ))
         {
         }
         
-        template<class C, typename =
-        typename ::std::enable_if<::std::is_class<C>{ }>::type>
+        template<class C, typename = std::enable_if_t<std::is_class<C>{ }>>
         explicit delegate( C const& o ) noexcept
             :
             object_ptr_( const_cast<C *>( &o ))
@@ -89,10 +87,8 @@ namespace TWE
         
         template<
             typename T,
-            typename = typename ::std::enable_if<
-                !::std::is_same<delegate, typename ::std::decay<T>::type>{ }
-            >::type
-        >
+            typename = std::enable_if_t<!std::is_same<delegate, std::decay_t<T>>{ }>
+            >
         delegate( T&& f )
             :
             store_( operator new( sizeof( typename ::std::decay<T>::type )),
@@ -128,10 +124,8 @@ namespace TWE
         
         template<
             typename T,
-            typename = typename ::std::enable_if<
-                !::std::is_same<delegate, typename ::std::decay<T>::type>{ }
-            >::type
-        >
+            typename = std::enable_if<!std::is_same<delegate, std::decay_t<T>>{ }>
+            >
         delegate& operator=( T&& f )
         {
             using functor_type = typename ::std::decay<T>::type;

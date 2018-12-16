@@ -27,28 +27,52 @@ namespace TWE
     {
     public:
         virtual ~base_window( ) = default;
-        
+    
         virtual void TWE_API poll_events( ) = 0;
     
         bool TWE_API is_open( ) const noexcept;
     
-        virtual vk::ResultValue<vk::SurfaceKHR> TWE_API create_surface( const vk::Instance& instance ) const noexcept = 0;
+        virtual vk::ResultValue<vk::SurfaceKHR> TWE_API
+        create_surface( const vk::Instance& instance ) const noexcept = 0;
     
         uint32_t TWE_API get_width( ) const noexcept;
+    
         uint32_t TWE_API get_height( ) const noexcept;
-        
-        void TWE_API add_key_listener( const key_event_delg& delg );
-        void TWE_API add_mouse_button_listener( const mouse_button_event_delg& delg );
-        void TWE_API add_mouse_motion_listener( const mouse_motion_event_delg& delg );
-        void TWE_API add_window_close_listener( const window_close_event_delg& delg );
-        void TWE_API add_framebuffer_resize_listener( const framebuffer_resize_event_delg& delg );
+    
+        template<class C>
+        std::enable_if_t<std::is_same<C, key_event_delg>{ }, void> add_listener( const C& delg )
+        {
+            key_event_.add_listener( delg );
+        }
+    
+        template<class C>
+        std::enable_if_t<std::is_same<C, mouse_button_event_delg>{ }, void> add_listener( const C& delg )
+        {
+            mouse_button_event_.add_listener( delg );
+        }
+    
+        template<class C>
+        std::enable_if_t<std::is_same<C, mouse_motion_event_delg>{ }, void> add_listener( const C& delg )
+        {
+            mouse_motion_event_.add_listener( delg );
+        }
+    
+        template<class C>
+        std::enable_if_t<std::is_same<C, window_close_event_delg>{ }, void> add_listener( const C& delg )
+        {
+            window_close_event_.add_listener( delg );
+        }
+    
+        template<class C>
+        std::enable_if_t<std::is_same<C, framebuffer_resize_event_delg>{ }, void> add_listener( const C& delg )
+        {
+            frame_buffer_resize_event_.add_listener( delg );
+        }
         
     protected:
         std::string title_;
     
         bool open_ = false;
-        
-        //event_handler event_handler_;
     
         struct settings
         {

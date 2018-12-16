@@ -29,7 +29,7 @@ namespace TWE
     class renderer
     {
     public:
-        struct graphics_pipeline_data;
+        struct shader_data_type;
     
     private:
         struct queue_family_indices_type;
@@ -44,9 +44,9 @@ namespace TWE
         renderer& operator=( const renderer& renderer ) noexcept = delete;
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
-        void TWE_API setup_graphics_pipeline( const graphics_pipeline_data& data );
+        void TWE_API setup_graphics_pipeline( const shader_data_type& data );
 
-        void TWE_API draw_frame( const TWE::renderer::graphics_pipeline_data &data );
+        void TWE_API draw_frame( const shader_data_type &data );
         
         void TWE_API record_draw_calls( );
         
@@ -54,7 +54,7 @@ namespace TWE
         void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event );
     
     private:
-        void recreate_swapchain( const TWE::renderer::graphics_pipeline_data &data );
+        void recreate_swapchain( const shader_data_type &data );
         void cleanup_swapchain( );
         
         void set_up( );
@@ -92,8 +92,12 @@ namespace TWE
     
         const vk::ResultValue<vk::PipelineLayout> create_pipeline_layout( ) const noexcept;
     
-        const vk::ResultValue<vk::Pipeline> create_graphics_pipeline( std::uint32_t stage_count,
+        const vk::ResultValue<vk::Pipeline> create_graphics_pipeline(
+            const vk::PipelineVertexInputStateCreateInfo vertex_input_info,
+            std::uint32_t stage_count,
             const vk::PipelineShaderStageCreateInfo* p_stages ) const noexcept;
+        
+        
     
 
         bool check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept;
@@ -187,10 +191,14 @@ namespace TWE
         };
     
     public:
-        struct graphics_pipeline_data
+        struct shader_data_type
         {
-            const std::string vertex_shader_filepath;
-            const std::string fragment_shader_filepath;
+            const std::string vertex_shader_filepath_;
+            const std::string fragment_shader_filepath_;
+            const std::uint32_t vertex_position_binding_;
+            const std::uint32_t vertex_position_location_;
+            const std::uint32_t vertex_colour_binding_;
+            const std::uint32_t vertex_colour_location_;
         };
     };
 }

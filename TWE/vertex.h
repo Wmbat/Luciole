@@ -13,24 +13,21 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef TWE_VERTEX_H
+#define TWE_VERTEX_H
 
-#include "window/base_window.h"
+#include <glm/glm.hpp>
+
+#include "vulkan_utils.h"
 
 namespace TWE
 {
-    bool base_window::is_open( ) const noexcept
+    struct vertex
     {
-        return open_;
-    }
-    
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
+        glm::vec3 position_;
+        glm::vec4 colour_;
+    };
 }
+
+#endif //TWE_VERTEX_H
