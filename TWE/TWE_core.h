@@ -17,6 +17,8 @@
 #ifndef TWE_CORE_H
 #define TWE_CORE_H
 
+#include <cstdint>
+
 #if defined( TWE_PLATFORM_WINDOWS )
     #if defined( TWE_BUILD_DLL )
         #define TWE_API __declspec( dllexport )
@@ -26,5 +28,15 @@
 #else
     #define TWE_API 
 #endif
+
+
+namespace TWE
+{
+    static constexpr uint32_t kilobyte = 1024;
+    static constexpr uint32_t megabyte = kilobyte * kilobyte;
+    
+    constexpr unsigned long long operator "" _kg( unsigned long long size ) { return size * kilobyte; }
+    constexpr unsigned long long operator "" _mb( unsigned long long size ) { return size * megabyte; }
+}
 
 #endif //TWE_CORE_H

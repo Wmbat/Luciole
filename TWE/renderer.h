@@ -155,11 +155,16 @@ namespace TWE
             
             vk::SurfaceFormatKHR surface_format_;
             
-            vk::SwapchainKHR swapchain_;
-            vk::Extent2D swapchain_extent_;
-            std::vector<vk::Image> swapchain_image_;
-            std::vector<vk::ImageView> swapchain_image_views_;
-            std::vector<vk::Framebuffer> swapchain_framebuffers_ = { };
+            struct swapchain
+            {
+                vk::SwapchainKHR swapchain_;
+                
+                vk::Extent2D extent_;
+                
+                std::vector<vk::Image> image_;
+                std::vector<vk::ImageView> image_views_;
+                std::vector<vk::Framebuffer> framebuffers_;
+            } swapchain_;
             
             vk::RenderPass render_pass_;
     

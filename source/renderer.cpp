@@ -116,6 +116,8 @@ namespace TWE
             /* Get GPU info. */
             VkPhysicalDeviceProperties properties;
             vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
+            
+            const auto mem_properties = vk_context_.gpu_.getMemoryProperties( );
     
             core_info( "Vulkan -> Physical Device picked: {0}", properties.deviceName );
             
@@ -164,7 +166,7 @@ namespace TWE
             const auto extent = choose_swapchain_extent( swapchain_support_details.capabilities_ );
     
             vk_context_.surface_format_ = surface_format;
-            vk_context_.swapchain_extent_ = extent;
+            vk_context_.swapchain_.extent_ = extent;
     
             uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
             if( swapchain_support_details.capabilities_.maxImageCount > 0 &&
@@ -174,21 +176,21 @@ namespace TWE
             }
     
     
-            vk_context_.swapchain_ = check_vk_result_value(
+            vk_context_.swapchain_.swapchain_ = check_vk_result_value(
                 create_swapchain( queue_families, present_mode, swapchain_support_details.capabilities_,
                                   image_count ), "create_swapchain( )" );
             core_info( "Vulkan -> Swapchain created." );
     
-            vk_context_.swapchain_image_ = check_vk_result_value(
-                vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_ ),
+            vk_context_.swapchain_.image_ = check_vk_result_value(
+                vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_ ),
                 "Failed to retrieve swapchain images." );
             core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
     
-            vk_context_.swapchain_image_views_.resize( image_count );
+            vk_context_.swapchain_.image_views_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_image_views_[i] = check_vk_result_value(
-                    create_image_view( vk_context_.swapchain_image_[i] ), "create_image_view( )" );
+                vk_context_.swapchain_.image_views_[i] = check_vk_result_value(
+                    create_image_view( vk_context_.swapchain_.image_[i] ), "create_image_view( )" );
             }
             core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
     
@@ -201,11 +203,11 @@ namespace TWE
                 create_render_pass( ), "create_render_pass( )" );
             core_info( "Vulkan -> Render Pass created." );
     
-            vk_context_.swapchain_framebuffers_.resize( image_count );
+            vk_context_.swapchain_.framebuffers_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_framebuffers_[i] = check_vk_result_value(
-                    create_framebuffer( vk_context_.swapchain_image_views_[i] ), "create_framebuffer( )" );
+                vk_context_.swapchain_.framebuffers_[i] = check_vk_result_value(
+                    create_framebuffer( vk_context_.swapchain_.image_views_[i] ), "create_framebuffer( )" );
             }
             core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
         }
@@ -232,7 +234,7 @@ namespace TWE
         vk_context_.device_.destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
         core_info( "Vulkan -> Pipeline Layout destroyed." );
     
-        for ( auto &framebuffer : vk_context_.swapchain_framebuffers_ )
+        for ( auto &framebuffer : vk_context_.swapchain_.framebuffers_ )
         {
             vkDestroyFramebuffer( vk_context_.device_, framebuffer, nullptr );
         }
@@ -241,13 +243,13 @@ namespace TWE
         vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
         core_info( "Vulkan -> Render Pass destroyed." );
     
-        for ( auto &image_view : vk_context_.swapchain_image_views_ )
+        for ( auto &image_view : vk_context_.swapchain_.image_views_ )
         {
             vk_context_.device_.destroyImageView( image_view );
         }
         core_info( "Vulkan -> Swapchain Image Views destroyed" );
     
-        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_ );
+        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_.swapchain_ );
         core_info( "Vulkan -> Swapchain destroyed." );
     
         if( !vk_context_.command_buffers_.empty() )
@@ -331,19 +333,19 @@ namespace TWE
             vk_context_.surface_format_ = rhs.vk_context_.surface_format_;
             rhs.vk_context_.surface_format_ = { };
     
-            vk_context_.swapchain_ = rhs.vk_context_.swapchain_;
-            rhs.vk_context_.swapchain_ = vk::SwapchainKHR( );
+            vk_context_.swapchain_.swapchain_ = rhs.vk_context_.swapchain_.swapchain_;
+            rhs.vk_context_.swapchain_.swapchain_ = vk::SwapchainKHR( );
     
-            vk_context_.swapchain_image_ = std::move( rhs.vk_context_.swapchain_image_ );
-            vk_context_.swapchain_image_views_ = std::move( rhs.vk_context_.swapchain_image_views_ );
+            vk_context_.swapchain_.image_ = std::move( rhs.vk_context_.swapchain_.image_ );
+            vk_context_.swapchain_.image_views_ = std::move( rhs.vk_context_.swapchain_.image_views_ );
     
-            vk_context_.swapchain_extent_ = rhs.vk_context_.swapchain_extent_;
-            rhs.vk_context_.swapchain_extent_ = vk::Extent2D( );
+            vk_context_.swapchain_.extent_ = rhs.vk_context_.swapchain_.extent_;
+            rhs.vk_context_.swapchain_.extent_ = vk::Extent2D( );
     
             vk_context_.render_pass_ = rhs.vk_context_.render_pass_;
             rhs.vk_context_.render_pass_ = vk::RenderPass( );
     
-            vk_context_.swapchain_framebuffers_ = std::move( rhs.vk_context_.swapchain_framebuffers_ );
+            vk_context_.swapchain_.framebuffers_ = std::move( rhs.vk_context_.swapchain_.framebuffers_ );
     
             vk_context_.graphics_pipeline_layout_ = rhs.vk_context_.graphics_pipeline_layout_;
             rhs.vk_context_.graphics_pipeline_layout_ = vk::PipelineLayout( );
@@ -429,6 +431,18 @@ namespace TWE
     }
     void renderer::record_draw_calls( )
     {
+        const auto viewport = vk::Viewport( )
+            .setX( 0.0f )
+            .setY( 0.0f )
+            .setWidth( static_cast<float>( vk_context_.swapchain_.extent_.width ) )
+            .setHeight( static_cast<float>( vk_context_.swapchain_.extent_.height ) )
+            .setMinDepth( 0.0f )
+            .setMaxDepth( 1.0f );
+    
+        const auto scissors = vk::Rect2D( )
+            .setOffset( { 0, 0 } )
+            .setExtent( vk_context_.swapchain_.extent_ );
+        
         for( auto i = 0; i < vk_context_.command_buffers_.size(); ++i )
         {
             const auto begin_info = vk::CommandBufferBeginInfo( )
@@ -444,11 +458,14 @@ namespace TWE
                 .setColor( clear_value_colour );
             
             const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
-                .setFramebuffer( vk_context_.swapchain_framebuffers_[i] )
+                .setFramebuffer( vk_context_.swapchain_.framebuffers_[i] )
                 .setRenderPass( vk_context_.render_pass_ )
                 .setClearValueCount( 1 )
                 .setPClearValues( &clear_value )
-                .setRenderArea( { { 0, 0 }, vk_context_.swapchain_extent_ } );
+                .setRenderArea( { { 0, 0 }, vk_context_.swapchain_.extent_ } );
+          
+            vk_context_.command_buffers_[i].setViewport( 0, 1, &viewport );
+            vk_context_.command_buffers_[i].setScissor( 0, 1, &scissors );
     
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
     
@@ -479,7 +496,8 @@ namespace TWE
             vk_context_.device_.waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_],
                 VK_TRUE, std::numeric_limits<uint64_t>::max() );
 
-            auto [result, image_index] = vk_context_.device_.acquireNextImageKHR( vk_context_.swapchain_, std::numeric_limits<uint64_t>::max(),
+            auto [result, image_index] = vk_context_.device_.acquireNextImageKHR( vk_context_.swapchain_.swapchain_,
+                std::numeric_limits<uint64_t>::max(),
                 vk_context_.image_available_semaphores_[current_frame_],{} );
             
             try
@@ -525,7 +543,7 @@ namespace TWE
                 .setWaitSemaphoreCount( 1 )
                 .setPWaitSemaphores( &vk_context_.render_finished_semaphores_[current_frame_] )
                 .setSwapchainCount( 1 )
-                .setPSwapchains( &vk_context_.swapchain_ )
+                .setPSwapchains( &vk_context_.swapchain_.swapchain_ )
                 .setPImageIndices( &image_index );
             
             result = vk_context_.present_queue_.presentKHR( present_info );
@@ -563,7 +581,7 @@ namespace TWE
         const auto extent = choose_swapchain_extent( swapchain_support_details.capabilities_ );
     
         vk_context_.surface_format_ = surface_format;
-        vk_context_.swapchain_extent_ = extent;
+        vk_context_.swapchain_.extent_ = extent;
     
         uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
         if( swapchain_support_details.capabilities_.maxImageCount > 0 &&
@@ -573,21 +591,21 @@ namespace TWE
         }
     
     
-        vk_context_.swapchain_ = check_vk_result_value(
+        vk_context_.swapchain_.swapchain_ = check_vk_result_value(
             create_swapchain( queue_family_indices, present_mode, swapchain_support_details.capabilities_,
                               image_count ), "create_swapchain( )" );
         core_info( "Vulkan -> Swapchain created." );
     
-        vk_context_.swapchain_image_ = check_vk_result_value(
-            vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_ ),
+        vk_context_.swapchain_.image_ = check_vk_result_value(
+            vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_ ),
             "Failed to retrieve swapchain images." );
         core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
     
-        vk_context_.swapchain_image_views_.resize( image_count );
+        vk_context_.swapchain_.image_views_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_image_views_[i] = check_vk_result_value(
-                create_image_view( vk_context_.swapchain_image_[i] ), "create_image_view( )" );
+            vk_context_.swapchain_.image_views_[i] = check_vk_result_value(
+                create_image_view( vk_context_.swapchain_.image_[i] ), "create_image_view( )" );
         }
         core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
         
@@ -599,28 +617,21 @@ namespace TWE
             create_render_pass( ), "create_render_pass( )" );
         core_info( "Vulkan -> Render Pass created." );
     
-        vk_context_.swapchain_framebuffers_.resize( image_count );
+        vk_context_.swapchain_.framebuffers_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_framebuffers_[i] = check_vk_result_value(
-                create_framebuffer( vk_context_.swapchain_image_views_[i] ), "create_framebuffer( )" );
+            vk_context_.swapchain_.framebuffers_[i] = check_vk_result_value(
+                create_framebuffer( vk_context_.swapchain_.image_views_[i] ), "create_framebuffer( )" );
         }
         core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
         
-        setup_graphics_pipeline( data );
         record_draw_calls( );
     }
     void renderer::cleanup_swapchain( )
     {
         vk_context_.device_.waitIdle( );
         
-        vk_context_.device_.destroyPipeline( vk_context_.graphics_pipeline_ );
-        core_info( "Vulkan -> Pipeline destroyed." );
-        
-        vk_context_.device_.destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
-        core_info( "Vulkan -> Pipeline Layout destroyed." );
-    
-        for ( auto &framebuffer : vk_context_.swapchain_framebuffers_ )
+        for ( auto &framebuffer : vk_context_.swapchain_.framebuffers_ )
         {
             vk_context_.device_.destroyFramebuffer( framebuffer );
         }
@@ -629,13 +640,13 @@ namespace TWE
         vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
         core_info( "Vulkan -> Render Pass destroyed." );
     
-        for ( auto &image_view : vk_context_.swapchain_image_views_ )
+        for ( auto &image_view : vk_context_.swapchain_.image_views_ )
         {
             vk_context_.device_.destroyImageView( image_view );
         }
         core_info( "Vulkan -> Swapchain Image Views destroyed" );
     
-        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_ );
+        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_.swapchain_ );
         core_info( "Vulkan -> Swapchain destroyed." );
     
     
@@ -911,7 +922,7 @@ namespace TWE
                 .setPresentMode( present_mode )
                 .setImageFormat( vk_context_.surface_format_.format )
                 .setImageColorSpace( vk_context_.surface_format_.colorSpace )
-                .setImageExtent( vk_context_.swapchain_extent_ )
+                .setImageExtent( vk_context_.swapchain_.extent_ )
                 .setImageArrayLayers( 1 )
                 .setImageUsage( vk::ImageUsageFlagBits::eColorAttachment )
                 .setImageSharingMode( vk::SharingMode::eConcurrent )
@@ -921,7 +932,6 @@ namespace TWE
                 .setPreTransform( capabilities.currentTransform )
                 .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
                 .setClipped( VK_TRUE );
-                
             
             return vk_context_.device_.createSwapchainKHR( create_info );
         }
@@ -932,7 +942,7 @@ namespace TWE
                 .setPresentMode( present_mode )
                 .setImageFormat( vk_context_.surface_format_.format )
                 .setImageColorSpace( vk_context_.surface_format_.colorSpace )
-                .setImageExtent( vk_context_.swapchain_extent_ )
+                .setImageExtent( vk_context_.swapchain_.extent_ )
                 .setImageArrayLayers( 1 )
                 .setImageUsage( vk::ImageUsageFlagBits::eColorAttachment )
                 .setImageSharingMode( vk::SharingMode::eExclusive )
@@ -942,7 +952,6 @@ namespace TWE
                 .setPreTransform( capabilities.currentTransform )
                 .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
                 .setClipped( VK_TRUE );
-            
             
             return vk_context_.device_.createSwapchainKHR( create_info );
         }
@@ -979,8 +988,8 @@ namespace TWE
     {
         const auto create_info = vk::FramebufferCreateInfo( )
             .setRenderPass( vk_context_.render_pass_ )
-            .setWidth( vk_context_.swapchain_extent_.width )
-            .setHeight( vk_context_.swapchain_extent_.height )
+            .setWidth( vk_context_.swapchain_.extent_.width )
+            .setHeight( vk_context_.swapchain_.extent_.height )
             .setAttachmentCount( 1 )
             .setPAttachments( &image_view )
             .setLayers( 1 );
@@ -1058,14 +1067,14 @@ namespace TWE
         const auto viewport = vk::Viewport( )
             .setX( 0.0f )
             .setY( 0.0f )
-            .setWidth( static_cast<float>( vk_context_.swapchain_extent_.width ) )
-            .setHeight( static_cast<float>( vk_context_.swapchain_extent_.height ) )
+            .setWidth( static_cast<float>( vk_context_.swapchain_.extent_.width ) )
+            .setHeight( static_cast<float>( vk_context_.swapchain_.extent_.height ) )
             .setMinDepth( 0.0f )
             .setMaxDepth( 1.0f );
         
         const auto scissors = vk::Rect2D( )
             .setOffset( { 0, 0 } )
-            .setExtent( vk_context_.swapchain_extent_ );
+            .setExtent( vk_context_.swapchain_.extent_ );
         
         const auto viewport_state_create_info = vk::PipelineViewportStateCreateInfo( )
             .setViewportCount( 1 )
@@ -1111,7 +1120,11 @@ namespace TWE
             .setPAttachments( &colour_blend_attachment_state )
             .setBlendConstants( { 0.0f, 0.0f, 0.0f, 0.0f } );
         
-        const auto dynamic_state_create_info = vk::PipelineDynamicStateCreateInfo( );
+        const vk::DynamicState dynamic_states[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+        
+        const auto dynamic_state_create_info = vk::PipelineDynamicStateCreateInfo( )
+            .setDynamicStateCount( sizeof( dynamic_states ) / sizeof( dynamic_states[0] ) )
+            .setPDynamicStates( dynamic_states );
         
         const auto create_info = vk::GraphicsPipelineCreateInfo( )
             .setLayout( vk_context_.graphics_pipeline_layout_ )
@@ -1124,6 +1137,7 @@ namespace TWE
             .setPRasterizationState( &rasterization_state_create_info )
             .setPMultisampleState( &multisample_state_create_info )
             .setPColorBlendState( &colour_blend_state_create_info )
+            .setPDynamicState( &dynamic_state_create_info )
             .setBasePipelineIndex( -1 );
         
         return vk_context_.device_.createGraphicsPipeline( { }, create_info );
