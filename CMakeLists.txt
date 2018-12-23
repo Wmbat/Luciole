@@ -26,6 +26,9 @@ endif( )
 
 include_directories( external/include )
 include_directories( external/include/glm )
+include_directories( external/include/SPIRV )
+include_directories( external/include/glslang )
+include_directories( external/include/StandAlone )
 include_directories( external/include/spdlog/include )
 
 find_package( Vulkan )
@@ -113,12 +116,19 @@ if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( TWE
                 ${Vulkan_LIBRARY}
-                ${WAYLAND_CLIENT_LIBRARIES} )
+                ${WAYLAND_CLIENT_LIBRARIES}
+                libglslang.a
+                libSPIRV.a )
     else( )
         target_link_libraries( TWE
                 ${Vulkan_LIBRARY}
-                ${XCB_LIBRARIES} )
+                ${XCB_LIBRARIES}
+                libglslang.a
+                libSPIRV.a )
     endif()
 else()
-    target_link_libraries( TWE ${Vulkan_LIBRARY} )
+    target_link_libraries( TWE
+            ${Vulkan_LIBRARY}
+            libglslang.a
+            libSPIRV.a )
 endif( )

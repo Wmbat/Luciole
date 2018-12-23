@@ -23,7 +23,6 @@
 #include "vulkan_utils.h"
 #include "window/base_window.h"
 
-
 namespace TWE
 {
     class renderer
