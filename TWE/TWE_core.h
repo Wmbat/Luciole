@@ -29,7 +29,6 @@
     #define TWE_API 
 #endif
 
-
 namespace TWE
 {
     static constexpr uint32_t kilobyte = 1024;

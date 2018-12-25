@@ -13,21 +13,29 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef TWE_VERTEX_H
-#define TWE_VERTEX_H
 
-#include <glm/glm.hpp>
+#ifndef TWE_VK_SHADER_MANAGER_H
+#define TWE_VK_SHADER_MANAGER_H
 
-#include "vk_utils.h"
+#include <unordered_map>
+
+#include "vk_shader.h"
 
 namespace TWE
 {
-    struct vertex
+    class vk_shader_manager
     {
-        glm::vec3 position_;
-        glm::vec4 colour_;
+    public:
+        std::uint32_t insert( const vk_shader::create_info& create_info );
+        const vk_shader& acquire( const uint32_t id ) const;
+        
+        void remove_orphans( );
+    
+    private:
+        std::unordered_map<std::uint32_t, vk_shader> shaders_;
+        
+        static std::uint32_t shader_id_count_;
     };
 }
 
-#endif //TWE_VERTEX_H
+#endif //TWE_VK_SHADER_MANAGER_H

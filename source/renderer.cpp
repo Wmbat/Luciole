@@ -19,6 +19,7 @@
 #include <map>
 #include <renderer.h>
 #include <vertex.h>
+#include <vk_shader.h>
 
 #include "renderer.h"
 #include "log.h"
@@ -278,7 +279,8 @@ namespace TWE
             vk_context_.device_.destroySemaphore( semaphore );
         }
         core_info( "Vulkan -> Render Finished Semaphores destroyed." );
-    
+        
+        shader_manager_.remove_orphans();
         
         vk_context_.device_.destroy( );
         core_info( "Vulkan -> Device destroyed." );
@@ -363,29 +365,9 @@ namespace TWE
     
     void renderer::setup_graphics_pipeline( const shader_data_type &data )
     {
-        auto vertex_shader = check_vk_result_value(
-            create_shader_module( data.vertex_shader_filepath_ ),
-            "create_shader_module( ) -> Vertex Shader" );
-    
-        core_info( "Vulkan -> Vertex Shader Module Created from: {}.", data.vertex_shader_filepath_ );
-    
-        auto fragment_shader = check_vk_result_value(
-            create_shader_module( data.fragment_shader_filepath_ ),
-            "create_shader_module( ) -> Fragment Shader" );
-    
-        core_info( "Vulkan -> Fragment Shader Module Created from: {}.", data.fragment_shader_filepath_ );
-    
-        const auto vertex_shader_stage = vk::PipelineShaderStageCreateInfo( )
-            .setStage( vk::ShaderStageFlagBits::eVertex )
-            .setModule( vertex_shader )
-            .setPName( "main" );
-        
-        const auto fragment_shader_stage = vk::PipelineShaderStageCreateInfo( )
-            .setStage( vk::ShaderStageFlagBits::eFragment )
-            .setModule( fragment_shader )
-            .setPName( "main" );
-        
-        const vk::PipelineShaderStageCreateInfo shader_stages[] = { vertex_shader_stage, fragment_shader_stage };
+        const vk::PipelineShaderStageCreateInfo shader_stages[] = {
+            shader_manager_.acquire( data.vert_shader_id_ ).get_shader_stage_create_info(),
+            shader_manager_.acquire( data.frag_shader_id_ ).get_shader_stage_create_info() };
         
         const auto binding_description = vk::VertexInputBindingDescription( )
             .setBinding( 0 )    // vertex buffer
@@ -407,9 +389,9 @@ namespace TWE
         const vk::VertexInputAttributeDescription vertex_input_attribs[] = { position_attrib, colour_attrib };
         
         const auto vertex_input_info = vk::PipelineVertexInputStateCreateInfo( )
-            .setVertexBindingDescriptionCount( 1 )
+            .setVertexBindingDescriptionCount( 0 ) // 1
             .setPVertexBindingDescriptions( &binding_description )
-            .setVertexAttributeDescriptionCount( 2 )
+            .setVertexAttributeDescriptionCount( 0 ) // 2
             .setPVertexAttributeDescriptions( vertex_input_attribs );
         
         vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
@@ -418,16 +400,18 @@ namespace TWE
         core_info( "Vulkan -> Graphics Pipeline Layout created." );
         
         vk_context_.graphics_pipeline_ = check_vk_result_value(
-            create_graphics_pipeline( vertex_input_info, 2, shader_stages ),
+            create_graphics_pipeline(
+                vertex_input_info,
+                sizeof( shader_stages ) / sizeof( shader_stages[0] ),
+                shader_stages ),
             "create_graphics_pipeline( )" );
         
         core_info( "Vulkan -> Graphics Pipeline created." );
-        
-        vk_context_.device_.destroyShaderModule( vertex_shader );
-        vk_context_.device_.destroyShaderModule( fragment_shader );
-        
-        core_info( "Vulkan -> Vertex Shader Module Destroyed." );
-        core_info( "Vulkan -> Fragment Shader Module Destroyed." );
+    }
+    std::uint32_t renderer::create_shader( const std::string& filepath, const std::string& entry_point,
+        const vk::ShaderStageFlagBits& flags )
+    {
+        return shader_manager_.insert( { &vk_context_.device_, flags, filepath, entry_point } );
     }
     void renderer::record_draw_calls( )
     {
@@ -489,7 +473,7 @@ namespace TWE
         framebuffer_resized_ = true;
     }
     
-    void renderer::draw_frame( const TWE::renderer::shader_data_type &data )
+    void renderer::draw_frame( )
     {
         if ( !is_window_closed_ )
         {
@@ -504,7 +488,7 @@ namespace TWE
             {
                 if ( result == vk::Result::eErrorOutOfDateKHR )
                 {
-                    recreate_swapchain ( data );
+                    recreate_swapchain ( );
                 }
                 else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
                 {
@@ -554,7 +538,7 @@ namespace TWE
                     framebuffer_resized_ )
                 {
                     framebuffer_resized_ = false;
-                    recreate_swapchain ( data );
+                    recreate_swapchain ( );
                 }
                 else if ( result != vk::Result::eSuccess )
                 {
@@ -570,7 +554,7 @@ namespace TWE
         }
     }
     
-    void renderer::recreate_swapchain( const shader_data_type &data )
+    void renderer::recreate_swapchain( )
     {
         cleanup_swapchain();
         

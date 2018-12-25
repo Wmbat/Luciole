@@ -13,21 +13,19 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef TWE_VERTEX_H
-#define TWE_VERTEX_H
 
-#include <glm/glm.hpp>
+#include <vk_pipeline_manager.h>
 
-#include "vk_utils.h"
+#include "vk_pipeline_manager.h"
+
+#include "utilities/file_io.h"
 
 namespace TWE
 {
-    struct vertex
+    uint32_t vk_pipeline_manager::create_pipeline( const vk_pipeline_manager::pipeline_create_info& create_info )
     {
-        glm::vec3 position_;
-        glm::vec4 colour_;
-    };
+        const auto id = ++pipeline_id_count_;
+        
+        return 0;
+    }
 }
-
-#endif //TWE_VERTEX_H

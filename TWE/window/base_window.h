@@ -19,7 +19,7 @@
 
 #include "../event.h"
 #include "../TWE_core.h"
-#include "../vulkan_utils.h"
+#include "../vk_utils.h"
 
 namespace TWE
 {

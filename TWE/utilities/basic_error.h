@@ -62,7 +62,8 @@ namespace TWE
             vk_version_error = -2,
             vk_not_supported_error = -3,
             vk_instance_ext_support_error = -4,
-            vk_validation_layer_support_error = -5
+            vk_validation_layer_support_error = -5,
+            vk_shader_not_present = -6
         };
         
     public:

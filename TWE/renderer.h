@@ -20,7 +20,8 @@
 #include <optional>
 
 #include "TWE_core.h"
-#include "vulkan_utils.h"
+#include "vk_utils.h"
+#include "vk_shader_manager.h"
 #include "window/base_window.h"
 
 namespace TWE
@@ -44,8 +45,10 @@ namespace TWE
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
         void TWE_API setup_graphics_pipeline( const shader_data_type& data );
+        std::uint32_t TWE_API create_shader( const std::string& filepath, const std::string& entry_point,
+            const vk::ShaderStageFlagBits& flags );
 
-        void TWE_API draw_frame( const shader_data_type &data );
+        void TWE_API draw_frame( );
         
         void TWE_API record_draw_calls( );
         
@@ -53,7 +56,7 @@ namespace TWE
         void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event );
     
     private:
-        void recreate_swapchain( const shader_data_type &data );
+        void recreate_swapchain( );
         void cleanup_swapchain( );
         
         void set_up( );
@@ -175,6 +178,8 @@ namespace TWE
             std::vector<const char*> validation_layers_;
         } vk_context_;
         
+        vk_shader_manager shader_manager_;
+        
     private:
         struct queue_family_indices_type
         {
@@ -197,8 +202,8 @@ namespace TWE
     public:
         struct shader_data_type
         {
-            const std::string vertex_shader_filepath_;
-            const std::string fragment_shader_filepath_;
+            const uint32_t vert_shader_id_;
+            const uint32_t frag_shader_id_;
             const std::uint32_t vertex_position_binding_;
             const std::uint32_t vertex_position_location_;
             const std::uint32_t vertex_colour_binding_;
