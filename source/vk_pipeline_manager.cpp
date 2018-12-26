@@ -14,7 +14,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vk_pipeline_manager.h>
+#include <nlohmann/json.hpp>
 
 #include "vk_pipeline_manager.h"
 
@@ -22,7 +22,9 @@
 
 namespace TWE
 {
-    uint32_t vk_pipeline_manager::create_pipeline( const vk_pipeline_manager::pipeline_create_info& create_info )
+    vk_pipeline::id vk_pipeline_manager::pipeline_id_count_;
+    
+    vk_pipeline::id vk_pipeline_manager::create_pipeline( const vk_pipeline::create_info& create_info )
     {
         const auto id = ++pipeline_id_count_;
         

@@ -96,72 +96,83 @@ namespace TWE
             set_up();
             
             core_info( "Using Vulkan for rendering." );
-            
-            vk_context_.instance_ = check_vk_result_value(
-                create_instance( app_name, app_version ), "create_instance( )" );
-            core_info( "Vulkan -> Instance created." );
     
+            {
+                auto res = create_instance( app_name, app_version );
+        
+                check_vk_result( res.result, "create_instance( )" );
+        
+                vk_context_.instance_.swap( res.value );
+            }
             if constexpr( enable_debug_layers )
             {
                 vk_context_.debug_report_ = check_vk_result_value(
                     create_debug_report( ), "create_debug_report( )" );
-                core_info( "Vulkan -> Debug Report Callback created." );
+            }
+            {
+                auto res = create_surface( p_wnd );
+                check_vk_result( res.result, "create_surface( )" );
+                
+                vk_context_.surface_.swap( res.value );
+            }
+            {
+                vk_context_.gpu_ = pick_physical_device( );
+        
+                /* Get GPU info. */
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
+        
+                const auto mem_properties = vk_context_.gpu_.getMemoryProperties( );
+        
+                core_info( "Vulkan -> Physical Device picked: {0}", properties.deviceName );
             }
             
-            vk_context_.surface_ = check_vk_result_value(
-                create_surface( p_wnd ), "create_surface( )" );
-            core_info( "Vulkan -> Surface created." );
-    
-            vk_context_.gpu_ = pick_physical_device( );
-            
-            /* Get GPU info. */
-            VkPhysicalDeviceProperties properties;
-            vkGetPhysicalDeviceProperties( vk_context_.gpu_, &properties );
-            
-            const auto mem_properties = vk_context_.gpu_.getMemoryProperties( );
-    
-            core_info( "Vulkan -> Physical Device picked: {0}", properties.deviceName );
-            
-            
-            vk_context_.device_ = check_vk_result_value(
-                create_device( ), "create_device( )" );
-            core_info( "Vulkan -> Device created." );
+            {
+                auto res = create_device( );
+                check_vk_result( res.result, "create_device( )" );
+                
+                vk_context_.device_.swap( res.value );
+            }
     
             /* Get the graphics queue and the present queue. */
-            const auto queue_families = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
-            vk_context_.graphics_queue_ = vk_context_.device_.getQueue( queue_families.graphic_family_.value(), 0 );
-            vk_context_.present_queue_ = vk_context_.device_.getQueue( queue_families.present_family_.value(), 0 );
-            
-            core_info( "Vulkan -> Physical Device Graphics Queue. ID: {0:d}.", queue_families.graphic_family_.value() );
-            core_info( "Vulkan -> Physical Device Present Queue. ID: {0:d}.", queue_families.present_family_.value() );
+            const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
+            vk_context_.graphics_queue_ = vk_context_.device_->getQueue( queue_families.graphic_family_.value(), 0 );
+            vk_context_.present_queue_ = vk_context_.device_->getQueue( queue_families.present_family_.value(), 0 );
     
             vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& semaphore : vk_context_.image_available_semaphores_ )
             {
-                semaphore = check_vk_result_value( create_semaphore(), "create_semaphore( )" );
+                auto res = create_semaphore();
+                check_vk_result( res.result, "create_semaphore( )" );
+                
+                semaphore.swap( res.value );
             }
-            core_info( "Vulkan -> Image Available Semaphores created" );
 
             vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& semaphore : vk_context_.render_finished_semaphores_ )
             {
-                semaphore = check_vk_result_value( create_semaphore(), "create_semaphore( )" );
+                auto res = create_semaphore();
+                check_vk_result( res.result, "create_semaphore( )" );
+    
+                semaphore.swap( res.value );
             }
-            core_info( "Vulkan -> Render Finished Semaphore." );
             
             vk_context_.in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
             for( auto& fence : vk_context_.in_flight_fences_ )
             {
-                fence = check_vk_result_value( create_fence(), "create_fence( )" );
+                auto res = create_fence();
+                check_vk_result( res.result, "create_fence( )" );
+                
+                fence.swap( res.value );
             }
-            core_info( "Vulkan -> In flight fences created." );
-            
-            vk_context_.command_pool_ = check_vk_result_value(
-                create_command_pool( queue_families.graphic_family_.value() ),
-                "create_command_pool( )" );
-            core_info( "Vulkan -> Command Pool created" );
+            {
+                auto res = create_command_pool( queue_families.graphic_family_.value() );
+                check_vk_result( res.result, "create_command_pool( )" );
+                
+                vk_context_.command_pool_.swap( res.value );
+            }
     
-            const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_, vk_context_.gpu_ );
+            const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_.get(), vk_context_.gpu_ );
             const auto present_mode = choose_swapchain_present_mode( swapchain_support_details.present_modes_ );
             const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
             const auto extent = choose_swapchain_extent( swapchain_support_details.capabilities_ );
@@ -175,42 +186,47 @@ namespace TWE
             {
                 image_count = swapchain_support_details.capabilities_.maxImageCount;
             }
-    
-    
-            vk_context_.swapchain_.swapchain_ = check_vk_result_value(
-                create_swapchain( queue_families, present_mode, swapchain_support_details.capabilities_,
-                                  image_count ), "create_swapchain( )" );
-            core_info( "Vulkan -> Swapchain created." );
+            
+            {
+                auto res = create_swapchain(
+                    queue_families, present_mode,
+                    swapchain_support_details.capabilities_, image_count );
+                check_vk_result( res.result, "create_swapchain( )" );
+        
+                vk_context_.swapchain_.swapchain_.swap( res.value );
+            }
     
             vk_context_.swapchain_.image_ = check_vk_result_value(
-                vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_ ),
+                vk_context_.device_->getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_.get() ),
                 "Failed to retrieve swapchain images." );
-            core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
-    
+            
             vk_context_.swapchain_.image_views_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_.image_views_[i] = check_vk_result_value(
-                    create_image_view( vk_context_.swapchain_.image_[i] ), "create_image_view( )" );
+                auto res = create_image_view( vk_context_.swapchain_.image_[i] );
+                check_vk_result( res.result, "create_image_view( )" );
+                
+                vk_context_.swapchain_.image_views_[i].swap( res.value );
             }
-            core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
-    
     
             vk_context_.command_buffers_ = check_vk_result_value(
                 create_command_buffers( image_count ), "create_command_buffers( )" );
-            core_info( "Vulkan -> Command Buffers created. Count: {0:d}.", image_count );
             
-            vk_context_.render_pass_ = check_vk_result_value(
-                create_render_pass( ), "create_render_pass( )" );
-            core_info( "Vulkan -> Render Pass created." );
+            {
+                auto res = create_render_pass( );
+                check_vk_result( res.result, "create_render_pass( )" );
+                
+                vk_context_.render_pass_.swap( res.value );
+            }
     
             vk_context_.swapchain_.framebuffers_.resize( image_count );
             for( auto i = 0; i < image_count; ++i )
             {
-                vk_context_.swapchain_.framebuffers_[i] = check_vk_result_value(
-                    create_framebuffer( vk_context_.swapchain_.image_views_[i] ), "create_framebuffer( )" );
+                auto res = create_framebuffer( vk_context_.swapchain_.image_views_[i].get() );
+                check_vk_result( res.result, "create_framebuffer( )" );
+                
+                vk_context_.swapchain_.framebuffers_[i].swap( res.value );
             }
-            core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
         }
         catch( const basic_error& e )
         {
@@ -227,125 +243,67 @@ namespace TWE
     }
     renderer::~renderer( )
     {
-        vkDeviceWaitIdle( vk_context_.device_ );
+        vk_context_.device_->waitIdle( );
     
-        vk_context_.device_.destroyPipeline( vk_context_.graphics_pipeline_ );
-        core_info( "Vulkan -> Pipeline destroyed." );
+        vk_context_.device_->destroyPipeline( vk_context_.graphics_pipeline_ );
     
-        vk_context_.device_.destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
-        core_info( "Vulkan -> Pipeline Layout destroyed." );
-    
-        for ( auto &framebuffer : vk_context_.swapchain_.framebuffers_ )
-        {
-            vkDestroyFramebuffer( vk_context_.device_, framebuffer, nullptr );
-        }
-        core_info( "Vulkan -> Swapchain Framebuffer destroyed." );
-    
-        vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
-        core_info( "Vulkan -> Render Pass destroyed." );
-    
-        for ( auto &image_view : vk_context_.swapchain_.image_views_ )
-        {
-            vk_context_.device_.destroyImageView( image_view );
-        }
-        core_info( "Vulkan -> Swapchain Image Views destroyed" );
-    
-        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_.swapchain_ );
-        core_info( "Vulkan -> Swapchain destroyed." );
+        vk_context_.device_->destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
     
         if( !vk_context_.command_buffers_.empty() )
         {
-            vk_context_.device_.freeCommandBuffers( vk_context_.command_pool_, vk_context_.command_buffers_ );
-            core_info( "Vulkan -> Command Buffers freed." );
+            vk_context_.device_->freeCommandBuffers( vk_context_.command_pool_.get(), vk_context_.command_buffers_ );
         }
-        
-        vk_context_.device_.destroyCommandPool( vk_context_.command_pool_ );
-        core_info( "Vulkan -> Command Pool destroyed." );
-        
-        for( auto& fence : vk_context_.in_flight_fences_ )
-        {
-            vk_context_.device_.destroyFence( fence );
-        }
-        core_info( "Vulkan -> In flight fences destroyed." );
-        
-        for( auto& semaphore : vk_context_.image_available_semaphores_ )
-        {
-            vk_context_.device_.destroySemaphore( semaphore );
-        }
-        core_info( "Vulkan -> Image Available Semaphores destroyed." );
-        
-        for( auto& semaphore : vk_context_.render_finished_semaphores_ )
-        {
-            vk_context_.device_.destroySemaphore( semaphore );
-        }
-        core_info( "Vulkan -> Render Finished Semaphores destroyed." );
-        
-        shader_manager_.remove_orphans();
-        
-        vk_context_.device_.destroy( );
-        core_info( "Vulkan -> Device destroyed." );
     
         if constexpr ( enable_debug_layers )
         {
-            vk_destroy_debug_report_callback( vk_context_.instance_, vk_context_.debug_report_, nullptr );
-            core_info( "Vulkan -> Debug Report Callback destroyed." );
+            vk_destroy_debug_report_callback( vk_context_.instance_.get(), vk_context_.debug_report_, nullptr );
         }
-    
-        vk_context_.instance_.destroy( );
-        core_info( "Vulkan -> Instance destroyed." );
     }
     
     renderer& renderer::operator=( renderer&& rhs ) noexcept
     {
         if( this != &rhs )
         {
-            vk_context_.instance_ = rhs.vk_context_.instance_;
-            rhs.vk_context_.instance_ = vk::Instance( );
+            vk_context_.instance_ = std::move( rhs.vk_context_.instance_ );
         
             if constexpr( enable_debug_layers )
             {
                 vk_context_.debug_report_ = rhs.vk_context_.debug_report_;
-                rhs.vk_context_.debug_report_ = vk::DebugReportCallbackEXT( );
+                rhs.vk_context_.debug_report_ = vk::DebugReportCallbackEXT( nullptr );
             }
     
-            vk_context_.surface_ = rhs.vk_context_.surface_;
-            rhs.vk_context_.surface_ = vk::SurfaceKHR( );
+            vk_context_.surface_ = std::move( rhs.vk_context_.surface_ );
     
             vk_context_.gpu_ = rhs.vk_context_.gpu_;
-            rhs.vk_context_.gpu_ = vk::PhysicalDevice( );
+            rhs.vk_context_.gpu_ = vk::PhysicalDevice( nullptr );
     
-            vk_context_.device_ = rhs.vk_context_.device_;
-            rhs.vk_context_.device_ = vk::Device( );
+            vk_context_.device_ = std::move( rhs.vk_context_.device_ );
     
             vk_context_.graphics_queue_ = rhs.vk_context_.graphics_queue_;
-            rhs.vk_context_.graphics_queue_ = vk::Queue( );
+            rhs.vk_context_.graphics_queue_ = vk::Queue( nullptr );
     
             vk_context_.present_queue_ = rhs.vk_context_.present_queue_;
-            rhs.vk_context_.present_queue_ = vk::Queue( );
+            rhs.vk_context_.present_queue_ = vk::Queue( nullptr );
             
             vk_context_.image_available_semaphores_ = std::move( rhs.vk_context_.image_available_semaphores_ );
             vk_context_.render_finished_semaphores_ = std::move( rhs.vk_context_.render_finished_semaphores_ );
             vk_context_.in_flight_fences_ = std::move( rhs.vk_context_.in_flight_fences_ );
     
-            vk_context_.command_pool_ = rhs.vk_context_.command_pool_;
-            rhs.vk_context_.command_pool_ = vk::CommandPool( );
+            vk_context_.command_pool_ = std::move( rhs.vk_context_.command_pool_ );
     
             vk_context_.command_buffers_ = std::move( rhs.vk_context_.command_buffers_ );
             
             vk_context_.surface_format_ = rhs.vk_context_.surface_format_;
             rhs.vk_context_.surface_format_ = { };
     
-            vk_context_.swapchain_.swapchain_ = rhs.vk_context_.swapchain_.swapchain_;
-            rhs.vk_context_.swapchain_.swapchain_ = vk::SwapchainKHR( );
-    
+            vk_context_.swapchain_.swapchain_ = std::move( rhs.vk_context_.swapchain_.swapchain_ );
             vk_context_.swapchain_.image_ = std::move( rhs.vk_context_.swapchain_.image_ );
             vk_context_.swapchain_.image_views_ = std::move( rhs.vk_context_.swapchain_.image_views_ );
     
             vk_context_.swapchain_.extent_ = rhs.vk_context_.swapchain_.extent_;
             rhs.vk_context_.swapchain_.extent_ = vk::Extent2D( );
     
-            vk_context_.render_pass_ = rhs.vk_context_.render_pass_;
-            rhs.vk_context_.render_pass_ = vk::RenderPass( );
+            vk_context_.render_pass_ = std::move( rhs.vk_context_.render_pass_ );
     
             vk_context_.swapchain_.framebuffers_ = std::move( rhs.vk_context_.swapchain_.framebuffers_ );
     
@@ -366,8 +324,8 @@ namespace TWE
     void renderer::setup_graphics_pipeline( const shader_data_type &data )
     {
         const vk::PipelineShaderStageCreateInfo shader_stages[] = {
-            shader_manager_.acquire( data.vert_shader_id_ ).get_shader_stage_create_info(),
-            shader_manager_.acquire( data.frag_shader_id_ ).get_shader_stage_create_info() };
+            shader_manager_.acquire( data.vert_shader_id_ )->get_shader_stage_create_info(),
+            shader_manager_.acquire( data.frag_shader_id_ )->get_shader_stage_create_info() };
         
         const auto binding_description = vk::VertexInputBindingDescription( )
             .setBinding( 0 )    // vertex buffer
@@ -397,21 +355,17 @@ namespace TWE
         vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
         
-        core_info( "Vulkan -> Graphics Pipeline Layout created." );
-        
         vk_context_.graphics_pipeline_ = check_vk_result_value(
             create_graphics_pipeline(
                 vertex_input_info,
                 sizeof( shader_stages ) / sizeof( shader_stages[0] ),
                 shader_stages ),
             "create_graphics_pipeline( )" );
-        
-        core_info( "Vulkan -> Graphics Pipeline created." );
     }
     std::uint32_t renderer::create_shader( const std::string& filepath, const std::string& entry_point,
-        const vk::ShaderStageFlagBits& flags )
+        const vk_shader::type& flags )
     {
-        return shader_manager_.insert( { &vk_context_.device_, flags, filepath, entry_point } );
+        return shader_manager_.insert( { &vk_context_.device_.get(), flags, filepath, entry_point } );
     }
     void renderer::record_draw_calls( )
     {
@@ -432,7 +386,7 @@ namespace TWE
             const auto begin_info = vk::CommandBufferBeginInfo( )
                 .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
             
-            check_vk_value( vk_context_.command_buffers_[i].begin( begin_info ),
+            check_vk_result( vk_context_.command_buffers_[i].begin( begin_info ),
                 "Failed to begin recording Command buffer." );
             
             const auto clear_value_colour = vk::ClearColorValue( )
@@ -442,8 +396,8 @@ namespace TWE
                 .setColor( clear_value_colour );
             
             const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
-                .setFramebuffer( vk_context_.swapchain_.framebuffers_[i] )
-                .setRenderPass( vk_context_.render_pass_ )
+                .setFramebuffer( vk_context_.swapchain_.framebuffers_[i].get() )
+                .setRenderPass( vk_context_.render_pass_.get() )
                 .setClearValueCount( 1 )
                 .setPClearValues( &clear_value )
                 .setRenderArea( { { 0, 0 }, vk_context_.swapchain_.extent_ } );
@@ -459,7 +413,7 @@ namespace TWE
     
             vk_context_.command_buffers_[i].endRenderPass( );
             
-            check_vk_value( vk_context_.command_buffers_[i].end( ), "Failed to record Command Buffer" );
+            check_vk_result( vk_context_.command_buffers_[i].end( ), "Failed to record Command Buffer" );
         }
     }
     void renderer::on_window_close ( const window_close_event& event )
@@ -477,12 +431,13 @@ namespace TWE
     {
         if ( !is_window_closed_ )
         {
-            vk_context_.device_.waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_],
+            vk_context_.device_->waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_].get(),
                 VK_TRUE, std::numeric_limits<uint64_t>::max() );
 
-            auto [result, image_index] = vk_context_.device_.acquireNextImageKHR( vk_context_.swapchain_.swapchain_,
+            auto [result, image_index] = vk_context_.device_->acquireNextImageKHR(
+                vk_context_.swapchain_.swapchain_.get(),
                 std::numeric_limits<uint64_t>::max(),
-                vk_context_.image_available_semaphores_[current_frame_],{} );
+                vk_context_.image_available_semaphores_[current_frame_].get(), {} );
             
             try
             {
@@ -504,18 +459,18 @@ namespace TWE
             const auto submit_info = vk::SubmitInfo( )
                 .setPWaitDstStageMask( wait_stages )
                 .setWaitSemaphoreCount( 1 )
-                .setPWaitSemaphores( &vk_context_.image_available_semaphores_[current_frame_] )
+                .setPWaitSemaphores( &vk_context_.image_available_semaphores_[current_frame_].get() )
                 .setSignalSemaphoreCount( 1 )
-                .setPSignalSemaphores( &vk_context_.render_finished_semaphores_[current_frame_] )
+                .setPSignalSemaphores( &vk_context_.render_finished_semaphores_[current_frame_].get() )
                 .setCommandBufferCount( 1 )
                 .setPCommandBuffers( &vk_context_.command_buffers_[image_index] );
 
-            vk_context_.device_.resetFences( 1, &vk_context_.in_flight_fences_[current_frame_] );
+            vk_context_.device_->resetFences( 1, &vk_context_.in_flight_fences_[current_frame_].get() );
 
             try
             {
-                check_vk_value ( vk_context_.graphics_queue_.submit( 1, &submit_info,
-                        vk_context_.in_flight_fences_[current_frame_] ),
+                check_vk_result( vk_context_.graphics_queue_.submit( 1, &submit_info,
+                        vk_context_.in_flight_fences_[current_frame_].get() ),
                     "Failed to submit draw command buffer!" );
             }
             catch ( const vk_error& e )
@@ -525,9 +480,9 @@ namespace TWE
 
             const auto present_info = vk::PresentInfoKHR( )
                 .setWaitSemaphoreCount( 1 )
-                .setPWaitSemaphores( &vk_context_.render_finished_semaphores_[current_frame_] )
+                .setPWaitSemaphores( &vk_context_.render_finished_semaphores_[current_frame_].get() )
                 .setSwapchainCount( 1 )
-                .setPSwapchains( &vk_context_.swapchain_.swapchain_ )
+                .setPSwapchains( &vk_context_.swapchain_.swapchain_.get() )
                 .setPImageIndices( &image_index );
             
             result = vk_context_.present_queue_.presentKHR( present_info );
@@ -558,8 +513,8 @@ namespace TWE
     {
         cleanup_swapchain();
         
-        const auto queue_family_indices = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
-        const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_, vk_context_.gpu_ );
+        const auto queue_family_indices = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
+        const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_.get(), vk_context_.gpu_ );
         const auto present_mode = choose_swapchain_present_mode( swapchain_support_details.present_modes_ );
         const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
         const auto extent = choose_swapchain_extent( swapchain_support_details.capabilities_ );
@@ -574,70 +529,78 @@ namespace TWE
             image_count = swapchain_support_details.capabilities_.maxImageCount;
         }
     
-    
-        vk_context_.swapchain_.swapchain_ = check_vk_result_value(
-            create_swapchain( queue_family_indices, present_mode, swapchain_support_details.capabilities_,
-                              image_count ), "create_swapchain( )" );
-        core_info( "Vulkan -> Swapchain created." );
-    
+        {
+            auto res = create_swapchain(
+                queue_family_indices, present_mode,
+                swapchain_support_details.capabilities_, image_count );
+            check_vk_result( res.result, "create_swapchain( )" );
+            
+            vk_context_.swapchain_.swapchain_.swap( res.value );
+        }
+        
         vk_context_.swapchain_.image_ = check_vk_result_value(
-            vk_context_.device_.getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_ ),
+            vk_context_.device_->getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_.get() ),
             "Failed to retrieve swapchain images." );
-        core_info( "Vulkan -> Swapchain Images created. Count: {0:d}.", image_count );
     
         vk_context_.swapchain_.image_views_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_.image_views_[i] = check_vk_result_value(
-                create_image_view( vk_context_.swapchain_.image_[i] ), "create_image_view( )" );
+            auto res = create_image_view( vk_context_.swapchain_.image_[i] );
+            check_vk_result( res.result, "create_image_view( )" );
+        
+            vk_context_.swapchain_.image_views_[i].swap( res.value );
         }
-        core_info( "Vulkan -> Swapchain Image Views created. Count: {0:d}.", image_count );
         
         vk_context_.command_buffers_ = check_vk_result_value(
             create_command_buffers( image_count ), "create_command_buffers( )" );
-        core_info( "Vulkan -> Command Buffers created. Count: {0:d}.", image_count );
     
-        vk_context_.render_pass_ = check_vk_result_value(
-            create_render_pass( ), "create_render_pass( )" );
-        core_info( "Vulkan -> Render Pass created." );
+        {
+            auto res = create_render_pass( );
+            check_vk_result( res.result, "create_render_pass( )" );
+        
+            vk_context_.render_pass_.swap( res.value );
+        }
     
         vk_context_.swapchain_.framebuffers_.resize( image_count );
         for( auto i = 0; i < image_count; ++i )
         {
-            vk_context_.swapchain_.framebuffers_[i] = check_vk_result_value(
-                create_framebuffer( vk_context_.swapchain_.image_views_[i] ), "create_framebuffer( )" );
+            auto res = create_framebuffer( vk_context_.swapchain_.image_views_[i].get() );
+            check_vk_result( res.result, "create_framebuffer( )" );
+        
+            vk_context_.swapchain_.framebuffers_[i].swap( res.value );
         }
-        core_info( "Vulkan -> Swapchain Framebuffers created. Count: {0:d}.", image_count );
         
         record_draw_calls( );
     }
     void renderer::cleanup_swapchain( )
     {
-        vk_context_.device_.waitIdle( );
+        vk_context_.device_->waitIdle( );
         
         for ( auto &framebuffer : vk_context_.swapchain_.framebuffers_ )
         {
-            vk_context_.device_.destroyFramebuffer( framebuffer );
+            auto p = framebuffer.release();
+            
+            vk_context_.device_->destroyFramebuffer( p );
         }
-        core_info( "Vulkan -> Swapchain Framebuffer destroyed." );
-    
-        vk_context_.device_.destroyRenderPass( vk_context_.render_pass_ );
-        core_info( "Vulkan -> Render Pass destroyed." );
-    
+        {
+            auto p = vk_context_.render_pass_.release();
+            
+            vk_context_.device_->destroyRenderPass( p );
+        }
         for ( auto &image_view : vk_context_.swapchain_.image_views_ )
         {
-            vk_context_.device_.destroyImageView( image_view );
+            auto p = image_view.release();
+            
+            vk_context_.device_->destroyImageView( p );
         }
-        core_info( "Vulkan -> Swapchain Image Views destroyed" );
-    
-        vk_context_.device_.destroySwapchainKHR( vk_context_.swapchain_.swapchain_ );
-        core_info( "Vulkan -> Swapchain destroyed." );
-    
-    
+        {
+            auto p = vk_context_.swapchain_.swapchain_.release();
+            
+            vk_context_.device_->destroySwapchainKHR( p );
+        }
         if( !vk_context_.command_buffers_.empty() )
         {
-            vk_context_.device_.freeCommandBuffers( vk_context_.command_pool_, vk_context_.command_buffers_ );
-            core_info( "Vulkan -> Command Buffers freed." );
+            vk_context_.device_->freeCommandBuffers( vk_context_.command_pool_.get(), vk_context_.command_buffers_ );
         }
     }
     
@@ -687,7 +650,7 @@ namespace TWE
         }
     }
     
-    const vk::ResultValue<vk::Instance> renderer::create_instance( const std::string& app_name,
+    const vk::ResultValue<vk::UniqueInstance> renderer::create_instance( const std::string& app_name,
         uint32_t app_version ) const noexcept
     {
         const auto app_info = vk::ApplicationInfo( )
@@ -706,7 +669,7 @@ namespace TWE
                 .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size() ) )
                 .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
                 
-            return vk::createInstance( create_info );
+            return vk::createInstanceUnique( create_info );
         }
         else
         {
@@ -717,7 +680,7 @@ namespace TWE
                 .setEnabledLayerCount( 0 )
                 .setPpEnabledLayerNames( nullptr );
     
-            return vk::createInstance( create_info );
+            return vk::createInstanceUnique( create_info );
         }
     }
     
@@ -726,26 +689,26 @@ namespace TWE
         VkDebugReportCallbackEXT debug_report;
     
         const VkDebugReportCallbackCreateInfoEXT create_info
-            {
-                VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,    // sType
-                nullptr,                                                    // pNext
-                VK_DEBUG_REPORT_ERROR_BIT_EXT |                             // flags
-                VK_DEBUG_REPORT_WARNING_BIT_EXT |
-                VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT,
-                debug_callback_function,                                    // pfnCallback
-                nullptr                                                     // pUserData
-            };
+        {
+            VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,    // sType
+            nullptr,                                                    // pNext
+            VK_DEBUG_REPORT_ERROR_BIT_EXT |                             // flags
+            VK_DEBUG_REPORT_WARNING_BIT_EXT |
+            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT,
+            debug_callback_function,                                    // pfnCallback
+            nullptr                                                     // pUserData
+        };
         
         
-        auto result = ( vk::Result ) create_debug_report_callback( vk_context_.instance_, &create_info,
+        auto result = ( vk::Result ) create_debug_report_callback( vk_context_.instance_.get(), &create_info,
                                                                    nullptr, &debug_report );
         
         return { result, debug_report };
     }
     
-    const vk::ResultValue<vk::SurfaceKHR> renderer::create_surface( const base_window* p_wnd ) const noexcept
+    const vk::ResultValue<vk::UniqueSurfaceKHR> renderer::create_surface( const base_window* p_wnd ) const noexcept
     {
-        return p_wnd->create_surface( vk_context_.instance_ );
+        return p_wnd->create_surface( vk_context_.instance_.get() );
     }
     
     const VkPhysicalDevice renderer::pick_physical_device( ) const noexcept
@@ -753,11 +716,11 @@ namespace TWE
         std::multimap<uint32_t, vk::PhysicalDevice> candidates;
     
         auto available_devices = check_vk_result_value(
-            vk_context_.instance_.enumeratePhysicalDevices(), "Failed to enumerate physical devices." );
+            vk_context_.instance_->enumeratePhysicalDevices(), "Failed to enumerate physical devices." );
         
         for ( auto &physical_device : available_devices )
         {
-            if ( is_physical_device_suitable( vk_context_.surface_, physical_device, vk_context_.device_extensions_ ) )
+            if ( is_physical_device_suitable( vk_context_.surface_.get(), physical_device, vk_context_.device_extensions_ ) )
             {
                 uint32_t score = 0;
                 
@@ -790,9 +753,9 @@ namespace TWE
         }
     }
     
-    const vk::ResultValue<vk::Device> renderer::create_device( ) const noexcept
+    const vk::ResultValue<vk::UniqueDevice> renderer::create_device( ) const noexcept
     {
-        const auto queue_families = find_queue_family_indices( vk_context_.surface_, vk_context_.gpu_ );
+        const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
         std::set<uint32_t> unique_queue_family;
         
         if ( queue_families.graphic_family_.has_value() )
@@ -837,7 +800,7 @@ namespace TWE
                 .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ) )
                 .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
             
-            return vk_context_.gpu_.createDevice( create_info );
+            return vk_context_.gpu_.createDeviceUnique( create_info );
         }
         else
         {
@@ -850,44 +813,44 @@ namespace TWE
                 .setEnabledLayerCount( 0 )
                 .setPpEnabledLayerNames( nullptr );
     
-            return vk_context_.gpu_.createDevice( create_info );
+            return vk_context_.gpu_.createDeviceUnique( create_info );
         }
     }
     
-    const vk::ResultValue<vk::Semaphore> renderer::create_semaphore( ) const noexcept
+    const vk::ResultValue<vk::UniqueSemaphore> renderer::create_semaphore( ) const noexcept
     {
         const auto create_info = vk::SemaphoreCreateInfo( );
         
-        return vk_context_.device_.createSemaphore( create_info );
+        return vk_context_.device_->createSemaphoreUnique( create_info );
     }
     
-    const vk::ResultValue<vk::Fence> renderer::create_fence( ) const noexcept
+    const vk::ResultValue<vk::UniqueFence> renderer::create_fence( ) const noexcept
     {
         const auto create_info = vk::FenceCreateInfo( )
             .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
-        return vk_context_.device_.createFence( create_info );
+        return vk_context_.device_->createFenceUnique( create_info );
     }
     
-    const vk::ResultValue<vk::CommandPool> renderer::create_command_pool( uint32_t queue_family ) const noexcept
+    const vk::ResultValue<vk::UniqueCommandPool> renderer::create_command_pool( uint32_t queue_family ) const noexcept
     {
         const auto create_info = vk::CommandPoolCreateInfo( )
             .setQueueFamilyIndex( queue_family );
         
-        return vk_context_.device_.createCommandPool( create_info );
+        return vk_context_.device_->createCommandPoolUnique( create_info );
     }
     
     const vk::ResultValue<std::vector<vk::CommandBuffer>> renderer::create_command_buffers( uint32_t count ) const noexcept
     {
         const auto allocate_info = vk::CommandBufferAllocateInfo( )
-            .setCommandPool( vk_context_.command_pool_ )
+            .setCommandPool( vk_context_.command_pool_.get() )
             .setCommandBufferCount( count )
             .setLevel( vk::CommandBufferLevel::ePrimary );
         
-        return vk_context_.device_.allocateCommandBuffers( allocate_info );
+        return vk_context_.device_->allocateCommandBuffers( allocate_info );
     }
 
-    const vk::ResultValue<vk::SwapchainKHR> renderer::create_swapchain( const queue_family_indices_type& queue_family_indices,
+    const vk::ResultValue<vk::UniqueSwapchainKHR> renderer::create_swapchain( const queue_family_indices_type& queue_family_indices,
         const vk::PresentModeKHR & present_mode, const vk::SurfaceCapabilitiesKHR& capabilities,
         uint32_t image_count ) const noexcept
     {
@@ -902,7 +865,7 @@ namespace TWE
              queue_family_indices.present_family_ )
         {
             const auto create_info = vk::SwapchainCreateInfoKHR( )
-                .setSurface( vk_context_.surface_ )
+                .setSurface( vk_context_.surface_.get() )
                 .setPresentMode( present_mode )
                 .setImageFormat( vk_context_.surface_format_.format )
                 .setImageColorSpace( vk_context_.surface_format_.colorSpace )
@@ -917,12 +880,12 @@ namespace TWE
                 .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
                 .setClipped( VK_TRUE );
             
-            return vk_context_.device_.createSwapchainKHR( create_info );
+            return vk_context_.device_->createSwapchainKHRUnique( create_info );
         }
         else
         {
             const auto create_info = vk::SwapchainCreateInfoKHR( )
-                .setSurface( vk_context_.surface_ )
+                .setSurface( vk_context_.surface_.get() )
                 .setPresentMode( present_mode )
                 .setImageFormat( vk_context_.surface_format_.format )
                 .setImageColorSpace( vk_context_.surface_format_.colorSpace )
@@ -937,11 +900,11 @@ namespace TWE
                 .setCompositeAlpha( vk::CompositeAlphaFlagBitsKHR::eOpaque )
                 .setClipped( VK_TRUE );
             
-            return vk_context_.device_.createSwapchainKHR( create_info );
+            return vk_context_.device_->createSwapchainKHRUnique( create_info );
         }
     }
 
-    const vk::ResultValue<vk::ImageView> renderer::create_image_view( const vk::Image& image ) const noexcept
+    const vk::ResultValue<vk::UniqueImageView> renderer::create_image_view( const vk::Image& image ) const noexcept
     {
         VkImageView image_view = VK_NULL_HANDLE;
     
@@ -965,23 +928,23 @@ namespace TWE
             .setImage( image )
             .setViewType( vk::ImageViewType::e2D );
         
-        return vk_context_.device_.createImageView( create_info );
+        return vk_context_.device_->createImageViewUnique( create_info );
     }
     
-    const vk::ResultValue<vk::Framebuffer> renderer::create_framebuffer( const vk::ImageView& image_view ) const noexcept
+    const vk::ResultValue<vk::UniqueFramebuffer> renderer::create_framebuffer( const vk::ImageView& image_view ) const noexcept
     {
         const auto create_info = vk::FramebufferCreateInfo( )
-            .setRenderPass( vk_context_.render_pass_ )
+            .setRenderPass( vk_context_.render_pass_.get() )
             .setWidth( vk_context_.swapchain_.extent_.width )
             .setHeight( vk_context_.swapchain_.extent_.height )
             .setAttachmentCount( 1 )
             .setPAttachments( &image_view )
             .setLayers( 1 );
         
-        return vk_context_.device_.createFramebuffer( create_info );
+        return vk_context_.device_->createFramebufferUnique( create_info );
     }
     
-    const vk::ResultValue<vk::RenderPass> renderer::create_render_pass( ) const noexcept
+    const vk::ResultValue<vk::UniqueRenderPass> renderer::create_render_pass( ) const noexcept
     {
         const auto colour_attachment = vk::AttachmentDescription( )
             .setFormat( vk_context_.surface_format_.format )
@@ -1018,25 +981,14 @@ namespace TWE
             .setDependencyCount( 1 )
             .setPDependencies( &dependency );
         
-        return vk_context_.device_.createRenderPass( create_info );
-    }
-    
-    const vk::ResultValue<vk::ShaderModule> renderer::create_shader_module( const std::string& filepath ) const noexcept
-    {
-        const std::string shader_code = read_from_binary_file( filepath );
-        
-        const auto create_info = vk::ShaderModuleCreateInfo( )
-            .setCodeSize( shader_code.size( ) )
-            .setPCode( reinterpret_cast<const uint32_t*>( shader_code.data() ) );
-        
-        return vk_context_.device_.createShaderModule( create_info );
+        return vk_context_.device_->createRenderPassUnique( create_info );
     }
     
     const vk::ResultValue<vk::PipelineLayout> renderer::create_pipeline_layout( ) const noexcept
     {
         const auto create_info = vk::PipelineLayoutCreateInfo( );
         
-        return vk_context_.device_.createPipelineLayout( create_info );
+        return vk_context_.device_->createPipelineLayout( create_info );
     }
     
     const vk::ResultValue<vk::Pipeline> renderer::create_graphics_pipeline(
@@ -1112,7 +1064,7 @@ namespace TWE
         
         const auto create_info = vk::GraphicsPipelineCreateInfo( )
             .setLayout( vk_context_.graphics_pipeline_layout_ )
-            .setRenderPass( vk_context_.render_pass_ )
+            .setRenderPass( vk_context_.render_pass_.get() )
             .setStageCount( stage_count )
             .setPStages( p_stages )
             .setPVertexInputState( &vertex_input_info )
@@ -1124,7 +1076,7 @@ namespace TWE
             .setPDynamicState( &dynamic_state_create_info )
             .setBasePipelineIndex( -1 );
         
-        return vk_context_.device_.createGraphicsPipeline( { }, create_info );
+        return vk_context_.device_->createGraphicsPipeline( { }, create_info );
     }
     
     bool renderer::check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept

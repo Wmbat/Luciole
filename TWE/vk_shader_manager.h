@@ -26,15 +26,15 @@ namespace TWE
     class vk_shader_manager
     {
     public:
-        std::uint32_t insert( const vk_shader::create_info& create_info );
-        const vk_shader& acquire( const uint32_t id ) const;
+        vk_shader::id insert( const vk_shader::create_info& create_info );
+        const std::shared_ptr<vk_shader> acquire( const vk_shader::id id ) const;
         
         void remove_orphans( );
     
     private:
-        std::unordered_map<std::uint32_t, vk_shader> shaders_;
+        std::unordered_map<vk_shader::id, std::shared_ptr<vk_shader>> shaders_;
         
-        static std::uint32_t shader_id_count_;
+        static vk_shader::id shader_id_count_;
     };
 }
 

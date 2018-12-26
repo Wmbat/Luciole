@@ -28,6 +28,7 @@ include_directories( external/include )
 include_directories( external/include/glm )
 include_directories( external/include/SPIRV )
 include_directories( external/include/glslang )
+include_directories( external/include/nlohmann )
 include_directories( external/include/StandAlone )
 include_directories( external/include/spdlog/include )
 
@@ -101,7 +102,7 @@ add_library( TWE SHARED
         source/log.cpp
         source/renderer.cpp
         source/vk_pipeline_manager.cpp
-        source/vk_shader.cpp source/vk_shader_manager.cpp)
+        source/vk_shader.cpp source/vk_shader_manager.cpp TWE/vk_pipeline.h)
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )

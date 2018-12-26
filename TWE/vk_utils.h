@@ -50,7 +50,7 @@ namespace TWE
         }
         else
         {
-            return std::move( return_obj.value );
+            return return_obj.value;
         }
     }
     
@@ -60,7 +60,7 @@ namespace TWE
      *  @param result, The result to check.
      *  @param error_msg, The message to display in case of error.
      */
-    inline void check_vk_value( const vk::Result& result, const std::string& msg )
+    inline void check_vk_result( const vk::Result& result, const std::string& msg )
     {
         if( result != vk::Result::eSuccess )
         {

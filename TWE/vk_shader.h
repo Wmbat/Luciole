@@ -24,11 +24,22 @@ namespace TWE
     class vk_shader
     {
     public:
+        using id = std::uint32_t;
+        
+        enum class type
+        {
+            vertex,
+            fragment,
+            compute,
+            tesselation,
+            geometry
+        };
+        
         struct create_info
         {
             vk::Device* p_device_;
             
-            vk::ShaderStageFlagBits shader_stage_;
+            type type_;
             
             std::string filepath_;
             std::string entry_point_;
@@ -39,9 +50,9 @@ namespace TWE
                 
                 return *this;
             }
-            create_info& set_stage( const vk::ShaderStageFlagBits& stage )
+            create_info& set_stage( const type& type )
             {
-                shader_stage_ = stage;
+                type_ = type;
                 
                 return *this;
             }
@@ -63,7 +74,7 @@ namespace TWE
         vk_shader( const create_info& create_info );
         vk_shader( const vk_shader& rhs ) noexcept = delete;
         vk_shader( vk_shader&& rhs ) noexcept;
-        ~vk_shader( );
+        ~vk_shader( ) = default;
         
         vk_shader& operator=( const vk_shader& rhs ) noexcept = delete;
         vk_shader& operator=( vk_shader&& rhs ) noexcept;
@@ -73,8 +84,8 @@ namespace TWE
     private:
         vk::Device* p_device_;
         
-        vk::ShaderModule shader_;
-        vk::ShaderStageFlagBits shader_stage_;
+        vk::UniqueShaderModule shader_;
+        type type_;
         
         std::string entry_point_;
     };

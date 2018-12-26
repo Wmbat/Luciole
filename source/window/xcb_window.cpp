@@ -294,13 +294,13 @@ namespace TWE
         }
     }
     
-    vk::ResultValue<vk::SurfaceKHR> xcb_window::create_surface( const vk::Instance& instance ) const noexcept
+    vk::ResultValue<vk::UniqueSurfaceKHR> xcb_window::create_surface( const vk::Instance& instance ) const noexcept
     {
         const auto create_info = vk::XcbSurfaceCreateInfoKHR( )
             .setConnection( p_xcb_connection_.get() )
             .setWindow( xcb_window_ );
         
-        return instance.createXcbSurfaceKHR( create_info );
+        return instance.createXcbSurfaceKHRUnique( create_info );
     }
 }
 #endif

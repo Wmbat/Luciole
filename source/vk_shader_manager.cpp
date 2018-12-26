@@ -21,18 +21,18 @@
 
 namespace TWE
 {
-    std::uint32_t vk_shader_manager::shader_id_count_;
+    vk_shader::id vk_shader_manager::shader_id_count_;
     
-    std::uint32_t vk_shader_manager::insert( const vk_shader::create_info& create_info )
+    vk_shader::id vk_shader_manager::insert( const vk_shader::create_info& create_info )
     {
         auto id = ++shader_id_count_;
         
-        shaders_.emplace( std::pair( id, vk_shader{ create_info } ) );
+        shaders_.emplace( std::pair( id, std::make_shared<vk_shader>( create_info ) ) );
         
         return id;
     }
     
-    const vk_shader& vk_shader_manager::acquire( const uint32_t id ) const
+    const std::shared_ptr<vk_shader> vk_shader_manager::acquire( const vk_shader::id id ) const
     {
         const auto i = shaders_.find( id );
         if( i != shaders_.cend() )
@@ -48,9 +48,16 @@ namespace TWE
     
     void vk_shader_manager::remove_orphans( )
     {
-        for( auto i = shaders_.begin(); i != shaders_.end(); ++i )
+        for( auto it = shaders_.begin(); it != shaders_.cend(); )
         {
-            i = shaders_.erase( i );
+            if( it->second.unique() )
+            {
+                it = shaders_.erase( it );
+            }
+            else
+            {
+                ++it;
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ namespace TWE
     vk_shader::vk_shader( const vk_shader::create_info& create_info )
         :
         p_device_( create_info.p_device_ ),
-        shader_stage_( create_info.shader_stage_ ),
+        type_( create_info.type_ ),
         entry_point_( create_info.entry_point_ )
     {
         const std::string shader_code = read_from_binary_file( create_info.filepath_ );
@@ -37,9 +37,10 @@ namespace TWE
         
         try
         {
-            shader_ = check_vk_result_value(
-                p_device_->createShaderModule( module_create_info ),
-                "vk_shader ctor -> Failed to create Shader Module: " + create_info.filepath_ );
+            auto res = p_device_->createShaderModuleUnique( module_create_info );
+            check_vk_result( res.result, "vk_shader ctor -> Failed to create Shader Module: " + create_info.filepath_ );
+            
+            shader_.swap( res.value );
         }
         catch( const vk_error& e )
         {
@@ -52,11 +53,6 @@ namespace TWE
         *this = std::move( rhs );
     }
     
-    vk_shader::~vk_shader( )
-    {
-        p_device_->destroyShaderModule( shader_ );
-    }
-    
     vk_shader& vk_shader::operator=( vk_shader&& rhs ) noexcept
     {
         if( this != &rhs )
@@ -64,11 +60,10 @@ namespace TWE
             p_device_ = rhs.p_device_;
             rhs.p_device_ = nullptr;
             
-            shader_ = rhs.shader_;
-            rhs.shader_ = vk::ShaderModule( );
+            shader_ = std::move( rhs.shader_ );
             
-            shader_stage_ = rhs.shader_stage_;
-            rhs.shader_stage_ = vk::ShaderStageFlagBits( );
+            type_ = rhs.type_;
+            rhs.type_ = type{ };
             
             entry_point_ = std::move( rhs.entry_point_ );
         }
@@ -78,9 +73,28 @@ namespace TWE
     
     const vk::PipelineShaderStageCreateInfo vk_shader::get_shader_stage_create_info( ) const noexcept
     {
+        vk::ShaderStageFlagBits stage_flag{ };
+        
+        if( type_ == type::vertex )
+        {
+            stage_flag = vk::ShaderStageFlagBits::eVertex;
+        }
+        else if( type_ == type::fragment )
+        {
+            stage_flag = vk::ShaderStageFlagBits::eFragment;
+        }
+        else if( type_ == type::compute )
+        {
+            stage_flag = vk::ShaderStageFlagBits::eCompute;
+        }
+        else if( type_ == type::geometry )
+        {
+            stage_flag = vk::ShaderStageFlagBits::eGeometry;
+        }
+        
         return vk::PipelineShaderStageCreateInfo( )
-                    .setModule( shader_ )
-                    .setStage( shader_stage_ )
+                    .setModule( shader_.get() )
+                    .setStage( stage_flag )
                     .setPName( entry_point_.c_str( ) );
     }
 }

@@ -20,38 +20,24 @@
 #include <unordered_map>
 
 #include "vk_utils.h"
+#include "vk_pipeline.h"
 #include "vk_shader_manager.h"
 
 namespace TWE
 {
     class vk_pipeline_manager
     {
-    private:
-        struct pipeline_type
-        {
-            vk::Pipeline pipeline_;
-            vk::PipelineLayout layout_;
-        };
-        
     public:
-        struct pipeline_create_info
-        {
-            std::uint32_t vert_shader_id_ = 0;
-            std::uint32_t frag_shader_id_ = 0;
-            vk::Extent2D swapchain_extent_;
-        };
-        
-    public:
-        std::uint32_t create_pipeline( const pipeline_create_info& create_info );
+        vk_pipeline::id create_pipeline( const vk_pipeline::create_info& create_info );
         
     private:
         vk::Device* p_device_;
         
         vk_shader_manager* p_shader_manager_;
         
-        std::unordered_map<std::uint32_t, pipeline_type> pipelines_;
+        std::unordered_map<std::uint32_t, vk::Pipeline> pipelines_;
         
-        static std::uint32_t pipeline_id_count_;
+        static vk_pipeline::id pipeline_id_count_;
     };
 }
 

@@ -22,6 +22,7 @@
 #include "TWE_core.h"
 #include "vk_utils.h"
 #include "vk_shader_manager.h"
+#include "vk_pipeline_manager.h"
 #include "window/base_window.h"
 
 namespace TWE
@@ -46,7 +47,7 @@ namespace TWE
         
         void TWE_API setup_graphics_pipeline( const shader_data_type& data );
         std::uint32_t TWE_API create_shader( const std::string& filepath, const std::string& entry_point,
-            const vk::ShaderStageFlagBits& flags );
+            const vk_shader::type& flags );
 
         void TWE_API draw_frame( );
         
@@ -61,36 +62,34 @@ namespace TWE
         
         void set_up( );
         
-        const vk::ResultValue<vk::Instance> create_instance( const std::string& app_name,
+        const vk::ResultValue<vk::UniqueInstance> create_instance( const std::string& app_name,
             uint32_t app_version ) const noexcept;
     
         const vk::ResultValue<vk::DebugReportCallbackEXT> create_debug_report( ) const noexcept;
     
-        const vk::ResultValue<vk::SurfaceKHR> create_surface( const base_window* p_window ) const noexcept;
+        const vk::ResultValue<vk::UniqueSurfaceKHR> create_surface( const base_window* p_window ) const noexcept;
     
         const VkPhysicalDevice pick_physical_device( ) const noexcept;
     
-        const vk::ResultValue<vk::Device> create_device( ) const noexcept;
+        const vk::ResultValue<vk::UniqueDevice> create_device( ) const noexcept;
         
-        const vk::ResultValue<vk::Semaphore> create_semaphore( ) const noexcept;
+        const vk::ResultValue<vk::UniqueSemaphore> create_semaphore( ) const noexcept;
         
-        const vk::ResultValue<vk::Fence> create_fence( ) const noexcept;
+        const vk::ResultValue<vk::UniqueFence> create_fence( ) const noexcept;
         
-        const vk::ResultValue<vk::CommandPool> create_command_pool( uint32_t queue_family ) const noexcept;
+        const vk::ResultValue<vk::UniqueCommandPool> create_command_pool( uint32_t queue_family ) const noexcept;
         
         const vk::ResultValue<std::vector<vk::CommandBuffer>> create_command_buffers( uint32_t count ) const noexcept;
         
-        const vk::ResultValue<vk::SwapchainKHR> create_swapchain( const queue_family_indices_type& queue_family_indices_,
+        const vk::ResultValue<vk::UniqueSwapchainKHR> create_swapchain( const queue_family_indices_type& queue_family_indices_,
             const vk::PresentModeKHR & present_mode_, const vk::SurfaceCapabilitiesKHR& capabilities_,
             uint32_t image_count_ ) const noexcept;
         
-        const vk::ResultValue<vk::ImageView> create_image_view( const vk::Image& image ) const noexcept;
+        const vk::ResultValue<vk::UniqueImageView> create_image_view( const vk::Image& image ) const noexcept;
         
-        const vk::ResultValue<vk::Framebuffer> create_framebuffer( const vk::ImageView& image_view ) const noexcept;
+        const vk::ResultValue<vk::UniqueFramebuffer> create_framebuffer( const vk::ImageView& image_view ) const noexcept;
         
-        const vk::ResultValue<vk::RenderPass> create_render_pass( ) const noexcept;
-        
-        const vk::ResultValue<vk::ShaderModule> create_shader_module( const std::string& filepath ) const noexcept;
+        const vk::ResultValue<vk::UniqueRenderPass> create_render_pass( ) const noexcept;
     
         const vk::ResultValue<vk::PipelineLayout> create_pipeline_layout( ) const noexcept;
     
@@ -140,35 +139,35 @@ namespace TWE
         
         struct vk_context_t
         {
-            vk::Instance instance_;
+            vk::UniqueInstance instance_;
             vk::DebugReportCallbackEXT debug_report_;
-            vk::SurfaceKHR surface_;
+            vk::UniqueSurfaceKHR surface_;
             vk::PhysicalDevice gpu_;
-            vk::Device device_;
+            vk::UniqueDevice device_;
             vk::Queue graphics_queue_;
             vk::Queue present_queue_;
             
-            std::vector<vk::Semaphore> image_available_semaphores_;
-            std::vector<vk::Semaphore> render_finished_semaphores_;
-            std::vector<vk::Fence> in_flight_fences_;
+            std::vector<vk::UniqueSemaphore> image_available_semaphores_;
+            std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
+            std::vector<vk::UniqueFence> in_flight_fences_;
             
-            vk::CommandPool command_pool_;
+            vk::UniqueCommandPool command_pool_;
             std::vector<vk::CommandBuffer> command_buffers_;
             
             vk::SurfaceFormatKHR surface_format_;
             
             struct swapchain
             {
-                vk::SwapchainKHR swapchain_;
+                vk::UniqueSwapchainKHR swapchain_;
                 
                 vk::Extent2D extent_;
                 
                 std::vector<vk::Image> image_;
-                std::vector<vk::ImageView> image_views_;
-                std::vector<vk::Framebuffer> framebuffers_;
+                std::vector<vk::UniqueImageView> image_views_;
+                std::vector<vk::UniqueFramebuffer> framebuffers_;
             } swapchain_;
             
-            vk::RenderPass render_pass_;
+            vk::UniqueRenderPass render_pass_;
     
             vk::PipelineLayout graphics_pipeline_layout_;
             vk::Pipeline graphics_pipeline_;
@@ -179,6 +178,7 @@ namespace TWE
         } vk_context_;
         
         vk_shader_manager shader_manager_;
+        vk_pipeline_manager pipeline_manager_;
         
     private:
         struct queue_family_indices_type
