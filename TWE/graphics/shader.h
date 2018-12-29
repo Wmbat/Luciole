@@ -17,11 +17,11 @@
 #ifndef TWE_VK_SHADER_H
 #define TWE_VK_SHADER_H
 
-#include "vk_utils.h"
+#include "../vk_utils.h"
 
 namespace TWE
 {
-    class vk_shader
+    class shader
     {
     public:
         using id = std::uint32_t;
@@ -37,16 +37,16 @@ namespace TWE
         
         struct create_info
         {
-            vk::Device* p_device_;
+            vk::Device& device_;
             
             type type_;
             
             std::string filepath_;
             std::string entry_point_;
             
-            create_info& set_p_device( vk::Device* p_device )
+            create_info& set_p_device( const vk::Device& device )
             {
-                p_device_ = p_device;
+                device_ = device;
                 
                 return *this;
             }
@@ -71,19 +71,17 @@ namespace TWE
         };
         
     public:
-        vk_shader( const create_info& create_info );
-        vk_shader( const vk_shader& rhs ) noexcept = delete;
-        vk_shader( vk_shader&& rhs ) noexcept;
-        ~vk_shader( ) = default;
+        shader( const create_info& create_info );
+        shader( const shader& rhs ) noexcept = delete;
+        shader( shader&& rhs ) noexcept;
+        ~shader( ) = default;
         
-        vk_shader& operator=( const vk_shader& rhs ) noexcept = delete;
-        vk_shader& operator=( vk_shader&& rhs ) noexcept;
+        shader& operator=( const shader& rhs ) noexcept = delete;
+        shader& operator=( shader&& rhs ) noexcept;
         
         const vk::PipelineShaderStageCreateInfo get_shader_stage_create_info( ) const noexcept;
     
     private:
-        vk::Device* p_device_;
-        
         vk::UniqueShaderModule shader_;
         type type_;
         

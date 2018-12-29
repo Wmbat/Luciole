@@ -40,31 +40,31 @@ namespace TWE
         uint32_t TWE_API get_height( ) const noexcept;
     
         template<class C>
-        std::enable_if_t<std::is_same<C, key_event_delg>{ }, void> add_listener( const C& delg )
+        std::enable_if_t<std::is_same<C, key_event_delg>{ }, void> set_event_callback( const C& delg )
         {
             key_event_.add_listener( delg );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, mouse_button_event_delg>{ }, void> add_listener( const C& delg )
+        std::enable_if_t<std::is_same<C, mouse_button_event_delg>{ }, void> set_event_callback( const C& delg )
         {
             mouse_button_event_.add_listener( delg );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, mouse_motion_event_delg>{ }, void> add_listener( const C& delg )
+        std::enable_if_t<std::is_same<C, mouse_motion_event_delg>{ }, void> set_event_callback( const C& delg )
         {
             mouse_motion_event_.add_listener( delg );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, window_close_event_delg>{ }, void> add_listener( const C& delg )
+        std::enable_if_t<std::is_same<C, window_close_event_delg>{ }, void> set_event_callback( const C& delg )
         {
             window_close_event_.add_listener( delg );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, framebuffer_resize_event_delg>{ }, void> add_listener( const C& delg )
+        std::enable_if_t<std::is_same<C, framebuffer_resize_event_delg>{ }, void> set_event_callback( const C& delg )
         {
             frame_buffer_resize_event_.add_listener( delg );
         }

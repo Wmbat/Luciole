@@ -17,12 +17,10 @@
 #include <iostream>
 #include <set>
 #include <map>
-#include <renderer.h>
-#include <vertex.h>
-#include <vk_shader.h>
 
 #include "renderer.h"
 #include "log.h"
+#include "vertex.h"
 #include "utilities/file_io.h"
 #include "utilities/basic_error.h"
 #include "utilities/vk_error.h"
@@ -88,8 +86,8 @@ namespace TWE
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() )
     {
-        p_wnd->add_listener( window_close_event_delg( *this, &renderer::on_window_close ) );
-        p_wnd->add_listener( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
+        p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
+        p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
         
         try
         {
@@ -245,10 +243,13 @@ namespace TWE
     {
         vk_context_.device_->waitIdle( );
     
+        /*
         vk_context_.device_->destroyPipeline( vk_context_.graphics_pipeline_ );
     
         vk_context_.device_->destroyPipelineLayout( vk_context_.graphics_pipeline_layout_ );
-    
+    */
+        
+        
         if( !vk_context_.command_buffers_.empty() )
         {
             vk_context_.device_->freeCommandBuffers( vk_context_.command_pool_.get(), vk_context_.command_buffers_ );
@@ -307,12 +308,15 @@ namespace TWE
     
             vk_context_.swapchain_.framebuffers_ = std::move( rhs.vk_context_.swapchain_.framebuffers_ );
     
+            
+            /*
             vk_context_.graphics_pipeline_layout_ = rhs.vk_context_.graphics_pipeline_layout_;
             rhs.vk_context_.graphics_pipeline_layout_ = vk::PipelineLayout( );
     
             vk_context_.graphics_pipeline_ = rhs.vk_context_.graphics_pipeline_;
             rhs.vk_context_.graphics_pipeline_ = vk::Pipeline( );
-    
+            */
+            
             vk_context_.instance_extensions_ = std::move( rhs.vk_context_.instance_extensions_ );
             vk_context_.device_extensions_ = std::move( rhs.vk_context_.device_extensions_ );
             vk_context_.validation_layers_ = std::move( rhs.vk_context_.validation_layers_ );
@@ -324,8 +328,8 @@ namespace TWE
     void renderer::setup_graphics_pipeline( const shader_data_type &data )
     {
         const vk::PipelineShaderStageCreateInfo shader_stages[] = {
-            shader_manager_.acquire( data.vert_shader_id_ )->get_shader_stage_create_info(),
-            shader_manager_.acquire( data.frag_shader_id_ )->get_shader_stage_create_info() };
+            shader_manager_.acquire( data.vert_shader_id_ ).get_shader_stage_create_info(),
+            shader_manager_.acquire( data.frag_shader_id_ ).get_shader_stage_create_info() };
         
         const auto binding_description = vk::VertexInputBindingDescription( )
             .setBinding( 0 )    // vertex buffer
@@ -352,6 +356,7 @@ namespace TWE
             .setVertexAttributeDescriptionCount( 0 ) // 2
             .setPVertexAttributeDescriptions( vertex_input_attribs );
         
+        /*
         vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
         
@@ -361,13 +366,10 @@ namespace TWE
                 sizeof( shader_stages ) / sizeof( shader_stages[0] ),
                 shader_stages ),
             "create_graphics_pipeline( )" );
+            */
     }
-    std::uint32_t renderer::create_shader( const std::string& filepath, const std::string& entry_point,
-        const vk_shader::type& flags )
-    {
-        return shader_manager_.insert( { &vk_context_.device_.get(), flags, filepath, entry_point } );
-    }
-    void renderer::record_draw_calls( )
+    
+    void renderer::record_draw_calls( const pipeline::id pipeline_id  )
     {
         const auto viewport = vk::Viewport( )
             .setX( 0.0f )
@@ -407,7 +409,10 @@ namespace TWE
     
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
     
-            vk_context_.command_buffers_[i].bindPipeline( vk::PipelineBindPoint::eGraphics, vk_context_.graphics_pipeline_ );
+            
+            vk_context_.command_buffers_[i].bindPipeline(
+                pipeline_manager_.get_pipeline( pipeline_id ).get_bind_point(),
+                pipeline_manager_.get_pipeline( pipeline_id ).get() );
     
             vk_context_.command_buffers_[i].draw( 3, 1, 0, 0 );
     
@@ -427,7 +432,7 @@ namespace TWE
         framebuffer_resized_ = true;
     }
     
-    void renderer::draw_frame( )
+    void renderer::draw_frame( const pipeline::id pipeline_id )
     {
         if ( !is_window_closed_ )
         {
@@ -443,7 +448,7 @@ namespace TWE
             {
                 if ( result == vk::Result::eErrorOutOfDateKHR )
                 {
-                    recreate_swapchain ( );
+                    recreate_swapchain ( pipeline_id );
                 }
                 else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
                 {
@@ -493,7 +498,7 @@ namespace TWE
                     framebuffer_resized_ )
                 {
                     framebuffer_resized_ = false;
-                    recreate_swapchain ( );
+                    recreate_swapchain ( pipeline_id );
                 }
                 else if ( result != vk::Result::eSuccess )
                 {
@@ -509,7 +514,7 @@ namespace TWE
         }
     }
     
-    void renderer::recreate_swapchain( )
+    void renderer::recreate_swapchain( const pipeline::id pipeline_id )
     {
         cleanup_swapchain();
         
@@ -570,7 +575,7 @@ namespace TWE
             vk_context_.swapchain_.framebuffers_[i].swap( res.value );
         }
         
-        record_draw_calls( );
+        record_draw_calls( pipeline_id );
     }
     void renderer::cleanup_swapchain( )
     {
@@ -996,6 +1001,7 @@ namespace TWE
         std::uint32_t stage_count,
         const vk::PipelineShaderStageCreateInfo* p_stages ) const noexcept
     {
+        /*
         const auto input_assembly_state_create_info = vk::PipelineInputAssemblyStateCreateInfo( )
             .setTopology( vk::PrimitiveTopology::eTriangleList )
             .setPrimitiveRestartEnable( VK_FALSE );
@@ -1075,8 +1081,9 @@ namespace TWE
             .setPColorBlendState( &colour_blend_state_create_info )
             .setPDynamicState( &dynamic_state_create_info )
             .setBasePipelineIndex( -1 );
-        
+         
         return vk_context_.device_->createGraphicsPipeline( { }, create_info );
+        */
     }
     
     bool renderer::check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept

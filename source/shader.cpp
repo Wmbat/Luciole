@@ -14,18 +14,15 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vk_shader.h>
-
-#include "vk_shader.h"
+#include "graphics/shader.h"
 #include "log.h"
 
 #include "utilities/file_io.h"
 
 namespace TWE
 {
-    vk_shader::vk_shader( const vk_shader::create_info& create_info )
+    shader::shader( const shader::create_info& create_info )
         :
-        p_device_( create_info.p_device_ ),
         type_( create_info.type_ ),
         entry_point_( create_info.entry_point_ )
     {
@@ -37,8 +34,8 @@ namespace TWE
         
         try
         {
-            auto res = p_device_->createShaderModuleUnique( module_create_info );
-            check_vk_result( res.result, "vk_shader ctor -> Failed to create Shader Module: " + create_info.filepath_ );
+            auto res = create_info.device_.createShaderModuleUnique( module_create_info );
+            check_vk_result( res.result, "shader ctor -> Failed to create Shader Module: " + create_info.filepath_ );
             
             shader_.swap( res.value );
         }
@@ -48,18 +45,15 @@ namespace TWE
         }
     }
     
-    vk_shader::vk_shader( vk_shader&& rhs ) noexcept
+    shader::shader( shader&& rhs ) noexcept
     {
         *this = std::move( rhs );
     }
     
-    vk_shader& vk_shader::operator=( vk_shader&& rhs ) noexcept
+    shader& shader::operator=( shader&& rhs ) noexcept
     {
         if( this != &rhs )
         {
-            p_device_ = rhs.p_device_;
-            rhs.p_device_ = nullptr;
-            
             shader_ = std::move( rhs.shader_ );
             
             type_ = rhs.type_;
@@ -71,7 +65,7 @@ namespace TWE
         return *this;
     }
     
-    const vk::PipelineShaderStageCreateInfo vk_shader::get_shader_stage_create_info( ) const noexcept
+    const vk::PipelineShaderStageCreateInfo shader::get_shader_stage_create_info( ) const noexcept
     {
         vk::ShaderStageFlagBits stage_flag{ };
         

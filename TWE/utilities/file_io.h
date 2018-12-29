@@ -32,7 +32,7 @@ namespace TWE
         std::ifstream file( filepath );
         std::string str;
 
-        if( !( file.tellg() < 0 ) )
+        if( !file.is_open() )
             throw std::runtime_error{ "Error loading file at location: " + filepath + "." };
         else if( !file.good() )
             throw std::runtime_error{ "Error reading file: " + filepath + "." };

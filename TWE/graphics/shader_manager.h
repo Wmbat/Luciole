@@ -19,22 +19,20 @@
 
 #include <unordered_map>
 
-#include "vk_shader.h"
+#include "shader.h"
 
 namespace TWE
 {
-    class vk_shader_manager
+    class shader_manager
     {
     public:
-        vk_shader::id insert( const vk_shader::create_info& create_info );
-        const std::shared_ptr<vk_shader> acquire( const vk_shader::id id ) const;
-        
-        void remove_orphans( );
+        shader::id insert( const shader::create_info& create_info );
+        const shader& acquire( const shader::id id ) const;
     
     private:
-        std::unordered_map<vk_shader::id, std::shared_ptr<vk_shader>> shaders_;
+        std::unordered_map<shader::id, shader> shaders_;
         
-        static vk_shader::id shader_id_count_;
+        static shader::id shader_id_count_;
     };
 }
 

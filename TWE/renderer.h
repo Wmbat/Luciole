@@ -21,7 +21,7 @@
 
 #include "TWE_core.h"
 #include "vk_utils.h"
-#include "vk_shader_manager.h"
+#include "graphics/shader_manager.h"
 #include "vk_pipeline_manager.h"
 #include "window/base_window.h"
 
@@ -46,18 +46,46 @@ namespace TWE
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
         void TWE_API setup_graphics_pipeline( const shader_data_type& data );
-        std::uint32_t TWE_API create_shader( const std::string& filepath, const std::string& entry_point,
-            const vk_shader::type& flags );
-
-        void TWE_API draw_frame( );
         
-        void TWE_API record_draw_calls( );
+        template<shader::type T>
+        shader::id create_shader( const std::string& filepath, const std::string& entry_point )
+        {
+            return shader_manager_.insert( { vk_context_.device_.get(), T, filepath, entry_point } );
+        }
+        
+        template<pipeline::type T>
+        std::vector<pipeline::id> create_pipelines(
+            const shader::id vert_shader_id, const shader::id frag_shader_id,
+            std::vector<std::string>& pipeline_definitions )
+        {
+            auto create_info = vk_pipeline_manager::pipeline_create_info
+                {
+                    vert_shader_id,
+                    frag_shader_id,
+            
+                    shader_manager_,
+            
+                    pipeline_definitions,
+            
+                    T,
+            
+                    vk_context_.device_.get(),
+                    vk_context_.render_pass_.get(),
+                    vk_context_.swapchain_.extent_
+                };
+    
+            return pipeline_manager_.insert( create_info );
+        }
+
+        void TWE_API draw_frame( const pipeline::id pipeline_id );
+        
+        void TWE_API record_draw_calls( const pipeline::id pipeline_id );
         
         void TWE_API on_window_close( const window_close_event& event );
         void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event );
     
     private:
-        void recreate_swapchain( );
+        void recreate_swapchain( const pipeline::id pipeline_id );
         void cleanup_swapchain( );
         
         void set_up( );
@@ -168,16 +196,13 @@ namespace TWE
             } swapchain_;
             
             vk::UniqueRenderPass render_pass_;
-    
-            vk::PipelineLayout graphics_pipeline_layout_;
-            vk::Pipeline graphics_pipeline_;
             
             std::vector<const char*> instance_extensions_;
             std::vector<const char*> device_extensions_;
             std::vector<const char*> validation_layers_;
         } vk_context_;
         
-        vk_shader_manager shader_manager_;
+        shader_manager shader_manager_;
         vk_pipeline_manager pipeline_manager_;
         
     private:

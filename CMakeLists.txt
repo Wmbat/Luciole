@@ -102,7 +102,7 @@ add_library( TWE SHARED
         source/log.cpp
         source/renderer.cpp
         source/vk_pipeline_manager.cpp
-        source/vk_shader.cpp source/vk_shader_manager.cpp TWE/vk_pipeline.h)
+        source/shader.cpp source/shader_manager.cpp TWE/pipeline.h source/pipeline.cpp)
 
 if( WIN32 )
 	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
