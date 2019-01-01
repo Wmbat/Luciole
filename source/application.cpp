@@ -23,7 +23,7 @@
 #include "window/xcb_window.h"
 #endif
 
-namespace TWE
+namespace twe
 {
     application::application ( const std::string& title )
     {

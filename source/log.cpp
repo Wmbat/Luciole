@@ -16,7 +16,7 @@
 
 #include "log.h"
 
-namespace TWE
+namespace twe
 {
     std::shared_ptr<spdlog::logger> log::core_logger_;
 

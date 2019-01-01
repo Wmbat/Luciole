@@ -14,23 +14,35 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef APPLICATION_H
+#define APPLICATION_H
+
+#include <memory>
+
 #include "window/base_window.h"
+
+#include "TWE_core.h"
+#include "renderer.h"
 
 namespace twe
 {
-    bool base_window::is_open( ) const noexcept
+    class application
     {
-        return open_;
-    }
+    public:
+        TWE_API application ( const std::string& title );
+        virtual ~application ( ) = default;
+        
+        virtual void run( ) = 0;
+
+    protected:
+        std::unique_ptr<base_window> p_wnd_;
+        std::shared_ptr<renderer> p_renderer_;
+    };
     
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
+    /**
+     * should be defined by the Client.
+     */
+    std::unique_ptr<application> create_application( );
 }
+
+#endif //TWE_APPLICATION_H

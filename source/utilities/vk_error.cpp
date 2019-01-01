@@ -16,7 +16,7 @@
 
 #include "utilities/vk_error.h"
 
-namespace TWE
+namespace twe
 {
     vk_error::vk_error( const vk::Result& result, const std::string& message )
         : system_error( static_cast<int>( result ), category( ), message )

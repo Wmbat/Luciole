@@ -14,23 +14,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window/base_window.h"
+#ifndef TWE_WAYLAND_WINDOW_H
+#define TWE_WAYLAND_WINDOW_H
+
+#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
 namespace twe
 {
-    bool base_window::is_open( ) const noexcept
-    {
-        return open_;
-    }
-    
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
+
 }
+
+#endif
+
+#endif //TWE_WAYLAND_WINDOW_H

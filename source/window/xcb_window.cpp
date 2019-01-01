@@ -14,8 +14,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window/xcb_window.h"
-#include "log.h"
+#include <window/xcb_window.h>
+#include <log.h>
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 
@@ -23,7 +23,7 @@
 #include <xcb/xkb.h>
 #undef explicit
 
-namespace TWE
+namespace twe
 {
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
     {
@@ -197,7 +197,7 @@ namespace TWE
                         const auto event = window_close_event( )
                             .set_is_closed( true );
                         
-                        window_close_event_.dispatch_event( event );
+                        window_close_event_.send_message( event );
                     }
                 } break;
                 case XCB_DESTROY_NOTIFY:
@@ -207,7 +207,7 @@ namespace TWE
                     const auto event = window_close_event( )
                         .set_is_closed( true );
     
-                    window_close_event_.dispatch_event( event );
+                    window_close_event_.send_message( event );
                 } break;
                 case XCB_CONFIGURE_NOTIFY:
                 {
@@ -225,7 +225,7 @@ namespace TWE
                         const auto event = framebuffer_resize_event( )
                             .set_size( { settings_.width_, settings_.height_ } );
         
-                        frame_buffer_resize_event_.dispatch_event( event );
+                        frame_buffer_resize_event_.send_message( event );
                     }
                 } break;
                 case XCB_KEY_PRESS:
@@ -236,7 +236,7 @@ namespace TWE
                         .set_code( static_cast<keyboard::key>( xcb_key_press->detail ) )
                         .set_state( keyboard::key_state::pressed );
                     
-                    key_event_.dispatch_event( event );
+                    key_event_.send_message( event );
                 } break;
                 case XCB_KEY_RELEASE:
                 {
@@ -246,7 +246,7 @@ namespace TWE
                         .set_code( static_cast<keyboard::key>( xcb_key_release->detail ) )
                         .set_state( keyboard::key_state::released );
                 
-                    key_event_.dispatch_event( event );
+                    key_event_.send_message( event );
                 } break;
                 case XCB_BUTTON_PRESS:
                 {
@@ -260,7 +260,7 @@ namespace TWE
                                            static_cast<int32_t>( button_press_event->event_y )
                                        } );
                     
-                    mouse_button_event_.dispatch_event( event );
+                    mouse_button_event_.send_message( event );
                 } break;
                 case XCB_BUTTON_RELEASE:
                 {
@@ -274,7 +274,7 @@ namespace TWE
                                            static_cast<int32_t>( button_release_event->event_y )
                                        } );
     
-                    mouse_button_event_.dispatch_event( event );
+                    mouse_button_event_.send_message( event );
                 } break;
                 case XCB_MOTION_NOTIFY:
                 {
@@ -286,7 +286,7 @@ namespace TWE
                                            static_cast<int32_t>( cursor_motion->event_y )
                                        } );
     
-                    mouse_motion_event_.dispatch_event( event );
+                    mouse_motion_event_.send_message( event );
                 } break;
             }
         
@@ -294,7 +294,7 @@ namespace TWE
         }
     }
     
-    vk::ResultValue<vk::UniqueSurfaceKHR> xcb_window::create_surface( const vk::Instance& instance ) const noexcept
+    vk::UniqueSurfaceKHR xcb_window::create_surface( const vk::Instance& instance ) const noexcept
     {
         const auto create_info = vk::XcbSurfaceCreateInfoKHR( )
             .setConnection( p_xcb_connection_.get() )

@@ -14,23 +14,29 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window/base_window.h"
+#ifndef TWE_ENTRY_POINT_H
+#define TWE_ENTRY_POINT_H
 
-namespace twe
+extern std::unique_ptr<twe::application> twe::create_application( );
+
+#if defined( TWE_PLATFORM_WINDOWS )
+int WINAPI wWinMain ( HINSTANCE hInst, HINSTANCE, LPWSTR pArgs, INT )
 {
-    bool base_window::is_open( ) const noexcept
-    {
-        return open_;
-    }
-    
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
+    twe::log::init ( );
+
+    auto app = twe::create_application ( );
+    app->run ( );
+
+    delete app;
 }
+#else
+int main( int args, char** argv )
+{
+    twe::log::init( );
+    
+    auto app = twe::create_application( );
+    app->run();
+}
+#endif
+
+#endif //TWE_ENTRY_POINT_H

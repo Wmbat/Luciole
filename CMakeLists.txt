@@ -92,6 +92,10 @@ if( MSVC )
 endif( )
 
 add_library( TWE SHARED
+        source/graphics/pipeline.cpp
+        source/graphics/pipeline_manager.cpp
+        source/graphics/shader.cpp
+        source/graphics/shader_manager.cpp
         source/utilities/basic_error.cpp
         source/utilities/vk_error.cpp
 		source/window/base_window.cpp
@@ -101,35 +105,34 @@ add_library( TWE SHARED
 		source/application.cpp
         source/log.cpp
         source/renderer.cpp
-        source/vk_pipeline_manager.cpp
-        source/shader.cpp source/shader_manager.cpp TWE/pipeline.h source/pipeline.cpp)
+        )
 
 if( WIN32 )
-	target_compile_definitions( TWE PUBLIC TWE_PLATFORM_WINDOWS )
-	target_compile_definitions( TWE PRIVATE TWE_BUILD_DLL )
+	target_compile_definitions(TWE PUBLIC TWE_PLATFORM_WINDOWS )
+	target_compile_definitions(TWE PRIVATE TWE_BUILD_DLL )
 endif( )
 
-set_target_properties( TWE PROPERTIES VERSION ${PROJECT_VERSION} )
-set_target_properties( TWE PROPERTIES SOVERSION 1 )
+set_target_properties(TWE PROPERTIES VERSION ${PROJECT_VERSION} )
+set_target_properties(TWE PROPERTIES SOVERSION 1 )
 
-target_include_directories( TWE PUBLIC TWE )
+target_include_directories(TWE PUBLIC twe)
 
 if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
-        target_link_libraries( TWE
+        target_link_libraries(TWE
                 ${Vulkan_LIBRARY}
                 ${WAYLAND_CLIENT_LIBRARIES}
                 libglslang.a
                 libSPIRV.a )
     else( )
-        target_link_libraries( TWE
+        target_link_libraries(TWE
                 ${Vulkan_LIBRARY}
                 ${XCB_LIBRARIES}
                 libglslang.a
                 libSPIRV.a )
     endif()
 else()
-    target_link_libraries( TWE
+    target_link_libraries(TWE
             ${Vulkan_LIBRARY}
             libglslang.a
             libSPIRV.a )

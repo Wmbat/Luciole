@@ -20,7 +20,8 @@
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
 
 #include <Windows.h>
-namespace TWE
+
+namespace twe
 {
     win32_window::win32_window ( const std::string& title )
     {
@@ -418,4 +419,5 @@ namespace TWE
         return DefWindowProc ( h_wnd, msg, w_param, l_param );
     }
 }
+
 #endif

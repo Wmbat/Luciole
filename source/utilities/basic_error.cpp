@@ -18,9 +18,9 @@
 
 #include "utilities/basic_error.h"
 
-namespace TWE
+namespace twe
 {
-    basic_error::basic_error( const basic_error::error_code& error_flags, const std::string& message )
+    basic_error::basic_error( const basic_error::code& error_flags, const std::string& message )
         : system_error( static_cast<int>( error_flags ), category( ), message )
     {
     
@@ -28,23 +28,27 @@ namespace TWE
     
     const char* basic_error::category::name( ) const noexcept
     {
-        return "TWE Error";
+        return "twe Error";
     }
     
     std::string basic_error::category::message( int ev ) const
     {
         switch ( ev )
         {
-        case static_cast<int>( error_code::engine_error ):
+        case static_cast<int>( code::engine_error ):
             return "ENGINE_ERROR";
-        case static_cast<int>( error_code::vk_version_error ):
+        case static_cast<int>( code::vk_version_error ):
             return "VULKAN_VERSION_ERROR";
-        case static_cast<int>( error_code::vk_not_supported_error ):
+        case static_cast<int>( code::vk_not_supported_error ):
             return "VULKAN_NOT_SUPPORTED_ERROR";
-        case static_cast<int>( error_code::vk_instance_ext_support_error ):
+        case static_cast<int>( code::vk_instance_ext_support_error ):
             return "VULKAN_INSTANCE_EXTENTION_SUPPORT_ERROR";
-        case static_cast<int>( error_code::vk_validation_layer_support_error ):
+        case static_cast<int>( code::vk_validation_layer_support_error ):
             return "VULKAN_VALIDATION_LAYERS_SUPPORT_ERROR";
+        case static_cast<int>( code::shader_not_present_error ):
+            return "SHADER_NOT_PRESENT_ERROR";
+        case static_cast<int>( code::pipeline_not_present_error ):
+            return "PIPELINE_NOT_PRESENT_ERROR";
         default:
             return "ENGINE_UNKNOWN_ERROR";
         }

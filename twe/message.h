@@ -14,23 +14,35 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window/base_window.h"
+#ifndef TWE_MESSAGE_H
+#define TWE_MESSAGE_H
+
+#include <vector>
+
+#include "utilities/delegate.h"
 
 namespace twe
 {
-    bool base_window::is_open( ) const noexcept
+    template<class C>
+    class message_handler
     {
-        return open_;
-    }
+    public:
+        void add_callback( const delegate<void( C )>& callback )
+        {
+            callbacks_.push_back( callback );
+        }
+        
+        void send_message( const C& message )
+        {
+            for( auto& delegate : callbacks_ )
+            {
+                delegate( message );
+            }
+        }
     
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
+    private:
+        std::vector<delegate<void( C )>> callbacks_;
+    };
 }
+
+#endif //TWE_MESSAGE_H

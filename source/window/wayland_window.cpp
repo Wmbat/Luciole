@@ -18,7 +18,7 @@
 
 #if defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
-namespace TWE
+namespace twe
 {
 
 }
