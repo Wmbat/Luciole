@@ -62,7 +62,7 @@ namespace twe
             return shader_manager_.insert( { vk_context_.device_.get(), T, filepath, entry_point } );
         }
         
-        template<pipeline::type T>
+        template<pipeline::type T, size_t number>
         std::vector<pipeline::id> create_pipelines(
             const shader::id vert_shader_id, const shader::id frag_shader_id,
             std::vector<std::string>& pipeline_definitions )
@@ -76,7 +76,7 @@ namespace twe
                 .set_device( vk_context_.device_.get() )
                 .set_render_pass( vk_context_.render_pass_.get() );
     
-            return pipeline_manager_.insert( create_info );
+            return pipeline_manager_.insert<number>( create_info );
         }
         
         void TWE_API switch_pipeline( const pipeline::id id );
