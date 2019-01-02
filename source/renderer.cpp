@@ -172,7 +172,7 @@ namespace twe
             
             vk_context_.swapchain_.image_views_.resize( image_count );
             vk_context_.swapchain_.framebuffers_.resize( image_count );
-            for( auto i = 0; i < image_count; ++i )
+            for( uint32_t i = 0; i < image_count; ++i )
             {
                 auto image_view = create_image_view( vk_context_.swapchain_.image_[i] );
                 vk_context_.swapchain_.image_views_[i] = std::move( image_view );
@@ -516,7 +516,7 @@ namespace twe
     
         vk_context_.swapchain_.image_views_.resize( image_count );
         vk_context_.swapchain_.framebuffers_.resize( image_count );
-        for( auto i = 0; i < image_count; ++i )
+        for( uint32_t i = 0; i < image_count; ++i )
         {
             auto image_view = create_image_view( vk_context_.swapchain_.image_[i] );
             vk_context_.swapchain_.image_views_[i] = std::move( image_view );

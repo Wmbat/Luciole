@@ -51,10 +51,10 @@ namespace twe
 
         RECT wnd_rect
         {
-            settings_.x_,                       // left
-            settings_.y_,                       // top
-            settings_.x_ + settings_.width_,    // right
-            settings_.y_ + settings_.height_    // bottom
+            static_cast< LONG >( settings_.x_ ),                       // left
+            static_cast< LONG >( settings_.y_ ),                       // top
+            static_cast< LONG >( settings_.x_ + settings_.width_ ),    // right
+            static_cast< LONG >( settings_.y_ + settings_.height_ )    // bottom
         };
 
         AdjustWindowRect ( &wnd_rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE );
@@ -126,16 +126,9 @@ namespace twe
 
     vk::UniqueSurfaceKHR win32_window::create_surface ( const vk::Instance& instance ) const noexcept
     {
-        VkSurfaceKHR surface;
-
-        const VkWin32SurfaceCreateInfoKHR create_info
-        {
-            VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,            // sType
-            nullptr,                                                    // pNext
-            { },                                                        // flags
-            h_inst_,                                                    // hinstance
-            h_wnd_                                                      // hwnd
-        };
+        const auto create_info = vk::Win32SurfaceCreateInfoKHR ( )
+            .setHinstance ( h_inst_ )
+            .setHwnd ( h_wnd_ );
 
         return instance.createWin32SurfaceKHRUnique ( create_info );
     }
@@ -204,8 +197,8 @@ namespace twe
             {
                 const auto points = MAKEPOINTS ( l_param );
                 
-                if ( static_cast<uint32_t>( points.x ) > 0 && static_cast<uint32_t>( points.x ) < settings_.width_ &&
-                     static_cast<uint32_t>( points.y ) > 0 && static_cast<uint32_t>( points.y ) < settings_.height_ )
+                if ( static_cast<uint32_t>( points.x ) > 0u && static_cast<uint32_t>( points.x ) < settings_.width_ &&
+                     static_cast<uint32_t>( points.y ) > 0u && static_cast<uint32_t>( points.y ) < settings_.height_ )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::l_button )
@@ -218,8 +211,8 @@ namespace twe
             case WM_LBUTTONUP:
             {
                 const auto points = MAKEPOINTS ( l_param );
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( points.x > 0 && points.x < static_cast<int32_t>( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::l_button )
@@ -233,8 +226,8 @@ namespace twe
             {
                 const auto points = MAKEPOINTS ( l_param );
 
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::scroll_button )
@@ -248,8 +241,8 @@ namespace twe
             {
                 const auto points = MAKEPOINTS ( l_param );
 
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::scroll_button )
@@ -263,8 +256,8 @@ namespace twe
             {
                 const auto points = MAKEPOINTS ( l_param );
 
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::r_button )
@@ -277,8 +270,9 @@ namespace twe
             case WM_RBUTTONUP:
             {
                 const auto points = MAKEPOINTS ( l_param );
-                if ( points.x > 0 && points.x < settings_.width_ &&
-                     points.y > 0 && points.y < settings_.height_ )
+
+                if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_button_event ( )
                         .set_code ( mouse::button::r_button )
@@ -294,8 +288,8 @@ namespace twe
                 const auto button = GET_XBUTTON_WPARAM ( w_param );
                 if ( button == XBUTTON1 )
                 {
-                    if ( points.x > 0 && points.x < settings_.width_ &&
-                         points.y > 0 && points.y < settings_.height_ )
+                    if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                         points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                     {
                         const auto event = mouse_button_event ( )
                             .set_code ( mouse::button::side_button_1 )
@@ -307,8 +301,9 @@ namespace twe
                 }
                 else if ( button == XBUTTON2 )
                 {
-                    if ( points.x > 0 && points.x < settings_.width_ &&
-                         points.y > 0 && points.y < settings_.height_ )
+
+                    if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                         points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                     {
                         const auto event = mouse_button_event ( )
                             .set_code ( mouse::button::side_button_2 )
@@ -325,8 +320,8 @@ namespace twe
                 const auto button = GET_XBUTTON_WPARAM ( w_param );
                 if ( button == XBUTTON1 )
                 {
-                    if ( points.x > 0 && points.x < settings_.width_ &&
-                         points.y > 0 && points.y < settings_.height_ )
+                    if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                         points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                     {
                         const auto event = mouse_button_event ( )
                             .set_code ( mouse::button::side_button_1 )
@@ -338,8 +333,8 @@ namespace twe
                 }
                 else if ( button == XBUTTON2 )
                 {
-                    if ( points.x > 0 && points.x < settings_.width_ &&
-                         points.y > 0 && points.y < settings_.height_ )
+                    if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                         points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                     {
                         const auto event = mouse_button_event ( )
                             .set_code ( mouse::button::side_button_2 )
@@ -354,8 +349,8 @@ namespace twe
             {
                 const auto points = MAKEPOINTS ( l_param );
 
-                if ( points.x > 0 && points.x < settings_.width_ && 
-                     points.y > 0 && points.y < settings_.height_ )
+                if ( points.x > 0 && points.x < static_cast< int32_t >( settings_.width_ ) &&
+                     points.y > 0 && points.y < static_cast< int32_t >( settings_.height_ ) )
                 {
                     const auto event = mouse_motion_event ( )
                         .set_position ( glm::i32vec2( points.x , points.y ) );
