@@ -41,14 +41,14 @@ namespace twe
         
     public:
         TWE_API pipeline_layout( const vk::Device& device, const shader::id vert_id, const shader::id frag_id );
-        pipeline_layout( const pipeline_layout& rhs ) = delete;
+        TWE_API pipeline_layout( const pipeline_layout& rhs ) = delete;
         TWE_API pipeline_layout( pipeline_layout&& rhs ) noexcept;
-        ~pipeline_layout( ) = default;
+        TWE_API~pipeline_layout( ) = default;
         
-        pipeline_layout& operator=( const pipeline_layout& rhs ) = delete;
-        pipeline_layout& TWE_API operator=( pipeline_layout&& rhs ) noexcept;
+        TWE_API pipeline_layout& operator=( const pipeline_layout& rhs ) = delete;
+        TWE_API pipeline_layout& operator=( pipeline_layout&& rhs ) noexcept;
         
-        const vk::PipelineLayout& get( ) const noexcept;
+        TWE_API const vk::PipelineLayout& get( ) const noexcept;
     
     private:
         vk::UniquePipelineLayout layout_;
@@ -71,15 +71,15 @@ namespace twe
         
     public:
         TWE_API pipeline( vk::UniquePipeline&& pipeline, const type type, const pipeline_layout::id layout_id );
-        pipeline( const pipeline& rhs ) = delete;
+        TWE_API pipeline( const pipeline& rhs ) = delete;
         TWE_API pipeline( pipeline&& rhs ) noexcept;
-        ~pipeline( ) = default;
+        TWE_API ~pipeline( ) = default;
         
-        pipeline& operator=( const pipeline& rhs ) = delete;
-        pipeline& TWE_API operator=( pipeline&& rhs ) noexcept;
+        TWE_API pipeline& operator=( const pipeline& rhs ) = delete;
+        TWE_API pipeline& operator=( pipeline&& rhs ) noexcept;
         
-        vk::PipelineBindPoint TWE_API get_bind_point( ) const;
-        const vk::Pipeline& TWE_API get( ) const;
+        TWE_API vk::PipelineBindPoint get_bind_point( ) const;
+        TWE_API const vk::Pipeline& get( ) const;
         
     private:
         vk::UniquePipeline pipeline_;

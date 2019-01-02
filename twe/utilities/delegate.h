@@ -47,14 +47,14 @@ namespace twe
             delegate( )
         { }
         
-        template<class C, typename = std::enable_if_t<std::is_class<C>{ }>>
+        template<class C, typename = std::enable_if_t<std::is_class<C>::value>>
         explicit delegate( C const *const o ) noexcept
             :
             object_ptr_( const_cast<C *>( o ))
         {
         }
         
-        template<class C, typename = std::enable_if_t<std::is_class<C>{ }>>
+        template<class C, typename = std::enable_if_t<std::is_class<C>::value>>
         explicit delegate( C const& o ) noexcept
             :
             object_ptr_( const_cast<C *>( &o ))
@@ -87,7 +87,7 @@ namespace twe
         
         template<
             typename T,
-            typename = std::enable_if_t<!std::is_same<delegate, std::decay_t<T>>{ }>
+            typename = std::enable_if_t<!std::is_same<delegate, std::decay_t<T>>::value>
             >
         delegate( T&& f )
             :
@@ -124,7 +124,7 @@ namespace twe
         
         template<
             typename T,
-            typename = std::enable_if<!std::is_same<delegate, std::decay_t<T>>{ }>
+            typename = std::enable_if<!std::is_same<delegate, std::decay_t<T>>::value>
             >
         delegate& operator=( T&& f )
         {
@@ -343,8 +343,8 @@ namespace twe
         
         template<typename T>
         static typename ::std::enable_if<
-            !( is_member_pair<T>{ } ||
-               is_const_member_pair<T>{ } ),
+            !( is_member_pair<T>::value ||
+               is_const_member_pair<T>::value ),
             R
         >::type
         functor_stub( void *const object_ptr, A&& ... args )
@@ -354,8 +354,8 @@ namespace twe
         
         template<typename T>
         static typename ::std::enable_if<
-            is_member_pair<T>{ } ||
-            is_const_member_pair<T>{ },
+            is_member_pair<T>::value ||
+            is_const_member_pair<T>::value,
             R
         >::type
         functor_stub( void *const object_ptr, A&& ... args )

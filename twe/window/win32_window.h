@@ -37,7 +37,7 @@ namespace twe
 
         void TWE_API poll_events ( ) override;
 
-        vk_return_type<VkSurfaceKHR> TWE_API create_surface ( const VkInstance& instance ) const noexcept override;
+        vk::UniqueSurfaceKHR TWE_API create_surface ( const vk::Instance& instance ) const noexcept override;
 
     private:
         static LRESULT WINAPI handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );

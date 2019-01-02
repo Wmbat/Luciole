@@ -43,44 +43,44 @@ namespace twe
             vk::RenderPass render_pass_;
             vk::Extent2D extent_;
             
-            pipeline_create_info& TWE_API set_shaders( const shader::id vert_shader_id, const shader::id frag_shader_id )
+            pipeline_create_info& set_shaders( const shader::id vert_shader_id, const shader::id frag_shader_id )
             {
                 vert_id_ = vert_shader_id;
                 frag_id_ = frag_shader_id;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_pipeline_type( const pipeline::type type )
+            pipeline_create_info& set_pipeline_type( const pipeline::type type )
             {
                 type_ = type;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_shader_manager( const shader_manager* manager )
+            pipeline_create_info& set_shader_manager( const shader_manager* manager )
             {
                 shader_manager_ = manager;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_pipeline_definitions( const std::vector<std::string> pipeline_defs )
+            pipeline_create_info& set_pipeline_definitions( const std::vector<std::string> pipeline_defs )
             {
                 pipeline_defs_ = pipeline_defs;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_device( const vk::Device& device )
+            pipeline_create_info& set_device( const vk::Device& device )
             {
                 device_ = device;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_render_pass( const vk::RenderPass& render_pass )
+            pipeline_create_info& set_render_pass( const vk::RenderPass& render_pass )
             {
                 render_pass_ = render_pass;
                 
                 return *this;
             }
-            pipeline_create_info& TWE_API set_extent( const vk::Extent2D extent )
+            pipeline_create_info& set_extent( const vk::Extent2D extent )
             {
                 extent_ = extent;
                 
@@ -89,11 +89,11 @@ namespace twe
         };
         
     public:
-        std::vector<pipeline::id> TWE_API insert( pipeline_create_info& create_info );
+        TWE_API std::vector<pipeline::id> insert( pipeline_create_info& create_info );
         
-        const pipeline& TWE_API find( const pipeline::id id ) const;
+        TWE_API const pipeline& find( const pipeline::id id ) const;
         
-        const pipeline& TWE_API operator[]( const pipeline::id id ) const;
+        TWE_API const pipeline& operator[]( const pipeline::id id ) const;
         
     private:
         const vk::Bool32 get_bool_data( const std::string& data, const std::string& problem_location ) const noexcept;

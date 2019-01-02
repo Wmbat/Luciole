@@ -40,33 +40,33 @@ namespace twe
         uint32_t TWE_API get_height( ) const noexcept;
     
         template<class C>
-        std::enable_if_t<std::is_same<C, key_event_delg>{ }, void> set_event_callback( const C& callback )
+        std::enable_if_t < std::is_same<C, key_event_delg>::value, void > set_event_callback ( const C& callback )
         {
             key_event_.add_callback( callback );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, mouse_button_event_delg>{ }, void> set_event_callback( const C& callback )
+        std::enable_if_t<std::is_same<C, mouse_button_event_delg>::value, void> set_event_callback( const C& callback )
         {
             mouse_button_event_.add_callback( callback );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, mouse_motion_event_delg>{ }, void> set_event_callback( const C& callback )
+        std::enable_if_t<std::is_same<C, mouse_motion_event_delg>::value, void> set_event_callback( const C& callback )
         {
             mouse_motion_event_.add_callback( callback );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, window_close_event_delg>{ }, void> set_event_callback( const C& callback )
+        std::enable_if_t<std::is_same<C, window_close_event_delg>::value, void> set_event_callback( const C& callback )
         {
             window_close_event_.add_callback( callback );
         }
     
         template<class C>
-        std::enable_if_t<std::is_same<C, framebuffer_resize_event_delg>{ }, void> set_event_callback( const C& callback )
+        std::enable_if_t<std::is_same<C, framebuffer_resize_event_delg>::value, void> set_event_callback( const C& callback )
         {
-            frame_buffer_resize_event_.add_callback( callback );
+            framebuffer_resize_event_.add_callback( callback );
         }
         
     protected:
@@ -91,7 +91,7 @@ namespace twe
         message_handler<const mouse_button_event> mouse_button_event_;
         message_handler<const mouse_motion_event> mouse_motion_event_;
         message_handler<const window_close_event> window_close_event_;
-        message_handler<const framebuffer_resize_event> frame_buffer_resize_event_;
+        message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
     };
 }
 

@@ -29,13 +29,13 @@ namespace twe
     class shader_manager
     {
     public:
-        shader_manager( ) = default;
-        shader_manager( const shader_manager& rhs ) = delete;
-        shader_manager( shader_manager&& rhs ) noexcept;
-        ~shader_manager( ) = default;
+        TWE_API shader_manager( ) = default;
+        TWE_API shader_manager( const shader_manager& rhs ) = delete;
+        TWE_API shader_manager( shader_manager&& rhs ) noexcept;
+        TWE_API ~shader_manager( ) = default;
         
-        shader_manager& operator=( const shader_manager& rhs ) = delete;
-        shader_manager& operator=( shader_manager&& rhs ) noexcept;
+        TWE_API shader_manager& operator=( const shader_manager& rhs ) = delete;
+        TWE_API shader_manager& operator=( shader_manager&& rhs ) noexcept;
         
         /*!
          * @brief Add a TWE::shader to the manager if it is not already present.
@@ -43,7 +43,7 @@ namespace twe
          * the data to create the TWE::shader.
          * @return The id, TWE::shader::id, of the TWE::shader.
          */
-        shader::id TWE_API insert( const shader::create_info& create_info );
+        TWE_API shader::id insert( const shader::create_info& create_info );
         
         /*!
          * @brief Get a TWE::shader from the manager if it is present.
@@ -51,7 +51,7 @@ namespace twe
          * @param id The id of the TWE::shader to be found.
          * @return A const reference to the desired TWE::shader.
          */
-        const shader& TWE_API find( const shader::id id ) const;
+        TWE_API const shader& find( const shader::id id ) const;
     
         /*!
          * @brief Get a TWE::shader from the manager if it is present.
@@ -59,7 +59,7 @@ namespace twe
          * @param id The id of the TWE::shader to be found.
          * @return A const reference to the desired TWE::shader.
          */
-        const shader& TWE_API operator[]( const shader::id id ) const;
+        TWE_API const shader& operator[]( const shader::id id ) const;
     
     private:
         std::unordered_map<shader::id, shader> shaders_;

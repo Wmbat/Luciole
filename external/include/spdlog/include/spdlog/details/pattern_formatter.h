@@ -1114,6 +1114,7 @@ private:
             auto digit = static_cast<size_t>(*it - '0');
             width = width * 10 + digit;
         }
+
         return details::padding_info{std::min(width, max_width), side};
     }
 

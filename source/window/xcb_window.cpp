@@ -303,6 +303,5 @@ namespace twe
         return instance.createXcbSurfaceKHRUnique( create_info );
     }
 }
+
 #endif
-
-

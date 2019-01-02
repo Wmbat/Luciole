@@ -124,7 +124,7 @@ namespace twe
         }
     };
 
-    vk_return_type<VkSurfaceKHR> win32_window::create_surface ( const VkInstance& instance ) const noexcept
+    vk::UniqueSurfaceKHR win32_window::create_surface ( const vk::Instance& instance ) const noexcept
     {
         VkSurfaceKHR surface;
 
@@ -137,7 +137,7 @@ namespace twe
             h_wnd_                                                      // hwnd
         };
 
-        return { vkCreateWin32SurfaceKHR ( instance, &create_info, nullptr, &surface ), surface };
+        return instance.createWin32SurfaceKHRUnique ( create_info );
     }
 
     LRESULT __stdcall win32_window::handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
@@ -177,25 +177,28 @@ namespace twe
                 open_ = false;
 
                 const auto event = window_close_event ( )
-                    .set_bool ( true );
+                    .set_is_closed ( open_ );
 
-                event_dispatcher::dispatch_window_close_event ( event );
+
+                window_close_event_.send_message ( event );
 
                 PostQuitMessage ( 0 );
             } break;
             case WM_KEYDOWN:
             {
-                const auto event = key_press_event ( )
-                    .set_key_code ( static_cast< keyboard::key >( w_param ) );
+                const auto event = key_event ( )
+                    .set_code ( static_cast< keyboard::key >( w_param ) )
+                    .set_state ( keyboard::key_state::pressed );
 
-                event_dispatcher::dispatch_key_pressed_event ( event );
+                key_event_.send_message ( event );
             } break;
             case WM_KEYUP:
             {
-                const auto event = key_release_event ( )
-                    .set_key_code ( static_cast< keyboard::key >( w_param ) );
+                const auto event = key_event ( )
+                    .set_code ( static_cast< keyboard::key >( w_param ) )
+                    .set_state ( keyboard::key_state::released );
 
-                event_dispatcher::dispatch_key_released_event ( event );
+                key_event_.send_message ( event );
             } break;
             case WM_LBUTTONDOWN:
             {
@@ -204,11 +207,12 @@ namespace twe
                 if ( static_cast<uint32_t>( points.x ) > 0 && static_cast<uint32_t>( points.x ) < settings_.width_ &&
                      static_cast<uint32_t>( points.y ) > 0 && static_cast<uint32_t>( points.y ) < settings_.height_ )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::l_button )
-                        .set_position ( points.x, points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::l_button )
+                        .set_state ( mouse::button_state::pressed )
+                        .set_position ( glm::i32vec2( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_LBUTTONUP:
@@ -217,11 +221,12 @@ namespace twe
                 if ( points.x > 0 && points.x < settings_.width_ &&
                      points.y > 0 && points.y < settings_.height_ )
                 {
-                    const auto event = mouse_button_release_event ( )
-                        .set_button_code ( mouse::button::l_button )
-                        .set_position ( points.x, points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::l_button )
+                        .set_state ( mouse::button_state::released )
+                        .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_MBUTTONDOWN:
@@ -231,11 +236,12 @@ namespace twe
                 if ( points.x > 0 && points.x < settings_.width_ &&
                      points.y > 0 && points.y < settings_.height_ )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::scroll_button )
-                        .set_position ( points.x, points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_button )
+                        .set_state ( mouse::button_state::pressed )
+                        .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_MBUTTONUP:
@@ -245,11 +251,12 @@ namespace twe
                 if ( points.x > 0 && points.x < settings_.width_ &&
                      points.y > 0 && points.y < settings_.height_ )
                 {
-                    const auto event = mouse_button_release_event ( )
-                        .set_button_code ( mouse::button::scroll_button )
-                        .set_position ( points.x, points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_button )
+                        .set_state ( mouse::button_state::released )
+                        .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_RBUTTONDOWN:
@@ -259,11 +266,12 @@ namespace twe
                 if ( points.x > 0 && points.x < settings_.width_ &&
                      points.y > 0 && points.y < settings_.height_ )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::r_button )
-                        .set_position ( points.x , points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::r_button )
+                        .set_state ( mouse::button_state::pressed )
+                        .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_RBUTTONUP:
@@ -272,11 +280,12 @@ namespace twe
                 if ( points.x > 0 && points.x < settings_.width_ &&
                      points.y > 0 && points.y < settings_.height_ )
                 {
-                    const auto event = mouse_button_release_event ( )
-                        .set_button_code ( mouse::button::r_button )
-                        .set_position ( points.x , points.y );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::r_button )
+                        .set_state ( mouse::button_state::released )
+                        .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                    event_dispatcher::dispatch_mouse_button_released_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_XBUTTONDOWN:
@@ -288,11 +297,12 @@ namespace twe
                     if ( points.x > 0 && points.x < settings_.width_ &&
                          points.y > 0 && points.y < settings_.height_ )
                     {
-                        const auto event = mouse_button_press_event ( )
-                            .set_button_code ( mouse::button::side_button_1 )
-                            .set_position ( points.x, points.y );
+                        const auto event = mouse_button_event ( )
+                            .set_code ( mouse::button::side_button_1 )
+                            .set_state ( mouse::button_state::pressed )
+                            .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                        event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                        mouse_button_event_.send_message ( event );
                     }
                 }
                 else if ( button == XBUTTON2 )
@@ -300,11 +310,12 @@ namespace twe
                     if ( points.x > 0 && points.x < settings_.width_ &&
                          points.y > 0 && points.y < settings_.height_ )
                     {
-                        const auto event = mouse_button_press_event ( )
-                            .set_button_code ( mouse::button::side_button_2 )
-                            .set_position ( points.x, points.y );
+                        const auto event = mouse_button_event ( )
+                            .set_code ( mouse::button::side_button_2 )
+                            .set_state ( mouse::button_state::pressed )
+                            .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                        event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                        mouse_button_event_.send_message ( event );
                     }
                 }
             } break;
@@ -317,11 +328,12 @@ namespace twe
                     if ( points.x > 0 && points.x < settings_.width_ &&
                          points.y > 0 && points.y < settings_.height_ )
                     {
-                        const auto event = mouse_button_release_event ( )
-                            .set_button_code ( mouse::button::side_button_1 )
-                            .set_position ( points.x, points.y );
+                        const auto event = mouse_button_event ( )
+                            .set_code ( mouse::button::side_button_1 )
+                            .set_state ( mouse::button_state::released )
+                            .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                        event_dispatcher::dispatch_mouse_button_released_event ( event );
+                        mouse_button_event_.send_message ( event );
                     }
                 }
                 else if ( button == XBUTTON2 )
@@ -329,11 +341,12 @@ namespace twe
                     if ( points.x > 0 && points.x < settings_.width_ &&
                          points.y > 0 && points.y < settings_.height_ )
                     {
-                        const auto event = mouse_button_release_event ( )
-                            .set_button_code ( mouse::button::side_button_2 )
-                            .set_position ( points.x, points.y );
+                        const auto event = mouse_button_event ( )
+                            .set_code ( mouse::button::side_button_2 )
+                            .set_state ( mouse::button_state::released )
+                            .set_position ( glm::i32vec2 ( points.x, points.y ) );
 
-                        event_dispatcher::dispatch_mouse_button_released_event ( event );
+                        mouse_button_event_.send_message ( event );
                     }
                 }
             } break;
@@ -345,9 +358,9 @@ namespace twe
                      points.y > 0 && points.y < settings_.height_ )
                 {
                     const auto event = mouse_motion_event ( )
-                        .set_position ( points.x , points.y );
+                        .set_position ( glm::i32vec2( points.x , points.y ) );
 
-                    event_dispatcher::dispatch_mouse_motion_event ( event );
+                    mouse_motion_event_.send_message ( event );
                 }
             } break;
             case WM_MOUSEWHEEL:
@@ -355,21 +368,20 @@ namespace twe
                 const auto points = MAKEPOINTS ( l_param );
                 if( GET_WHEEL_DELTA_WPARAM ( w_param ) > 0 )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::scroll_up )
-                        .set_position ( static_cast< int32_t >( points.x ),
-                                        static_cast< int32_t >( points.y ) );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_up )
+                        .set_position ( glm::i32vec2 { static_cast< int32_t >( points.x ), static_cast< int32_t >( points.y ) } );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
                 else if( GET_WHEEL_DELTA_WPARAM ( w_param ) < 0 )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::scroll_down )
-                        .set_position ( static_cast< int32_t >( points.x ),
-                                        static_cast< int32_t >( points.y ) );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_down )
+                        .set_position ( glm::i32vec2 { static_cast< int32_t >( points.x ), static_cast< int32_t >( points.y ) } );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_MOUSEHWHEEL:
@@ -377,21 +389,19 @@ namespace twe
                 const auto points = MAKEPOINTS ( l_param );
                 if ( GET_WHEEL_DELTA_WPARAM ( w_param ) > 0 )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::scroll_left )
-                        .set_position ( static_cast< int32_t >( points.x ) ,
-                                        static_cast< int32_t >( points.y ) );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_left )
+                        .set_position ( glm::i32vec2 { static_cast< int32_t >( points.x ), static_cast< int32_t >( points.y ) } );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
                 else if ( GET_WHEEL_DELTA_WPARAM ( w_param ) < 0 )
                 {
-                    const auto event = mouse_button_press_event ( )
-                        .set_button_code ( mouse::button::scroll_right )
-                        .set_position ( static_cast< int32_t >( points.x ) ,
-                                        static_cast< int32_t >( points.y ) );
+                    const auto event = mouse_button_event ( )
+                        .set_code ( mouse::button::scroll_right )
+                        .set_position ( glm::i32vec2 { static_cast< int32_t >( points.x ), static_cast< int32_t >( points.y ) } );
 
-                    event_dispatcher::dispatch_mouse_button_pressed_event ( event );
+                    mouse_button_event_.send_message ( event );
                 }
             } break;
             case WM_MOVE:
@@ -408,9 +418,9 @@ namespace twe
                     settings_.height_ = HIWORD ( l_param );
 
                     const auto event = framebuffer_resize_event ( )
-                        .set_size ( settings_.width_, settings_.height_ );
+                        .set_size ( glm::i32vec2 { settings_.width_, settings_.height_ } );
 
-                    event_dispatcher::dispatch_framebuffer_resize_event ( event );
+                    framebuffer_resize_event_.send_message ( event );
                 }
             } break;
 
