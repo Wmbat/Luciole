@@ -17,11 +17,14 @@
 #ifndef TWE_VK_PIPELINE_MANAGER_H
 #define TWE_VK_PIPELINE_MANAGER_H
 
+#include <nlohmann/json.hpp>
+
 #include <unordered_map>
 
 #include "../vk_utils.h"
 #include "pipeline.h"
 #include "shader_manager.h"
+#include "utilities/file_io.h"
 
 namespace twe
 {
@@ -90,7 +93,6 @@ namespace twe
         
     public:
         TWE_API std::vector<pipeline::id> insert( pipeline_create_info& create_info );
-        
         TWE_API const pipeline& find( const pipeline::id id ) const;
         
         TWE_API const pipeline& operator[]( const pipeline::id id ) const;
