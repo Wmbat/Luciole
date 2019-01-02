@@ -345,15 +345,6 @@ namespace twe
           
             vk_context_.command_buffers_[i].setViewport( 0, 1, &viewport );
             vk_context_.command_buffers_[i].setScissor( 0, 1, &scissors );
-    
-            /*
-            auto render_pass_begin_info = VkRenderPassBeginInfo{ };
-            render_pass_begin_info.framebuffer = vk_context_.swapchain_.framebuffers_[i].get();
-            render_pass_begin_info.renderPass = vk_context_.render_pass_.get();
-            render_pass_begin_info.clearValueCount = 1;
-            render_pass_begin_info.pClearValues = &clear_value_;
-            render_pass_begin_info.renderArea = vk::Rect2D{ { 0, 0 }, vk_context_.swapchain_.extent_ };
-             */
             
             const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
                 .setFramebuffer( vk_context_.swapchain_.framebuffers_[i].get() )
@@ -363,7 +354,7 @@ namespace twe
                 .setRenderArea( { { 0, 0 }, vk_context_.swapchain_.extent_ } );
             
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
-            
+
             vk_context_.command_buffers_[i].bindPipeline(
                 pipeline_manager_.find( current_pipeline_ ).get_bind_point(),
                 pipeline_manager_.find( current_pipeline_ ).get() );
@@ -444,6 +435,7 @@ namespace twe
                 core_error ( e.what ( ) );
             }
 
+            /*
             const auto present_info = vk::PresentInfoKHR( )
                 .setWaitSemaphoreCount( 1 )
                 .setPWaitSemaphores( &vk_context_.render_finished_semaphores_[current_frame_].get() )
@@ -452,6 +444,17 @@ namespace twe
                 .setPImageIndices( &image_index );
             
             result = vk_context_.present_queue_.presentKHR( present_info );
+            */
+            
+            auto present_info = VkPresentInfoKHR{ };
+            present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            present_info.waitSemaphoreCount = 1;
+            present_info.pWaitSemaphores = reinterpret_cast<VkSemaphore*>( &vk_context_.render_finished_semaphores_[current_frame_].get() );
+            present_info.swapchainCount = 1;
+            present_info.pSwapchains = reinterpret_cast<VkSwapchainKHR*>( &vk_context_.swapchain_.swapchain_.get() );
+            present_info.pImageIndices = &image_index;
+            
+            result = ( vk::Result )vkQueuePresentKHR( vk_context_.present_queue_, &present_info );
             
             try
             {
