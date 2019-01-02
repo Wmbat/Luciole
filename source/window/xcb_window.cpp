@@ -225,7 +225,7 @@ namespace twe
                         const auto event = framebuffer_resize_event( )
                             .set_size( { settings_.width_, settings_.height_ } );
         
-                        frame_buffer_resize_event_.send_message( event );
+                        framebuffer_resize_event_.send_message( event );
                     }
                 } break;
                 case XCB_KEY_PRESS:
