@@ -71,6 +71,10 @@ namespace twe
         {
             // TODO: handle error.
         }
+        catch ( ... )
+        {
+            // TODO: handle error.
+        }
     }
     
     const shader& shader_manager::operator[]( const shader::id id ) const
@@ -93,6 +97,10 @@ namespace twe
         catch( const basic_error& e )
         {
             // TODO: handle error.
+        }
+        catch ( ... )
+        {
+            // TODO: handler error.
         }
     }
 }

@@ -133,7 +133,5 @@ if( NOT WIN32 )
     endif()
 else()
     target_link_libraries(TWE
-            ${Vulkan_LIBRARY}
-            libglslang.a
-            libSPIRV.a )
+            ${Vulkan_LIBRARY} )
 endif( )

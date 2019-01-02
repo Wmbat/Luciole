@@ -1115,7 +1115,7 @@ private:
             width = width * 10 + digit;
         }
 
-        return details::padding_info{std::min(width, max_width), side};
+        return details::padding_info{ ( std::min )(width, max_width), side};
     }
 
     void compile_pattern_(const std::string &pattern)
