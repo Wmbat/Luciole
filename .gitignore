@@ -8,3 +8,4 @@
 /release
 /.idea
 /build/x64-Debug
+/build/x64-Release

@@ -20,10 +20,7 @@
 #include "utilities/file_io.h"
 
 namespace twe
-{
-    pipeline::id pipeline_manager::pipeline_id_count_;
-    pipeline_layout::id pipeline_manager::layout_id_count_;
-    
+{    
     const pipeline& pipeline_manager::find( const pipeline::id id ) const
     {
         try

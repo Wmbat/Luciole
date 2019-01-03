@@ -276,32 +276,32 @@ namespace twe
         TWE_API const pipeline& operator[]( const pipeline::id id ) const;
         
     private:
-        const vk::Bool32 get_bool_data( const std::string& data, const std::string& problem_location ) const noexcept;
+        TWE_API const vk::Bool32 get_bool_data( const std::string& data, const std::string& problem_location ) const noexcept;
         
         // Input Assembly //
-        const vk::PrimitiveTopology get_topology_data( const std::string& data ) const noexcept;
+        TWE_API const vk::PrimitiveTopology get_topology_data( const std::string& data ) const noexcept;
         
         // Rasterization //
-        const vk::PolygonMode get_polygon_mode_data( const std::string& data ) const noexcept;
-        const vk::CullModeFlags get_cull_mode_data( const std::string& data ) const noexcept;
-        const vk::FrontFace get_front_face_data( const std::string& data ) const noexcept;
+        TWE_API const vk::PolygonMode get_polygon_mode_data( const std::string& data ) const noexcept;
+        TWE_API const vk::CullModeFlags get_cull_mode_data( const std::string& data ) const noexcept;
+        TWE_API const vk::FrontFace get_front_face_data( const std::string& data ) const noexcept;
         
         // Multisample //
-        const vk::SampleCountFlagBits get_rasterization_samples_data( const std::uint32_t data ) const noexcept;
+        TWE_API const vk::SampleCountFlagBits get_rasterization_samples_data( const std::uint32_t data ) const noexcept;
         
         // Colour Blend Attachments //
-        const vk::BlendFactor set_blend_factor_data( const std::string& data ) const noexcept;
-        const vk::BlendOp set_blend_op_data( const std::string& data ) const noexcept;
+        TWE_API const vk::BlendFactor set_blend_factor_data( const std::string& data ) const noexcept;
+        TWE_API const vk::BlendOp set_blend_op_data( const std::string& data ) const noexcept;
         
         // Colour Blend //
-        const vk::LogicOp set_logic_op_data( const std::string& data ) const noexcept;
+        TWE_API const vk::LogicOp set_logic_op_data( const std::string& data ) const noexcept;
         
     private:
         std::unordered_map<pipeline::id, pipeline> pipelines_;
         std::unordered_map<pipeline_layout::id, pipeline_layout> layouts_;
         
-        static pipeline::id pipeline_id_count_;
-        static pipeline_layout::id layout_id_count_;
+        static inline pipeline::id pipeline_id_count_;
+        static inline pipeline_layout::id layout_id_count_;
     };
 }
 

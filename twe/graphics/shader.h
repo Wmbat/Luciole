@@ -80,15 +80,15 @@ namespace twe
         };
         
     public:
-        shader( const create_info& create_info );
-        shader( const shader& rhs ) noexcept = delete;
-        shader( shader&& rhs ) noexcept;
-        ~shader( ) = default;
+        TWE_API shader( const create_info& create_info );
+        TWE_API shader( const shader& rhs ) noexcept = delete;
+        TWE_API shader( shader&& rhs ) noexcept;
+        TWE_API ~shader( ) = default;
         
-        shader& operator=( const shader& rhs ) noexcept = delete;
-        shader& operator=( shader&& rhs ) noexcept;
+        TWE_API shader& operator=( const shader& rhs ) noexcept = delete;
+        TWE_API shader& operator=( shader&& rhs ) noexcept;
         
-        const vk::PipelineShaderStageCreateInfo get_shader_stage_create_info( ) const noexcept;
+        TWE_API const vk::PipelineShaderStageCreateInfo get_shader_stage_create_info( ) const noexcept;
     
     private:
         vk::UniqueShaderModule shader_;
