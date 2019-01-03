@@ -113,7 +113,7 @@ private:
         file_helper_.reopen(true);
     }
 
-    // delete the target if exists, and rename the src file  to target
+    // delete the target if exists, and rename the source file  to target
     // return true on success, false otherwise.
     bool rename_file(const filename_t &src_filename, const filename_t &target_filename)
     {

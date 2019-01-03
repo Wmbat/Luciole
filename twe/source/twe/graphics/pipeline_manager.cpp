@@ -14,10 +14,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log.h"
-#include "graphics/pipeline_manager.h"
+#include "../log.h"
+#include "pipeline_manager.h"
 
-#include "utilities/file_io.h"
+#include "../utilities/file_io.h"
 
 namespace twe
 {    

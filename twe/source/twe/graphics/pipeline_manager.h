@@ -24,7 +24,7 @@
 #include "../vk_utils.h"
 #include "pipeline.h"
 #include "shader_manager.h"
-#include "utilities/file_io.h"
+#include "../utilities/file_io.h"
 
 namespace twe
 {

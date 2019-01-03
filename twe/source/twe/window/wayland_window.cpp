@@ -14,20 +14,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_H
-#define TWE_H
+#include "wayland_window.hpp"
 
-#include <memory>
+#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
 
-// #define VULKAN_HPP_NO_EXCEPTIONS
-// #define VULKAN_HPP_ASSERT
-#include <vulkan/vulkan.hpp>
+namespace twe
+{
 
-#include "application.h"
-#include "log.h"
+}
 
-//
-#include "entry_point.h"
-//
-
-#endif //TWE_H
+#endif

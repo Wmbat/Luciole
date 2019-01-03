@@ -3257,11 +3257,11 @@ void TParseContext::globalQualifierTypeCheck(const TSourceLoc& loc, const TQuali
 }
 
 //
-// Merge characteristics of the 'src' qualifier into the 'dst'.
+// Merge characteristics of the 'source' qualifier into the 'dst'.
 // If there is duplication, issue error messages, unless 'force'
 // is specified, which means to just override default settings.
 //
-// Also, when force is false, it will be assumed that 'src' follows
+// Also, when force is false, it will be assumed that 'source' follows
 // 'dst', for the purpose of error checking order for versions
 // that require specific orderings of qualifiers.
 //
@@ -5144,7 +5144,7 @@ void TParseContext::setLayoutQualifier(const TSourceLoc& loc, TPublicType& publi
     error(loc, "there is no such layout identifier for this stage taking an assigned value", id.c_str(), "");
 }
 
-// Merge any layout qualifier information from src into dst, leaving everything else in dst alone
+// Merge any layout qualifier information from source into dst, leaving everything else in dst alone
 //
 // "More than one layout qualifier may appear in a single declaration.
 // Additionally, the same layout-qualifier-name can occur multiple times
@@ -5206,15 +5206,15 @@ void TParseContext::mergeObjectLayoutQualifiers(TQualifier& dst, const TQualifie
             dst.layoutPushConstant = true;
 
 #ifdef NV_EXTENSIONS
-        if (src.layoutPassthrough)
+        if (source.layoutPassthrough)
             dst.layoutPassthrough = true;
-        if (src.layoutViewportRelative)
+        if (source.layoutViewportRelative)
             dst.layoutViewportRelative = true;
-        if (src.layoutSecondaryViewportRelativeOffset != -2048)
-            dst.layoutSecondaryViewportRelativeOffset = src.layoutSecondaryViewportRelativeOffset;
-        if (src.layoutShaderRecordNV)
+        if (source.layoutSecondaryViewportRelativeOffset != -2048)
+            dst.layoutSecondaryViewportRelativeOffset = source.layoutSecondaryViewportRelativeOffset;
+        if (source.layoutShaderRecordNV)
             dst.layoutShaderRecordNV = true;
-        if (src.pervertexNV)
+        if (source.pervertexNV)
             dst.pervertexNV = true;
 #endif
     }

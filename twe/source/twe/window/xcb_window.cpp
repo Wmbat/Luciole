@@ -14,14 +14,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <window/xcb_window.h>
-#include <log.h>
+#include "xcb_window.hpp"
+#include "../log.h"
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 
+/*
 #define explicit c_explicit             // Avoid mixing up "explicit" with the C++11 explicit
 #include <xcb/xkb.h>
 #undef explicit
+*/
 
 namespace twe
 {
@@ -78,12 +80,14 @@ namespace twe
             XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
             XCB_EVENT_MASK_POINTER_MOTION;
     
+        /*
         xcb_xkb_use_extension( p_xcb_connection_.get(), XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION );
         
         xcb_xkb_per_client_flags( p_xcb_connection_.get(), XCB_XKB_ID_USE_CORE_KBD,
                                   XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
                                   XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
                                   0,0,0 );
+                                  */
         
         if( settings_.fullscreen_ )
         {

@@ -18,9 +18,8 @@
 #include <set>
 #include <map>
 
-#include <renderer.h>
-#include <log.h>
-
+#include "renderer.h"
+#include "log.h"
 #include "vertex.h"
 #include "utilities/file_io.h"
 #include "utilities/basic_error.h"

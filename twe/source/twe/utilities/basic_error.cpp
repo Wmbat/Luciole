@@ -14,9 +14,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utilities/basic_error.h>
-
-#include "utilities/basic_error.h"
+#include "basic_error.h"
 
 namespace twe
 {
@@ -28,7 +26,7 @@ namespace twe
     
     const char* basic_error::category::name( ) const noexcept
     {
-        return "twe Error";
+        return "source Error";
     }
     
     std::string basic_error::category::message( int ev ) const

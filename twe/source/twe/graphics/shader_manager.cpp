@@ -14,8 +14,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "graphics/shader_manager.h"
-#include "utilities/basic_error.h"
+#include "shader_manager.h"
+#include "../utilities/basic_error.h"
 
 namespace twe
 {

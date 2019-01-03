@@ -23,7 +23,7 @@
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
 
-#include "base_window.h"
+#include "base_window.hpp"
 
 namespace twe
 {

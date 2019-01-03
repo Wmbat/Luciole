@@ -14,35 +14,20 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#ifndef TWE_H
+#define TWE_H
 
 #include <memory>
 
-#include "window/base_window.h"
+// #define VULKAN_HPP_NO_EXCEPTIONS
+// #define VULKAN_HPP_ASSERT
+#include <vulkan/vulkan.hpp>
 
-#include "TWE_core.h"
-#include "renderer.h"
+#include "twe/application.h"
+#include "log.h"
 
-namespace twe
-{
-    class application
-    {
-    public:
-        TWE_API application ( const std::string& title );
-        virtual ~application ( ) = default;
-        
-        virtual void run( ) = 0;
+//
+#include "entry_point.h"
+//
 
-    protected:
-        std::unique_ptr<base_window> p_wnd_;
-        std::shared_ptr<renderer> p_renderer_;
-    };
-    
-    /**
-     * should be defined by the Client.
-     */
-    std::unique_ptr<application> create_application( );
-}
-
-#endif //TWE_APPLICATION_H
+#endif //TWE_H

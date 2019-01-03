@@ -14,10 +14,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "graphics/shader.h"
-#include "log.h"
+#include "shader.h"
+#include "../log.h"
 
-#include "utilities/file_io.h"
+#include "../utilities/file_io.h"
 
 namespace twe
 {

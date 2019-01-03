@@ -14,23 +14,27 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window/base_window.h"
+#include "application.h"
+
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+#include "window/win32_window.h"
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+#include "window/xcb_window.hpp"
+#endif
 
 namespace twe
 {
-    bool base_window::is_open( ) const noexcept
+    application::application ( const std::string& title )
     {
-        return open_;
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+        p_wnd_ = std::make_unique<win32_window> ( title );
+#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
+        p_wnd_ = std::make_unique<wayland_window> ( title );
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+        p_wnd_ = std::make_unique<xcb_window> ( title );
+#endif
+        
+        p_renderer_ = std::make_shared<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
     }
-    
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
 }

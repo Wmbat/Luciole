@@ -1,6 +1,6 @@
 #pragma once
 
-//#twe "compute_common.hpp"
+//#source "compute_common.hpp"
 #include "setup.hpp"
 #include <limits>
 

@@ -17,7 +17,7 @@
 #ifndef BASE_WINDOW_H
 #define BASE_WINDOW_H
 
-#include "event.h"
+#include "event.hpp"
 #include "../message.h"
 #include "../TWE_core.h"
 #include "../vk_utils.h"

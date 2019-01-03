@@ -17,7 +17,7 @@
 #ifndef WIN32_WINDOW_H
 #define WIN32_WINDOW_H
 
-#include "base_window.h"
+#include "base_window.hpp"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
 

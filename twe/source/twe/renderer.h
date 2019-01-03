@@ -23,7 +23,7 @@
 #include "vk_utils.h"
 #include "graphics/shader_manager.h"
 #include "graphics/pipeline_manager.h"
-#include "window/base_window.h"
+#include "window/base_window.hpp"
 
 namespace twe
 {

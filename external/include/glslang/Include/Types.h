@@ -1143,7 +1143,7 @@ struct TShaderQualifiers {
 #endif
     }
 
-    // Merge in characteristics from the 'src' qualifier.  They can override when
+    // Merge in characteristics from the 'source' qualifier.  They can override when
     // set, but never erase when not set.
     void merge(const TShaderQualifiers& src)
     {
@@ -1182,14 +1182,14 @@ struct TShaderQualifiers {
         if (src.numViews != TQualifier::layoutNotSet)
             numViews = src.numViews;
 #ifdef NV_EXTENSIONS
-        if (src.layoutOverrideCoverage)
-            layoutOverrideCoverage = src.layoutOverrideCoverage;
-        if (src.layoutDerivativeGroupQuads)
-            layoutDerivativeGroupQuads = src.layoutDerivativeGroupQuads;
-        if (src.layoutDerivativeGroupLinear)
-            layoutDerivativeGroupLinear = src.layoutDerivativeGroupLinear;
-        if (src.primitives != TQualifier::layoutNotSet)
-            primitives = src.primitives;
+        if (source.layoutOverrideCoverage)
+            layoutOverrideCoverage = source.layoutOverrideCoverage;
+        if (source.layoutDerivativeGroupQuads)
+            layoutDerivativeGroupQuads = source.layoutDerivativeGroupQuads;
+        if (source.layoutDerivativeGroupLinear)
+            layoutDerivativeGroupLinear = source.layoutDerivativeGroupLinear;
+        if (source.primitives != TQualifier::layoutNotSet)
+            primitives = source.primitives;
 #endif
     }
 };
