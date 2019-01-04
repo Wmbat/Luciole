@@ -15,6 +15,16 @@
 #
 
 cmake_minimum_required( VERSION 3.11 )
+project( twe VERSION 0.0.3 )
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    add_compile_options("-Wall")
+#    add_compile_options("-Wextra")
+#    add_compile_options("-Wconversion")
+#    add_compile_options("-pedantic")
+#    add_compile_options("-Wfatal-errors")
+
+endif()
 
 add_library( twe SHARED
         source/twe/vulkan/pipeline.cpp
@@ -46,7 +56,7 @@ add_library( twe SHARED
         source/twe/utilities/log.cpp
         source/twe/utilities/log.hpp
         source/twe/utilities/message.hpp
-        source/twe/window/mouse.hpp)
+        source/twe/window/mouse.hpp )
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )
@@ -92,3 +102,5 @@ target_sources( twe
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe_core.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/vk_utils.hpp" )
+
+target_include_directories( twe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/source" )

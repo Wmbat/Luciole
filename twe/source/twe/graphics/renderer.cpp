@@ -35,51 +35,21 @@ namespace twe
         int32_t code, const char* layerPrefix,
         const char* msg, void* userData )
     {
-        if( flags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
+        if ( flags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
         {
             core_warn( "Validation Layers -> {0}.", msg );
         }
-        else if( flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
+        else if ( flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
         {
             core_warn( "Validation Layers -> {0}.", msg );
         }
-        else if( flags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
+        else if ( flags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
             core_error( "Validation Layers -> {0}.", msg );
         }
         
         return VK_FALSE;
     }
-    VKAPI_ATTR VkResult VKAPI_CALL create_debug_report_callback( VkInstance instance,
-        const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-        const VkAllocationCallbacks* pAllocator,
-        VkDebugReportCallbackEXT* pCallback )
-    {
-        static auto func = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
-            vkGetInstanceProcAddr ( instance, "vkCreateDebugReportCallbackEXT" ) );
-        
-        if ( func != nullptr )
-        {
-            return func ( instance, pCreateInfo, pAllocator, pCallback );
-        }
-        else
-        {
-            return VK_ERROR_EXTENSION_NOT_PRESENT;
-        }
-    }
-    VKAPI_ATTR void VKAPI_CALL vk_destroy_debug_report_callback( VkInstance instance,
-        VkDebugReportCallbackEXT callback,
-        const VkAllocationCallbacks* pAllocator )
-    {
-        static auto func = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(
-            vkGetInstanceProcAddr ( instance, "vkDestroyDebugReportCallbackEXT" ) );
-        
-        if ( func != nullptr )
-        {
-            func ( instance, callback, pAllocator );
-        }
-    }
-    
     
     renderer::renderer( base_window* p_wnd, const std::string& app_name, uint32_t app_version )
         :
@@ -108,8 +78,10 @@ namespace twe
             
             if constexpr( enable_debug_layers )
             {
-                vk_context_.debug_report_ = check_vk_result_value(
-                    create_debug_report( ), "create_debug_report( )" );
+                vk_context_.dispatch_loader_dynamic_.init( vk_context_.instance_.get() );
+                
+                auto debug_callback = create_debug_report_callback();
+                vk_context_.debug_report_callback_ = std::move( debug_callback );
             }
             
             vk_context_.surface_ = p_wnd->create_surface( vk_context_.instance_.get() );
@@ -207,11 +179,6 @@ namespace twe
         {
             vk_context_.device_->freeCommandBuffers( vk_context_.command_pool_.get(), vk_context_.command_buffers_ );
         }
-    
-        if constexpr ( enable_debug_layers )
-        {
-            vk_destroy_debug_report_callback( vk_context_.instance_.get(), vk_context_.debug_report_, nullptr );
-        }
     }
     
     renderer& renderer::operator=( renderer&& rhs ) noexcept
@@ -230,8 +197,9 @@ namespace twe
         
             if constexpr( enable_debug_layers )
             {
-                vk_context_.debug_report_ = rhs.vk_context_.debug_report_;
-                rhs.vk_context_.debug_report_ = vk::DebugReportCallbackEXT( nullptr );
+                vk_context_.dispatch_loader_dynamic_ = std::move( rhs.vk_context_.dispatch_loader_dynamic_ );
+                
+                vk_context_.debug_report_callback_ = std::move( rhs.vk_context_.debug_report_callback_ );
             }
     
             vk_context_.surface_ = std::move( rhs.vk_context_.surface_ );
@@ -279,6 +247,7 @@ namespace twe
     
     void renderer::setup_graphics_pipeline( const shader_data_type &data )
     {
+        /*
         const vk::PipelineShaderStageCreateInfo shader_stages[] = {
             shader_manager_.find( data.vert_shader_id_ ).get_shader_stage_create_info(),
             shader_manager_.find( data.frag_shader_id_ ).get_shader_stage_create_info() };
@@ -308,7 +277,6 @@ namespace twe
             .setVertexAttributeDescriptionCount( 0 ) // 2
             .setPVertexAttributeDescriptions( vertex_input_attribs );
         
-        /*
         vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
             create_pipeline_layout( ), "create_pipeline_layout( )" );
         
@@ -335,7 +303,7 @@ namespace twe
             .setOffset( { 0, 0 } )
             .setExtent( vk_context_.swapchain_.extent_ );
         
-        for( auto i = 0; i < vk_context_.command_buffers_.size(); ++i )
+        for( size_t i = 0; i < vk_context_.command_buffers_.size(); ++i )
         {
             const auto begin_info = vk::CommandBufferBeginInfo( )
                 .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
@@ -473,7 +441,7 @@ namespace twe
                 core_error ( e.what ( ) );
             }
 
-            current_frame_ = ( ++current_frame_ ) % MAX_FRAMES_IN_FLIGHT;
+            current_frame_ = ++current_frame_ % MAX_FRAMES_IN_FLIGHT;
         }
     }
     
@@ -642,25 +610,13 @@ namespace twe
         }
     }
     
-    const vk::ResultValue<vk::DebugReportCallbackEXT> renderer::create_debug_report( ) const noexcept
+    const vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> renderer::create_debug_report_callback( ) const noexcept
     {
-        VkDebugReportCallbackEXT debug_report;
-    
-        const VkDebugReportCallbackCreateInfoEXT create_info
-        {
-            VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,    // sType
-            nullptr,                                                    // pNext
-            VK_DEBUG_REPORT_ERROR_BIT_EXT |                             // flags
-            VK_DEBUG_REPORT_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT,
-            debug_callback_function,                                    // pfnCallback
-            nullptr                                                     // pUserData
-        };
+        const auto create_info = vk::DebugReportCallbackCreateInfoEXT( )
+            .setFlags( vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning )
+            .setPfnCallback( debug_callback_function );
         
-        auto result = ( vk::Result ) create_debug_report_callback( vk_context_.instance_.get(), &create_info,
-                                                                   nullptr, &debug_report );
-        
-        return { result, debug_report };
+        return vk_context_.instance_->createDebugReportCallbackEXTUnique( create_info, nullptr, vk_context_.dispatch_loader_dynamic_ );
     }
     
     const vk::PhysicalDevice renderer::pick_physical_device( ) const noexcept
@@ -737,8 +693,6 @@ namespace twe
             
             queue_create_infos.emplace_back( create_info );
         }
-        
-        const vk::PhysicalDeviceFeatures features = { };
         
         if constexpr( enable_debug_layers )
         {

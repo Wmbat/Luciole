@@ -16,7 +16,7 @@
 
 #include "shader.hpp"
 #include "../utilities/log.hpp"
-
+#include "../utilities/vk_error.hpp"
 #include "../utilities/file_io.hpp"
 
 namespace twe

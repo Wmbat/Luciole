@@ -17,6 +17,8 @@
 #ifndef TWE_ENTRY_POINT_H
 #define TWE_ENTRY_POINT_H
 
+#include <twe/application.hpp>
+
 extern std::unique_ptr<twe::application> twe::create_application( );
 
 #if defined( TWE_PLATFORM_WINDOWS )
@@ -26,8 +28,8 @@ int WINAPI wWinMain ( HINSTANCE hInst, HINSTANCE, LPWSTR pArgs, INT )
 
     auto app = twe::create_application ( );
     app->run ( );
-
-    delete app;
+    
+    return 0;
 }
 #else
 int main( int args, char** argv )
@@ -36,6 +38,8 @@ int main( int args, char** argv )
     
     auto app = twe::create_application( );
     app->run();
+    
+    return 0;
 }
 #endif
 

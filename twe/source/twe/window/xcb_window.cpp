@@ -29,7 +29,7 @@ namespace twe
 {
     static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
     {
-        xcb_intern_atom_cookie_t cookie = xcb_intern_atom( p_connection, only_if_exists, str.size(), str.c_str() );
+        xcb_intern_atom_cookie_t cookie = xcb_intern_atom( p_connection, only_if_exists, static_cast<uint16_t>( str.size() ), str.c_str() );
         
         return std::unique_ptr<xcb_intern_atom_reply_t>( xcb_intern_atom_reply( p_connection, cookie, NULL ) );
     }

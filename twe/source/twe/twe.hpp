@@ -25,6 +25,7 @@
 #include "window/event.hpp"
 #include "window/keyboard.hpp"
 #include "window/mouse.hpp"
+#include "utilities/log.hpp"
 #include "graphics/renderer.hpp"
 
 //

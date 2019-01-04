@@ -97,8 +97,8 @@ namespace twe
         void set_up( );
         
         const vk::UniqueInstance create_instance( const std::string& app_name, uint32_t app_version ) const noexcept;
-    
-        const vk::ResultValue<vk::DebugReportCallbackEXT> create_debug_report( ) const noexcept;
+        
+        const vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> create_debug_report_callback( ) const noexcept;
     
         const vk::PhysicalDevice pick_physical_device( ) const noexcept;
     
@@ -164,8 +164,12 @@ namespace twe
         
         struct vk_context_t
         {
+            vk::DispatchLoaderDynamic dispatch_loader_dynamic_;
+            
             vk::UniqueInstance instance_;
-            vk::DebugReportCallbackEXT debug_report_;
+            
+            vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> debug_report_callback_;
+            
             vk::UniqueSurfaceKHR surface_;
             vk::PhysicalDevice gpu_;
             vk::UniqueDevice device_;

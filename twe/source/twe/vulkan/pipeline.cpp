@@ -87,7 +87,7 @@ namespace twe
         }
         else
         {
-            return vk::PipelineBindPoint::eRayTracingNV;
+            return vk::PipelineBindPoint::eGraphics;
         }
     }
     
