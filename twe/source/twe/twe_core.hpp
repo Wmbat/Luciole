@@ -14,18 +14,31 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_WAYLAND_WINDOW_H
-#define TWE_WAYLAND_WINDOW_H
+#ifndef TWE_CORE_H
+#define TWE_CORE_H
 
-#include "base_window.hpp"
+#include <cstdint>
 
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#include <vulkan/vulkan.hpp>
+
+#if defined( TWE_PLATFORM_WINDOWS )
+#if defined( TWE_BUILD_DLL )
+        #define TWE_API __declspec( dllexport )
+    #else
+        #define TWE_API __declspec( dllimport )
+    #endif
+#else
+#define TWE_API
+#endif
 
 namespace twe
 {
-
+    static constexpr uint32_t kilobyte = 1024;
+    static constexpr uint32_t megabyte = kilobyte * kilobyte;
+    
+    constexpr unsigned long long operator "" _kg( unsigned long long size ) { return size * kilobyte; }
+    constexpr unsigned long long operator "" _mb( unsigned long long size ) { return size * megabyte; }
 }
 
-#endif
 
-#endif //TWE_WAYLAND_WINDOW_H
+#endif //TWE_CORE_H

@@ -14,18 +14,35 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_WAYLAND_WINDOW_H
-#define TWE_WAYLAND_WINDOW_H
+#ifndef TWE_MESSAGE_H
+#define TWE_MESSAGE_H
 
-#include "base_window.hpp"
+#include <vector>
 
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#include "delegate.hpp"
 
 namespace twe
 {
-
+    template<class C>
+    class message_handler
+    {
+    public:
+        void add_callback( const delegate<void( C )>& callback )
+        {
+            callbacks_.push_back( callback );
+        }
+        
+        void send_message( const C& message )
+        {
+            for( auto& delegate : callbacks_ )
+            {
+                delegate( message );
+            }
+        }
+    
+    private:
+        std::vector<delegate<void( C )>> callbacks_;
+    };
 }
 
-#endif
-
-#endif //TWE_WAYLAND_WINDOW_H
+#endif //TWE_MESSAGE_H

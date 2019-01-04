@@ -17,13 +17,11 @@
 #ifndef TWE_EVENT_H
 #define TWE_EVENT_H
 
-#include <queue>
-#include <vector>
-#include <functional>
+#include <glm/glm.hpp>
 
-#include "../keyboard.h"
-#include "../mouse.h"
-#include "../utilities/delegate.h"
+#include "keyboard.hpp"
+#include "mouse.hpp"
+#include "../utilities/delegate.hpp"
 
 namespace twe
 {

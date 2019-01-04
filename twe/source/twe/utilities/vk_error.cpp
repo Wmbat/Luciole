@@ -14,7 +14,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vk_error.h"
+#include "vk_error.hpp"
 
 namespace twe
 {

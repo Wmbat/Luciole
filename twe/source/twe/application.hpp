@@ -14,18 +14,34 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_WAYLAND_WINDOW_H
-#define TWE_WAYLAND_WINDOW_H
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
-#include "base_window.hpp"
+#include <memory>
 
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#include "twe_core.hpp"
+#include "window/base_window.hpp"
+#include "graphics/renderer.hpp"
 
 namespace twe
 {
+    class application
+    {
+    public:
+        TWE_API application ( const std::string& title );
+        virtual ~application ( ) = default;
+        
+        virtual void run( ) = 0;
 
+    protected:
+        std::unique_ptr<base_window> p_wnd_;
+        std::unique_ptr<renderer> p_renderer_;
+    };
+    
+    /**
+     * should be defined by the Client.
+     */
+    std::unique_ptr<application> create_application( );
 }
 
-#endif
-
-#endif //TWE_WAYLAND_WINDOW_H
+#endif //TWE_APPLICATION_H

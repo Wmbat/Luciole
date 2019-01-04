@@ -14,18 +14,19 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TWE_WAYLAND_WINDOW_H
-#define TWE_WAYLAND_WINDOW_H
-
-#include "base_window.hpp"
-
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#include "log.hpp"
 
 namespace twe
 {
+    std::shared_ptr<spdlog::logger> log::core_logger_;
 
+    void log::init( )
+    {
+        core_logger_ = spdlog::stdout_color_mt( "TWE_logger" );
+        core_logger_->set_pattern( "%^[%T] %n: %v%$" );
+        core_logger_->set_level( spdlog::level::trace );
+        
+        core_info( "spdlog -> TWE_logger Initialized." );
+    }
 }
 
-#endif
-
-#endif //TWE_WAYLAND_WINDOW_H

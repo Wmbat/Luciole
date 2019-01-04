@@ -13,19 +13,19 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef TWE_VERTEX_H
+#define TWE_VERTEX_H
 
-#ifndef TWE_WAYLAND_WINDOW_H
-#define TWE_WAYLAND_WINDOW_H
-
-#include "base_window.hpp"
-
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
+#include <glm/glm.hpp>
 
 namespace twe
 {
-
+    struct vertex
+    {
+        glm::vec3 position_;
+        glm::vec4 colour_;
+    };
 }
 
-#endif
-
-#endif //TWE_WAYLAND_WINDOW_H
+#endif //TWE_VERTEX_H

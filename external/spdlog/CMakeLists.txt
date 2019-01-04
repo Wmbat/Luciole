@@ -15,36 +15,9 @@
 #
 
 cmake_minimum_required( VERSION 3.11 )
-project( demo )
+project( spdlog )
 
-add_executable( demo )
+add_library( spdlog INTERFACE )
 
-if( NOT WIN32 )
-    if( USE_WAYLAND_WSI )
-        target_link_libraries( demo
-                ${WAYLAND_CLIENT_LIBRARIES}
-                spdlog
-                nlohmann
-                glm
-                vulkan
-                twe )
-    else( )
-        target_link_libraries( demo
-                ${XCB_LIBRARIES}
-                spdlog
-                nlohmann
-                glm
-                vulkan
-                twe )
-    endif()
-else()
-    target_link_libraries( demo
-            spdlog
-            nlohmann
-            glm
-            vulkan
-            twe )
-endif( )
-
-target_sources( demo
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp" )
+target_include_directories( spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_compile_features( spdlog INTERFACE cxx_std_17 )

@@ -15,7 +15,7 @@
  */
 
 #include "xcb_window.hpp"
-#include "../log.h"
+#include "../utilities/log.hpp"
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 

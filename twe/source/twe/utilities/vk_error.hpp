@@ -14,8 +14,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_ENGINE_ERROR_H
-#define ENGINE_ENGINE_ERROR_H
+#ifndef ENGINE_VK_ERROR_H
+#define ENGINE_VK_ERROR_H
 
 #include <system_error>
 
@@ -26,10 +26,10 @@
 namespace twe
 {
     /*!
-     * @brief An error for general TWE errors, inherits from
-     * std::system_error
+     * @brief An error for vulkan related problems. It inherits from
+     * std::system_error.
      */
-    class basic_error : public std::system_error
+    class vk_error : public std::system_error
     {
     private:
         /*!
@@ -45,37 +45,22 @@ namespace twe
              */
             const char* name( ) const noexcept override;
             /*!
-             * @brief Get the name of the general error type.
-             * @param ev The error code.
+             * @brief Get the name of the Vulkan error type.
+             * @param ev The Vulkan error code.
              * @return The associated name with the error code.
              */
             std::string message( int ev ) const override;
         };
-
-    public:
-        enum class code : int
-        {
-            /* General engine errors. */
-            engine_error = -1,
-            
-            /* General Vulkan Environment errors. */
-            vk_version_error = -2,
-            vk_not_supported_error = -3,
-            vk_instance_ext_support_error = -4,
-            vk_validation_layer_support_error = -5,
-    
-            shader_not_present_error = -6,
-            pipeline_not_present_error = -7
-        };
         
     public:
         /*!
-         * @brief Ctor to create the error
-         * @param code The error code.
-         * @param message The message to print alongside the error.
+         * @brief Ctor to create the vk_error.
+         * @param result The Vulkan error code.
+         * @param message The message to print along with the error name.
          */
-        TWE_API basic_error( const code& code, const std::string& message );
+        TWE_API vk_error( const vk::Result& result, const std::string& message );
     };
+    
 }
 
-#endif //ENGINE_ENGINE_ERROR_H
+#endif //ENGINE_vk_error_H

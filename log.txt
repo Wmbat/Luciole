@@ -1,0 +1,8 @@
+
+version 0.0.3 -
+
+    - renamed all twe headers from .h to .hpp
+    - reorganized all twe files and put them in appropriate folders.
+    - added a demo project to display twe capabilities.
+    - reorganized external dependencies for easier inclusion into projects.
+    - updated and optimized all include preprocessor definitions.

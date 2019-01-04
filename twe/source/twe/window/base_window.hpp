@@ -18,9 +18,8 @@
 #define BASE_WINDOW_H
 
 #include "event.hpp"
-#include "../message.h"
-#include "../TWE_core.h"
-#include "../vk_utils.h"
+#include "../twe_core.hpp"
+#include "../utilities/message.hpp"
 
 namespace twe
 {
@@ -29,15 +28,14 @@ namespace twe
     public:
         virtual ~base_window( ) = default;
     
-        virtual void TWE_API poll_events( ) = 0;
+        TWE_API virtual void poll_events( ) = 0;
     
-        bool TWE_API is_open( ) const noexcept;
+        TWE_API bool is_open( ) const noexcept;
     
-        virtual vk::UniqueSurfaceKHR TWE_API create_surface( const vk::Instance& instance ) const noexcept = 0;
+        TWE_API virtual vk::UniqueSurfaceKHR create_surface( const vk::Instance& instance ) const noexcept = 0;
     
-        uint32_t TWE_API get_width( ) const noexcept;
-    
-        uint32_t TWE_API get_height( ) const noexcept;
+        TWE_API uint32_t get_width( ) const noexcept;
+        TWE_API uint32_t get_height( ) const noexcept;
     
         template<class C>
         std::enable_if_t < std::is_same<C, key_event_delg>::value, void > set_event_callback ( const C& callback )

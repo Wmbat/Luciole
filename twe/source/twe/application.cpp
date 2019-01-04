@@ -14,7 +14,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.h"
+#include "application.hpp"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
 #include "window/win32_window.h"
@@ -35,6 +35,6 @@ namespace twe
         p_wnd_ = std::make_unique<xcb_window> ( title );
 #endif
         
-        p_renderer_ = std::make_shared<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 1 ) );
+        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 3 ) );
     }
 }
