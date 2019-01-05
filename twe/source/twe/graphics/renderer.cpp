@@ -141,6 +141,9 @@ namespace twe
     
             vk_context_.swapchain_.image_ = vk_context_.device_->getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_.get() );
             
+            auto render_pass = create_render_pass ( );
+            vk_context_.render_pass_ = std::move ( render_pass );
+
             vk_context_.swapchain_.image_views_.resize( image_count );
             vk_context_.swapchain_.framebuffers_.resize( image_count );
             for ( uint32_t i = 0; i < image_count; ++i )
@@ -158,9 +161,6 @@ namespace twe
     
             auto command_buffers = create_command_buffers( image_count );
             vk_context_.command_buffers_ = std::move( command_buffers );
-    
-            auto render_pass = create_render_pass( );
-            vk_context_.render_pass_ = std::move( render_pass );
         }
         catch( const basic_error& e )
         {
@@ -485,6 +485,9 @@ namespace twe
         
         vk_context_.swapchain_.image_ = vk_context_.device_->getSwapchainImagesKHR( vk_context_.swapchain_.swapchain_.get() );
     
+        auto render_pass = create_render_pass ( );
+        vk_context_.render_pass_ = std::move ( render_pass );
+
         vk_context_.swapchain_.image_views_.resize( image_count );
         vk_context_.swapchain_.framebuffers_.resize( image_count );
         for( uint32_t i = 0; i < image_count; ++i )
@@ -502,9 +505,6 @@ namespace twe
         
         auto command_buffers = create_command_buffers( image_count );
         vk_context_.command_buffers_ = std::move( command_buffers );
-        
-        auto render_pass = create_render_pass( pipeline_manager_[current_pipeline_].get_bind_point() );
-        vk_context_.render_pass_ = std::move( render_pass );
         
         record_draw_calls( );
     }
@@ -568,7 +568,7 @@ namespace twe
         vk_context_.instance_extensions_.emplace_back( VK_KHR_XCB_SURFACE_EXTENSION_NAME );
 #endif
         
-        vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_core_validation" );
+        vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_standard_validation" );
         
         vk_context_.device_extensions_.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
         
@@ -702,10 +702,12 @@ namespace twe
             queue_create_infos.emplace_back( create_info );
         }
         
+        const auto features = vk_context_.gpu_.getFeatures ( );
+
         if constexpr( enable_debug_layers )
         {
             const auto create_info = vk::DeviceCreateInfo( )
-                .setPEnabledFeatures( nullptr )
+                .setPEnabledFeatures( &features )
                 .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
                 .setPQueueCreateInfos( queue_create_infos.data() )
                 .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )
@@ -718,7 +720,7 @@ namespace twe
         else
         {
             const auto create_info = vk::DeviceCreateInfo( )
-                .setPEnabledFeatures( nullptr )
+                .setPEnabledFeatures( &features )
                 .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
                 .setPQueueCreateInfos( queue_create_infos.data() )
                 .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )

@@ -111,7 +111,7 @@ namespace twe
         const vk::UniqueFramebuffer create_framebuffer( const vk::ImageView* attachments, const std::uint32_t attachment_count ) const noexcept;
         
         const vk::UniqueRenderPass create_render_pass( vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
-    
+  
 
         bool check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept;
     

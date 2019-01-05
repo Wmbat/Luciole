@@ -27,7 +27,7 @@ public:
     }
     void on_mouse_button( const twe::mouse_button_event& event )
     {
-        std::cout << "Mouse button pressed: " << static_cast<uint32_t>( event.code_ ) << std::endl;
+        // std::cout << "Mouse button pressed: " << static_cast<uint32_t>( event.code_ ) << std::endl;
     }
 };
 
@@ -54,20 +54,20 @@ public:
         p_wnd_->set_event_callback( twe::key_event_delg( player_, &player::on_key_event ) );
         p_wnd_->set_event_callback( twe::mouse_button_event_delg( player_, &player::on_mouse_button ) );
         
-        p_wnd_->set_event_callback( twe::key_event_delg( *this, &demo::on_key_press ) );
+        p_wnd_->set_event_callback( twe::mouse_button_event_delg( *this, &demo::on_mouse_press ) );
     }
     ~demo( ) override
     {
     
     }
     
-    void on_key_press( const twe::key_event& event )
+    void on_mouse_press ( const twe::mouse_button_event& event )
     {
-        if( event.code_ == twe::keyboard::key::a )
-            p_renderer_->switch_pipeline( pipeline_ids_[1] );
-        
-        if( event.code_ == twe::keyboard::key::d )
-            p_renderer_->switch_pipeline( pipeline_ids_[0] );
+        if ( event.code_ == twe::mouse::button::l_button )
+            p_renderer_->switch_pipeline ( pipeline_ids_[1] );
+
+        if ( event.code_ == twe::mouse::button::r_button )
+            p_renderer_->switch_pipeline ( pipeline_ids_[0] );
     }
     
     void run( ) override
