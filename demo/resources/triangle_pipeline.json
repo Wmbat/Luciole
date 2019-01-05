@@ -15,7 +15,7 @@
     "depth_bias_constant_factor": 0.0,
     "depth_bias_clamp": 0.0,
     "depth_bias_slope_factor": 0.0,
-    "line_width": 2.0
+    "line_width": 1.0
   },
   "multisample":
   {

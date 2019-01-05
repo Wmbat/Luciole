@@ -12,7 +12,6 @@
 #  You should have received a copy of the GNU General Public License
 #  GNU General Public License for more details.
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
 
 cmake_minimum_required( VERSION 3.11 )
 project( twe VERSION 0.0.4 )

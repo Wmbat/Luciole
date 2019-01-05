@@ -143,17 +143,17 @@ namespace twe
             
             vk_context_.swapchain_.image_views_.resize( image_count );
             vk_context_.swapchain_.framebuffers_.resize( image_count );
-            for( uint32_t i = 0; i < image_count; ++i )
+            for ( uint32_t i = 0; i < image_count; ++i )
             {
-                auto image_view = create_image_view( vk_context_.swapchain_.image_[i] );
-                vk_context_.swapchain_.image_views_[i] = std::move( image_view );
-    
-            const vk::ImageView attachments[] = {
-                vk_context_.swapchain_.image_views_[i].get ( )
-            };
+                auto image_view = create_image_view ( vk_context_.swapchain_.image_[i] );
+                vk_context_.swapchain_.image_views_[i] = std::move ( image_view );
 
-            auto framebuffer = create_framebuffer( attachments, sizeof ( attachments ) / sizeof ( attachments[0] ) );
-            vk_context_.swapchain_.framebuffers_[i] = std::move( framebuffer );
+                const vk::ImageView attachments[] = {
+                    vk_context_.swapchain_.image_views_[i].get ( )
+                };
+
+                auto framebuffer = create_framebuffer ( attachments, sizeof ( attachments ) / sizeof ( attachments[0] ) );
+                vk_context_.swapchain_.framebuffers_[i] = std::move ( framebuffer );
             }
     
             auto command_buffers = create_command_buffers( image_count );
