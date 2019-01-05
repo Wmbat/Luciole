@@ -148,8 +148,12 @@ namespace twe
                 auto image_view = create_image_view( vk_context_.swapchain_.image_[i] );
                 vk_context_.swapchain_.image_views_[i] = std::move( image_view );
     
-                auto framebuffer = create_framebuffer( vk_context_.swapchain_.image_views_[i].get() );
-                vk_context_.swapchain_.framebuffers_[i] = std::move( framebuffer );
+            const vk::ImageView attachments[] = {
+                vk_context_.swapchain_.image_views_[i].get ( )
+            };
+
+            auto framebuffer = create_framebuffer( attachments, sizeof ( attachments ) / sizeof ( attachments[0] ) );
+            vk_context_.swapchain_.framebuffers_[i] = std::move( framebuffer );
             }
     
             auto command_buffers = create_command_buffers( image_count );
@@ -488,7 +492,11 @@ namespace twe
             auto image_view = create_image_view( vk_context_.swapchain_.image_[i] );
             vk_context_.swapchain_.image_views_[i] = std::move( image_view );
             
-            auto framebuffer = create_framebuffer( vk_context_.swapchain_.image_views_[i].get() );
+            const vk::ImageView attachments[] = {
+                vk_context_.swapchain_.image_views_[i].get ( )
+            };
+
+            auto framebuffer = create_framebuffer( attachments, sizeof( attachments ) / sizeof( attachments[0] ) );
             vk_context_.swapchain_.framebuffers_[i] = std::move( framebuffer );
         }
         
@@ -831,14 +839,14 @@ namespace twe
         return vk_context_.device_->createImageViewUnique( create_info );
     }
     
-    const vk::UniqueFramebuffer renderer::create_framebuffer( const vk::ImageView& image_view ) const noexcept
+    const vk::UniqueFramebuffer renderer::create_framebuffer( const vk::ImageView* attachments, const std::uint32_t attachment_count ) const noexcept
     {
         const auto create_info = vk::FramebufferCreateInfo( )
             .setRenderPass( vk_context_.render_pass_.get() )
             .setWidth( vk_context_.swapchain_.extent_.width )
             .setHeight( vk_context_.swapchain_.extent_.height )
-            .setAttachmentCount( 1 )
-            .setPAttachments( &image_view )
+            .setAttachmentCount( attachment_count )
+            .setPAttachments( attachments )
             .setLayers( 1 );
         
         return vk_context_.device_->createFramebufferUnique( create_info );

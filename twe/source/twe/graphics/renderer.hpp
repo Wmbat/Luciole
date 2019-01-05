@@ -47,15 +47,6 @@ namespace twe
         
         void TWE_API setup_graphics_pipeline( const shader_data_type& data );
         
-        /*!
-         * @brief Add a TWE::shader to the shader manager, if said TWE::shader is already present,
-         * it will simply return the TWE::shader::id of said TWE:shader.
-         * @throw Will throw a TWE::basic_error if the requested TWE::shader is not present.
-         * @tparam T The TWE::shader::type of the TWE::shader
-         * @param filepath The filepath to the TWE::shader.
-         * @param entry_point The main function of the TWE::shader.
-         * @return the id of the TWE::shader created or already present.
-         */
         template<shader::type T>
         shader::id create_shader( const std::string& filepath, const std::string& entry_point )
         {
@@ -117,7 +108,7 @@ namespace twe
         
         const vk::UniqueImageView create_image_view( const vk::Image& image ) const noexcept;
         
-        const vk::UniqueFramebuffer create_framebuffer( const vk::ImageView& image_view ) const noexcept;
+        const vk::UniqueFramebuffer create_framebuffer( const vk::ImageView* attachments, const std::uint32_t attachment_count ) const noexcept;
         
         const vk::UniqueRenderPass create_render_pass( vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
     
