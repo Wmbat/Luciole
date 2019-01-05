@@ -22,7 +22,8 @@
 extern std::unique_ptr<twe::application> twe::create_application( );
 
 #if defined( TWE_PLATFORM_WINDOWS )
-int WINAPI wWinMain ( HINSTANCE hInst, HINSTANCE, LPWSTR pArgs, INT )
+// int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+int main( int args, char** argv )
 {
     twe::log::init ( );
 

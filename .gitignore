@@ -9,3 +9,5 @@
 /.idea
 /build/x64-Debug
 /build/x64-Release
+/build_debug
+/CMakeSettings.json

@@ -17,7 +17,7 @@
 #include "application.hpp"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-#include "window/win32_window.h"
+#include "window/win32_window.hpp"
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
 #include "window/xcb_window.hpp"
@@ -35,6 +35,6 @@ namespace twe
         p_wnd_ = std::make_unique<xcb_window> ( title );
 #endif
         
-        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 3 ) );
+        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 4 ) );
     }
 }

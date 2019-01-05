@@ -1,5 +1,9 @@
 
-version 0.0.3 -
+version 0.0.4 - 04/01/2018
+
+	- Better Win32 support.
+
+version 0.0.3 - 04/01/2018
 
     - renamed all twe headers from .h to .hpp
     - reorganized all twe files and put them in appropriate folders.

@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required( VERSION 3.11 )
-project( twe VERSION 0.0.3 )
+project( twe VERSION 0.0.4 )
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     add_compile_options("-Wall")

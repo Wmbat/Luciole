@@ -38,9 +38,6 @@ namespace twe
         {
             invalid = -1,
 
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
             nun_1 = 10,
             num_2 = 11,
             num_3 = 12,
@@ -147,7 +144,6 @@ namespace twe
             right_arrow = 114,
 
             last = 256
-#endif
         };
     };
 }

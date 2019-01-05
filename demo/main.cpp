@@ -66,7 +66,7 @@ public:
         if( event.code_ == twe::keyboard::key::a )
             p_renderer_->switch_pipeline( pipeline_ids_[1] );
         
-        if( event.code_ == twe::keyboard::key::o )
+        if( event.code_ == twe::keyboard::key::d )
             p_renderer_->switch_pipeline( pipeline_ids_[0] );
     }
     
