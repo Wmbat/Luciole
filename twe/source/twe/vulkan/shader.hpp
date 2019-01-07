@@ -93,8 +93,7 @@ namespace twe
     private:
         vk::UniqueShaderModule shader_;
         type type_;
-    
-        std::string shader_filepath_;
+        
         std::string entry_point_;
     };
 }

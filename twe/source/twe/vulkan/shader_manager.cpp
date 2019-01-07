@@ -19,13 +19,10 @@
 
 namespace twe
 {
-    shader::id shader_manager::shader_id_count_;
-    
     shader_manager::shader_manager( shader_manager&& rhs ) noexcept
     {
         *this = std::move( rhs );
     }
-    
     shader_manager& shader_manager::operator=( shader_manager&& rhs ) noexcept
     {
         if( this != &rhs )
@@ -41,8 +38,6 @@ namespace twe
     
     shader::id shader_manager::insert( const shader::create_info& create_info )
     {
-        // create find_if.
-        
         auto id = ++shader_id_count_;
         
         shaders_.emplace( std::pair( id, shader{ create_info } ) );
@@ -52,55 +47,19 @@ namespace twe
     
     const shader& shader_manager::find( const shader::id id ) const
     {
-        try
-        {
-            const auto i = shaders_.find( id );
-            if ( i != shaders_.cend( ))
-            {
-                return i->second;
-            }
-            else
-            {
-                throw basic_error{
-                    basic_error::code::shader_not_present_error,
-                    "Shader: " + std::to_string( id ) + "is not in the manager. Call insert first."
-                };
-            }
-        }
-        catch( const basic_error& e )
-        {
-            // TODO: handle error.
-        }
-        catch ( ... )
-        {
-            // TODO: handle error.
-        }
+        const auto i = shaders_.find( id );
+        
+        assert( i != shaders_.cend( ) );
+        
+        return i->second;
     }
     
     const shader& shader_manager::operator[]( const shader::id id ) const
     {
-        try
-        {
-            const auto i = shaders_.find( id );
-            if ( i != shaders_.cend( ))
-            {
-                return i->second;
-            }
-            else
-            {
-                throw basic_error{
-                    basic_error::code::shader_not_present_error,
-                    "Shader: " + std::to_string( id ) + "is not in the manager. Call insert first."
-                };
-            }
-        }
-        catch( const basic_error& e )
-        {
-            // TODO: handle error.
-        }
-        catch ( ... )
-        {
-            // TODO: handler error.
-        }
+        const auto i = shaders_.find( id );
+    
+        assert( i != shaders_.cend( ) );
+    
+        return i->second;
     }
 }

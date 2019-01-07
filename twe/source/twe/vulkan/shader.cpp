@@ -24,7 +24,6 @@ namespace twe
     shader::shader( const shader::create_info& create_info )
         :
         type_( create_info.type_ ),
-        shader_filepath_( create_info.filepath_ ),
         entry_point_( create_info.entry_point_ )
     {
         const std::string shader_code = read_from_binary_file( create_info.filepath_ );
@@ -58,7 +57,6 @@ namespace twe
             type_ = rhs.type_;
             rhs.type_ = type{ };
             
-            shader_filepath_ = std::move( rhs.shader_filepath_ );
             entry_point_ = std::move( rhs.entry_point_ );
         }
         

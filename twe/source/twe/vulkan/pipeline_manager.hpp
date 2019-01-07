@@ -92,7 +92,7 @@ namespace twe
         };
         
     public:
-        template<size_t size>
+        template<size_t count>
         std::vector<pipeline::id> insert( pipeline_create_info& create_info )
         {
             auto layout_id = ++layout_id_count_;
@@ -100,21 +100,21 @@ namespace twe
                 layout_id,
                 pipeline_layout{ create_info.device_, create_info.vert_id_, create_info.frag_id_ } } );
     
-            std::vector<pipeline::id> pipeline_ids_( size );
-            std::vector<vk::GraphicsPipelineCreateInfo> create_infos( size );
+            std::vector<pipeline::id> pipeline_ids_( count );
+            std::vector<vk::GraphicsPipelineCreateInfo> create_infos( count );
     
-            vk::PipelineInputAssemblyStateCreateInfo input_assembly_create_infos[size];
-            vk::Viewport viewports[size];                           // TODO: allow for multiple viewports.
-            vk::Rect2D scissors[size];                              // TODO: allow for multiple scissors.
-            vk::PipelineViewportStateCreateInfo viewport_create_infos[size];
-            vk::PipelineRasterizationStateCreateInfo rasterization_create_infos[size];
-            vk::PipelineMultisampleStateCreateInfo multisample_create_infos[size];
+            vk::PipelineInputAssemblyStateCreateInfo input_assembly_create_infos[count];
+            vk::Viewport viewports[count];                           // TODO: allow for multiple viewports.
+            vk::Rect2D scissors[count];                              // TODO: allow for multiple scissors.
+            vk::PipelineViewportStateCreateInfo viewport_create_infos[count];
+            vk::PipelineRasterizationStateCreateInfo rasterization_create_infos[count];
+            vk::PipelineMultisampleStateCreateInfo multisample_create_infos[count];
     
-            std::vector<vk::PipelineColorBlendAttachmentState> attachments[size];
-            vk::PipelineColorBlendStateCreateInfo colour_blend_create_infos[size];
+            std::vector<vk::PipelineColorBlendAttachmentState> attachments[count];
+            vk::PipelineColorBlendStateCreateInfo colour_blend_create_infos[count];
     
-            std::vector<vk::DynamicState> dynamic_states[size];
-            vk::PipelineDynamicStateCreateInfo dynamic_state_create_infos[size];
+            std::vector<vk::DynamicState> dynamic_states[count];
+            vk::PipelineDynamicStateCreateInfo dynamic_state_create_infos[count];
     
             const vk::PipelineShaderStageCreateInfo shader_stages[] = {
                 create_info.shader_manager_->find( create_info.vert_id_ ).get_shader_stage_create_info(),
@@ -124,7 +124,7 @@ namespace twe
                 .setVertexAttributeDescriptionCount( 0 )
                 .setVertexBindingDescriptionCount( 0 );
     
-            for( auto i = 0; i < size; ++i )
+            for( auto i = 0; i < count; ++i )
             {
                 auto id = ++pipeline_id_count_;
                 pipeline_ids_[i] = id;
@@ -259,7 +259,7 @@ namespace twe
     
             auto pipelines = create_info.device_.createGraphicsPipelinesUnique( nullptr, create_infos );
     
-            for( auto i = 0; i < size; ++i )
+            for( auto i = 0; i < count; ++i )
             {
                 pipelines_.insert(
                     std::pair{

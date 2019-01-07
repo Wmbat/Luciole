@@ -38,7 +38,7 @@ public:
         :
         twe::application( title )
     {
-        p_renderer_->set_clear_colour( glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f ) );
+        p_renderer_->set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
         
         vert_id_ = p_renderer_->create_shader<twe::shader::type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
         frag_id_ = p_renderer_->create_shader<twe::shader::type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );

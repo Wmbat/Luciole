@@ -23,9 +23,6 @@
 
 namespace twe
 {
-    /*!
-     * @brief Handles program shaders to avoid duplicates.
-     */
     class shader_manager
     {
     public:
@@ -37,34 +34,16 @@ namespace twe
         TWE_API shader_manager& operator=( const shader_manager& rhs ) = delete;
         TWE_API shader_manager& operator=( shader_manager&& rhs ) noexcept;
         
-        /*!
-         * @brief Add a TWE::shader to the manager if it is not already present.
-         * @param Create_info the struct, TWE::shader::create_info, carrying
-         * the data to create the TWE::shader.
-         * @return The id, TWE::shader::id, of the TWE::shader.
-         */
         TWE_API shader::id insert( const shader::create_info& create_info );
         
-        /*!
-         * @brief Get a TWE::shader from the manager if it is present.
-         * @throw Will throw a TWE::basic_error if the requested TWE::shader is not present.
-         * @param id The id of the TWE::shader to be found.
-         * @return A const reference to the desired TWE::shader.
-         */
         TWE_API const shader& find( const shader::id id ) const;
-    
-        /*!
-         * @brief Get a TWE::shader from the manager if it is present.
-         * @throw Will throw a TWE::basic_error if the requested TWE::shader is not present.
-         * @param id The id of the TWE::shader to be found.
-         * @return A const reference to the desired TWE::shader.
-         */
+        
         TWE_API const shader& operator[]( const shader::id id ) const;
     
     private:
         std::unordered_map<shader::id, shader> shaders_;
         
-        static shader::id shader_id_count_;
+        static inline shader::id shader_id_count_;
     };
 }
 

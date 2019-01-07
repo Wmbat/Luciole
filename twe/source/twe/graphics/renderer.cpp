@@ -54,18 +54,11 @@ namespace twe
     renderer::renderer( base_window* p_wnd, const std::string& app_name, uint32_t app_version )
         :
         window_width_( p_wnd->get_width() ),
-        window_height_( p_wnd->get_height() )
+        window_height_( p_wnd->get_height() ),
+        clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f )
     {
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
-     
-        auto clear_colour = vk::ClearColorValue{ };
-        clear_colour.float32[0] = 0.0f;
-        clear_colour.float32[1] = 0.0f;
-        clear_colour.float32[2] = 0.0f;
-        clear_colour.float32[3] = 1.0f;
-        
-        clear_value_.color = clear_colour;
         
         try
         {
@@ -195,7 +188,7 @@ namespace twe
             window_height_ = rhs.window_height_;
             rhs.window_height_ = 0;
             
-            clear_value_ = std::move( rhs.clear_value_ );
+            clear_colour_ = std::move( rhs.clear_colour_ );
             
             vk_context_.instance_ = std::move( rhs.vk_context_.instance_ );
         
@@ -317,11 +310,17 @@ namespace twe
             vk_context_.command_buffers_[i].setViewport( 0, 1, &viewport );
             vk_context_.command_buffers_[i].setScissor( 0, 1, &scissors );
             
+            const auto clear_colour_value= vk::ClearColorValue( )
+                .setFloat32( std::array<float, 4>{ clear_colour_.r / 255.f, clear_colour_.g / 255.f, clear_colour_.b / 255.f, clear_colour_.a / 255.f } );
+            
+            const auto clear_colour = vk::ClearValue( )
+                .setColor( clear_colour_value );
+            
             const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
                 .setFramebuffer( vk_context_.swapchain_.framebuffers_[i].get() )
                 .setRenderPass( vk_context_.render_pass_.get() )
                 .setClearValueCount( 1 )
-                .setPClearValues( &clear_value_ )
+                .setPClearValues( &clear_colour )
                 .setRenderArea( { { 0, 0 }, vk_context_.swapchain_.extent_ } );
             
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
@@ -451,13 +450,7 @@ namespace twe
     
     void renderer::set_clear_colour( const glm::vec4& colour )
     {
-        auto clear_colour = vk::ClearColorValue{ };
-        clear_colour.float32[0] = colour.r;
-        clear_colour.float32[1] = colour.g;
-        clear_colour.float32[2] = colour.b;
-        clear_colour.float32[3] = colour.a;
-        
-        clear_value_.color = clear_colour;
+        clear_colour_ = colour;
     }
     
     void renderer::recreate_swapchain( )

@@ -1,4 +1,10 @@
 
+version 0.0.5 - 07/01/2018
+
+    - Added TinyglTF: https://github.com/syoyo/tinygltf
+    - Added stb: https://github.com/nothings/stb
+    - Added Vulkan Memory Allocator: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+
 version 0.0.4 - 04/01/2018
 
 	- Better Win32 support.

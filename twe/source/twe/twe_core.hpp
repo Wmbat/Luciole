@@ -23,10 +23,10 @@
 
 #if defined( TWE_PLATFORM_WINDOWS )
 #if defined( TWE_BUILD_DLL )
-        #define TWE_API __declspec( dllexport )
-    #else
-        #define TWE_API __declspec( dllimport )
-    #endif
+#define TWE_API __declspec( dllexport )
+#else
+#define TWE_API __declspec( dllimport )
+#endif
 #else
 #define TWE_API
 #endif

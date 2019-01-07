@@ -23,49 +23,19 @@ namespace twe
 {    
     const pipeline& pipeline_manager::find( const pipeline::id id ) const
     {
-        try
-        {
-            const auto it = pipelines_.find( id );
-            if( it != pipelines_.cend() )
-            {
-                return it->second;
-            }
-            else
-            {
-                throw basic_error{
-                    basic_error::code::pipeline_not_present_error,
-                    "Pipeline: " + std::to_string( id ) + " is not in the manager, "
-                    "Please call pipeline_manager::insert first."
-                };
-            }
-        }
-        catch( const basic_error& e )
-        {
-            // TODO: handle properly.
-        }
+        const auto cit = pipelines_.find( id );
+        
+        assert( cit != pipelines_.cend( ) && "Pipeline not present in manager!" );
+        
+        return cit->second;
     }
     const pipeline& pipeline_manager::operator[]( const pipeline::id id ) const
     {
-        try
-        {
-            const auto it = pipelines_.find( id );
-            if( it != pipelines_.cend() )
-            {
-                return it->second;
-            }
-            else
-            {
-                throw basic_error{
-                    basic_error::code::pipeline_not_present_error,
-                    "Pipeline: " + std::to_string( id ) + " is not in the manager, "
-                                                          "Please call pipeline_manager::insert first."
-                };
-            }
-        }
-        catch( const basic_error& e )
-        {
-            // TODO: handle properly.
-        }
+        const auto cit = pipelines_.find( id );
+    
+        assert( cit != pipelines_.cend( ) && "Pipeline not present in manager!" );
+    
+        return cit->second;
     }
     
     const vk::Bool32

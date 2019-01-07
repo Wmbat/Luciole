@@ -73,24 +73,33 @@ if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( twe
                 ${WAYLAND_CLIENT_LIBRARIES}
+                vulkan
+                vma
+                stb
                 spdlog
                 nlohmann
-                glm
-                vulkan )
+                tinygltf
+                glm )
     else( )
         target_link_libraries( twe
                 ${XCB_LIBRARIES}
+                vulkan
+                vma
+                stb
                 spdlog
                 nlohmann
-                glm
-                vulkan )
+                tinygltf
+                glm )
     endif()
 else()
     target_link_libraries( twe
+            vulkan
+            vma
+            stb
             spdlog
             nlohmann
-            glm
-            vulkan )
+            tinygltf
+            glm )
 endif( )
 
 # Declace the library's files.
