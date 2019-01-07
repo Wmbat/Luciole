@@ -16,19 +16,5 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef TWE_VERTEX_H
-#define TWE_VERTEX_H
-
-#include <glm/glm.hpp>
-
-namespace twe
-{
-    struct vertex
-    {
-        glm::vec3 position_;
-        glm::vec4 colour_;
-    };
-}
-
-#endif //TWE_VERTEX_H
+#define VMA_IMPLEMENTATION
+#include <vma/vk_mem_alloc.h>

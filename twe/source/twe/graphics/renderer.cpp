@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -154,6 +156,16 @@ namespace twe
     
             auto command_buffers = create_command_buffers( image_count );
             vk_context_.command_buffers_ = std::move( command_buffers );
+            
+            auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
+            mem_allocator_create_info.physicalDevice = vk_context_.gpu_;
+            mem_allocator_create_info.device = vk_context_.device_.get();
+            
+            auto result = vmaCreateAllocator( &mem_allocator_create_info, &memory_allocator_ );
+            if( result != VK_SUCCESS )
+            {
+                throw;
+            }
         }
         catch( const basic_error& e )
         {
@@ -189,6 +201,9 @@ namespace twe
             rhs.window_height_ = 0;
             
             clear_colour_ = std::move( rhs.clear_colour_ );
+            
+            memory_allocator_ = rhs.memory_allocator_;
+            rhs.memory_allocator_ = VK_NULL_HANDLE;
             
             vk_context_.instance_ = std::move( rhs.vk_context_.instance_ );
         

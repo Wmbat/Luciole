@@ -55,7 +55,7 @@ add_library( twe SHARED
         source/twe/utilities/log.cpp
         source/twe/utilities/log.hpp
         source/twe/utilities/message.hpp
-        source/twe/window/mouse.hpp )
+        source/twe/window/mouse.hpp source/twe/graphics/vertex_buffer.hpp source/twe/graphics/mesh.hpp source/twe/vulkan/vma_define.cpp)
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )

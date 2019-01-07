@@ -16,19 +16,20 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef ENGINE_MESH_HPP
+#define ENGINE_MESH_HPP
 
-#ifndef TWE_VERTEX_H
-#define TWE_VERTEX_H
+#include <vector>
 
-#include <glm/glm.hpp>
+#include "vertex.hpp"
 
 namespace twe
 {
-    struct vertex
+    struct mesh
     {
-        glm::vec3 position_;
-        glm::vec4 colour_;
+        std::vector<vertex> vertices_;
+        std::vector<uint32_t> indices_;
     };
 }
 
-#endif //TWE_VERTEX_H
+#endif //ENGINE_MESH_HPP

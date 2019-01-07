@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +20,8 @@
 #define VULKAN_PROJECT_RENDERER_H
 
 #include <optional>
+
+#include <vma/vk_mem_alloc.h>
 
 #include "../twe_core.hpp"
 #include "../utilities/vk_utils.hpp"
@@ -194,6 +198,8 @@ namespace twe
             std::vector<const char*> validation_layers_;
         } vk_context_;
     
+        VmaAllocator memory_allocator_;
+        
         shader_manager shader_manager_;
         pipeline_manager pipeline_manager_;
         

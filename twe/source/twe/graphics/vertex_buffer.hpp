@@ -17,18 +17,15 @@
  */
 
 
-#ifndef TWE_VERTEX_H
-#define TWE_VERTEX_H
-
-#include <glm/glm.hpp>
+#ifndef ENGINE_VERTEX_BUFFER_HPP
+#define ENGINE_VERTEX_BUFFER_HPP
 
 namespace twe
 {
-    struct vertex
+    class vertex_buffer
     {
-        glm::vec3 position_;
-        glm::vec4 colour_;
+    
     };
 }
 
-#endif //TWE_VERTEX_H
+#endif //ENGINE_VERTEX_BUFFER_HPP

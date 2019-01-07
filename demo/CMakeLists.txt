@@ -21,6 +21,7 @@ if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( demo
                 ${WAYLAND_CLIENT_LIBRARIES}
+                vma
                 spdlog
                 nlohmann
                 glm
@@ -29,6 +30,7 @@ if( NOT WIN32 )
     else( )
         target_link_libraries( demo
                 ${XCB_LIBRARIES}
+                vma
                 spdlog
                 nlohmann
                 glm
@@ -37,6 +39,7 @@ if( NOT WIN32 )
     endif()
 else()
     target_link_libraries( demo
+            vma
             spdlog
             nlohmann
             glm
