@@ -21,13 +21,14 @@
 
 #include <optional>
 
-#include <vma/vk_mem_alloc.h>
-
+#include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
 #include "../utilities/vk_utils.hpp"
-#include "../vulkan/shader_manager.hpp"
-#include "../vulkan/pipeline_manager.hpp"
+#include "../vulkan/memory_allocator.hpp"
+#include "../shader_manager.hpp"
+//#include "../vulkan/pipeline_manager.hpp"
 #include "../window/base_window.hpp"
+#include "../pipeline_manager.hpp"
 
 namespace twe
 {
@@ -42,24 +43,56 @@ namespace twe
 
     public:
         TWE_API renderer( base_window* p_window, const std::string& app_name, uint32_t app_version );
-        renderer( const renderer& renderer ) noexcept = delete;
+        TWE_API renderer( const renderer& renderer ) noexcept = delete;
         TWE_API renderer( renderer&& renderer ) noexcept;
         TWE_API ~renderer( );
 
-        renderer& operator=( const renderer& renderer ) noexcept = delete;
+        TWE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
         void TWE_API setup_graphics_pipeline( const shader_data_type& data );
         
-        template<shader::type T>
-        shader::id create_shader( const std::string& filepath, const std::string& entry_point )
+        template<class C>
+        uint32_t create_shader( const std::string& filepath, const std::string& entry_point )
         {
-            return shader_manager_.insert( { vk_context_.device_.get(), T, filepath, entry_point } );
+            return shader_manager_.insert<C>( shader_create_info{ vk_context_.device_.get(), filepath, entry_point } );
         }
         
+        template<class C>
+        uint32_t create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
+        {
+            std::vector<vk::Viewport> viewports = {
+                vk::Viewport( )
+                    .setX( 0.0f )
+                    .setY( 0.0f )
+                    .setWidth( static_cast<float>( vk_context_.swapchain_.extent_.width ) )
+                    .setHeight( static_cast<float>( vk_context_.swapchain_.extent_.height ) )
+                    .setMinDepth( 0.0f )
+                    .setMaxDepth( 1.0f )
+            };
+    
+            std::vector<vk::Rect2D> scissors = {
+                vk::Rect2D( )
+                    .setOffset( { 0, 0 } )
+                    .setExtent( vk_context_.swapchain_.extent_ )
+            };
+            
+            const auto create_info = pipeline_create_info( )
+                .set_device( &vk_context_.device_.get() )
+                .set_render_pass( &vk_context_.render_pass_.get() )
+                .set_pipeline_definition( pipeline_definition )
+                .set_shader_manager( &shader_manager_ )
+                .set_shader_ids( vert_id, frag_id )
+                .set_viewports( viewports )
+                .set_scissors( scissors );
+            
+            return pipeline_manager_.insert<C>( create_info );
+        }
+        
+        /*
         template<pipeline::type T, size_t count>
         std::vector<pipeline::id> create_pipelines(
-            const shader::id vert_shader_id, const shader::id frag_shader_id,
+            const uint32_t vert_shader_id, const uint32_t frag_shader_id,
             std::vector<std::string>& pipeline_definitions )
         {
             auto create_info = pipeline_manager::pipeline_create_info( )
@@ -73,8 +106,9 @@ namespace twe
     
             return pipeline_manager_.insert<count>( create_info );
         }
+         */
         
-        void TWE_API switch_pipeline( const pipeline::id id );
+        void TWE_API switch_pipeline( const uint32_t id );
 
         void TWE_API draw_frame( );
         
@@ -155,7 +189,7 @@ namespace twe
         
         size_t current_frame_ = 0;
         
-        pipeline::id current_pipeline_;
+        uint32_t current_pipeline_;
         
         struct vk_context_t
         {
@@ -197,8 +231,10 @@ namespace twe
             std::vector<const char*> device_extensions_;
             std::vector<const char*> validation_layers_;
         } vk_context_;
-    
-        VmaAllocator memory_allocator_;
+
+        memory_allocator memory_allocator_;
+        
+        vertex_buffer vertex_buffer_;
         
         shader_manager shader_manager_;
         pipeline_manager pipeline_manager_;

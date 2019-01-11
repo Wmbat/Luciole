@@ -20,11 +20,38 @@
 #ifndef ENGINE_VERTEX_BUFFER_HPP
 #define ENGINE_VERTEX_BUFFER_HPP
 
+#include <vma/vk_mem_alloc.h>
+
+#include "../vulkan/memory_allocator.hpp"
+#include "../twe_core.hpp"
+#include "vertex.hpp"
+
+
 namespace twe
 {
     class vertex_buffer
     {
-    
+    public:
+        TWE_API vertex_buffer( ) = default;
+        TWE_API vertex_buffer( vk::Device* p_device, vk::PhysicalDevice& gpu, const std::vector<vertex>& vertices );
+        TWE_API vertex_buffer( memory_allocator& p_memory_allocator, const std::vector<vertex>& vertices );
+        TWE_API vertex_buffer( const vertex_buffer& rhs ) noexcept = delete;
+        TWE_API vertex_buffer( vertex_buffer&& rhs ) noexcept;
+        TWE_API ~vertex_buffer( );
+        
+        TWE_API vertex_buffer& operator=( const vertex_buffer& rhs ) noexcept = delete;
+        TWE_API vertex_buffer& operator=( vertex_buffer&& rhs ) noexcept;
+        
+        TWE_API const vk::Buffer& get( ) const noexcept;
+        
+    private:
+        vk::Device* p_device_;
+        
+        VmaAllocator* p_memory_allocator_;
+        VmaAllocation memory_allocation_;
+        
+        vk::Buffer buffer_;
+        vk::DeviceMemory memory_;
     };
 }
 

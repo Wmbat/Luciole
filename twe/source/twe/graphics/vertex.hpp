@@ -29,6 +29,12 @@ namespace twe
         glm::vec3 position_;
         glm::vec4 colour_;
     };
+    
+    struct vertex_input_config
+    {
+        std::vector<vk::VertexInputBindingDescription> bindings_;
+        std::vector<vk::VertexInputAttributeDescription> attributes_;
+    };
 }
 
 #endif //TWE_VERTEX_H

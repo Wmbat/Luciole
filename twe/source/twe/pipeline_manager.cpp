@@ -16,27 +16,27 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
-
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-#include "window/win32_window.hpp"
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-#include "window/xcb_window.hpp"
-#endif
+#include "pipeline_manager.hpp"
 
 namespace twe
 {
-    application::application ( const std::string& title )
+    
+    pipeline_manager::pipeline_manager( pipeline_manager&& rhs ) noexcept
     {
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-        p_wnd_ = std::make_unique<win32_window> ( title );
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-        p_wnd_ = std::make_unique<wayland_window> ( title );
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-        p_wnd_ = std::make_unique<xcb_window> ( title );
-#endif
+        *this = std::move( rhs );
+    }
+    
+    pipeline_manager& pipeline_manager::operator=( pipeline_manager&& rhs ) noexcept
+    {
+        if( this != &rhs )
+        {
+            graphics_pipelines_ = std::move( rhs.graphics_pipelines_ );
+            compute_pipelines_ = std::move( rhs.compute_pipelines_ );
+            
+            pipeline_id_count_ = rhs.pipeline_id_count_;
+            rhs.pipeline_id_count_ = 0;
+        }
         
-        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 4 ) );
+        return *this;
     }
 }

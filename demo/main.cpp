@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,34 +42,32 @@ public:
     {
         p_renderer_->set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
         
-        vert_id_ = p_renderer_->create_shader<twe::shader::type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
-        frag_id_ = p_renderer_->create_shader<twe::shader::type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
+        vert_id_ = p_renderer_->create_shader<twe::vertex_shader>( "../../demo/resources/shaders/vert.spv", "main" );
+        frag_id_ = p_renderer_->create_shader<twe::fragment_shader>( "../../demo/resources/shaders/frag.spv", "main" );
         
-        std::vector<std::string> pipeline_defs;
-        pipeline_defs.emplace_back( "../../demo/resources/triangle_pipeline.json" );
-        pipeline_defs.emplace_back( "../../demo/resources/wireframe_triangle_pipeline.json" );
+        std::string triangle_pipeline = "../../demo/resources/triangle_pipeline.json";
+        std::string wireframe_triangle_pipeline = "../../demo/resources/wireframe_triangle_pipeline.json";
         
-        pipeline_ids_ = p_renderer_->create_pipelines<twe::pipeline::type::graphics, 2>( vert_id_, frag_id_, pipeline_defs );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::graphics_pipeline>( triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::graphics_pipeline>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
         
         p_renderer_->switch_pipeline( pipeline_ids_[0] );
         
         p_wnd_->set_event_callback( twe::key_event_delg( player_, &player::on_key_event ) );
         p_wnd_->set_event_callback( twe::mouse_button_event_delg( player_, &player::on_mouse_button ) );
         
-        p_wnd_->set_event_callback( twe::mouse_button_event_delg( *this, &demo::on_mouse_press ) );
+        p_wnd_->set_event_callback( twe::mouse_button_event_delg( [this]( const twe::mouse_button_event& event )
+            {
+                if ( event.code_ == twe::mouse::button::l_button )
+                    p_renderer_->switch_pipeline ( pipeline_ids_[1] );
+    
+                if ( event.code_ == twe::mouse::button::r_button )
+                    p_renderer_->switch_pipeline ( pipeline_ids_[0] );
+            }) );
     }
     ~demo( ) override
     {
     
-    }
-    
-    void on_mouse_press ( const twe::mouse_button_event& event )
-    {
-        if ( event.code_ == twe::mouse::button::l_button )
-            p_renderer_->switch_pipeline ( pipeline_ids_[1] );
-
-        if ( event.code_ == twe::mouse::button::r_button )
-            p_renderer_->switch_pipeline ( pipeline_ids_[0] );
     }
     
     void run( ) override
@@ -98,10 +98,10 @@ private:
     
     float time_passed_ = 0;
     
-    twe::shader::id vert_id_ = 0;
-    twe::shader::id frag_id_ = 0;
+    uint32_t vert_id_ = 0;
+    uint32_t frag_id_ = 0;
     
-    std::vector<twe::pipeline::id> pipeline_ids_;
+    std::vector<uint32_t> pipeline_ids_;
 };
 
 std::unique_ptr<twe::application> twe::create_application( )

@@ -24,10 +24,17 @@
 #include "../utilities/log.hpp"
 #include "vertex.hpp"
 #include "../utilities/file_io.hpp"
-#include "../utilities/basic_error.h"
+#include "../utilities/basic_error.hpp"
 #include "../utilities/vk_error.hpp"
 
 static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+
+const std::vector<twe::vertex> vertices = {
+    { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+    { {  0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+    { { -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+};
 
 namespace twe
 {
@@ -161,11 +168,9 @@ namespace twe
             mem_allocator_create_info.physicalDevice = vk_context_.gpu_;
             mem_allocator_create_info.device = vk_context_.device_.get();
             
-            auto result = vmaCreateAllocator( &mem_allocator_create_info, &memory_allocator_ );
-            if( result != VK_SUCCESS )
-            {
-                throw;
-            }
+            memory_allocator_ = memory_allocator( mem_allocator_create_info );
+            
+            vertex_buffer_ = vertex_buffer( &vk_context_.device_.get(), vk_context_.gpu_, vertices );
         }
         catch( const basic_error& e )
         {
@@ -201,9 +206,6 @@ namespace twe
             rhs.window_height_ = 0;
             
             clear_colour_ = std::move( rhs.clear_colour_ );
-            
-            memory_allocator_ = rhs.memory_allocator_;
-            rhs.memory_allocator_ = VK_NULL_HANDLE;
             
             vk_context_.instance_ = std::move( rhs.vk_context_.instance_ );
         
@@ -340,11 +342,13 @@ namespace twe
             
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
 
-            vk_context_.command_buffers_[i].bindPipeline(
-                pipeline_manager_.find( current_pipeline_ ).get_bind_point(),
-                pipeline_manager_.find( current_pipeline_ ).get() );
-    
-            vk_context_.command_buffers_[i].draw( 3, 1, 0, 0 );
+            pipeline_manager_.find<graphics_pipeline>( current_pipeline_ ).bind( vk_context_.command_buffers_[i] );
+            
+            std::array<vk::Buffer, 1> vertex_buffers = { vertex_buffer_.get( ) };
+            std::array<vk::DeviceSize, 1> offsets = { 0 };
+            vk_context_.command_buffers_[i].bindVertexBuffers( 0, vertex_buffers, offsets );
+            
+            vk_context_.command_buffers_[i].draw( static_cast<uint32_t>( vertices.size() ), 1, 0, 0 );
     
             vk_context_.command_buffers_[i].endRenderPass( );
             
@@ -362,7 +366,7 @@ namespace twe
         framebuffer_resized_ = true;
     }
     
-    void renderer::switch_pipeline( const pipeline::id id )
+    void renderer::switch_pipeline( const uint32_t id )
     {
         current_pipeline_ = id;
         

@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,7 +17,7 @@
  */
 
 #include "shader_manager.hpp"
-#include "../utilities/basic_error.h"
+#include "utilities/basic_error.hpp"
 
 namespace twe
 {
@@ -27,39 +29,13 @@ namespace twe
     {
         if( this != &rhs )
         {
-            shaders_ = std::move( rhs.shaders_ );
+            vertex_shaders_ = std::move( rhs.vertex_shaders_ );
+            fragment_shaders_ = std::move( rhs.fragment_shaders_ );
             
             shader_id_count_ = rhs.shader_id_count_;
             rhs.shader_id_count_ = 0;
         }
         
         return *this;
-    }
-    
-    shader::id shader_manager::insert( const shader::create_info& create_info )
-    {
-        auto id = ++shader_id_count_;
-        
-        shaders_.emplace( std::pair( id, shader{ create_info } ) );
-        
-        return id;
-    }
-    
-    const shader& shader_manager::find( const shader::id id ) const
-    {
-        const auto i = shaders_.find( id );
-        
-        assert( i != shaders_.cend( ) );
-        
-        return i->second;
-    }
-    
-    const shader& shader_manager::operator[]( const shader::id id ) const
-    {
-        const auto i = shaders_.find( id );
-    
-        assert( i != shaders_.cend( ) );
-    
-        return i->second;
     }
 }

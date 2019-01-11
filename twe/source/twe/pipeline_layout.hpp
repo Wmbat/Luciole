@@ -16,27 +16,21 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef ENGINE_PIPELINE_LAYOUT_HPP
+#define ENGINE_PIPELINE_LAYOUT_HPP
 
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-#include "window/win32_window.hpp"
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-#include "window/xcb_window.hpp"
-#endif
+#include "twe_core.hpp"
 
 namespace twe
 {
-    application::application ( const std::string& title )
+    class pipeline_layout
     {
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-        p_wnd_ = std::make_unique<win32_window> ( title );
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-        p_wnd_ = std::make_unique<wayland_window> ( title );
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-        p_wnd_ = std::make_unique<xcb_window> ( title );
-#endif
+    public:
+        pipeline_layout( ) = default;
         
-        p_renderer_ = std::make_unique<renderer>( p_wnd_.get(), title, VK_MAKE_VERSION( 0, 0, 4 ) );
-    }
+    private:
+        vk::UniquePipelineLayout layout_;
+    };
 }
+
+#endif //ENGINE_PIPELINE_LAYOUT_HPP

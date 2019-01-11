@@ -21,7 +21,7 @@
 #include <fstream>
 #include <vector>
 
-#include "basic_error.h"
+#include "basic_error.hpp"
 
 
 // TODO: Update this whole file to be better and comment.

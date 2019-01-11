@@ -26,16 +26,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 endif()
 
 add_library( twe SHARED
-        source/twe/vulkan/pipeline.cpp
-        source/twe/vulkan/pipeline.hpp
-        source/twe/vulkan/pipeline_manager.cpp
-        source/twe/vulkan/pipeline_manager.hpp
-        source/twe/vulkan/shader.cpp
-        source/twe/vulkan/shader.hpp
-        source/twe/vulkan/shader_manager.cpp
-        source/twe/vulkan/shader_manager.hpp
         source/twe/utilities/basic_error.cpp
-        source/twe/utilities/basic_error.h
+        source/twe/utilities/basic_error.hpp
         source/twe/utilities/delegate.hpp
         source/twe/utilities/file_io.hpp
         source/twe/utilities/vk_error.cpp
@@ -55,7 +47,12 @@ add_library( twe SHARED
         source/twe/utilities/log.cpp
         source/twe/utilities/log.hpp
         source/twe/utilities/message.hpp
-        source/twe/window/mouse.hpp source/twe/graphics/vertex_buffer.hpp source/twe/graphics/mesh.hpp source/twe/vulkan/vma_define.cpp)
+        source/twe/window/mouse.hpp
+        source/twe/graphics/vertex_buffer.hpp
+        source/twe/graphics/mesh.hpp
+        source/twe/graphics/vertex_buffer.cpp
+        source/twe/vulkan/memory_allocator.hpp
+        source/twe/vulkan/memory_allocator.cpp source/twe/pipeline.hpp source/twe/pipeline_layout.hpp source/twe/pipeline_manager.hpp source/twe/pipeline_manager.cpp)
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )
@@ -104,11 +101,15 @@ endif( )
 
 # Declace the library's files.
 target_sources( twe
-        PRIVATE  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.cpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vma_define.cpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader_manager.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader_manager.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe_core.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/vk_utils.hpp" )
 
 target_include_directories( twe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/source" )
