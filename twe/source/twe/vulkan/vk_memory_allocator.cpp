@@ -16,13 +16,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "memory_allocator.hpp"
+#include "vk_memory_allocator.hpp"
 #include "../utilities/basic_error.hpp"
 #include "../utilities/log.hpp"
 
 namespace twe
 {
-    memory_allocator::memory_allocator( const VmaAllocatorCreateInfo& create_info )
+    vk_memory_allocator::vk_memory_allocator( const VmaAllocatorCreateInfo& create_info )
     {
         try
         {
@@ -39,16 +39,16 @@ namespace twe
         }
     
     }
-    memory_allocator::memory_allocator( memory_allocator&& rhs ) noexcept
+    vk_memory_allocator::vk_memory_allocator( vk_memory_allocator&& rhs ) noexcept
     {
         *this = std::move( rhs );
     }
-    memory_allocator::~memory_allocator( )
+    vk_memory_allocator::~vk_memory_allocator( )
     {
         vmaDestroyAllocator( allocator_ );
     }
     
-    memory_allocator& memory_allocator::operator=( memory_allocator&& rhs ) noexcept
+    vk_memory_allocator& vk_memory_allocator::operator=( vk_memory_allocator&& rhs ) noexcept
     {
         if( this != &rhs )
         {
@@ -59,20 +59,20 @@ namespace twe
         return *this;
     }
     
-    const VmaAllocator& memory_allocator::operator()( ) const noexcept
+    const VmaAllocator& vk_memory_allocator::operator()( ) const noexcept
     {
         return allocator_;
     }
-    VmaAllocator& memory_allocator::operator( )( ) noexcept
+    VmaAllocator& vk_memory_allocator::operator( )( ) noexcept
     {
         return allocator_;
     }
     
-    const VmaAllocator& memory_allocator::get( ) const noexcept
+    const VmaAllocator& vk_memory_allocator::get( ) const noexcept
     {
         return allocator_;
     }
-    VmaAllocator& memory_allocator::get( ) noexcept
+    VmaAllocator& vk_memory_allocator::get( ) noexcept
     {
         return allocator_;
     }

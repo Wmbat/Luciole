@@ -36,8 +36,8 @@ namespace twe
         TWE_API shader_manager& operator=( const shader_manager& rhs ) = delete;
         TWE_API shader_manager& operator=( shader_manager&& rhs ) noexcept;
         
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, vertex_shader>, uint32_t> insert( const shader_create_info& create_info )
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::vertex, uint32_t> insert( const shader_create_info& create_info )
         {
             auto id = ++shader_id_count_;
             
@@ -45,8 +45,8 @@ namespace twe
             
             return id;
         }
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, fragment_shader>, uint32_t> insert( const shader_create_info& create_info )
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::fragment, uint32_t> insert( const shader_create_info& create_info )
         {
             auto id = ++shader_id_count_;
             
@@ -55,8 +55,8 @@ namespace twe
             return id;
         }
         
-        template<class C, class = std::enable_if_t<std::is_same_v<C, vertex_shader>>>
-        const vertex_shader& find( const uint32_t id ) const
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::vertex, const shader<T>& > find( const uint32_t id ) const
         {
             const auto it = vertex_shaders_.find( id );
             
@@ -64,8 +64,8 @@ namespace twe
             
             return it->second;
         }
-        template<class C, class = std::enable_if_t<std::is_same_v<C, fragment_shader>>>
-        const fragment_shader& find( const uint32_t id ) const
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::fragment, const shader<T>&> find( const uint32_t id ) const
         {
             const auto it = fragment_shaders_.find( id );
             

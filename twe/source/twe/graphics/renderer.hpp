@@ -24,9 +24,8 @@
 #include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
 #include "../utilities/vk_utils.hpp"
-#include "../vulkan/memory_allocator.hpp"
+#include "../vulkan/vk_memory_allocator.hpp"
 #include "../shader_manager.hpp"
-//#include "../vulkan/pipeline_manager.hpp"
 #include "../window/base_window.hpp"
 #include "../pipeline_manager.hpp"
 
@@ -34,9 +33,6 @@ namespace twe
 {
     class renderer
     {
-    public:
-        struct shader_data_type;
-    
     private:
         struct queue_family_indices_type;
         struct swapchain_support_details_type;
@@ -50,15 +46,13 @@ namespace twe
         TWE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
-        void TWE_API setup_graphics_pipeline( const shader_data_type& data );
-        
-        template<class C>
+        template<shader_type T>
         uint32_t create_shader( const std::string& filepath, const std::string& entry_point )
         {
-            return shader_manager_.insert<C>( shader_create_info{ vk_context_.device_.get(), filepath, entry_point } );
+            return shader_manager_.insert<T>( shader_create_info{ vk_context_.device_.get(), filepath, entry_point } );
         }
         
-        template<class C>
+        template<pipeline_type T>
         uint32_t create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
         {
             std::vector<vk::Viewport> viewports = {
@@ -86,29 +80,11 @@ namespace twe
                 .set_viewports( viewports )
                 .set_scissors( scissors );
             
-            return pipeline_manager_.insert<C>( create_info );
+            return pipeline_manager_.insert<T>( create_info );
         }
         
-        /*
-        template<pipeline::type T, size_t count>
-        std::vector<pipeline::id> create_pipelines(
-            const uint32_t vert_shader_id, const uint32_t frag_shader_id,
-            std::vector<std::string>& pipeline_definitions )
-        {
-            auto create_info = pipeline_manager::pipeline_create_info( )
-                .set_shaders( vert_shader_id, frag_shader_id )
-                .set_shader_manager( &shader_manager_ )
-                .set_pipeline_type( T )
-                .set_pipeline_definitions( pipeline_definitions )
-                .set_extent( vk_context_.swapchain_.extent_ )
-                .set_device( vk_context_.device_.get() )
-                .set_render_pass( vk_context_.render_pass_.get() );
-    
-            return pipeline_manager_.insert<count>( create_info );
-        }
-         */
-        
-        void TWE_API switch_pipeline( const uint32_t id );
+        TWE_API void set_pipeline( const uint32_t id );
+        TWE_API void switch_pipeline( const uint32_t id );
 
         void TWE_API draw_frame( );
         
@@ -232,7 +208,7 @@ namespace twe
             std::vector<const char*> validation_layers_;
         } vk_context_;
 
-        memory_allocator memory_allocator_;
+        vk_memory_allocator memory_allocator_;
         
         vertex_buffer vertex_buffer_;
         
@@ -240,15 +216,22 @@ namespace twe
         pipeline_manager pipeline_manager_;
         
     private:
+        enum class queue_type
+        {
+            graphics,
+            compute,
+            transfer,
+            present
+        };
+        
         struct queue_family_indices_type
         {
             std::optional<uint32_t> graphic_family_;
-            std::optional<uint32_t> compute_family_;
             std::optional<uint32_t> present_family_;
             
-            bool is_complete( ) const
+            bool has_rendering_support( ) const
             {
-                return graphic_family_.has_value() && compute_family_.has_value() && present_family_.has_value();
+                return graphic_family_.has_value() && present_family_.has_value();
             }
         };
         struct swapchain_support_details_type
@@ -256,17 +239,6 @@ namespace twe
             vk::SurfaceCapabilitiesKHR capabilities_;
             std::vector<vk::SurfaceFormatKHR> formats_;
             std::vector<vk::PresentModeKHR> present_modes_;
-        };
-    
-    public:
-        struct shader_data_type
-        {
-            const uint32_t vert_shader_id_;
-            const uint32_t frag_shader_id_;
-            const std::uint32_t vertex_position_binding_;
-            const std::uint32_t vertex_position_location_;
-            const std::uint32_t vertex_colour_binding_;
-            const std::uint32_t vertex_colour_location_;
         };
     };
 }

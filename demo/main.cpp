@@ -42,16 +42,16 @@ public:
     {
         p_renderer_->set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
         
-        vert_id_ = p_renderer_->create_shader<twe::vertex_shader>( "../../demo/resources/shaders/vert.spv", "main" );
-        frag_id_ = p_renderer_->create_shader<twe::fragment_shader>( "../../demo/resources/shaders/frag.spv", "main" );
+        vert_id_ = p_renderer_->create_shader<twe::shader_type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
+        frag_id_ = p_renderer_->create_shader<twe::shader_type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
         
         std::string triangle_pipeline = "../../demo/resources/triangle_pipeline.json";
         std::string wireframe_triangle_pipeline = "../../demo/resources/wireframe_triangle_pipeline.json";
         
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::graphics_pipeline>( triangle_pipeline, vert_id_, frag_id_ ) );
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::graphics_pipeline>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::pipeline_type::graphics>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
         
-        p_renderer_->switch_pipeline( pipeline_ids_[0] );
+        p_renderer_->set_pipeline( pipeline_ids_[0] );
         
         p_wnd_->set_event_callback( twe::key_event_delg( player_, &player::on_key_event ) );
         p_wnd_->set_event_callback( twe::mouse_button_event_delg( player_, &player::on_mouse_button ) );
@@ -63,7 +63,7 @@ public:
     
                 if ( event.code_ == twe::mouse::button::r_button )
                     p_renderer_->switch_pipeline ( pipeline_ids_[0] );
-            }) );
+            } ) );
     }
     ~demo( ) override
     {

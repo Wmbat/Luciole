@@ -35,6 +35,19 @@ namespace twe
         compute
     };
     
+    enum class dynamic_state_type
+    {
+        viewport = VK_DYNAMIC_STATE_VIEWPORT,
+        scissor = VK_DYNAMIC_STATE_SCISSOR,
+        line_width = VK_DYNAMIC_STATE_LINE_WIDTH,
+        depth_bias = VK_DYNAMIC_STATE_DEPTH_BIAS,
+        blend_constants = VK_DYNAMIC_STATE_BLEND_CONSTANTS,
+        depth_bounds = VK_DYNAMIC_STATE_DEPTH_BOUNDS,
+        stencil_compare_mask = VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK,
+        stencil_write_mask = VK_DYNAMIC_STATE_STENCIL_WRITE_MASK,
+        stencil_reference = VK_DYNAMIC_STATE_STENCIL_REFERENCE,
+    };
+    
     struct pipeline_create_info
     {
         vk::Device* p_device_;
@@ -581,8 +594,8 @@ namespace twe
             };
             
             const vk::PipelineShaderStageCreateInfo shader_stage_create_infos[] = {
-                create_info.p_shader_manager_->find<vertex_shader>( vert_shader_id_ ).get_shader_stage_create_info( ),
-                create_info.p_shader_manager_->find<fragment_shader>( frag_shader_id_ ).get_shader_stage_create_info( )
+                create_info.p_shader_manager_->find<shader_type::vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),
+                create_info.p_shader_manager_->find<shader_type::fragment>( frag_shader_id_ ).get_shader_stage_create_info( )
             };
     
             //
@@ -597,7 +610,7 @@ namespace twe
                     .setBinding( 0 )
                     .setLocation( 0 )
                     .setFormat( vk::Format::eR32G32B32Sfloat )
-                    .setOffset( offsetof( struct vertex, position_ ) )
+                    .setOffset( static_cast<uint32_t>( offsetof( struct vertex, position_ ) ) )
                 );
             
             vertex_input_config_.attributes_.emplace_back(
@@ -605,7 +618,7 @@ namespace twe
                     .setBinding( 0 )
                     .setLocation( 1 )
                     .setFormat( vk::Format::eR32G32B32A32Sfloat )
-                    .setOffset( offsetof( struct vertex, colour_ ) )
+                    .setOffset( static_cast<uint32_t>( offsetof( struct vertex, colour_ ) ) )
                 );
             //
             
@@ -720,6 +733,8 @@ namespace twe
             {
                 pipeline_ = std::move( rhs.pipeline_ );
                 
+                dynamic_states_ = std::move( rhs.dynamic_states_ );
+                
                 vertex_input_config_ = std::move( rhs.vertex_input_config_ );
             
                 vert_shader_id_ = rhs.vert_shader_id_;
@@ -736,6 +751,118 @@ namespace twe
             }
             
             return *this;
+        }
+        
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::viewport>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, uint32_t first_viewport, std::vector<vk::Viewport>& viewports ) const
+        {
+            if ( std::find( dynamic_states_.cbegin( ), dynamic_states_.cend( ), vk::DynamicState::eViewport ) != dynamic_states_.cend() )
+            {
+                buffer.setViewport( first_viewport, viewports );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: viewport, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::scissor>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, uint32_t first_scissor, std::vector<vk::Rect2D>& scissors ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend(), vk::DynamicState::eScissor ) != dynamic_states_.cend() )
+            {
+                buffer.setScissor( first_scissor, scissors );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: scissor, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::line_width>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, float line_width ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eLineWidth ) != dynamic_states_.cend() )
+            {
+                buffer.setLineWidth( line_width );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: line_width, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::depth_bias>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, float depth_bias_constant_factor, float depth_bias_clamp, float depth_bias_slope_factor ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eDepthBias ) != dynamic_states_.cend() )
+            {
+                buffer.setDepthBias( depth_bias_constant_factor, depth_bias_clamp, depth_bias_slope_factor );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: depth_bias, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::blend_constants>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, const float* blend_constants ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend(), vk::DynamicState::eBlendConstants ) != dynamic_states_.cend() )
+            {
+                buffer.setBlendConstants( blend_constants );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: blend_constants, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type, class = std::enable_if_t<type == dynamic_state_type::depth_bounds>>
+        void set_dynamic_state( const vk::CommandBuffer& buffer, float min_depth_bound, float max_depth_bound ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eDepthBounds ) != dynamic_states_.cend() )
+            {
+                buffer.setDepthBounds( min_depth_bound, max_depth_bound );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: depth_bounds, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type>
+        std::enable_if_t<type == dynamic_state_type::stencil_compare_mask, void>
+        set_dynamic_state( const vk::CommandBuffer& buffer, vk::StencilFaceFlags flags, uint32_t compare_mask ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eStencilCompareMask ) != dynamic_states_.cend( ) )
+            {
+                buffer.setStencilCompareMask( flags, compare_mask );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: stencil_compare_mask, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type>
+        std::enable_if_t<type == dynamic_state_type::stencil_write_mask, void>
+        set_dynamic_state( const vk::CommandBuffer& buffer, vk::StencilFaceFlags flags, uint32_t write_mask ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eStencilWriteMask ) != dynamic_states_.cend( ) )
+            {
+                buffer.setStencilWriteMask( flags, write_mask );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: stencil_write_mask, while it is not enabled in the graphics pipeline." );
+            }
+        }
+        template<dynamic_state_type type>
+        std::enable_if_t<type == dynamic_state_type::stencil_reference, void>
+        set_dynamic_state( const vk::CommandBuffer& buffer, vk::StencilFaceFlags flags, uint32_t reference ) const
+        {
+            if ( std::find( dynamic_states_.cbegin(), dynamic_states_.cend( ), vk::DynamicState::eStencilReference ) != dynamic_states_.cend( ) )
+            {
+                buffer.setStencilReference( flags, reference );
+            }
+            else
+            {
+                core_warn( "Attempted to set dynamic state: stencil_reference, while it is not enabled in the graphics pipeline." );
+            }
         }
         
         void bind( const vk::CommandBuffer& buffer ) const

@@ -37,24 +37,24 @@ namespace twe
         TWE_API pipeline_manager& operator=( const pipeline_manager& rhs ) = delete;
         TWE_API pipeline_manager& operator=( pipeline_manager&& rhs ) noexcept;
         
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, graphics_pipeline>, uint32_t> insert( const pipeline_create_info& create_info )
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::graphics, uint32_t> insert( const pipeline_create_info& create_info )
         {
             graphics_pipelines_.emplace( std::pair{ ++pipeline_id_count_, graphics_pipeline{ create_info } } );
         
             return pipeline_id_count_;
         }
         
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, compute_pipeline>, uint32_t> insert( const pipeline_create_info& create_info )
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::compute, uint32_t> insert( const pipeline_create_info& create_info )
         {
             compute_pipelines_.emplace( std::pair{ ++pipeline_id_count_, compute_pipeline{ create_info } } );
             
             return pipeline_id_count_;
         }
         
-        template<class C, class = std::enable_if_t<std::is_same_v<C, graphics_pipeline>>>
-        const graphics_pipeline& find( const uint32_t id ) const
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::graphics, const pipeline<T>&> find( const uint32_t id ) const
         {
             const auto it = graphics_pipelines_.find( id );
             
@@ -63,8 +63,8 @@ namespace twe
             return it->second;
         }
         
-        template<class C, class = std::enable_if_t<std::is_same_v<C, compute_pipeline>>>
-        const compute_pipeline& find( const uint32_t id ) const
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::compute, const pipeline<T>&> find( const uint32_t id ) const
         {
             const auto it = compute_pipelines_.find( id );
             

@@ -20,27 +20,39 @@
 
 namespace twe
 {
-    vertex_buffer::vertex_buffer( memory_allocator& p_memory_allocator, const std::vector<vertex>& vertices  )
+    vertex_buffer::vertex_buffer( vk_memory_allocator& memory_allocator, const std::vector<vertex>& vertices  )
         :
-        p_memory_allocator_( reinterpret_cast<VmaAllocator*>( &p_memory_allocator  ) )
+        p_memory_allocator_( reinterpret_cast<VmaAllocator*>( &memory_allocator  ) )
     {
-        const auto create_info = vk::BufferCreateInfo( )
-            .setSize( vertices.size() * sizeof( vertices[0] ) )
-            .setUsage( vk::BufferUsageFlagBits::eVertexBuffer )
-            .setSharingMode( vk::SharingMode::eExclusive );
-    
+        const auto buffer_size = vertices.size() * sizeof( vertices[0] );
         
-        VmaAllocationCreateInfo allocation_info = { };
-        allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;  // TODO: remove hardcode query for it
+        const auto staging_create_info = vk::BufferCreateInfo( )
+            .setSize( buffer_size )
+            .setUsage( vk::BufferUsageFlagBits::eTransferSrc )
+            .setSharingMode( vk::SharingMode::eExclusive );
+        
+        vk::Buffer staging_buffer;
+        VmaAllocation staging_buffer_memory;
+        
+        VmaAllocationCreateInfo staging_allocation_info = { };
+        staging_allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;  // TODO: remove hardcode query for it
         
         vmaCreateBuffer( *p_memory_allocator_,
-            reinterpret_cast<const VkBufferCreateInfo*>( &create_info ), &allocation_info,
-            reinterpret_cast<VkBuffer*>( &buffer_ ), &memory_allocation_, nullptr );
+            reinterpret_cast<const VkBufferCreateInfo*>( &staging_create_info ), &staging_allocation_info,
+            reinterpret_cast<VkBuffer*>( &staging_buffer ), &staging_buffer_memory, nullptr );
         
         void* data;
-        vmaMapMemory( *p_memory_allocator_, memory_allocation_, &data );
-        memcpy( data, vertices.data(), vertices.size() );
-        vmaUnmapMemory( *p_memory_allocator_, memory_allocation_ );
+        vmaMapMemory( *p_memory_allocator_, staging_buffer_memory, &data );
+        memcpy( data, vertices.data(), buffer_size );
+        vmaUnmapMemory( *p_memory_allocator_, staging_buffer_memory );
+        
+        const auto vertex_create_info = vk::BufferCreateInfo( )
+            .setSize( buffer_size )
+            .setUsage( vk::BufferUsageFlagBits::eTransferDst )
+            .setSharingMode( vk::SharingMode::eExclusive );
+        
+        VmaAllocationCreateInfo allocation_info = { };
+        allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     }
     vertex_buffer::vertex_buffer( vertex_buffer&& rhs ) noexcept
     {
@@ -71,45 +83,5 @@ namespace twe
     const vk::Buffer& vertex_buffer::get( ) const noexcept
     {
         return buffer_;
-    }
-    
-    uint32_t find_memory_type( vk::PhysicalDevice& gpu, uint32_t type_filter, vk::MemoryPropertyFlags flags )
-    {
-        auto mem_properties = gpu.getMemoryProperties( );
-        
-        for( uint32_t i = 0; i < mem_properties.memoryTypeCount; ++i )
-        {
-            if ( ( type_filter & ( 1 << i ) ) && ( mem_properties.memoryTypes[i].propertyFlags & flags ) == flags )
-            {
-                return i;
-            }
-        }
-    }
-    
-    vertex_buffer::vertex_buffer( vk::Device* p_device, vk::PhysicalDevice& gpu, const std::vector<vertex>& vertices )
-        :
-        p_device_( p_device )
-    {
-        const auto create_info = vk::BufferCreateInfo( )
-            .setSize( vertices.size() * sizeof( vertices[0] ) )
-            .setUsage( vk::BufferUsageFlagBits::eVertexBuffer )
-            .setSharingMode( vk::SharingMode::eExclusive );
-        
-        buffer_ = p_device_->createBuffer( create_info );
-        
-        auto mem_reqs = p_device_->getBufferMemoryRequirements( buffer_ );
-        
-        const auto alloc_info = vk::MemoryAllocateInfo( )
-            .setAllocationSize( mem_reqs.size )
-            .setMemoryTypeIndex( find_memory_type( gpu, mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent ) );
-        
-        memory_ = p_device_->allocateMemory( alloc_info );
-        
-        p_device_->bindBufferMemory( buffer_, memory_, 0 );
-        
-        void* data;
-        p_device_->mapMemory( memory_, 0, create_info.size,{ }, &data );
-        memcpy( data, vertices.data(), create_info.size );
-        p_device_->unmapMemory( memory_ );
     }
 }

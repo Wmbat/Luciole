@@ -21,8 +21,8 @@
 #include <map>
 
 #include "renderer.hpp"
-#include "../utilities/log.hpp"
 #include "vertex.hpp"
+#include "../utilities/log.hpp"
 #include "../utilities/file_io.hpp"
 #include "../utilities/basic_error.hpp"
 #include "../utilities/vk_error.hpp"
@@ -168,9 +168,9 @@ namespace twe
             mem_allocator_create_info.physicalDevice = vk_context_.gpu_;
             mem_allocator_create_info.device = vk_context_.device_.get();
             
-            memory_allocator_ = memory_allocator( mem_allocator_create_info );
+            memory_allocator_ = vk_memory_allocator( mem_allocator_create_info );
             
-            vertex_buffer_ = vertex_buffer( &vk_context_.device_.get(), vk_context_.gpu_, vertices );
+            vertex_buffer_ = vertex_buffer( memory_allocator_, vertices );
         }
         catch( const basic_error& e )
         {
@@ -259,52 +259,11 @@ namespace twe
         return *this;
     }
     
-    void renderer::setup_graphics_pipeline( const shader_data_type &data )
-    {
-        /*
-        const vk::PipelineShaderStageCreateInfo shader_stages[] = {
-            shader_manager_.find( data.vert_shader_id_ ).get_shader_stage_create_info(),
-            shader_manager_.find( data.frag_shader_id_ ).get_shader_stage_create_info() };
-        
-        const auto binding_description = vk::VertexInputBindingDescription( )
-            .setBinding( 0 )    // vertex buffer
-            .setStride( sizeof( vertex ) )
-            .setInputRate( vk::VertexInputRate::eVertex );
-        
-        const auto position_attrib = vk::VertexInputAttributeDescription( )
-            .setBinding( data.vertex_position_binding_ )
-            .setLocation( data.vertex_position_location_ )
-            .setFormat( vk::Format::eR32G32B32Sfloat )
-            .setOffset( static_cast<uint32_t>( offsetof( vertex, vertex::position_ ) ) );
-        
-        const auto colour_attrib = vk::VertexInputAttributeDescription( )
-            .setBinding( data.vertex_colour_binding_ )
-            .setLocation( data.vertex_colour_location_ )
-            .setFormat( vk::Format::eR32G32B32A32Sfloat )
-            .setOffset( static_cast<uint32_t>( offsetof( vertex, vertex::colour_ ) ) );
-        
-        const vk::VertexInputAttributeDescription vertex_input_attribs[] = { position_attrib, colour_attrib };
-        
-        const auto vertex_input_info = vk::PipelineVertexInputStateCreateInfo( )
-            .setVertexBindingDescriptionCount( 0 ) // 1
-            .setPVertexBindingDescriptions( &binding_description )
-            .setVertexAttributeDescriptionCount( 0 ) // 2
-            .setPVertexAttributeDescriptions( vertex_input_attribs );
-        
-        vk_context_.graphics_pipeline_layout_ = check_vk_result_value(
-            create_pipeline_layout( ), "create_pipeline_layout( )" );
-        
-        vk_context_.graphics_pipeline_ = check_vk_result_value(
-            create_graphics_pipeline(
-                vertex_input_info,
-                sizeof( shader_stages ) / sizeof( shader_stages[0] ),
-                shader_stages ),
-            "create_graphics_pipeline( )" );
-            */
-    }
-    
     void renderer::record_draw_calls( )
     {
+        std::vector<vk::Viewport> viewports;
+        std::vector<vk::Rect2D> scissors;
+        
         const auto viewport = vk::Viewport( )
             .setX( 0.0f )
             .setY( 0.0f )
@@ -312,10 +271,14 @@ namespace twe
             .setHeight( static_cast<float>( vk_context_.swapchain_.extent_.height ) )
             .setMinDepth( 0.0f )
             .setMaxDepth( 1.0f );
+        
+        viewports.push_back( viewport );
     
-        const auto scissors = vk::Rect2D( )
+        const auto scissor = vk::Rect2D( )
             .setOffset( { 0, 0 } )
             .setExtent( vk_context_.swapchain_.extent_ );
+        
+        scissors.push_back( scissor );
         
         for( size_t i = 0; i < vk_context_.command_buffers_.size(); ++i )
         {
@@ -324,8 +287,6 @@ namespace twe
             
             vk_context_.command_buffers_[i].begin( begin_info );
           
-            vk_context_.command_buffers_[i].setViewport( 0, 1, &viewport );
-            vk_context_.command_buffers_[i].setScissor( 0, 1, &scissors );
             
             const auto clear_colour_value= vk::ClearColorValue( )
                 .setFloat32( std::array<float, 4>{ clear_colour_.r / 255.f, clear_colour_.g / 255.f, clear_colour_.b / 255.f, clear_colour_.a / 255.f } );
@@ -341,8 +302,13 @@ namespace twe
                 .setRenderArea( { { 0, 0 }, vk_context_.swapchain_.extent_ } );
             
             vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
-
-            pipeline_manager_.find<graphics_pipeline>( current_pipeline_ ).bind( vk_context_.command_buffers_[i] );
+            
+            const auto& pipeline = pipeline_manager_.find<pipeline_type::graphics>( current_pipeline_ );
+            
+            pipeline.set_dynamic_state<dynamic_state_type::viewport>( vk_context_.command_buffers_[i], 0, viewports );
+            pipeline.set_dynamic_state<dynamic_state_type::scissor>( vk_context_.command_buffers_[i], 0, scissors );
+            
+            pipeline.bind( vk_context_.command_buffers_[i] );
             
             std::array<vk::Buffer, 1> vertex_buffers = { vertex_buffer_.get( ) };
             std::array<vk::DeviceSize, 1> offsets = { 0 };
@@ -366,11 +332,17 @@ namespace twe
         framebuffer_resized_ = true;
     }
     
+    void renderer::set_pipeline( const uint32_t id )
+    {
+        current_pipeline_ = id;
+        
+        recreate_swapchain();
+    }
     void renderer::switch_pipeline( const uint32_t id )
     {
         current_pipeline_ = id;
         
-        recreate_swapchain( );
+        recreate_swapchain();
     }
     
     void renderer::draw_frame( )
@@ -682,17 +654,16 @@ namespace twe
     
     const vk::UniqueDevice renderer::create_device( ) const noexcept
     {
+        const auto queue_properties = vk_context_.gpu_.getQueueFamilyProperties( );
+        
+        
+        
         const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
         std::set<uint32_t> unique_queue_family;
         
         if ( queue_families.graphic_family_.has_value() )
         {
             unique_queue_family.insert( queue_families.graphic_family_.value() );
-        }
-        
-        if( queue_families.compute_family_.has_value() )
-        {
-            unique_queue_family.insert( queue_families.compute_family_.value() );
         }
         
         if( queue_families.present_family_.has_value() )
@@ -762,6 +733,7 @@ namespace twe
     const vk::UniqueCommandPool renderer::create_command_pool( uint32_t queue_family ) const noexcept
     {
         const auto create_info = vk::CommandPoolCreateInfo( )
+            .setFlags( vk::CommandPoolCreateFlagBits::eResetCommandBuffer )
             .setQueueFamilyIndex( queue_family );
         
         return vk_context_.device_->createCommandPoolUnique( create_info );
@@ -964,7 +936,7 @@ namespace twe
     
     bool renderer::is_physical_device_suitable( const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device, const std::vector<const char*>& device_extensions ) const noexcept
     {
-        return find_queue_family_indices( surface, physical_device ).is_complete() &&
+        return find_queue_family_indices( surface, physical_device ).has_rendering_support() &&
                check_physical_device_extension_support( physical_device, device_extensions ) &&
                is_swapchain_adequate( surface, physical_device );
     }
@@ -987,7 +959,7 @@ namespace twe
     {
         queue_family_indices_type indices;
     
-        auto queue_properties = physical_device.getQueueFamilyProperties( );
+        const auto queue_properties = physical_device.getQueueFamilyProperties( );
         
         int i = 0;
         for( const auto& queue_property : queue_properties )
@@ -998,14 +970,8 @@ namespace twe
                 {
                     indices.graphic_family_ = i;
                 }
-                if ( queue_property.queueFlags & vk::QueueFlagBits::eCompute )
-                {
-                    indices.compute_family_ = i;
-                }
                 
-                const auto present_support = physical_device.getSurfaceSupportKHR( i, surface );
-                
-                if ( present_support )
+                if ( physical_device.getSurfaceSupportKHR( i, surface ) )
                 {
                     indices.present_family_ = i;
                 }
