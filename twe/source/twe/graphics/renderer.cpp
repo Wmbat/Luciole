@@ -64,7 +64,8 @@ namespace twe
         :
         window_width_( p_wnd->get_width() ),
         window_height_( p_wnd->get_height() ),
-        clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f )
+        clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f ),
+        test_( p_wnd, app_name, app_version )
     {
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
@@ -102,7 +103,8 @@ namespace twe
             /* Get the graphics queue and the present queue. */
             const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
             vk_context_.graphics_queue_ = vk_context_.device_->getQueue( queue_families.graphic_family_.value(), 0 );
-            vk_context_.present_queue_ = vk_context_.device_->getQueue( queue_families.present_family_.value(), 0 );
+            // vk_context_.present_queue_ = vk_context_.device_->getQueue( queue_families.present_family_.value(), 0 );
+
             
             vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
             vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
@@ -226,8 +228,11 @@ namespace twe
             vk_context_.graphics_queue_ = rhs.vk_context_.graphics_queue_;
             rhs.vk_context_.graphics_queue_ = vk::Queue( nullptr );
     
+            /*
             vk_context_.present_queue_ = rhs.vk_context_.present_queue_;
             rhs.vk_context_.present_queue_ = vk::Queue( nullptr );
+            */
+            
             
             vk_context_.in_flight_fences_ = std::move( rhs.vk_context_.in_flight_fences_ );
             vk_context_.image_available_semaphores_ = std::move( rhs.vk_context_.image_available_semaphores_ );
@@ -415,7 +420,7 @@ namespace twe
             present_info.pSwapchains = reinterpret_cast<VkSwapchainKHR*>( &vk_context_.swapchain_.swapchain_.get() );
             present_info.pImageIndices = &image_index;
             
-            result = ( vk::Result )vkQueuePresentKHR( vk_context_.present_queue_, &present_info );
+            result = ( vk::Result )vkQueuePresentKHR( vk_context_.graphics_queue_, &present_info );
             
             try
             {
@@ -654,6 +659,46 @@ namespace twe
     
     const vk::UniqueDevice renderer::create_device( ) const noexcept
     {
+        /*
+        std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
+    
+        const auto queue_properties = vk_context_.gpu_.getQueueFamilyProperties( );
+    
+        bool has_dedicated_transfer = false;
+    
+        uint32_t i = 0;
+        for( const auto& queue_property : queue_properties )
+        {
+            float queue_priority = 1.0f;
+            if( queue_property.queueCount > 0 )
+            {
+                if ( queue_property.queueFlags == vk::QueueFlagBits::eTransfer )
+                {
+                    has_dedicated_transfer = true;
+                
+                    const auto create_info = vk::DeviceQueueCreateInfo( )
+                        .setQueueCount( queue_property.queueCount )
+                        .setPQueuePriorities( &queue_priority )
+                        .setQueueFamilyIndex( i );
+                
+                    queue_create_infos.push_back( create_info );
+                }
+            
+                if ( ( queue_property.queueFlags & vk::QueueFlagBits::eGraphics ) && ( queue_property.queueFlags & vk::QueueFlagBits::eCompute ) &&
+                     ( queue_property.queueFlags & vk::QueueFlagBits::eTransfer ) )
+                {
+                    const auto create_info = vk::DeviceQueueCreateInfo( )
+                        .setQueueCount( queue_property.queueCount )
+                        .setPQueuePriorities( &queue_priority )
+                        .setQueueFamilyIndex( i );
+                
+                    queue_create_infos.push_back( create_info );
+                }
+            }
+        
+            ++i;
+        }
+        */
         const auto queue_properties = vk_context_.gpu_.getQueueFamilyProperties( );
         
         
@@ -947,6 +992,7 @@ namespace twe
         
         const auto properties = physical_device.enumerateDeviceExtensionProperties( );
         
+        
         for( const auto& property : properties )
         {
             required_extensions.erase( property.extensionName );
@@ -964,6 +1010,7 @@ namespace twe
         int i = 0;
         for( const auto& queue_property : queue_properties )
         {
+            
             if( queue_property.queueCount > 0 )
             {
                 if ( queue_property.queueFlags & vk::QueueFlagBits::eGraphics )

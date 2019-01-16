@@ -29,6 +29,8 @@
 #include "../window/base_window.hpp"
 #include "../pipeline_manager.hpp"
 
+#include "../vulkan/context.hpp"
+
 namespace twe
 {
     class renderer
@@ -167,6 +169,8 @@ namespace twe
         
         uint32_t current_pipeline_;
         
+        vulkan::context test_;
+        
         struct vk_context_t
         {
             vk::DispatchLoaderDynamic dispatch_loader_dynamic_;
@@ -179,7 +183,7 @@ namespace twe
             vk::PhysicalDevice gpu_;
             vk::UniqueDevice device_;
             vk::Queue graphics_queue_;
-            vk::Queue present_queue_;
+            //vk::Queue present_queue_;
             
             std::vector<vk::UniqueSemaphore> image_available_semaphores_;
             std::vector<vk::UniqueSemaphore> render_finished_semaphores_;

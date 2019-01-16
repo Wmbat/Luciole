@@ -19,8 +19,6 @@
 
 #include <cstdint>
 
-#include <vulkan/vulkan.hpp>
-
 #if defined( TWE_PLATFORM_WINDOWS )
 #if defined( TWE_BUILD_DLL )
 #define TWE_API __declspec( dllexport )

@@ -28,31 +28,20 @@ namespace twe
         
         const auto staging_create_info = vk::BufferCreateInfo( )
             .setSize( buffer_size )
-            .setUsage( vk::BufferUsageFlagBits::eTransferSrc )
+            .setUsage( vk::BufferUsageFlagBits::eVertexBuffer )
             .setSharingMode( vk::SharingMode::eExclusive );
-        
-        vk::Buffer staging_buffer;
-        VmaAllocation staging_buffer_memory;
         
         VmaAllocationCreateInfo staging_allocation_info = { };
         staging_allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;  // TODO: remove hardcode query for it
         
         vmaCreateBuffer( *p_memory_allocator_,
             reinterpret_cast<const VkBufferCreateInfo*>( &staging_create_info ), &staging_allocation_info,
-            reinterpret_cast<VkBuffer*>( &staging_buffer ), &staging_buffer_memory, nullptr );
+            reinterpret_cast<VkBuffer*>( &buffer_ ), &memory_allocation_, nullptr );
         
         void* data;
-        vmaMapMemory( *p_memory_allocator_, staging_buffer_memory, &data );
+        vmaMapMemory( *p_memory_allocator_, memory_allocation_, &data );
         memcpy( data, vertices.data(), buffer_size );
-        vmaUnmapMemory( *p_memory_allocator_, staging_buffer_memory );
-        
-        const auto vertex_create_info = vk::BufferCreateInfo( )
-            .setSize( buffer_size )
-            .setUsage( vk::BufferUsageFlagBits::eTransferDst )
-            .setSharingMode( vk::SharingMode::eExclusive );
-        
-        VmaAllocationCreateInfo allocation_info = { };
-        allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        vmaUnmapMemory( *p_memory_allocator_, memory_allocation_ );
     }
     vertex_buffer::vertex_buffer( vertex_buffer&& rhs ) noexcept
     {
