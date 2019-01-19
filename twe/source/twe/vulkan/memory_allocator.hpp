@@ -23,19 +23,19 @@
 
 #include "../twe_core.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
-    class vk_memory_allocator
+    class memory_allocator
     {
     public:
-        TWE_API vk_memory_allocator( ) = default;
-        TWE_API vk_memory_allocator( const VmaAllocatorCreateInfo& create_info );
-        TWE_API vk_memory_allocator( const vk_memory_allocator& rhs ) = delete;
-        TWE_API vk_memory_allocator( vk_memory_allocator&& rhs ) noexcept;
-        TWE_API ~vk_memory_allocator( );
+        TWE_API memory_allocator( ) = default;
+        TWE_API memory_allocator( const VmaAllocatorCreateInfo& create_info );
+        TWE_API memory_allocator( const memory_allocator& rhs ) = delete;
+        TWE_API memory_allocator( memory_allocator&& rhs ) noexcept;
+        TWE_API ~memory_allocator( );
         
-        TWE_API vk_memory_allocator& operator=( const vk_memory_allocator& rhs ) = delete;
-        TWE_API vk_memory_allocator& operator=( vk_memory_allocator&& rhs ) noexcept;
+        TWE_API memory_allocator& operator=( const memory_allocator& rhs ) = delete;
+        TWE_API memory_allocator& operator=( memory_allocator&& rhs ) noexcept;
         
         TWE_API const VmaAllocator& operator( )( ) const noexcept;
         TWE_API VmaAllocator& operator( )( ) noexcept;

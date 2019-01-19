@@ -20,12 +20,9 @@
 #ifndef ENGINE_VERTEX_BUFFER_HPP
 #define ENGINE_VERTEX_BUFFER_HPP
 
-#include <vma/vk_mem_alloc.h>
-
-#include "../vulkan/vk_memory_allocator.hpp"
-#include "../twe_core.hpp"
 #include "vertex.hpp"
-
+#include "../twe_core.hpp"
+#include "../vulkan/memory_allocator.hpp"
 
 namespace twe
 {
@@ -33,7 +30,7 @@ namespace twe
     {
     public:
         TWE_API vertex_buffer( ) = default;
-        TWE_API vertex_buffer( vk_memory_allocator& memory_allocator, const std::vector<vertex>& vertices );
+        TWE_API vertex_buffer( vulkan::memory_allocator& memory_allocator, const std::vector<vertex>& vertices );
         TWE_API vertex_buffer( const vertex_buffer& rhs ) noexcept = delete;
         TWE_API vertex_buffer( vertex_buffer&& rhs ) noexcept;
         TWE_API ~vertex_buffer( );

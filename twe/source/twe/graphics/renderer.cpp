@@ -66,56 +66,34 @@ namespace twe
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
         
+        const auto context_create_info = vulkan::context::create_info_type( )
+            .set_window( p_wnd )
+            .set_app_name( app_name )
+            .set_app_version( app_version )
+            .set_max_frames_in_flight( MAX_FRAMES_IN_FLIGHT );
+        
+        context_ = vulkan::context( context_create_info );
+    
+        vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
+        vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
+        vk_context_.in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
+    
+        for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
+        {
+            auto image_available_semaphore = create_semaphore();
+            vk_context_.image_available_semaphores_[i] = std::move( image_available_semaphore );
+        
+            auto render_finished_semaphore = create_semaphore();
+            vk_context_.render_finished_semaphores_[i] = std::move( render_finished_semaphore );
+        
+            auto fence = create_fence();
+            vk_context_.in_flight_fences_[i] = std::move( fence );
+        }
+        
         try
         {
-            set_up();
-            
-            core_info( "Using Vulkan for rendering." );
-            
-            auto instance = create_instance( app_name, app_version );
-            vk_context_.instance_ = std::move( instance );
-            
-            if constexpr( enable_debug_layers )
-            {
-                vk_context_.dispatch_loader_dynamic_.init( vk_context_.instance_.get() );
-                
-                auto debug_callback = create_debug_report_callback();
-                vk_context_.debug_report_callback_ = std::move( debug_callback );
-            }
-            
-            vk_context_.surface_ = p_wnd->create_surface( vk_context_.instance_.get() );
-            vk_context_.gpu_ = pick_physical_device( );
-            
-            auto device = create_device();
-            vk_context_.device_ = std::move( device );
-    
-            // Get the graphics queue and the present queue.
-            const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
-            vk_context_.graphics_queue_ = vk_context_.device_->getQueue( queue_families.graphic_family_.value(), 0 );
-            // vk_context_.present_queue_ = vk_context_.device_->getQueue( queue_families.present_family_.value(), 0 );
-
-            
-            vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
-            vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
-            vk_context_.in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
-            
-            for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
-            {
-                auto image_available_semaphore = create_semaphore();
-                vk_context_.image_available_semaphores_[i] = std::move( image_available_semaphore );
-                
-                auto render_finished_semaphore = create_semaphore();
-                vk_context_.render_finished_semaphores_[i] = std::move( render_finished_semaphore );
-                
-                auto fence = create_fence();
-                vk_context_.in_flight_fences_[i] = std::move( fence );
-            }
-            
-            auto command_pool = create_command_pool( queue_families.graphic_family_.value() );
-            vk_context_.command_pool_ = std::move( command_pool );
-            
             // TO something about that //
-            const auto swapchain_support_details = query_swapchain_support( vk_context_.surface_.get(), vk_context_.gpu_ );
+            const auto swapchain_support_details = query_swapchain_support( context_.surface_.get(), context_.gpu_ );
             const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
     
             vk_context_.surface_format_ = surface_format;
@@ -132,9 +110,9 @@ namespace twe
             vk_context_.render_pass_ = std::move ( render_pass );
     
             const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-                .set_gpu( vk_context_.gpu_ )
-                .set_device( vk_context_.device_.get() )
-                .set_surface( vk_context_.surface_.get() )
+                .set_gpu( context_.gpu_ )
+                .set_device( context_.device_.get() )
+                .set_surface( context_.surface_.get() )
                 .set_render_pass( vk_context_.render_pass_.get() )
                 .set_width( window_width_ )
                 .set_height( window_height_ );
@@ -142,14 +120,14 @@ namespace twe
             swapchain_ = vulkan::swapchain( swapchain_create_info );
             
             
-            auto command_buffers = create_command_buffers( 3 );
+            auto command_buffers = create_command_buffers( swapchain_.image_count_ );
             vk_context_.command_buffers_ = std::move( command_buffers );
             
             auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
-            mem_allocator_create_info.physicalDevice = vk_context_.gpu_;
-            mem_allocator_create_info.device = vk_context_.device_.get();
+            mem_allocator_create_info.physicalDevice = context_.gpu_;
+            mem_allocator_create_info.device = context_.device_.get();
             
-            memory_allocator_ = vk_memory_allocator( mem_allocator_create_info );
+            memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
             
             vertex_buffer_ = vertex_buffer( memory_allocator_, vertices );
         }
@@ -168,11 +146,11 @@ namespace twe
     }
     renderer::~renderer( )
     {
-        vk_context_.device_->waitIdle( );
+        context_.device_->waitIdle( );
         
         if( !vk_context_.command_buffers_.empty() )
         {
-            vk_context_.device_->freeCommandBuffers( vk_context_.command_pool_.get(), vk_context_.command_buffers_ );
+            context_.device_->freeCommandBuffers( context_.graphics_command_pools_[0].get(), vk_context_.command_buffers_ );
         }
     }
     
@@ -188,25 +166,6 @@ namespace twe
             
             clear_colour_ = std::move( rhs.clear_colour_ );
             
-            vk_context_.instance_ = std::move( rhs.vk_context_.instance_ );
-            
-            if constexpr( enable_debug_layers )
-            {
-                vk_context_.dispatch_loader_dynamic_ = std::move( rhs.vk_context_.dispatch_loader_dynamic_ );
-                
-                vk_context_.debug_report_callback_ = std::move( rhs.vk_context_.debug_report_callback_ );
-            }
-    
-            vk_context_.surface_ = std::move( rhs.vk_context_.surface_ );
-    
-            vk_context_.gpu_ = rhs.vk_context_.gpu_;
-            rhs.vk_context_.gpu_ = vk::PhysicalDevice( nullptr );
-    
-            vk_context_.device_ = std::move( rhs.vk_context_.device_ );
-    
-            vk_context_.graphics_queue_ = rhs.vk_context_.graphics_queue_;
-            rhs.vk_context_.graphics_queue_ = vk::Queue( nullptr );
-
             vk_context_.in_flight_fences_ = std::move( rhs.vk_context_.in_flight_fences_ );
             vk_context_.image_available_semaphores_ = std::move( rhs.vk_context_.image_available_semaphores_ );
             vk_context_.render_finished_semaphores_ = std::move( rhs.vk_context_.render_finished_semaphores_ );
@@ -304,16 +263,16 @@ namespace twe
         current_pipeline_ = id;
     
         const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-            .set_gpu( vk_context_.gpu_ )
-            .set_device( vk_context_.device_.get() )
-            .set_surface( vk_context_.surface_.get() )
+            .set_gpu( context_.gpu_ )
+            .set_device( context_.device_.get() )
+            .set_surface( context_.surface_.get() )
             .set_render_pass( vk_context_.render_pass_.get() )
             .set_width( window_width_ )
             .set_height( window_height_ );
         
         swapchain_.recreate( swapchain_create_info );
     
-        vk_context_.device_->resetCommandPool( vk_context_.command_pool_.get( ), { } );
+        context_.device_->resetCommandPool( context_.graphics_command_pools_[0].get( ), { } );
     
         record_draw_calls( );
     }
@@ -325,10 +284,10 @@ namespace twe
     {
         if ( !is_window_closed_ )
         {
-            vk_context_.device_->waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_].get(),
+            context_.device_->waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_].get(),
                 VK_TRUE, std::numeric_limits<uint64_t>::max() );
 
-            auto [result, image_index] = vk_context_.device_->acquireNextImageKHR(
+            auto [result, image_index] = context_.device_->acquireNextImageKHR(
                 swapchain_.swapchain_.get(),
                 std::numeric_limits<uint64_t>::max(),
                 vk_context_.image_available_semaphores_[current_frame_].get(), {} );
@@ -338,16 +297,16 @@ namespace twe
                 if ( result == vk::Result::eErrorOutOfDateKHR )
                 {
                     const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-                        .set_gpu( vk_context_.gpu_ )
-                        .set_device( vk_context_.device_.get() )
-                        .set_surface( vk_context_.surface_.get() )
+                        .set_gpu( context_.gpu_ )
+                        .set_device( context_.device_.get() )
+                        .set_surface( context_.surface_.get() )
                         .set_render_pass( vk_context_.render_pass_.get() )
                         .set_width( window_width_ )
                         .set_height( window_height_ );
     
                     swapchain_.recreate( swapchain_create_info );
     
-                    vk_context_.device_->resetCommandPool( vk_context_.command_pool_.get( ), { } );
+                    context_.device_->resetCommandPool( context_.graphics_command_pools_[0].get( ), { } );
     
                     record_draw_calls( );
                 }
@@ -371,11 +330,11 @@ namespace twe
                 .setCommandBufferCount( 1 )
                 .setPCommandBuffers( &vk_context_.command_buffers_[image_index] );
 
-            vk_context_.device_->resetFences( 1, &vk_context_.in_flight_fences_[current_frame_].get() );
+            context_.device_->resetFences( 1, &vk_context_.in_flight_fences_[current_frame_].get() );
 
             try
             {
-                vk_context_.graphics_queue_.submit( 1, &submit_info, vk_context_.in_flight_fences_[current_frame_].get()  );
+                context_.graphics_queue_.submit( 1, &submit_info, vk_context_.in_flight_fences_[current_frame_].get()  );
             }
             catch ( const vk_error& e )
             {
@@ -390,7 +349,7 @@ namespace twe
             present_info.pSwapchains = reinterpret_cast<VkSwapchainKHR*>( &swapchain_.swapchain_.get() );
             present_info.pImageIndices = &image_index;
             
-            result = ( vk::Result )vkQueuePresentKHR( vk_context_.graphics_queue_, &present_info );
+            result = ( vk::Result )vkQueuePresentKHR( context_.graphics_queue_, &present_info );
             
             try
             {
@@ -400,16 +359,16 @@ namespace twe
                     framebuffer_resized_ = false;
     
                     const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-                        .set_gpu( vk_context_.gpu_ )
-                        .set_device( vk_context_.device_.get() )
-                        .set_surface( vk_context_.surface_.get() )
+                        .set_gpu( context_.gpu_ )
+                        .set_device( context_.device_.get() )
+                        .set_surface( context_.surface_.get() )
                         .set_render_pass( vk_context_.render_pass_.get() )
                         .set_width( window_width_ )
                         .set_height( window_height_ );
     
                     swapchain_.recreate( swapchain_create_info );
     
-                    vk_context_.device_->resetCommandPool( vk_context_.command_pool_.get( ), { } );
+                    context_.device_->resetCommandPool( context_.graphics_command_pools_[0].get( ), { } );
     
                     record_draw_calls( );
                 }
@@ -432,199 +391,11 @@ namespace twe
         clear_colour_ = colour;
     }
     
-    void renderer::set_up( )
-    {
-        uint32_t supported_api_version;
-        if( vkEnumerateInstanceVersion( &supported_api_version ) != VK_SUCCESS )
-        {
-            throw basic_error{ basic_error::code::vk_not_supported_error, "Vulkan not Installed" };
-        }
-        if( supported_api_version != VK_API_VERSION_1_1 )
-        {
-            throw basic_error{ basic_error::code::vk_version_error, "Vulkan 1.1 not supporetd" };
-        }
-        
-        if constexpr( enable_debug_layers )
-        {
-            vk_context_.instance_extensions_.emplace_back( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-        }
-        
-        vk_context_.instance_extensions_.emplace_back( VK_KHR_SURFACE_EXTENSION_NAME );
-
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-        vk_context_.instance_extensions_.emplace_back( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
-#elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
-        vk_context_.instance_extensions_.emplace_back( VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME );
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-        vk_context_.instance_extensions_.emplace_back( VK_KHR_XCB_SURFACE_EXTENSION_NAME );
-#endif
-        
-        vk_context_.validation_layers_.emplace_back( "VK_LAYER_LUNARG_standard_validation" );
-        
-        vk_context_.device_extensions_.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
-        
-        if( !check_instance_extension_support( vk_context_.instance_extensions_ ) )
-        {
-            throw basic_error{ basic_error::code::vk_instance_ext_support_error, "Instance extensions requested, but not supporetd" };
-        }
-        
-        if constexpr ( enable_debug_layers )
-        {
-            if( !check_debug_layer_support( vk_context_.validation_layers_ ) )
-            {
-                throw basic_error{ basic_error::code::vk_validation_layer_support_error, "VK_LAYER_LUNARG_standard_validation not supported" };
-            }
-        }
-    }
-    const vk::UniqueInstance renderer::create_instance( const std::string& app_name, uint32_t app_version ) const noexcept
-    {
-        const auto app_info = vk::ApplicationInfo( )
-            .setApiVersion( VK_API_VERSION_1_1 )
-            .setEngineVersion( VK_MAKE_VERSION( 0, 0, 2 ) )
-            .setPEngineName( "The Wombat Engine" )
-            .setApplicationVersion( app_version )
-            .setPApplicationName( app_name.c_str( ) );
-    
-        if constexpr( enable_debug_layers )
-        {
-            const auto create_info = vk::InstanceCreateInfo( )
-                .setPApplicationInfo( &app_info )
-                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.instance_extensions_.size( ) ) )
-                .setPpEnabledExtensionNames( vk_context_.instance_extensions_.data() )
-                .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size() ) )
-                .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
-        
-            return vk::createInstanceUnique( create_info );
-        }
-        else
-        {
-            const auto create_info = vk::InstanceCreateInfo( )
-                .setPApplicationInfo( &app_info )
-                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.instance_extensions_.size( ) ) )
-                .setPpEnabledExtensionNames( vk_context_.instance_extensions_.data() )
-                .setEnabledLayerCount( 0 )
-                .setPpEnabledLayerNames( nullptr );
-        
-            return vk::createInstanceUnique( create_info );
-        }
-    }
-    
-    const vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> renderer::create_debug_report_callback( ) const noexcept
-    {
-        const auto create_info = vk::DebugReportCallbackCreateInfoEXT( )
-            .setFlags( vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning )
-            .setPfnCallback( debug_callback_function );
-        
-        return vk_context_.instance_->createDebugReportCallbackEXTUnique( create_info, nullptr, vk_context_.dispatch_loader_dynamic_ );
-    }
-    
-    const vk::PhysicalDevice renderer::pick_physical_device( ) const noexcept
-    {
-        std::multimap<uint32_t, vk::PhysicalDevice> candidates;
-    
-        auto available_devices = vk_context_.instance_->enumeratePhysicalDevices();
-        
-        for ( auto &physical_device : available_devices )
-        {
-            if ( is_physical_device_suitable( vk_context_.surface_.get(), physical_device, vk_context_.device_extensions_ ) )
-            {
-                uint32_t score = 0;
-                
-                auto properties = physical_device.getProperties( );
-                
-                if ( properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu )
-                {
-                    score += 2;
-                }
-                else if ( properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu )
-                {
-                    score += 1;
-                }
-                else
-                {
-                    score += 0;
-                }
-                
-                candidates.insert( { score, physical_device } );
-            }
-        }
-        
-        if ( candidates.rbegin( )->first > 0 )
-        {
-            return candidates.rbegin()->second;
-        }
-        else
-        {
-            return { };
-        }
-    }
-    
-    const vk::UniqueDevice renderer::create_device( ) const noexcept
-    {
-        const auto queue_properties = vk_context_.gpu_.getQueueFamilyProperties( );
-        
-        const auto queue_families = find_queue_family_indices( vk_context_.surface_.get(), vk_context_.gpu_ );
-        std::set<uint32_t> unique_queue_family;
-        
-        if ( queue_families.graphic_family_.has_value() )
-        {
-            unique_queue_family.insert( queue_families.graphic_family_.value() );
-        }
-        
-        if( queue_families.present_family_.has_value() )
-        {
-            unique_queue_family.insert( queue_families.present_family_.value() );
-        }
-        
-        std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
-        queue_create_infos.reserve( unique_queue_family.size() );
-        
-        const float priority = 1.0f;
-        for( const auto& queue_family : unique_queue_family )
-        {
-            const auto create_info = vk::DeviceQueueCreateInfo( )
-                .setPQueuePriorities( &priority )
-                .setQueueCount( 1 )
-                .setQueueFamilyIndex( queue_family );
-            
-            queue_create_infos.emplace_back( create_info );
-        }
-        
-        const auto features = vk_context_.gpu_.getFeatures ( );
-
-        if constexpr( enable_debug_layers )
-        {
-            const auto create_info = vk::DeviceCreateInfo( )
-                .setPEnabledFeatures( &features )
-                .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
-                .setPQueueCreateInfos( queue_create_infos.data() )
-                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )
-                .setPpEnabledExtensionNames( vk_context_.device_extensions_.data( ) )
-                .setEnabledLayerCount( static_cast<uint32_t>( vk_context_.validation_layers_.size( ) ) )
-                .setPpEnabledLayerNames( vk_context_.validation_layers_.data() );
-            
-            return vk_context_.gpu_.createDeviceUnique( create_info );
-        }
-        else
-        {
-            const auto create_info = vk::DeviceCreateInfo( )
-                .setPEnabledFeatures( &features )
-                .setQueueCreateInfoCount( static_cast<uint32_t>( queue_create_infos.size() ) )
-                .setPQueueCreateInfos( queue_create_infos.data() )
-                .setEnabledExtensionCount( static_cast<uint32_t>( vk_context_.device_extensions_.size() ) )
-                .setPpEnabledExtensionNames( vk_context_.device_extensions_.data( ) )
-                .setEnabledLayerCount( 0 )
-                .setPpEnabledLayerNames( nullptr );
-    
-            return vk_context_.gpu_.createDeviceUnique( create_info );
-        }
-    }
-    
     const vk::UniqueSemaphore renderer::create_semaphore( ) const noexcept
     {
         const auto create_info = vk::SemaphoreCreateInfo( );
         
-        return vk_context_.device_->createSemaphoreUnique( create_info );
+        return context_.device_->createSemaphoreUnique( create_info );
     }
     
     const vk::UniqueFence renderer::create_fence( ) const noexcept
@@ -632,7 +403,7 @@ namespace twe
         const auto create_info = vk::FenceCreateInfo( )
             .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
-        return vk_context_.device_->createFenceUnique( create_info );
+        return context_.device_->createFenceUnique( create_info );
     }
     
     const vk::UniqueCommandPool renderer::create_command_pool( uint32_t queue_family ) const noexcept
@@ -640,17 +411,17 @@ namespace twe
         const auto create_info = vk::CommandPoolCreateInfo( )
             .setQueueFamilyIndex( queue_family );
         
-        return vk_context_.device_->createCommandPoolUnique( create_info );
+        return context_.device_->createCommandPoolUnique( create_info );
     }
     
     const std::vector<vk::CommandBuffer> renderer::create_command_buffers( uint32_t count ) const noexcept
     {
         const auto allocate_info = vk::CommandBufferAllocateInfo( )
-            .setCommandPool( vk_context_.command_pool_.get() )
+            .setCommandPool( context_.graphics_command_pools_[0].get() )
             .setCommandBufferCount( count )
             .setLevel( vk::CommandBufferLevel::ePrimary );
         
-        return vk_context_.device_->allocateCommandBuffers( allocate_info );
+        return context_.device_->allocateCommandBuffers( allocate_info );
     }
     
     const vk::UniqueRenderPass renderer::create_render_pass( vk::PipelineBindPoint bind_point ) const noexcept
@@ -690,7 +461,7 @@ namespace twe
             .setDependencyCount( 1 )
             .setPDependencies( &dependency );
         
-        return vk_context_.device_->createRenderPassUnique( create_info );
+        return context_.device_->createRenderPassUnique( create_info );
     }
     
     bool renderer::check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept

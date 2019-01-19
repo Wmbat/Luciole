@@ -24,12 +24,12 @@
 #include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
 #include "../utilities/vk_utils.hpp"
-#include "../vulkan/vk_memory_allocator.hpp"
 #include "../shader_manager.hpp"
 #include "../window/base_window.hpp"
 #include "../pipeline_manager.hpp"
 
 #include "../vulkan/context.hpp"
+#include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/swapchain.hpp"
 
 namespace twe
@@ -52,7 +52,7 @@ namespace twe
         template<shader_type T>
         uint32_t create_shader( const std::string& filepath, const std::string& entry_point )
         {
-            return shader_manager_.insert<T>( shader_create_info{ vk_context_.device_.get(), filepath, entry_point } );
+            return shader_manager_.insert<T>( shader_create_info{ context_.device_.get(), filepath, entry_point } );
         }
         
         template<pipeline_type T>
@@ -75,7 +75,7 @@ namespace twe
             };
             
             const auto create_info = pipeline_create_info( )
-                .set_device( &vk_context_.device_.get() )
+                .set_device( &context_.device_.get() )
                 .set_render_pass( &vk_context_.render_pass_.get() )
                 .set_pipeline_definition( pipeline_definition )
                 .set_shader_manager( &shader_manager_ )
@@ -99,16 +99,6 @@ namespace twe
         void TWE_API set_clear_colour( const glm::vec4& colour );
     
     private:
-        void set_up( );
-        
-        const vk::UniqueInstance create_instance( const std::string& app_name, uint32_t app_version ) const noexcept;
-        
-        const vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> create_debug_report_callback( ) const noexcept;
-    
-        const vk::PhysicalDevice pick_physical_device( ) const noexcept;
-    
-        const vk::UniqueDevice create_device( ) const noexcept;
-        
         const vk::UniqueSemaphore create_semaphore( ) const noexcept;
         
         const vk::UniqueFence create_fence( ) const noexcept;
@@ -156,43 +146,19 @@ namespace twe
         size_t current_frame_ = 0;
         
         uint32_t current_pipeline_;
-        
-        // vulkan::context<MAX_FRAMES_IN_FLIGHT> test_;
+    
+        vulkan::context context_;
+        vulkan::swapchain swapchain_;
         
         struct vk_context_t
         {
-            vk::DispatchLoaderDynamic dispatch_loader_dynamic_;
-            
-            vk::UniqueInstance instance_;
-            
-            vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic> debug_report_callback_;
-            
-            vk::UniqueSurfaceKHR surface_;
-            vk::PhysicalDevice gpu_;
-            vk::UniqueDevice device_;
-            vk::Queue graphics_queue_;
-            
             std::vector<vk::UniqueSemaphore> image_available_semaphores_;
             std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
             std::vector<vk::UniqueFence> in_flight_fences_;
-            
-            vk::UniqueCommandPool command_pool_;
+
             std::vector<vk::CommandBuffer> command_buffers_;
             
             vk::SurfaceFormatKHR surface_format_;
-            
-            /*
-            struct swapchain
-            {
-                vk::UniqueSwapchainKHR swapchain_;
-                
-                vk::Extent2D extent_;
-                
-                std::vector<vk::Image> image_;
-                std::vector<vk::UniqueImageView> image_views_;
-                std::vector<vk::UniqueFramebuffer> framebuffers_;
-            } swapchain_;
-            */
             
             vk::UniqueRenderPass render_pass_;
             
@@ -200,10 +166,8 @@ namespace twe
             std::vector<const char*> device_extensions_;
             std::vector<const char*> validation_layers_;
         } vk_context_;
-    
-        vulkan::swapchain swapchain_;
         
-        vk_memory_allocator memory_allocator_;
+        vulkan::memory_allocator memory_allocator_;
         
         vertex_buffer vertex_buffer_;
         

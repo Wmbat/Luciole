@@ -20,7 +20,7 @@
 
 namespace twe
 {
-    vertex_buffer::vertex_buffer( vk_memory_allocator& memory_allocator, const std::vector<vertex>& vertices  )
+    vertex_buffer::vertex_buffer( vulkan::memory_allocator& memory_allocator, const std::vector<vertex>& vertices  )
         :
         p_memory_allocator_( reinterpret_cast<VmaAllocator*>( &memory_allocator  ) )
     {

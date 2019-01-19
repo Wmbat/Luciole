@@ -56,8 +56,7 @@ namespace twe::vulkan
             const vk::Device device,
             const vk::SurfaceKHR surface,
             const vk::PresentModeKHR& present_mode,
-            const vk::SurfaceCapabilitiesKHR& capabilities,
-            const std::uint32_t image_count ) const noexcept
+            const vk::SurfaceCapabilitiesKHR& capabilities ) const noexcept
         {
             const auto create_info = vk::SwapchainCreateInfoKHR( )
                 .setSurface( surface )
@@ -68,7 +67,7 @@ namespace twe::vulkan
                 .setImageArrayLayers( 1 )
                 .setImageUsage( vk::ImageUsageFlagBits::eColorAttachment )
                 .setImageSharingMode( vk::SharingMode::eExclusive )
-                .setMinImageCount( image_count )
+                .setMinImageCount( image_count_ )
                 .setQueueFamilyIndexCount( 0 )
                 .setPQueueFamilyIndices( nullptr )
                 .setPreTransform( capabilities.currentTransform )
@@ -133,8 +132,10 @@ namespace twe::vulkan
     private:
         std::uint32_t width_;
         std::uint32_t height_;
-    
+        
     public:
+        std::uint32_t image_count_;
+        
         vk::SurfaceFormatKHR surface_format_;
         vk::Extent2D extent_;
         
