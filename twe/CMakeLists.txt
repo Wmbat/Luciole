@@ -52,7 +52,7 @@ add_library( twe SHARED
         source/twe/graphics/mesh.hpp
         source/twe/graphics/vertex_buffer.cpp
         source/twe/vulkan/vk_memory_allocator.hpp
-        source/twe/vulkan/vk_memory_allocator.cpp source/twe/pipeline.hpp source/twe/pipeline_layout.hpp source/twe/pipeline_manager.hpp source/twe/pipeline_manager.cpp source/twe/vulkan/context.hpp source/twe/vulkan/context.cpp)
+        source/twe/vulkan/vk_memory_allocator.cpp source/twe/pipeline.hpp source/twe/pipeline_layout.hpp source/twe/pipeline_manager.hpp source/twe/pipeline_manager.cpp source/twe/vulkan/context.hpp source/twe/vulkan/swapchain.hpp source/twe/vulkan/swapchain.cpp)
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )

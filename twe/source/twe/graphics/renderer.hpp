@@ -30,6 +30,7 @@
 #include "../pipeline_manager.hpp"
 
 #include "../vulkan/context.hpp"
+#include "../vulkan/swapchain.hpp"
 
 namespace twe
 {
@@ -61,8 +62,8 @@ namespace twe
                 vk::Viewport( )
                     .setX( 0.0f )
                     .setY( 0.0f )
-                    .setWidth( static_cast<float>( vk_context_.swapchain_.extent_.width ) )
-                    .setHeight( static_cast<float>( vk_context_.swapchain_.extent_.height ) )
+                    .setWidth( static_cast<float>( swapchain_.extent_.width ) )
+                    .setHeight( static_cast<float>( swapchain_.extent_.height ) )
                     .setMinDepth( 0.0f )
                     .setMaxDepth( 1.0f )
             };
@@ -70,7 +71,7 @@ namespace twe
             std::vector<vk::Rect2D> scissors = {
                 vk::Rect2D( )
                     .setOffset( { 0, 0 } )
-                    .setExtent( vk_context_.swapchain_.extent_ )
+                    .setExtent( swapchain_.extent_ )
             };
             
             const auto create_info = pipeline_create_info( )
@@ -98,9 +99,6 @@ namespace twe
         void TWE_API set_clear_colour( const glm::vec4& colour );
     
     private:
-        void recreate_swapchain( );
-        void cleanup_swapchain( );
-        
         void set_up( );
         
         const vk::UniqueInstance create_instance( const std::string& app_name, uint32_t app_version ) const noexcept;
@@ -118,13 +116,6 @@ namespace twe
         const vk::UniqueCommandPool create_command_pool( uint32_t queue_family ) const noexcept;
         
         const std::vector<vk::CommandBuffer> create_command_buffers( uint32_t count ) const noexcept;
-        
-        const vk::UniqueSwapchainKHR create_swapchain( const queue_family_indices_type& queue_family_indices_,
-            const vk::PresentModeKHR & present_mode_, const vk::SurfaceCapabilitiesKHR& capabilities_, uint32_t image_count_ ) const noexcept;
-        
-        const vk::UniqueImageView create_image_view( const vk::Image& image ) const noexcept;
-        
-        const vk::UniqueFramebuffer create_framebuffer( const vk::ImageView* attachments, const std::uint32_t attachment_count ) const noexcept;
         
         const vk::UniqueRenderPass create_render_pass( vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
   
@@ -151,12 +142,9 @@ namespace twe
         const vk::SurfaceFormatKHR choose_swapchain_surface_format(
                 const std::vector<vk::SurfaceFormatKHR>& available_formats ) const noexcept;
 
-        const vk::PresentModeKHR choose_swapchain_present_mode(
-                const std::vector<vk::PresentModeKHR>& available_present_modes ) const noexcept;
-
-        const vk::Extent2D choose_swapchain_extent( const vk::SurfaceCapabilitiesKHR& capabilities ) const noexcept;
-
     private:
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+        
         uint32_t window_width_;
         uint32_t window_height_;
 
@@ -169,7 +157,7 @@ namespace twe
         
         uint32_t current_pipeline_;
         
-        vulkan::context test_;
+        // vulkan::context<MAX_FRAMES_IN_FLIGHT> test_;
         
         struct vk_context_t
         {
@@ -183,7 +171,6 @@ namespace twe
             vk::PhysicalDevice gpu_;
             vk::UniqueDevice device_;
             vk::Queue graphics_queue_;
-            //vk::Queue present_queue_;
             
             std::vector<vk::UniqueSemaphore> image_available_semaphores_;
             std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
@@ -194,6 +181,7 @@ namespace twe
             
             vk::SurfaceFormatKHR surface_format_;
             
+            /*
             struct swapchain
             {
                 vk::UniqueSwapchainKHR swapchain_;
@@ -204,6 +192,7 @@ namespace twe
                 std::vector<vk::UniqueImageView> image_views_;
                 std::vector<vk::UniqueFramebuffer> framebuffers_;
             } swapchain_;
+            */
             
             vk::UniqueRenderPass render_pass_;
             
@@ -211,7 +200,9 @@ namespace twe
             std::vector<const char*> device_extensions_;
             std::vector<const char*> validation_layers_;
         } vk_context_;
-
+    
+        vulkan::swapchain swapchain_;
+        
         vk_memory_allocator memory_allocator_;
         
         vertex_buffer vertex_buffer_;
@@ -220,13 +211,6 @@ namespace twe
         pipeline_manager pipeline_manager_;
         
     private:
-        enum class queue_type
-        {
-            graphics,
-            compute,
-            transfer,
-            present
-        };
         
         struct queue_family_indices_type
         {
