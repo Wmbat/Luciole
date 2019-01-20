@@ -19,11 +19,11 @@
 #ifndef TWE_VK_SHADER_H
 #define TWE_VK_SHADER_H
 
-#include "twe_core.hpp"
-#include "utilities/log.hpp"
-#include "utilities/file_io.hpp"
+#include "../twe_core.hpp"
+#include "../utilities/log.hpp"
+#include "../utilities/file_io.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
     enum class shader_type
     {
@@ -35,27 +35,24 @@ namespace twe
     
     struct shader_create_info
     {
-        vk::Device& device_;
+        vk::Device device_;
         
         std::string filepath_;
         std::string entry_point_;
     
-        shader_create_info& set_device( const vk::Device& device )
+        shader_create_info& set_device( const vk::Device device )
         {
             device_ = device;
-            
             return *this;
         }
         shader_create_info& set_filepath( const std::string& filepath )
         {
             filepath_ = filepath;
-            
             return *this;
         }
         shader_create_info& set_entry_point( const std::string& entry_point )
         {
             entry_point_ = entry_point;
-            
             return *this;
         }
     };

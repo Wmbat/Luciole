@@ -21,10 +21,10 @@
 
 #include <unordered_map>
 
-#include "twe_core.hpp"
 #include "pipeline.hpp"
+#include "../twe_core.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
     class pipeline_manager
     {

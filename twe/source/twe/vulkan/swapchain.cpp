@@ -108,9 +108,9 @@ namespace twe::vulkan
         
         
         const auto support_details = support_details_type( )
-            .set_capabilities( create_info.gpu_.getSurfaceCapabilitiesKHR( create_info.surface_ ))
-            .set_formats( create_info.gpu_.getSurfaceFormatsKHR( create_info.surface_ ))
-            .set_present_modes( create_info.gpu_.getSurfacePresentModesKHR( create_info.surface_ ));
+            .set_capabilities( create_info.gpu_.getSurfaceCapabilitiesKHR( create_info.surface_ ) )
+            .set_formats( create_info.gpu_.getSurfaceFormatsKHR( create_info.surface_ ) )
+            .set_present_modes( create_info.gpu_.getSurfacePresentModesKHR( create_info.surface_ ) );
         
         extent_ = choose_extent( support_details.capabilities_ );
         surface_format_ = choose_surface_format( support_details.formats_ );

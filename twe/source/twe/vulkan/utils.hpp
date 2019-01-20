@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,11 +21,11 @@
 
 #include <string>
 
+#include "error.hpp"
 #include "../twe_core.hpp"
 
-#include "vk_error.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
 #if defined( NDEBUG )
     static constexpr bool enable_debug_layers = false;
@@ -44,7 +46,7 @@ namespace twe
     {
         if( return_obj.result != vk::Result::eSuccess )
         {
-            throw vk_error{ return_obj.result, msg };
+            throw error{ return_obj.result, msg };
         }
         else
         {
@@ -62,7 +64,7 @@ namespace twe
     {
         if( result != vk::Result::eSuccess )
         {
-            throw vk_error{ result, msg };
+            throw error{ result, msg };
         }
     }
 }

@@ -23,7 +23,7 @@
 
 #include "shader.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
     class shader_manager
     {

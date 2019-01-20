@@ -25,7 +25,7 @@
 #include "../utilities/log.hpp"
 #include "../utilities/file_io.hpp"
 #include "../utilities/basic_error.hpp"
-#include "../utilities/vk_error.hpp"
+#include "../vulkan/error.hpp"
 
 const std::vector<twe::vertex> vertices = {
     { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
@@ -74,71 +74,48 @@ namespace twe
         
         context_ = vulkan::context( context_create_info );
     
-        vk_context_.image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
-        vk_context_.render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
-        vk_context_.in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
+        const auto surface_format = choose_swapchain_surface_format( context_.gpu_.getSurfaceFormatsKHR( context_.surface_.get() ) );
+        
+        render_pass_ = create_handle<vk::UniqueRenderPass>( surface_format );
+    
+        const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
+            .set_gpu( context_.gpu_ )
+            .set_device( context_.device_.get() )
+            .set_surface( context_.surface_.get() )
+            .set_render_pass( render_pass_.get() )
+            .set_width( window_width_ )
+            .set_height( window_height_ );
+    
+        swapchain_ = vulkan::swapchain( swapchain_create_info );
+        
+        image_available_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
+        render_finished_semaphores_.resize( MAX_FRAMES_IN_FLIGHT );
+        in_flight_fences_.resize( MAX_FRAMES_IN_FLIGHT );
     
         for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
         {
             auto image_available_semaphore = create_semaphore();
-            vk_context_.image_available_semaphores_[i] = std::move( image_available_semaphore );
+            image_available_semaphores_[i] = std::move( image_available_semaphore );
         
             auto render_finished_semaphore = create_semaphore();
-            vk_context_.render_finished_semaphores_[i] = std::move( render_finished_semaphore );
+            render_finished_semaphores_[i] = std::move( render_finished_semaphore );
         
             auto fence = create_fence();
-            vk_context_.in_flight_fences_[i] = std::move( fence );
+            in_flight_fences_[i] = std::move( fence );
         }
         
-        try
+        for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
         {
-            // TO something about that //
-            const auto swapchain_support_details = query_swapchain_support( context_.surface_.get(), context_.gpu_ );
-            const auto surface_format = choose_swapchain_surface_format( swapchain_support_details.formats_ );
-    
-            vk_context_.surface_format_ = surface_format;
-            ///
-            
-            uint32_t image_count = swapchain_support_details.capabilities_.minImageCount + 1;
-            if( swapchain_support_details.capabilities_.maxImageCount > 0 &&
-                image_count > swapchain_support_details.capabilities_.maxImageCount )
-            {
-                image_count = swapchain_support_details.capabilities_.maxImageCount;
-            }
-    
-            auto render_pass = create_render_pass ( );
-            vk_context_.render_pass_ = std::move ( render_pass );
-    
-            const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-                .set_gpu( context_.gpu_ )
-                .set_device( context_.device_.get() )
-                .set_surface( context_.surface_.get() )
-                .set_render_pass( vk_context_.render_pass_.get() )
-                .set_width( window_width_ )
-                .set_height( window_height_ );
-    
-            swapchain_ = vulkan::swapchain( swapchain_create_info );
-            
-            
-            auto command_buffers = create_command_buffers( swapchain_.image_count_ );
-            vk_context_.command_buffers_ = std::move( command_buffers );
-            
-            auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
-            mem_allocator_create_info.physicalDevice = context_.gpu_;
-            mem_allocator_create_info.device = context_.device_.get();
-            
-            memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
-            
-            vertex_buffer_ = vertex_buffer( memory_allocator_, vertices );
+            render_command_buffers_[i] = create_handles<vk::UniqueCommandBuffer>( context_.graphics_command_pools_[i].get( ), swapchain_.image_count_ );
         }
-        catch( const basic_error& e )
-        {
-            core_error( e.what() );
-        }
-        catch( const vk_error& e )
-        {
-            core_error( e.what() );
-        }
+    
+        auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
+        mem_allocator_create_info.physicalDevice = context_.gpu_;
+        mem_allocator_create_info.device = context_.device_.get();
+    
+        memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
+    
+        vertex_buffer_ = vertex_buffer( memory_allocator_, vertices );
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -147,11 +124,6 @@ namespace twe
     renderer::~renderer( )
     {
         context_.device_->waitIdle( );
-        
-        if( !vk_context_.command_buffers_.empty() )
-        {
-            context_.device_->freeCommandBuffers( context_.graphics_command_pools_[0].get(), vk_context_.command_buffers_ );
-        }
     }
     
     renderer& renderer::operator=( renderer&& rhs ) noexcept
@@ -166,20 +138,16 @@ namespace twe
             
             clear_colour_ = std::move( rhs.clear_colour_ );
             
-            vk_context_.in_flight_fences_ = std::move( rhs.vk_context_.in_flight_fences_ );
-            vk_context_.image_available_semaphores_ = std::move( rhs.vk_context_.image_available_semaphores_ );
-            vk_context_.render_finished_semaphores_ = std::move( rhs.vk_context_.render_finished_semaphores_ );
+            in_flight_fences_ = std::move( rhs.in_flight_fences_ );
+            image_available_semaphores_ = std::move( rhs.image_available_semaphores_ );
+            render_finished_semaphores_ = std::move( rhs.render_finished_semaphores_ );
             
-            vk_context_.command_buffers_ = std::move( rhs.vk_context_.command_buffers_ );
+            for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
+            {
+                render_command_buffers_[i] = std::move( rhs.render_command_buffers_[i] );
+            }
             
-            vk_context_.surface_format_ = rhs.vk_context_.surface_format_;
-            rhs.vk_context_.surface_format_ = { };
-            
-            vk_context_.render_pass_ = std::move( rhs.vk_context_.render_pass_ );
-            
-            vk_context_.instance_extensions_ = std::move( rhs.vk_context_.instance_extensions_ );
-            vk_context_.device_extensions_ = std::move( rhs.vk_context_.device_extensions_ );
-            vk_context_.validation_layers_ = std::move( rhs.vk_context_.validation_layers_ );
+            render_pass_ = std::move( rhs.render_pass_ );
         }
     
         return *this;
@@ -205,46 +173,49 @@ namespace twe
             .setExtent( swapchain_.extent_ );
         
         scissors.push_back( scissor );
-        
-        for( size_t i = 0; i < vk_context_.command_buffers_.size(); ++i )
-        {
-            const auto begin_info = vk::CommandBufferBeginInfo( )
-                .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
-            
-            vk_context_.command_buffers_[i].begin( begin_info );
-          
-            
-            const auto clear_colour_value= vk::ClearColorValue( )
-                .setFloat32( std::array<float, 4>{ clear_colour_.r / 255.f, clear_colour_.g / 255.f, clear_colour_.b / 255.f, clear_colour_.a / 255.f } );
-            
-            const auto clear_colour = vk::ClearValue( )
-                .setColor( clear_colour_value );
-            
-            const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
-                .setFramebuffer( swapchain_.framebuffers_[i].get() )
-                .setRenderPass( vk_context_.render_pass_.get() )
-                .setClearValueCount( 1 )
-                .setPClearValues( &clear_colour )
-                .setRenderArea( { { 0, 0 }, swapchain_.extent_ } );
-            
-            vk_context_.command_buffers_[i].beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
-            
-            const auto& pipeline = pipeline_manager_.find<pipeline_type::graphics>( current_pipeline_ );
-            
-            pipeline.set_dynamic_state<dynamic_state_type::viewport>( vk_context_.command_buffers_[i], 0, viewports );
-            pipeline.set_dynamic_state<dynamic_state_type::scissor>( vk_context_.command_buffers_[i], 0, scissors );
-            
-            pipeline.bind( vk_context_.command_buffers_[i] );
-            
-            std::array<vk::Buffer, 1> vertex_buffers = { vertex_buffer_.get( ) };
-            std::array<vk::DeviceSize, 1> offsets = { 0 };
-            vk_context_.command_buffers_[i].bindVertexBuffers( 0, vertex_buffers, offsets );
-            
-            vk_context_.command_buffers_[i].draw( static_cast<uint32_t>( vertices.size() ), 1, 0, 0 );
     
-            vk_context_.command_buffers_[i].endRenderPass( );
+        for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
+        {
+            for( size_t j = 0; j < render_command_buffers_[i].size(); ++j )
+            {
+                const auto begin_info = vk::CommandBufferBeginInfo( )
+                    .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
+        
+                render_command_buffers_[i][j]->begin( begin_info );
+        
+        
+                const auto clear_colour_value= vk::ClearColorValue( )
+                    .setFloat32( std::array<float, 4>{ clear_colour_.r / 255.f, clear_colour_.g / 255.f, clear_colour_.b / 255.f, clear_colour_.a / 255.f } );
+        
+                const auto clear_colour = vk::ClearValue( )
+                    .setColor( clear_colour_value );
+        
+                const auto render_pass_begin_info = vk::RenderPassBeginInfo( )
+                    .setFramebuffer( swapchain_.framebuffers_[j].get() )
+                    .setRenderPass( render_pass_.get() )
+                    .setClearValueCount( 1 )
+                    .setPClearValues( &clear_colour )
+                    .setRenderArea( { { 0, 0 }, swapchain_.extent_ } );
+        
+                render_command_buffers_[i][j]->beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
+        
+                const auto& pipeline = pipeline_manager_.find<vulkan::pipeline_type::graphics>( current_pipeline_ );
+        
+                pipeline.set_dynamic_state<vulkan::dynamic_state_type::viewport>( render_command_buffers_[i][j].get(), 0, viewports );
+                pipeline.set_dynamic_state<vulkan::dynamic_state_type::scissor>( render_command_buffers_[i][j].get(), 0, scissors );
+        
+                pipeline.bind( render_command_buffers_[i][j].get() );
+        
+                std::array<vk::Buffer, 1> vertex_buffers = { vertex_buffer_.get( ) };
+                std::array<vk::DeviceSize, 1> offsets = { 0 };
+                render_command_buffers_[i][j]->bindVertexBuffers( 0, vertex_buffers, offsets );
             
-            vk_context_.command_buffers_[i].end( );
+                render_command_buffers_[i][j]->draw( static_cast<uint32_t>( vertices.size() ), 1, 0, 0 );
+            
+                render_command_buffers_[i][j]->endRenderPass( );
+            
+                render_command_buffers_[i][j]->end( );
+            }
         }
     }
     void renderer::on_window_close ( const window_close_event& event )
@@ -266,7 +237,7 @@ namespace twe
             .set_gpu( context_.gpu_ )
             .set_device( context_.device_.get() )
             .set_surface( context_.surface_.get() )
-            .set_render_pass( vk_context_.render_pass_.get() )
+            .set_render_pass( render_pass_.get() )
             .set_width( window_width_ )
             .set_height( window_height_ );
         
@@ -284,13 +255,13 @@ namespace twe
     {
         if ( !is_window_closed_ )
         {
-            context_.device_->waitForFences( 1, &vk_context_.in_flight_fences_[current_frame_].get(),
+            context_.device_->waitForFences( 1, &in_flight_fences_[current_frame_].get(),
                 VK_TRUE, std::numeric_limits<uint64_t>::max() );
 
             auto [result, image_index] = context_.device_->acquireNextImageKHR(
                 swapchain_.swapchain_.get(),
                 std::numeric_limits<uint64_t>::max(),
-                vk_context_.image_available_semaphores_[current_frame_].get(), {} );
+                image_available_semaphores_[current_frame_].get(), {} );
             
             try
             {
@@ -300,22 +271,25 @@ namespace twe
                         .set_gpu( context_.gpu_ )
                         .set_device( context_.device_.get() )
                         .set_surface( context_.surface_.get() )
-                        .set_render_pass( vk_context_.render_pass_.get() )
+                        .set_render_pass( render_pass_.get() )
                         .set_width( window_width_ )
                         .set_height( window_height_ );
     
                     swapchain_.recreate( swapchain_create_info );
     
-                    context_.device_->resetCommandPool( context_.graphics_command_pools_[0].get( ), { } );
+                    for( auto& command_pool : context_.graphics_command_pools_ )
+                    {
+                        context_.device_->resetCommandPool( command_pool.get(), { } );
+                    }
     
                     record_draw_calls( );
                 }
                 else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
                 {
-                    throw vk_error{ result, "Failed to acquire swapchain image" };
+                    throw vulkan::error{ result, "Failed to acquire swapchain image" };
                 }
             }
-            catch ( const vk_error& e )
+            catch ( const vulkan::error& e )
             {
                 core_error ( e.what ( ) );
             }
@@ -324,19 +298,19 @@ namespace twe
             const auto submit_info = vk::SubmitInfo( )
                 .setPWaitDstStageMask( wait_stages )
                 .setWaitSemaphoreCount( 1 )
-                .setPWaitSemaphores( &vk_context_.image_available_semaphores_[current_frame_].get() )
+                .setPWaitSemaphores( &image_available_semaphores_[current_frame_].get() )
                 .setSignalSemaphoreCount( 1 )
-                .setPSignalSemaphores( &vk_context_.render_finished_semaphores_[current_frame_].get() )
+                .setPSignalSemaphores( &render_finished_semaphores_[current_frame_].get() )
                 .setCommandBufferCount( 1 )
-                .setPCommandBuffers( &vk_context_.command_buffers_[image_index] );
+                .setPCommandBuffers( &render_command_buffers_[current_frame_][image_index].get( ) );
 
-            context_.device_->resetFences( 1, &vk_context_.in_flight_fences_[current_frame_].get() );
+            context_.device_->resetFences( 1, &in_flight_fences_[current_frame_].get() );
 
             try
             {
-                context_.graphics_queue_.submit( 1, &submit_info, vk_context_.in_flight_fences_[current_frame_].get()  );
+                context_.graphics_queue_.submit( 1, &submit_info, in_flight_fences_[current_frame_].get()  );
             }
-            catch ( const vk_error& e )
+            catch ( const vulkan::error& e )
             {
                 core_error ( e.what ( ) );
             }
@@ -344,7 +318,7 @@ namespace twe
             auto present_info = VkPresentInfoKHR{ };
             present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
             present_info.waitSemaphoreCount = 1;
-            present_info.pWaitSemaphores = reinterpret_cast<VkSemaphore*>( &vk_context_.render_finished_semaphores_[current_frame_].get() );
+            present_info.pWaitSemaphores = reinterpret_cast<VkSemaphore*>( &render_finished_semaphores_[current_frame_].get() );
             present_info.swapchainCount = 1;
             present_info.pSwapchains = reinterpret_cast<VkSwapchainKHR*>( &swapchain_.swapchain_.get() );
             present_info.pImageIndices = &image_index;
@@ -362,22 +336,25 @@ namespace twe
                         .set_gpu( context_.gpu_ )
                         .set_device( context_.device_.get() )
                         .set_surface( context_.surface_.get() )
-                        .set_render_pass( vk_context_.render_pass_.get() )
+                        .set_render_pass( render_pass_.get() )
                         .set_width( window_width_ )
                         .set_height( window_height_ );
     
                     swapchain_.recreate( swapchain_create_info );
     
-                    context_.device_->resetCommandPool( context_.graphics_command_pools_[0].get( ), { } );
+                    for( auto& command_pool : context_.graphics_command_pools_ )
+                    {
+                        context_.device_->resetCommandPool( command_pool.get(), { } );
+                    }
     
                     record_draw_calls( );
                 }
                 else if ( result != vk::Result::eSuccess )
                 {
-                    throw vk_error{ result, "failed to present swapchain image." };
+                    throw vulkan::error{ result, "failed to present swapchain image." };
                 }
             }
-            catch ( const vk_error& e )
+            catch ( const vulkan::error& e )
             {
                 core_error ( e.what ( ) );
             }
@@ -404,180 +381,6 @@ namespace twe
             .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
         return context_.device_->createFenceUnique( create_info );
-    }
-    
-    const vk::UniqueCommandPool renderer::create_command_pool( uint32_t queue_family ) const noexcept
-    {
-        const auto create_info = vk::CommandPoolCreateInfo( )
-            .setQueueFamilyIndex( queue_family );
-        
-        return context_.device_->createCommandPoolUnique( create_info );
-    }
-    
-    const std::vector<vk::CommandBuffer> renderer::create_command_buffers( uint32_t count ) const noexcept
-    {
-        const auto allocate_info = vk::CommandBufferAllocateInfo( )
-            .setCommandPool( context_.graphics_command_pools_[0].get() )
-            .setCommandBufferCount( count )
-            .setLevel( vk::CommandBufferLevel::ePrimary );
-        
-        return context_.device_->allocateCommandBuffers( allocate_info );
-    }
-    
-    const vk::UniqueRenderPass renderer::create_render_pass( vk::PipelineBindPoint bind_point ) const noexcept
-    {
-        const auto colour_attachment = vk::AttachmentDescription( )
-            .setFormat( vk_context_.surface_format_.format )
-            .setSamples( vk::SampleCountFlagBits::e1 )
-            .setLoadOp( vk::AttachmentLoadOp::eClear )
-            .setStoreOp( vk::AttachmentStoreOp::eStore )
-            .setStencilLoadOp( vk::AttachmentLoadOp::eDontCare )
-            .setStencilStoreOp( vk::AttachmentStoreOp::eDontCare )
-            .setInitialLayout( vk::ImageLayout::eUndefined )
-            .setFinalLayout( vk::ImageLayout::ePresentSrcKHR );
-        
-        const auto colour_attachment_ref = vk::AttachmentReference( )
-            .setAttachment( 0 )
-            .setLayout( vk::ImageLayout::eColorAttachmentOptimal );
-            
-        const auto subpass_description = vk::SubpassDescription( )
-            .setPipelineBindPoint( bind_point )
-            .setColorAttachmentCount( 1 )
-            .setPColorAttachments( &colour_attachment_ref );
-        
-        const auto dependency = vk::SubpassDependency( )
-            .setSrcSubpass( VK_SUBPASS_EXTERNAL )
-            .setDstSubpass( 0 )
-            .setSrcStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
-            .setDstStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
-            .setSrcAccessMask( vk::AccessFlagBits{ } )
-            .setDstAccessMask( vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite );
-        
-        const auto create_info = vk::RenderPassCreateInfo( )
-            .setAttachmentCount( 1 )
-            .setPAttachments( &colour_attachment )
-            .setSubpassCount( 1 )
-            .setPSubpasses( &subpass_description )
-            .setDependencyCount( 1 )
-            .setPDependencies( &dependency );
-        
-        return context_.device_->createRenderPassUnique( create_info );
-    }
-    
-    bool renderer::check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept
-    {
-        uint32_t count;
-        vkEnumerateInstanceExtensionProperties( nullptr, &count, nullptr );
-        
-        std::vector<VkExtensionProperties> available_extensions( count );
-        vkEnumerateInstanceExtensionProperties( nullptr, &count, available_extensions.data() );
-        
-        for( const auto& extension : instance_extensions )
-        {
-            bool is_supported = false;
-            
-            for( const auto& extension_property : available_extensions )
-            {
-                if( strcmp( extension, extension_property.extensionName ) == 0 )
-                {
-                    is_supported = true;
-                    break;
-                }
-            }
-            
-            if( !is_supported )
-            {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    bool renderer::check_debug_layer_support( const std::vector<const char*>& debug_layers ) const noexcept
-    {
-        std::vector<vk::LayerProperties> available_layers = vk::enumerateInstanceLayerProperties( );
-        
-        for( const auto& layer : debug_layers )
-        {
-            bool is_supported = false;
-            
-            for( const auto& layer_properties : available_layers )
-            {
-                if( strcmp( layer, layer_properties.layerName ) == 0 )
-                {
-                    is_supported = true;
-                    break;
-                }
-            }
-            
-            if( !is_supported )
-            {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    bool renderer::is_physical_device_suitable( const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device, const std::vector<const char*>& device_extensions ) const noexcept
-    {
-        return find_queue_family_indices( surface, physical_device ).has_rendering_support() &&
-               check_physical_device_extension_support( physical_device, device_extensions ) &&
-               is_swapchain_adequate( surface, physical_device );
-    }
-    
-    bool renderer::check_physical_device_extension_support( const vk::PhysicalDevice &physical_device, const std::vector<const char*>& device_extensions ) const noexcept
-    {
-        std::set<std::string> required_extensions( device_extensions.cbegin(), device_extensions.cend() );
-        
-        const auto properties = physical_device.enumerateDeviceExtensionProperties( );
-        
-        
-        for( const auto& property : properties )
-        {
-            required_extensions.erase( property.extensionName );
-        }
-        
-        return required_extensions.empty();
-    }
-    
-    const renderer::queue_family_indices_type renderer::find_queue_family_indices( const vk::SurfaceKHR& surface, const vk::PhysicalDevice &physical_device ) const noexcept
-    {
-        queue_family_indices_type indices;
-    
-        const auto queue_properties = physical_device.getQueueFamilyProperties( );
-        
-        int i = 0;
-        for( const auto& queue_property : queue_properties )
-        {
-            
-            if( queue_property.queueCount > 0 )
-            {
-                if ( queue_property.queueFlags & vk::QueueFlagBits::eGraphics )
-                {
-                    indices.graphic_family_ = i;
-                }
-                
-                if ( physical_device.getSurfaceSupportKHR( i, surface ) )
-                {
-                    indices.present_family_ = i;
-                }
-            }
-            
-            ++i;
-        }
-        
-        return indices;
-    }
-    
-    bool renderer::is_swapchain_adequate( const vk::SurfaceKHR& surface, const vk::PhysicalDevice &physical_device ) const noexcept
-    {
-        const auto surface_formats = physical_device.getSurfaceFormatsKHR( surface );
-        
-        const auto present_modes = physical_device.getSurfacePresentModesKHR( surface );
-        
-        return !surface_formats.empty() && !present_modes.empty();
     }
     
     const renderer::swapchain_support_details_type renderer::query_swapchain_support( const vk::SurfaceKHR& surface,

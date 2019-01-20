@@ -18,9 +18,8 @@
 
 #include "pipeline_manager.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
-    
     pipeline_manager::pipeline_manager( pipeline_manager&& rhs ) noexcept
     {
         *this = std::move( rhs );

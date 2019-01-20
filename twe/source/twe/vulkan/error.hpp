@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,13 +25,13 @@
 
 #include "../twe_core.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
     /*!
      * @brief An error for vulkan related problems. It inherits from
      * std::system_error.
      */
-    class vk_error : public std::system_error
+    class error : public std::system_error
     {
     private:
         /*!
@@ -58,7 +60,7 @@ namespace twe
          * @param result The Vulkan error code.
          * @param message The message to print along with the error name.
          */
-        TWE_API vk_error( const vk::Result& result, const std::string& message );
+        TWE_API error( const vk::Result& result, const std::string& message );
     };
     
 }

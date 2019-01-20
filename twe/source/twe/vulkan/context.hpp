@@ -24,7 +24,7 @@
 
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
-#include "../utilities/vk_utils.hpp"
+#include "utils.hpp"
 #include "../utilities/log.hpp"
 
 namespace twe::vulkan

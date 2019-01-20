@@ -23,14 +23,13 @@
 
 #include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
-#include "../utilities/vk_utils.hpp"
-#include "../shader_manager.hpp"
 #include "../window/base_window.hpp"
-#include "../pipeline_manager.hpp"
 
 #include "../vulkan/context.hpp"
-#include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/swapchain.hpp"
+#include "../vulkan/memory_allocator.hpp"
+#include "../vulkan/shader_manager.hpp"
+#include "../vulkan/pipeline_manager.hpp"
 
 namespace twe
 {
@@ -49,13 +48,13 @@ namespace twe
         TWE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         TWE_API renderer& operator=( renderer&& renderer ) noexcept;
         
-        template<shader_type T>
+        template<vulkan::shader_type T>
         uint32_t create_shader( const std::string& filepath, const std::string& entry_point )
         {
-            return shader_manager_.insert<T>( shader_create_info{ context_.device_.get(), filepath, entry_point } );
+            return shader_manager_.insert<T>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
         }
         
-        template<pipeline_type T>
+        template<vulkan::pipeline_type T>
         uint32_t create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
         {
             std::vector<vk::Viewport> viewports = {
@@ -74,9 +73,9 @@ namespace twe
                     .setExtent( swapchain_.extent_ )
             };
             
-            const auto create_info = pipeline_create_info( )
-                .set_device( &context_.device_.get() )
-                .set_render_pass( &vk_context_.render_pass_.get() )
+            const auto create_info = vulkan::pipeline_create_info( )
+                .set_device( context_.device_.get() )
+                .set_render_pass( render_pass_.get() )
                 .set_pipeline_definition( pipeline_definition )
                 .set_shader_manager( &shader_manager_ )
                 .set_shader_ids( vert_id, frag_id )
@@ -89,43 +88,74 @@ namespace twe
         TWE_API void set_pipeline( const uint32_t id );
         TWE_API void switch_pipeline( const uint32_t id );
 
-        void TWE_API draw_frame( );
+        TWE_API void draw_frame( );
         
-        void TWE_API record_draw_calls( );
+        TWE_API void record_draw_calls( );
         
-        void TWE_API on_window_close( const window_close_event& event );
-        void TWE_API on_framebuffer_resize( const framebuffer_resize_event& event );
+        TWE_API void on_window_close( const window_close_event& event );
+        TWE_API void on_framebuffer_resize( const framebuffer_resize_event& event );
         
-        void TWE_API set_clear_colour( const glm::vec4& colour );
+        TWE_API void set_clear_colour( const glm::vec4& colour );
     
     private:
         const vk::UniqueSemaphore create_semaphore( ) const noexcept;
         
         const vk::UniqueFence create_fence( ) const noexcept;
         
-        const vk::UniqueCommandPool create_command_pool( uint32_t queue_family ) const noexcept;
+        template<class C>
+        std::enable_if_t<std::is_same_v<C, vk::UniqueCommandBuffer>, std::vector<C>> create_handles( const vk::CommandPool command_pool, uint32_t count ) const noexcept
+        {
+            const auto allocate_info = vk::CommandBufferAllocateInfo( )
+                .setCommandPool( command_pool )
+                .setCommandBufferCount( count )
+                .setLevel( vk::CommandBufferLevel::ePrimary );
+    
+            return context_.device_->allocateCommandBuffersUnique( allocate_info );
+        }
         
-        const std::vector<vk::CommandBuffer> create_command_buffers( uint32_t count ) const noexcept;
+        template<class C>
+        std::enable_if_t<std::is_same_v<C, vk::UniqueRenderPass>, C> create_handle(
+            const vk::SurfaceFormatKHR surface_format,
+            const vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept
+        {
+            const auto colour_attachment = vk::AttachmentDescription( )
+                .setFormat( surface_format.format )
+                .setSamples( vk::SampleCountFlagBits::e1 )
+                .setLoadOp( vk::AttachmentLoadOp::eClear )
+                .setStoreOp( vk::AttachmentStoreOp::eStore )
+                .setStencilLoadOp( vk::AttachmentLoadOp::eDontCare )
+                .setStencilStoreOp( vk::AttachmentStoreOp::eDontCare )
+                .setInitialLayout( vk::ImageLayout::eUndefined )
+                .setFinalLayout( vk::ImageLayout::ePresentSrcKHR );
+    
+            const auto colour_attachment_ref = vk::AttachmentReference( )
+                .setAttachment( 0 )
+                .setLayout( vk::ImageLayout::eColorAttachmentOptimal );
+    
+            const auto subpass_description = vk::SubpassDescription( )
+                .setPipelineBindPoint( bind_point )
+                .setColorAttachmentCount( 1 )
+                .setPColorAttachments( &colour_attachment_ref );
+    
+            const auto dependency = vk::SubpassDependency( )
+                .setSrcSubpass( VK_SUBPASS_EXTERNAL )
+                .setDstSubpass( 0 )
+                .setSrcStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+                .setDstStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+                .setSrcAccessMask( vk::AccessFlagBits{ } )
+                .setDstAccessMask( vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite );
+    
+            const auto create_info = vk::RenderPassCreateInfo( )
+                .setAttachmentCount( 1 )
+                .setPAttachments( &colour_attachment )
+                .setSubpassCount( 1 )
+                .setPSubpasses( &subpass_description )
+                .setDependencyCount( 1 )
+                .setPDependencies( &dependency );
+    
+            return context_.device_->createRenderPassUnique( create_info );
+        }
         
-        const vk::UniqueRenderPass create_render_pass( vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
-  
-
-        bool check_instance_extension_support( const std::vector<const char*>& instance_extensions ) const noexcept;
-    
-        bool check_debug_layer_support( const std::vector<const char*>& debug_layers ) const noexcept;
-    
-        bool is_physical_device_suitable( const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device,
-            const std::vector<const char*>& device_extensions ) const noexcept;
-    
-        bool check_physical_device_extension_support( const vk::PhysicalDevice& physical_device,
-            const std::vector<const char*>& device_extensions ) const noexcept;
-    
-        bool is_swapchain_adequate( const vk::SurfaceKHR& surface,
-            const vk::PhysicalDevice &physical_device ) const noexcept;
-    
-        const queue_family_indices_type find_queue_family_indices( const vk::SurfaceKHR& surface,
-            const vk::PhysicalDevice &physical_device ) const noexcept;
-
         const swapchain_support_details_type query_swapchain_support( const vk::SurfaceKHR& surface,
             const vk::PhysicalDevice &physical_device ) const noexcept;
 
@@ -149,30 +179,21 @@ namespace twe
     
         vulkan::context context_;
         vulkan::swapchain swapchain_;
-        
-        struct vk_context_t
-        {
-            std::vector<vk::UniqueSemaphore> image_available_semaphores_;
-            std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
-            std::vector<vk::UniqueFence> in_flight_fences_;
-
-            std::vector<vk::CommandBuffer> command_buffers_;
-            
-            vk::SurfaceFormatKHR surface_format_;
-            
-            vk::UniqueRenderPass render_pass_;
-            
-            std::vector<const char*> instance_extensions_;
-            std::vector<const char*> device_extensions_;
-            std::vector<const char*> validation_layers_;
-        } vk_context_;
+    
+        std::vector<vk::UniqueSemaphore> image_available_semaphores_;
+        std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
+        std::vector<vk::UniqueFence> in_flight_fences_;
+    
+        std::vector<vk::UniqueCommandBuffer> render_command_buffers_[MAX_FRAMES_IN_FLIGHT];
+    
+        vk::UniqueRenderPass render_pass_;
         
         vulkan::memory_allocator memory_allocator_;
         
         vertex_buffer vertex_buffer_;
         
-        shader_manager shader_manager_;
-        pipeline_manager pipeline_manager_;
+        vulkan::shader_manager shader_manager_;
+        vulkan::pipeline_manager pipeline_manager_;
         
     private:
         

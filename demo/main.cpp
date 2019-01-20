@@ -42,14 +42,14 @@ public:
     {
         p_renderer_->set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
         
-        vert_id_ = p_renderer_->create_shader<twe::shader_type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
-        frag_id_ = p_renderer_->create_shader<twe::shader_type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
+        vert_id_ = p_renderer_->create_shader<twe::vulkan::shader_type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
+        frag_id_ = p_renderer_->create_shader<twe::vulkan::shader_type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
         
         std::string triangle_pipeline = "../../demo/resources/triangle_pipeline.json";
         std::string wireframe_triangle_pipeline = "../../demo/resources/wireframe_triangle_pipeline.json";
         
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::pipeline_type::graphics>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::vulkan::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<twe::vulkan::pipeline_type::graphics>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
         
         p_renderer_->set_pipeline( pipeline_ids_[0] );
         

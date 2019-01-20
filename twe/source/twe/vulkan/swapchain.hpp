@@ -149,12 +149,12 @@ namespace twe::vulkan
         struct create_info_type
         {
             create_info_type(
-                vk::PhysicalDevice gpu = vk::PhysicalDevice( ),
-                vk::Device device = vk::Device( ),
-                vk::SurfaceKHR surface = vk::SurfaceKHR( ),
-                vk::RenderPass render_pass = vk::RenderPass( ),
-                std::uint32_t width = 0,
-                std::uint32_t height = 0 )
+                const vk::PhysicalDevice gpu = vk::PhysicalDevice( ),
+                const vk::Device device = vk::Device( ),
+                const vk::SurfaceKHR surface = vk::SurfaceKHR( ),
+                const vk::RenderPass render_pass = vk::RenderPass( ),
+                const std::uint32_t width = 0,
+                const std::uint32_t height = 0 )
                 :
                 gpu_( gpu ),
                 device_( device ),

@@ -21,13 +21,13 @@
 
 #include <nlohmann/json.hpp>
 
-#include "twe_core.hpp"
+#include "../twe_core.hpp"
 #include "shader_manager.hpp"
-#include "graphics/vertex.hpp"
-#include "utilities/file_io.hpp"
-#include "utilities/log.hpp"
+#include "../graphics/vertex.hpp"
+#include "../utilities/file_io.hpp"
+#include "../utilities/log.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
     enum class pipeline_type
     {
@@ -50,8 +50,45 @@ namespace twe
     
     struct pipeline_create_info
     {
-        vk::Device* p_device_;
-        vk::RenderPass* p_render_pass_;
+        pipeline_create_info& set_device( const vk::Device device )
+        {
+            device_ = device;
+            return *this;
+        }
+        pipeline_create_info& set_render_pass( const vk::RenderPass render_pass )
+        {
+            render_pass_ = render_pass;
+            return *this;
+        }
+        pipeline_create_info& set_pipeline_definition( const std::string& pipeline_json )
+        {
+            pipeline_json_ = pipeline_json;
+            return *this;
+        }
+        pipeline_create_info& set_viewports( const std::vector<vk::Viewport>& viewports )
+        {
+            viewports_ = viewports;
+            return *this;
+        }
+        pipeline_create_info& set_scissors( const std::vector<vk::Rect2D>& scissors )
+        {
+            scissors_ = scissors;
+            return *this;
+        }
+        pipeline_create_info& set_shader_manager( shader_manager* p_shader_manager )
+        {
+            p_shader_manager_ = p_shader_manager;
+            return *this;
+        }
+        pipeline_create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id )
+        {
+            vert_shader_id_ = vert_shader_id;
+            frag_shader_id_ = frag_shader_id;
+            return *this;
+        }
+        
+        vk::Device device_;
+        vk::RenderPass render_pass_;
         
         std::string pipeline_json_;
         
@@ -61,50 +98,6 @@ namespace twe
         shader_manager* p_shader_manager_;
         uint32_t vert_shader_id_;
         uint32_t frag_shader_id_;
-        
-        pipeline_create_info& set_device( vk::Device* p_device )
-        {
-            p_device_ = p_device;
-            
-            return *this;
-        }
-        pipeline_create_info& set_render_pass( vk::RenderPass* p_render_pass )
-        {
-            p_render_pass_ = p_render_pass;
-            
-            return *this;
-        }
-        pipeline_create_info& set_pipeline_definition( const std::string& pipeline_json )
-        {
-            pipeline_json_ = pipeline_json;
-            
-            return *this;
-        }
-        pipeline_create_info& set_viewports( const std::vector<vk::Viewport>& viewports )
-        {
-            viewports_ = viewports;
-            
-            return *this;
-        }
-        pipeline_create_info& set_scissors( const std::vector<vk::Rect2D>& scissors )
-        {
-            scissors_ = scissors;
-            
-            return *this;
-        }
-        pipeline_create_info& set_shader_manager( shader_manager* p_shader_manager )
-        {
-            p_shader_manager_ = p_shader_manager;
-            
-            return *this;
-        }
-        pipeline_create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id )
-        {
-            vert_shader_id_ = vert_shader_id;
-            frag_shader_id_ = frag_shader_id;
-            
-            return *this;
-        }
     };
     
     template<pipeline_type T>
@@ -680,7 +673,7 @@ namespace twe
             
             const auto layout_create_info = vk::PipelineLayoutCreateInfo( );
             
-            layout_ = create_info.p_device_->createPipelineLayoutUnique( layout_create_info );
+            layout_ = create_info.device_.createPipelineLayoutUnique( layout_create_info );
             
             if( T == pipeline_type::graphics )
             {
@@ -697,12 +690,12 @@ namespace twe
                     .setPColorBlendState( &colour_blend_state )
                     .setPDynamicState( &dynamic_state_create_info )
                     .setLayout( layout_.get() )
-                    .setRenderPass( *create_info.p_render_pass_ )
+                    .setRenderPass( create_info.render_pass_ )
                     .setSubpass( 0 )
                     .setBasePipelineHandle( nullptr )
                     .setBasePipelineIndex( -1 );
                 
-                auto test = create_info.p_device_->createGraphicsPipelinesUnique( nullptr, graphics_create_info );
+                auto test = create_info.device_.createGraphicsPipelinesUnique( nullptr, graphics_create_info );
                 
                 pipeline_ = std::move( test[0] );
             }

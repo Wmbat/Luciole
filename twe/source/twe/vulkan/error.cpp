@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,20 +16,20 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vk_error.hpp"
+#include "error.hpp"
 
-namespace twe
+namespace twe::vulkan
 {
-    vk_error::vk_error( const vk::Result& result, const std::string& message )
+    error::error( const vk::Result& result, const std::string& message )
         : system_error( static_cast<int>( result ), category( ), message )
     { }
     
-    const char* vk_error::category::name( ) const noexcept
+    const char* error::category::name( ) const noexcept
     {
         return "Vulkan Error";
     }
     
-    std::string vk_error::category::message( int ev ) const
+    std::string error::category::message( int ev ) const
     {
         switch ( ev )
         {

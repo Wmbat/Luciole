@@ -25,34 +25,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 
 endif()
 
-add_library( twe SHARED
-        source/twe/utilities/basic_error.cpp
-        source/twe/utilities/basic_error.hpp
-        source/twe/utilities/delegate.hpp
-        source/twe/utilities/file_io.hpp
-        source/twe/utilities/vk_error.cpp
-        source/twe/utilities/vk_error.hpp
-        source/twe/window/base_window.cpp
-        source/twe/window/base_window.hpp
-        source/twe/window/wayland_window.cpp
-        source/twe/window/wayland_window.hpp
-        source/twe/window/win32_window.cpp
-        source/twe/window/win32_window.hpp
-        source/twe/window/xcb_window.cpp
-        source/twe/window/xcb_window.hpp
-        source/twe/application.cpp
-        source/twe/application.hpp
-        source/twe/entry_point.hpp
-        source/twe/window/keyboard.hpp
-        source/twe/utilities/log.cpp
-        source/twe/utilities/log.hpp
-        source/twe/utilities/message.hpp
-        source/twe/window/mouse.hpp
-        source/twe/graphics/vertex_buffer.hpp
-        source/twe/graphics/mesh.hpp
-        source/twe/graphics/vertex_buffer.cpp
-        source/twe/vulkan/memory_allocator.hpp
-        source/twe/vulkan/memory_allocator.cpp source/twe/pipeline.hpp source/twe/pipeline_layout.hpp source/twe/pipeline_manager.hpp source/twe/pipeline_manager.cpp source/twe/vulkan/context.hpp source/twe/vulkan/swapchain.hpp source/twe/vulkan/swapchain.cpp)
+add_library( twe SHARED )
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )
@@ -101,15 +74,56 @@ endif( )
 
 # Declace the library's files.
 target_sources( twe
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vma_define.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/mesh.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader_manager.cpp"
-        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader_manager.hpp"
-        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/shader.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex_buffer.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex_buffer.cpp"
+
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/basic_error.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/basic_error.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/delegate.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/file_io.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/log.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/log.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/message.hpp"
+
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/context.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/error.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/error.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/memory_allocator.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/memory_allocator.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/pipeline.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/pipeline_layout.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/pipeline_manager.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/pipeline_manager.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/swapchain.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/swapchain.cpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/shader_manager.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/shader_manager.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/shader.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/utils.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vma_define.cpp"
+
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/base_window.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/base_window.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/event.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/keyboard.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/mouse.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/wayland_window.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/wayland_window.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/win32_window.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/win32_window.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/xcb_window.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/xcb_window.hpp"
+
+
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/application.cpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/application.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/entry_point.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/twe_core.hpp"
-        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/vk_utils.hpp" )
+        )
 
 target_include_directories( twe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/source" )

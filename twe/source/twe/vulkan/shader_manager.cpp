@@ -16,21 +16,26 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_PIPELINE_LAYOUT_HPP
-#define ENGINE_PIPELINE_LAYOUT_HPP
+#include "shader_manager.hpp"
+#include "../utilities/basic_error.hpp"
 
-#include "twe_core.hpp"
-
-namespace twe
+namespace twe::vulkan
 {
-    class pipeline_layout
+    shader_manager::shader_manager( shader_manager&& rhs ) noexcept
     {
-    public:
-        pipeline_layout( ) = default;
+        *this = std::move( rhs );
+    }
+    shader_manager& shader_manager::operator=( shader_manager&& rhs ) noexcept
+    {
+        if( this != &rhs )
+        {
+            vertex_shaders_ = std::move( rhs.vertex_shaders_ );
+            fragment_shaders_ = std::move( rhs.fragment_shaders_ );
+            
+            shader_id_count_ = rhs.shader_id_count_;
+            rhs.shader_id_count_ = 0;
+        }
         
-    private:
-        vk::UniquePipelineLayout layout_;
-    };
+        return *this;
+    }
 }
-
-#endif //ENGINE_PIPELINE_LAYOUT_HPP
