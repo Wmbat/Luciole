@@ -24,7 +24,6 @@
 #include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
-
 #include "../vulkan/context.hpp"
 #include "../vulkan/swapchain.hpp"
 #include "../vulkan/memory_allocator.hpp"
