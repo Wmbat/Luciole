@@ -78,8 +78,6 @@ target_sources( twe
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex.hpp"
-        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex_buffer.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/vertex_buffer.cpp"
 
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/basic_error.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/basic_error.hpp"
@@ -104,6 +102,8 @@ target_sources( twe
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/shader_manager.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/shader.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/utils.hpp"
+        PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vertex_buffer.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vertex_buffer.cpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/vulkan/vma_define.cpp"
 
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/base_window.cpp"

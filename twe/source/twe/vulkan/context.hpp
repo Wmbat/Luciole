@@ -123,12 +123,20 @@ namespace twe::vulkan
             {
                 if ( info.is_dedicated_transfer( ))
                 {
+                    ++queue_family_count_;
+                    
+                    queue_family_indices_.emplace_back( info.transfer_.value( ) );
+                    
                     transfer_queue_ = device_->getQueue( info.transfer_.value( ), 0 );
                     
                     transfer_command_pool_ = create_handle<vk::UniqueCommandPool>( info.transfer_.value( ));
                 }
                 else if ( info.is_general_purpose( ))
                 {
+                    ++queue_family_count_;
+                    
+                    queue_family_indices_.emplace_back( info.transfer_.value( ) );
+                    
                     graphics_queue_ = device_->getQueue( info.graphics_.value( ), 0 );
                     
                     for ( auto& command_pool : graphics_command_pools_ )
@@ -174,9 +182,14 @@ namespace twe::vulkan
                 surface_ = std::move( rhs.surface_ );
                 
                 graphics_queue_ = std::move( rhs.graphics_queue_ );
-                graphics_command_pools_ = std::move( rhs.graphics_command_pools_ );
-                
                 transfer_queue_ = std::move( rhs.transfer_queue_ );
+                
+                queue_family_count_ = rhs.queue_family_count_;
+                rhs.queue_family_count_ = 0;
+                
+                queue_family_indices_ = std::move( rhs.queue_family_indices_ );
+                
+                graphics_command_pools_ = std::move( rhs.graphics_command_pools_ );
                 transfer_command_pool_ = std::move( rhs.transfer_command_pool_ );
                 
                 instance_extensions_ = std::move( rhs.instance_extensions_ );
@@ -527,9 +540,12 @@ namespace twe::vulkan
         vk::UniqueDevice device_;
         
         vk::Queue graphics_queue_;
-        std::vector<vk::UniqueCommandPool> graphics_command_pools_;
-        
         vk::Queue transfer_queue_;
+        
+        uint32_t queue_family_count_ = 0;
+        std::vector<uint32_t> queue_family_indices_;
+        
+        std::vector<vk::UniqueCommandPool> graphics_command_pools_;
         vk::UniqueCommandPool transfer_command_pool_;
     
     private:

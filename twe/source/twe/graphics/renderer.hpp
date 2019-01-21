@@ -21,23 +21,20 @@
 
 #include <optional>
 
-#include "vertex_buffer.hpp"
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
+
 #include "../vulkan/context.hpp"
 #include "../vulkan/swapchain.hpp"
 #include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/shader_manager.hpp"
 #include "../vulkan/pipeline_manager.hpp"
+#include "../vulkan/vertex_buffer.hpp"
 
 namespace twe
 {
     class renderer
     {
-    private:
-        struct queue_family_indices_type;
-        struct swapchain_support_details_type;
-
     public:
         TWE_API renderer( base_window* p_window, const std::string& app_name, uint32_t app_version );
         TWE_API renderer( const renderer& renderer ) noexcept = delete;
@@ -111,7 +108,6 @@ namespace twe
     
             return context_.device_->allocateCommandBuffersUnique( allocate_info );
         }
-        
         template<class C>
         std::enable_if_t<std::is_same_v<C, vk::UniqueRenderPass>, C> create_handle(
             const vk::SurfaceFormatKHR surface_format,
@@ -154,13 +150,10 @@ namespace twe
     
             return context_.device_->createRenderPassUnique( create_info );
         }
-        
-        const swapchain_support_details_type query_swapchain_support( const vk::SurfaceKHR& surface,
-            const vk::PhysicalDevice &physical_device ) const noexcept;
-
+    
         const vk::SurfaceFormatKHR choose_swapchain_surface_format(
-                const std::vector<vk::SurfaceFormatKHR>& available_formats ) const noexcept;
-
+            const std::vector<vk::SurfaceFormatKHR> &available_formats ) const noexcept;
+        
     private:
         static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
         
@@ -184,34 +177,17 @@ namespace twe
         std::vector<vk::UniqueFence> in_flight_fences_;
     
         std::vector<vk::UniqueCommandBuffer> render_command_buffers_[MAX_FRAMES_IN_FLIGHT];
+        
+        std::vector<vk::UniqueCommandBuffer> transfer_command_buffers_;
     
         vk::UniqueRenderPass render_pass_;
         
         vulkan::memory_allocator memory_allocator_;
         
-        vertex_buffer vertex_buffer_;
+        vulkan::vertex_buffer vertex_buffer_;
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
-        
-    private:
-        
-        struct queue_family_indices_type
-        {
-            std::optional<uint32_t> graphic_family_;
-            std::optional<uint32_t> present_family_;
-            
-            bool has_rendering_support( ) const
-            {
-                return graphic_family_.has_value() && present_family_.has_value();
-            }
-        };
-        struct swapchain_support_details_type
-        {
-            vk::SurfaceCapabilitiesKHR capabilities_;
-            std::vector<vk::SurfaceFormatKHR> formats_;
-            std::vector<vk::PresentModeKHR> present_modes_;
-        };
     };
 }
 

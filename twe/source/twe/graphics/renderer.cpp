@@ -27,7 +27,7 @@
 #include "../utilities/basic_error.hpp"
 #include "../vulkan/error.hpp"
 
-const std::vector<twe::vertex> vertices = {
+std::vector<twe::vertex> vertices = {
     { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
     { {  0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
     { { -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
@@ -108,6 +108,8 @@ namespace twe
         {
             render_command_buffers_[i] = create_handles<vk::UniqueCommandBuffer>( context_.graphics_command_pools_[i].get( ), swapchain_.image_count_ );
         }
+        
+        transfer_command_buffers_ = create_handles<vk::UniqueCommandBuffer>( context_.transfer_command_pool_.get(), 1 );
     
         auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
         mem_allocator_create_info.physicalDevice = context_.gpu_;
@@ -115,7 +117,16 @@ namespace twe
     
         memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
     
-        vertex_buffer_ = vertex_buffer( memory_allocator_, vertices );
+        const auto vertex_buffer_create_info = vulkan::vertex_buffer::create_info_type()
+            .set_memory_allocator( memory_allocator_.get() )
+            .set_transfer_queue( context_.transfer_queue_ )
+            .set_transfer_command_buffer( transfer_command_buffers_[0].get() )
+            .set_queue_family_index_count_( context_.queue_family_count_ )
+            .set_p_queue_family_indices( context_.queue_family_indices_.data() )
+            .set_vertex_count( static_cast<std::uint32_t>( vertices.size() ) )
+            .set_p_vertices( vertices.data() );
+        
+        vertex_buffer_ = vulkan::vertex_buffer( vertex_buffer_create_info );
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -381,18 +392,6 @@ namespace twe
             .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
         return context_.device_->createFenceUnique( create_info );
-    }
-    
-    const renderer::swapchain_support_details_type renderer::query_swapchain_support( const vk::SurfaceKHR& surface,
-        const vk::PhysicalDevice &physical_device ) const noexcept
-    {
-        swapchain_support_details_type details;
-
-        details.capabilities_ = physical_device.getSurfaceCapabilitiesKHR( surface );
-        details.formats_ = physical_device.getSurfaceFormatsKHR( surface );
-        details.present_modes_ = physical_device.getSurfacePresentModesKHR( surface );
-
-        return details;
     }
 
     const vk::SurfaceFormatKHR renderer::choose_swapchain_surface_format(
