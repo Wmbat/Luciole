@@ -19,6 +19,8 @@
 #ifndef TWE_VK_SHADER_H
 #define TWE_VK_SHADER_H
 
+#include <vulkan/vulkan.hpp>
+
 #include "../twe_core.hpp"
 #include "../utilities/log.hpp"
 #include "../utilities/file_io.hpp"

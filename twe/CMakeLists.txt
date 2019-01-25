@@ -118,7 +118,6 @@ target_sources( twe
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/xcb_window.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/window/xcb_window.hpp"
 
-
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/application.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/application.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/entry_point.hpp"

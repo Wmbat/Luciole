@@ -21,8 +21,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../twe_core.hpp"
 #include "shader_manager.hpp"
+#include "../twe_core.hpp"
 #include "../graphics/vertex.hpp"
 #include "../utilities/file_io.hpp"
 #include "../utilities/log.hpp"
