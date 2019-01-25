@@ -72,7 +72,6 @@ else()
             glm )
 endif( )
 
-# Declace the library's files.
 target_sources( twe
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/mesh.hpp"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/graphics/renderer.cpp"
