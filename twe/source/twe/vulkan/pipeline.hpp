@@ -648,12 +648,12 @@ namespace twe::vulkan
                 .setDepthBiasSlopeFactor( get_float_data( json["rasterization"]["depth_bias_slope_factor"], "rasterization/depth_bias_slope_factor" ) )
                 .setLineWidth( get_int_data( json["rasterization"]["line_width"], "rasterization/line_width", 1 ) );
             
-            const auto multisampling_state = vk::PipelineMultisampleStateCreateInfo( )
-                .setRasterizationSamples( get_rasterization_samples( json["multisampling"]["rasterization_samples"] ) )
-                .setSampleShadingEnable( get_bool_data( json["multisampling"]["sample_shading_enable"], "multisampling/sample_shading_enable" ) )
-                .setMinSampleShading( get_float_data( json["multisampling"]["min_sample_shading"], "multisampling/min_sample_shading", 1.0f ) )
-                .setPSampleMask( nullptr )
-                .setAlphaToCoverageEnable( get_bool_data( json["multisampling"]["alpha_to_coverage_enable"], "multisampling/alpha_to_coverage_enable" ) )
+			const auto multisampling_state = vk::PipelineMultisampleStateCreateInfo( )
+				.setRasterizationSamples( get_rasterization_samples( json["multisampling"]["rasterization_samples"] ) )
+				.setSampleShadingEnable( get_bool_data( json["multisampling"]["sample_shading_enable"], "multisampling/sample_shading_enable" ) )
+				.setMinSampleShading( get_float_data( json["multisampling"]["min_sample_shading"], "multisampling/min_sample_shading", 1.0f ) )
+				.setPSampleMask( nullptr )
+				.setAlphaToCoverageEnable( get_bool_data( json["multisampling"]["alpha_to_coverage_enable"], "multisampling/alpha_to_coverage_enable" ) );
                 .setAlphaToOneEnable( get_bool_data( json["multisampling"]["alpha_to_one_enable"], "multisampling/alpha_to_one_enable" ) );
             
             const auto colour_blend_state = vk::PipelineColorBlendStateCreateInfo( )

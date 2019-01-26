@@ -181,6 +181,9 @@ namespace twe::vulkan
         }
     }
     
+#undef max
+#undef min
+
     const vk::Extent2D swapchain::choose_extent( const vk::SurfaceCapabilitiesKHR& capabilities ) const noexcept
     {
         if ( capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max( ))

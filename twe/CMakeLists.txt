@@ -82,7 +82,6 @@ target_sources( twe
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/basic_error.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/delegate.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/file_io.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/log.cpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/log.hpp"
         PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/source/twe/utilities/message.hpp"
 

@@ -1,6 +1,5 @@
 /*!
- * I, wmbat, did not make this and the code found within deletegates.hpp does not belong
- * to me, here below is a link to the original code.
+ * here below is a link to the original code.
  * https://codereview.stackexchange.com/questions/14730/impossibly-fast-delegate-in-c11
  */
 
