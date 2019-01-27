@@ -19,12 +19,11 @@
 #ifndef ENGINE_CONTEXT_HPP
 #define ENGINE_CONTEXT_HPP
 
-#include <vulkan/vulkan.hpp>
 #include <map>
 
+#include "utils.hpp"
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
-#include "utils.hpp"
 #include "../utilities/log.hpp"
 
 namespace twe::vulkan
@@ -50,10 +49,14 @@ namespace twe::vulkan
         
         context( const create_info_type& create_info )
         {
+            auto result = volkInitialize( );
+            
+            /*
             if ( vk::enumerateInstanceVersion( ) != VK_API_VERSION_1_1)
             {
                 // TODO: handle error.
             }
+             */
             
             if constexpr ( enable_debug_layers )
             {
@@ -89,6 +92,8 @@ namespace twe::vulkan
             
             instance_ = create_handle<vk::UniqueInstance>( create_info.app_name_, create_info.app_version_ );
             
+            volkLoadInstance( instance_.get() );
+            
             if constexpr ( enable_debug_layers )
             {
                 dispatch_loader_dynamic_ = vk::DispatchLoaderDynamic( instance_.get( ));
@@ -107,6 +112,8 @@ namespace twe::vulkan
             const auto queue_family_infos = get_queue_family_infos( gpu_.getQueueFamilyProperties( ));
             
             device_ = create_handle<vk::UniqueDevice>( queue_family_infos );
+            
+            volkLoadDevice( device_.get() );
             
             graphics_command_pools_.resize( create_info.max_frames_in_flight_ );
             

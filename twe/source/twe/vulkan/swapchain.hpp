@@ -19,8 +19,7 @@
 #ifndef ENGINE_SWAPCHAIN_HPP
 #define ENGINE_SWAPCHAIN_HPP
 
-#include <vulkan/vulkan.hpp>
-
+#include "core.hpp"
 #include "../twe_core.hpp"
 
 namespace twe::vulkan

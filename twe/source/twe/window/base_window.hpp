@@ -17,11 +17,12 @@
 #ifndef BASE_WINDOW_H
 #define BASE_WINDOW_H
 
-#include <vulkan/vulkan.hpp>
+
 
 #include "event.hpp"
 #include "../twe_core.hpp"
 #include "../utilities/message.hpp"
+#include "../vulkan/core.hpp"
 
 namespace twe
 {

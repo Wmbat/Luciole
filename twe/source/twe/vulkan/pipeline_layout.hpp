@@ -19,9 +19,9 @@
 #ifndef ENGINE_PIPELINE_LAYOUT_HPP
 #define ENGINE_PIPELINE_LAYOUT_HPP
 
-#include <volk/vulkan.hpp>
+#include "core.hpp"
 
-#include "twe/twe_core.hpp"
+#include "../twe_core.hpp"
 
 namespace twe::vulkan
 {

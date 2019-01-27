@@ -48,15 +48,15 @@ elseif( UNIX )
         endif( )
 
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
+        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
     endif()
 endif( )
 
 if( MSVC )
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	SET( CMAKE_CXX_FLAGS    "${CMAKE_CXX_FLAGS} /EHsc")
 endif( )
 
-add_subdirectory( external/vulkan )
-add_subdirectory( external/vma )
+add_subdirectory( external/volk )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
 add_subdirectory( external/spdlog )

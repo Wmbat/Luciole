@@ -15,35 +15,49 @@
 cmake_minimum_required( VERSION 3.11 )
 project( demo )
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    add_compile_options("-Wall")
+    #    add_compile_options("-Wextra")
+    #    add_compile_options("-Wconversion")
+    #    add_compile_options("-pedantic")
+    #    add_compile_options("-Wfatal-errors")
+
+endif()
+
 add_executable( demo )
+
+target_compile_features( twe PUBLIC cxx_std_17 )
 
 if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( demo
                 ${WAYLAND_CLIENT_LIBRARIES}
-                vma
+                volk
+                stb
                 spdlog
                 nlohmann
+                tinygltf
                 glm
-                vulkan
                 twe )
     else( )
         target_link_libraries( demo
                 ${XCB_LIBRARIES}
-                vma
+                volk
+                stb
                 spdlog
                 nlohmann
+                tinygltf
                 glm
-                vulkan
                 twe )
     endif()
 else()
     target_link_libraries( demo
-            vma
+            volk
+            stb
             spdlog
             nlohmann
+            tinygltf
             glm
-            vulkan
             twe )
 endif( )
 

@@ -14,7 +14,7 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.11 )
-project( twe VERSION 0.0.4 )
+project( twe VERSION 0.0.5 )
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     add_compile_options("-Wall")
@@ -25,7 +25,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 
 endif()
 
-add_library( twe SHARED )
+add_library( twe SHARED source/twe/vulkan/core.hpp)
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )
@@ -36,15 +36,14 @@ if( WIN32 )
 endif( )
 
 set_target_properties( twe PROPERTIES VERSION ${PROJECT_VERSION} )
-set_target_properties( twe PROPERTIES SOVERSION 1 )
+set_target_properties( twe PROPERTIES SOVERSION 0 )
 
 # Declare the library's libs.
 if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( twe
                 ${WAYLAND_CLIENT_LIBRARIES}
-                vulkan
-                vma
+                volk
                 stb
                 spdlog
                 nlohmann
@@ -53,8 +52,7 @@ if( NOT WIN32 )
     else( )
         target_link_libraries( twe
                 ${XCB_LIBRARIES}
-                vulkan
-                vma
+                volk
                 stb
                 spdlog
                 nlohmann
@@ -63,8 +61,7 @@ if( NOT WIN32 )
     endif()
 else()
     target_link_libraries( twe
-            vulkan
-            vma
+            volk
             stb
             spdlog
             nlohmann

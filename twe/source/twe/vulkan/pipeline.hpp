@@ -653,7 +653,7 @@ namespace twe::vulkan
 				.setSampleShadingEnable( get_bool_data( json["multisampling"]["sample_shading_enable"], "multisampling/sample_shading_enable" ) )
 				.setMinSampleShading( get_float_data( json["multisampling"]["min_sample_shading"], "multisampling/min_sample_shading", 1.0f ) )
 				.setPSampleMask( nullptr )
-				.setAlphaToCoverageEnable( get_bool_data( json["multisampling"]["alpha_to_coverage_enable"], "multisampling/alpha_to_coverage_enable" ) );
+				.setAlphaToCoverageEnable( get_bool_data( json["multisampling"]["alpha_to_coverage_enable"], "multisampling/alpha_to_coverage_enable" ) )
                 .setAlphaToOneEnable( get_bool_data( json["multisampling"]["alpha_to_one_enable"], "multisampling/alpha_to_one_enable" ) );
             
             const auto colour_blend_state = vk::PipelineColorBlendStateCreateInfo( )
