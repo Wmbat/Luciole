@@ -29,7 +29,7 @@
 
 #undef max
 
-std::vector<twe::vertex> vertices = {
+static std::vector<twe::vertex> vertices = {
     { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
     { {  0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
     { { -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }

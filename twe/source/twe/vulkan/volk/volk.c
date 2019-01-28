@@ -50,7 +50,7 @@ VkResult volkInitialize(void)
 		module = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
 	if (!module)
 		return VK_ERROR_INITIALIZATION_FAILED;
-
+	
 	vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)dlsym(module, "vkGetInstanceProcAddr");
 #endif
 
