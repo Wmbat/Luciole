@@ -21,7 +21,7 @@
 
 #include <map>
 
-#include "core.hpp"
+#include "vulkan.hpp"
 #include "utils.hpp"
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
@@ -150,6 +150,7 @@ namespace twe::vulkan
                     
                     if ( !dedicated_transfer )
                     {
+                        // TODO: check for IGPU
                         transfer_queue_ = device_->getQueue( info.transfer_.value( ), 1 );
                         
                         transfer_command_pool_ = create_handle<vk::UniqueCommandPool>( info.transfer_.value( ));

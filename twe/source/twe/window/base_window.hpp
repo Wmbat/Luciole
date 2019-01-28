@@ -22,7 +22,7 @@
 #include "event.hpp"
 #include "../twe_core.hpp"
 #include "../utilities/message.hpp"
-#include "../vulkan/core.hpp"
+#include "../vulkan/vulkan.hpp"
 
 namespace twe
 {

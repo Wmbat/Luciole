@@ -116,6 +116,26 @@ namespace twe
         auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
         mem_allocator_create_info.physicalDevice = context_.gpu_;
         mem_allocator_create_info.device = context_.device_.get();
+        
+        VmaVulkanFunctions test;
+        test.vkMapMemory = vkMapMemory;
+        test.vkUnmapMemory = vkUnmapMemory;
+        test.vkAllocateMemory = vkAllocateMemory;
+        test.vkBindBufferMemory = vkBindBufferMemory;
+        test.vkBindImageMemory = vkBindImageMemory;
+        test.vkCmdCopyBuffer = vkCmdCopyBuffer;
+        test.vkCreateBuffer = vkCreateBuffer;
+        test.vkCreateImage = vkCreateImage;
+        test.vkDestroyBuffer = vkDestroyBuffer;
+        test.vkDestroyImage = vkDestroyImage;
+        test.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+        test.vkFreeMemory = vkFreeMemory;
+        test.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+        test.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+        test.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+        test.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+        
+        mem_allocator_create_info.pVulkanFunctions = &test;
     
         memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
     

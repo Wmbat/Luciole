@@ -21,7 +21,7 @@
 #define TWE_VERTEX_H
 
 #include <glm/glm.hpp>
-#include "../vulkan/core.hpp"
+#include "../vulkan/vulkan.hpp"
 
 namespace twe
 {

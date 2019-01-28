@@ -21,7 +21,7 @@
 
 #include <system_error>
 
-#include "core.hpp"
+#include "vulkan.hpp"
 #include "../twe_core.hpp"
 
 namespace twe::vulkan

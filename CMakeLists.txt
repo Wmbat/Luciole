@@ -39,6 +39,7 @@ elseif( UNIX )
 
         include_directories( ${WAYLAND_INCLUDE_DIR} )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR")
+        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR" )
     else( )
         find_package( XCB REQUIRED )
 
@@ -54,10 +55,10 @@ elseif( UNIX )
 endif( )
 
 if( MSVC )
-	SET( CMAKE_CXX_FLAGS    "${CMAKE_CXX_FLAGS} /EHsc")
+	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif( )
 
-add_subdirectory( external/volk )
+add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
 add_subdirectory( external/spdlog )

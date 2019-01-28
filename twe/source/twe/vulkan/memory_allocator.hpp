@@ -20,8 +20,8 @@
 #define ENGINE_MEMORY_ALLOCATOR_HPP
 
 
-#include "core.hpp"
-#include "vk_mem_alloc.h"
+#include "vulkan.hpp"
+#include "vma/vk_mem_alloc.h"
 #include "../twe_core.hpp"
 
 namespace twe::vulkan
