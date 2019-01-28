@@ -25,7 +25,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 
 endif()
 
-add_library( twe SHARED source/twe/vulkan/core.hpp)
+add_library( twe STATIC source/twe/vulkan/core.hpp )
 
 # Declare the library's C++ version
 target_compile_features( twe PUBLIC cxx_std_17 )

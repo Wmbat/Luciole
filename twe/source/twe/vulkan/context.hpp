@@ -21,6 +21,7 @@
 
 #include <map>
 
+#include "core.hpp"
 #include "utils.hpp"
 #include "../twe_core.hpp"
 #include "../window/base_window.hpp"
@@ -36,8 +37,6 @@ namespace twe::vulkan
     
     struct context
     {
-        using unique_debug_callback = vk::UniqueHandle<vk::DebugReportCallbackEXT, vk::DispatchLoaderDynamic>;
-        
     public:
         struct create_info_type;
         
@@ -50,13 +49,12 @@ namespace twe::vulkan
         context( const create_info_type& create_info )
         {
             auto result = volkInitialize( );
-            
-            /*
-            if ( vk::enumerateInstanceVersion( ) != VK_API_VERSION_1_1)
+            if( result != VK_SUCCESS )
             {
-                // TODO: handle error.
+                // HANDLE ERROR.
             }
-             */
+            
+            auto api_version = volkGetInstanceVersion( );
             
             if constexpr ( enable_debug_layers )
             {
@@ -90,14 +88,13 @@ namespace twe::vulkan
                 }
             }
             
-            instance_ = create_handle<vk::UniqueInstance>( create_info.app_name_, create_info.app_version_ );
+            instance_ = create_handle<vk::UniqueInstance>( api_version, create_info.app_name_, create_info.app_version_ );
             
             volkLoadInstance( instance_.get() );
             
             if constexpr ( enable_debug_layers )
             {
-                dispatch_loader_dynamic_ = vk::DispatchLoaderDynamic( instance_.get( ));
-                debug_callback_ = create_handle<unique_debug_callback>( );
+                debug_callback_ = create_handle<vk::UniqueDebugReportCallbackEXT>( );
             }
             
             surface_ = create_info.p_wnd_->create_surface( instance_.get( ));
@@ -180,7 +177,6 @@ namespace twe::vulkan
                 
                 if constexpr ( enable_debug_layers )
                 {
-                    dispatch_loader_dynamic_ = std::move( rhs.dispatch_loader_dynamic_ );
                     debug_callback_ = std::move( rhs.debug_callback_ );
                 }
                 
@@ -228,10 +224,10 @@ namespace twe::vulkan
         }
         
         template<class C>
-        std::enable_if_t<std::is_same_v<C, vk::UniqueInstance>, C> create_handle( const std::string& app_name, uint32_t app_version ) const noexcept
+        std::enable_if_t<std::is_same_v<C, vk::UniqueInstance>, C> create_handle( const uint32_t api_version, const std::string& app_name, uint32_t app_version ) const noexcept
         {
             const auto app_info = vk::ApplicationInfo( )
-                .setApiVersion(VK_API_VERSION_1_1)
+                .setApiVersion( api_version )
                 .setEngineVersion(VK_MAKE_VERSION( 0, 0, 2 ))
                 .setPEngineName( "The Wombat Engine" )
                 .setApplicationVersion( app_version )
@@ -262,7 +258,7 @@ namespace twe::vulkan
         }
         
         template<class C>
-        std::enable_if_t<std::is_same_v<C, unique_debug_callback>, C> create_handle( ) const noexcept
+        std::enable_if_t<std::is_same_v<C, vk::UniqueDebugReportCallbackEXT>, C> create_handle( ) const noexcept
         {
             const auto create_info = vk::DebugReportCallbackCreateInfoEXT( )
                 .setFlags( vk::DebugReportFlagBitsEXT::eError |
@@ -270,7 +266,7 @@ namespace twe::vulkan
                            vk::DebugReportFlagBitsEXT::ePerformanceWarning )
                 .setPfnCallback( debug_callback_function );
             
-            return instance_->createDebugReportCallbackEXTUnique( create_info, nullptr, dispatch_loader_dynamic_ );
+            return instance_->createDebugReportCallbackEXTUnique( create_info );
         }
         
         template<class C>
@@ -536,12 +532,8 @@ namespace twe::vulkan
         }
     
     public:
-        vk::DispatchLoaderDynamic dispatch_loader_dynamic_;
-        
         vk::UniqueInstance instance_;
-    
-        unique_debug_callback debug_callback_;
-        
+        vk::UniqueDebugReportCallbackEXT debug_callback_;
         vk::UniqueSurfaceKHR surface_;
         vk::PhysicalDevice gpu_;
         vk::UniqueDevice device_;

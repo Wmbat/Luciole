@@ -5,7 +5,7 @@ if( MSVC )
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /EHsc")
 endif( )
 
-add_library( volk STATIC include/volk/volk.c )
+add_library( volk STATIC )
 
 if(MSVC)
   target_compile_options( volk PRIVATE /W4 /WX )
@@ -15,8 +15,10 @@ else()
   target_link_libraries( volk PRIVATE dl )
 endif()
 
+target_sources( volk PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/volk/volk.c" )
+
 if( DEFINED ENV{VULKAN_SDK})
 	target_include_directories( volk PUBLIC "$ENV{VULKAN_SDK}/include" )
 endif()
 
-target_include_directories( volk INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_include_directories( volk PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

@@ -19,7 +19,6 @@
 #ifndef ENGINE_CORE_HPP
 #define ENGINE_CORE_HPP
 
-#define VK_NO_PROTOTYPES
-#include "vulkan.hpp"
+#include <volk/vulkan.hpp>
 
 #endif //ENGINE_CORE_HPP
