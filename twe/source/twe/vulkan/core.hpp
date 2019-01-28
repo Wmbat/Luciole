@@ -19,6 +19,6 @@
 #ifndef ENGINE_CORE_HPP
 #define ENGINE_CORE_HPP
 
-#include <volk/vulkan.hpp>
+#include "vulkan.hpp"
 
 #endif //ENGINE_CORE_HPP

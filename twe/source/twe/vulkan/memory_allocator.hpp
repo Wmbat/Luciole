@@ -19,9 +19,9 @@
 #ifndef ENGINE_MEMORY_ALLOCATOR_HPP
 #define ENGINE_MEMORY_ALLOCATOR_HPP
 
-#include <volk/vk_mem_alloc.h>
 
 #include "core.hpp"
+#include "vk_mem_alloc.h"
 #include "../twe_core.hpp"
 
 namespace twe::vulkan
