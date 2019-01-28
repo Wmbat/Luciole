@@ -27,6 +27,8 @@
 #include "../utilities/basic_error.hpp"
 #include "../vulkan/error.hpp"
 
+#undef max
+
 std::vector<twe::vertex> vertices = {
     { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
     { {  0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
