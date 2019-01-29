@@ -1,62 +1,7 @@
-# The Wombat Engine
-A Cross-Platform Vulkan game engine.
+# Marsupial
+Marsupial is a cross-platform game engine framework using the Vulkan API.
 
 ## GNU/Linux
-The library does not currently support Wayland nor Mir. It only supports XCB.
+As of v0.0.6, Marsupial only support X11 platforms in the GNU/Linux ecosystem.
 
-You will have to find the XCB library
-```
-    find_package( XCB REQUIRED )
-
-    if( NOT XCB_FOUND )
-        message( FATAL_ERROR "XCB development package not found" )
-    else( )
-        message( STATUS ${XCB_LIBRARIES} )
-    endif( )
-```
-and link against it.
-```
-    target_link_libraries( your_project
-            ${XCB_LIBRARIES} )
-```
-It does not have to be done that way though.
-
-You will also have to include the GLM headers, which can either be found here https://glm.g-truc.net/0.9.9/index.html or, provided within the external folder. You will also have to include spdlog which can be found here https://github.com/gabime/spdlog or you can simply grab them from the include external folder.
-
-You can then include the TWE library headers located in the TWE folder and link against the libTWE.so that you build.
-
-## How to use
-
-To start using the engine, you simply have to create a class that inherits from *TWE::application* and call its constructor. You will also have to override the *run()* function where your main loop will be located.
-```
-class demo : public TWE::application
-{
-public:
-    demo( const std::string& title )
-        :
-        TWE::application( title )
-    {
-
-    }
-    ~demo( ) override
-    {
-    }
-    
-    void run( ) override
-    {
-        while( p_wnd_->is_open() )
-        {
-        
-        }
-    }
-};
-```
-Finally, you will have to implement the function *TWE::create_application*. Here is an example
-```
-std::unique_ptr<TWE::application> TWE::create_application( )
-{
-    auto p_demo = std::make_unique<demo>( "Demo" );
-    
-    return std::move( p_demo );
-}
-```
+## Windows
