@@ -1,3 +1,12 @@
+version 0.0.6 - 28/01/2019
+
+    - Marsupial:
+        - Moved from using vulkan loader to using Volk.
+        - rename of engine.
+
+    - TWE:
+        - is now named marsupial
+        - has be moved into a new repo.
 
 version 0.0.5 - 07/01/2018
 

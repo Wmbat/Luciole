@@ -26,7 +26,7 @@ endif()
 
 add_executable( demo )
 
-target_compile_features( twe PUBLIC cxx_std_17 )
+target_compile_features( demo PUBLIC cxx_std_17 )
 
 if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
@@ -39,7 +39,7 @@ if( NOT WIN32 )
                 nlohmann
                 tinygltf
                 glm
-                twe )
+                marsupial )
     else( )
         target_link_libraries( demo
                 ${XCB_LIBRARIES}
@@ -50,7 +50,7 @@ if( NOT WIN32 )
                 nlohmann
                 tinygltf
                 glm
-                twe )
+                marsupial )
     endif()
 else()
     target_link_libraries( demo
@@ -60,7 +60,7 @@ else()
             nlohmann
             tinygltf
             glm
-            twe )
+            marsupial )
 endif( )
 
 target_sources( demo
