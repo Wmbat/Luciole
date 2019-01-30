@@ -264,7 +264,6 @@ namespace marsupial
                 std::array<vk::Buffer, 1> vertex_buffers = { vertex_buffer_.get( ) };
                 std::array<vk::DeviceSize, 1> offsets = { 0 };
                 render_command_buffers_[i][j]->bindVertexBuffers( 0, vertex_buffers, offsets );
-            
                 render_command_buffers_[i][j]->bindIndexBuffer( index_buffer_.get(), 0, vk::IndexType::eUint32 );
                 
                 render_command_buffers_[i][j]->drawIndexed( static_cast<uint32_t>( indices.size() ), 1, 0, 0, 0 );
