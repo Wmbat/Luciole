@@ -27,6 +27,25 @@ namespace marsupial
 {
     struct mesh
     {
+        mesh(
+            const std::vector<vertex>& vertices = { },
+            const std::vector<uint32_t>& indices = { } )
+            :
+            vertices_( vertices ),
+            indices_( indices )
+        { }
+        
+        mesh& set_vertices( const std::vector<vertex>& vertices )
+        {
+            vertices_ = vertices;
+            return *this;
+        }
+        mesh& set_indices( const std::vector<uint32_t> indices )
+        {
+            indices_ = indices;
+            return *this;
+        }
+        
         std::vector<vertex> vertices_;
         std::vector<uint32_t> indices_;
     };

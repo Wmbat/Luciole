@@ -24,12 +24,12 @@
 #include "../marsupial_core.hpp"
 #include "../window/base_window.hpp"
 
+#include "../vulkan/buffer.hpp"
 #include "../vulkan/context.hpp"
 #include "../vulkan/swapchain.hpp"
 #include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/shader_manager.hpp"
 #include "../vulkan/pipeline_manager.hpp"
-#include "../vulkan/vertex_buffer.hpp"
 
 namespace marsupial
 {
@@ -184,7 +184,8 @@ namespace marsupial
         
         vulkan::memory_allocator memory_allocator_;
         
-        vulkan::vertex_buffer vertex_buffer_;
+        vulkan::buffer<vulkan::buffer_type::vertex> vertex_buffer_;
+        vulkan::buffer<vulkan::buffer_type::index> index_buffer_;
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;

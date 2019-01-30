@@ -20,6 +20,7 @@
 #include <set>
 #include <map>
 
+#include "mesh.hpp"
 #include "renderer.hpp"
 #include "vertex.hpp"
 #include "../utilities/log.hpp"
@@ -30,10 +31,19 @@
 #undef max
 
 static std::vector<marsupial::vertex> vertices = {
-    { {  0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-    { {  0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-    { { -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+    { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+    { {  0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+    { {  0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+    { { -0.5f,  0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }
 };
+
+static std::vector<uint32_t> indices = {
+    0, 1, 2, 2, 3, 0
+};
+
+static auto test_mesh = marsupial::mesh( )
+    .set_vertices( vertices )
+    .set_indices( indices );
 
 namespace marsupial
 {
@@ -139,16 +149,28 @@ namespace marsupial
     
         memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
     
-        const auto vertex_buffer_create_info = vulkan::vertex_buffer::create_info_type()
+        const auto vertex_buffer_create_info = vulkan::vertex_buffer_create_info_t()
             .set_memory_allocator( memory_allocator_.get() )
             .set_transfer_queue( context_.transfer_queue_ )
             .set_transfer_command_buffer( transfer_command_buffers_[0].get() )
-            .set_queue_family_index_count_( context_.queue_family_count_ )
+            .set_queue_family_index_count( context_.queue_family_count_ )
             .set_p_queue_family_indices( context_.queue_family_indices_.data() )
             .set_vertex_count( static_cast<std::uint32_t>( vertices.size() ) )
             .set_p_vertices( vertices.data() );
         
-        vertex_buffer_ = vulkan::vertex_buffer( vertex_buffer_create_info );
+        vertex_buffer_ = vulkan::buffer<vulkan::buffer_type::vertex>( vertex_buffer_create_info );
+        
+        
+        const auto index_buffer_create_info = vulkan::index_buffer_create_info_t( )
+            .set_memory_allocator( memory_allocator_.get() )
+            .set_transfer_queue( context_.transfer_queue_ )
+            .set_transfer_command_buffer( transfer_command_buffers_[0].get() )
+            .set_queue_family_index_count( context_.queue_family_count_ )
+            .set_p_queue_family_indices( context_.queue_family_indices_.data() )
+            .set_vertex_count( static_cast<std::uint32_t>( indices.size() ) )
+            .set_p_vertices( indices.data() );
+            
+        index_buffer_ = vulkan::buffer<vulkan::buffer_type::index>( index_buffer_create_info );
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -243,7 +265,9 @@ namespace marsupial
                 std::array<vk::DeviceSize, 1> offsets = { 0 };
                 render_command_buffers_[i][j]->bindVertexBuffers( 0, vertex_buffers, offsets );
             
-                render_command_buffers_[i][j]->draw( static_cast<uint32_t>( vertices.size() ), 1, 0, 0 );
+                render_command_buffers_[i][j]->bindIndexBuffer( index_buffer_.get(), 0, vk::IndexType::eUint32 );
+                
+                render_command_buffers_[i][j]->drawIndexed( static_cast<uint32_t>( indices.size() ), 1, 0, 0, 0 );
             
                 render_command_buffers_[i][j]->endRenderPass( );
             
