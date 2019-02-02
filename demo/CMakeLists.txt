@@ -48,12 +48,6 @@ if( NOT WIN32 )
     endif()
 else()
     target_link_libraries( demo
-            vulkan
-            stb
-            spdlog
-            nlohmann
-            tinygltf
-            glm
             marsupial )
 endif( )
 

@@ -33,7 +33,7 @@ target_compile_features( marsupial PUBLIC cxx_std_17 )
 
 if( WIN32 )
     target_compile_definitions( marsupial PUBLIC MARSUPIAL_PLATFORM_WINDOWS )
-    target_compile_definitions( marsupial PRIVATE MARSUPIAL_BUILD_DLL )
+    target_compile_definitions( marsupial PUBLIC MARSUPIAL_BUILD_DLL )
 endif( )
 
 set_target_properties( marsupial PROPERTIES VERSION ${PROJECT_VERSION} )
@@ -64,12 +64,12 @@ if( NOT WIN32 )
     endif()
 else()
     target_link_libraries( marsupial
-            vulkan
-            stb
-            spdlog
-            nlohmann
-            tinygltf
-            glm )
+           PUBLIC vulkan
+           PUBLIC stb
+           PUBLIC spdlog
+           PUBLIC nlohmann
+           PUBLIC tinygltf
+           PUBLIC glm )
 endif( )
 
 target_sources( marsupial
@@ -97,14 +97,16 @@ target_sources( marsupial
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/context.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/error.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/error.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/memory_allocator.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/memory_allocator.cpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/memory_allocator.hpp"
+		PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/mesh_buffer.cpp"
+		PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/mesh_buffer.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/pipeline.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/pipeline_layout.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/pipeline_manager.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/pipeline_manager.cpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/swapchain.hpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/pipeline_manager.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/swapchain.cpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/swapchain.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/shader_manager.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/shader_manager.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/shader.hpp"

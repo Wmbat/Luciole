@@ -21,8 +21,9 @@
 #define MARSUPIAL_VULKAN_BUFFER_HPP
 
 #include "memory_allocator.hpp"
-#include "../graphics/vertex.hpp"
 #include "../marsupial_core.hpp"
+#include "../graphics/vertex.hpp"
+#include "../graphics/mesh.hpp"
 
 namespace marsupial::vulkan
 {
@@ -31,7 +32,7 @@ namespace marsupial::vulkan
         vertex,
         index
     };
-    
+
     struct vertex_buffer_create_info_t
     {
         vertex_buffer_create_info_t(
@@ -171,14 +172,14 @@ namespace marsupial::vulkan
         uint32_t index_count_;
         uint32_t* p_indices_;
     };
-    
+
     // TODO: Handle only 1 queue.
     template<buffer_type type>
     class buffer
     {
     public:
         buffer( ) = default;
-        buffer( const vertex_buffer_create_info_t& create_info, std::enable_if_t<type == buffer_type::vertex>* = nullptr )
+        buffer( const vertex_buffer_create_info_t& create_info )
             :
             memory_allocator_( create_info.memory_allocator_ )
         {
@@ -249,7 +250,7 @@ namespace marsupial::vulkan
     
             vmaDestroyBuffer( memory_allocator_, staging_buffer, staging_memory );
         }
-        buffer( const index_buffer_create_info_t& create_info, std::enable_if_t<type == buffer_type::index>* = nullptr )
+        buffer( const index_buffer_create_info_t& create_info )
             :
             memory_allocator_( create_info.memory_allocator_ )
         {
