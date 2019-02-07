@@ -595,7 +595,13 @@ namespace marsupial::vulkan
             vertex_input_config_.bindings_.emplace_back(
                 vk::VertexInputBindingDescription( )
                     .setBinding( 0 )
-                    .setStride( sizeof( vertex ) )
+                    .setStride( sizeof( glm::vec3 ) )
+                    .setInputRate( vk::VertexInputRate::eVertex ) );
+
+            vertex_input_config_.bindings_.emplace_back(
+                vk::VertexInputBindingDescription( )
+                    .setBinding( 1 )
+                    .setStride( sizeof( glm::vec4 ) )
                     .setInputRate( vk::VertexInputRate::eVertex ) );
             
             vertex_input_config_.attributes_.emplace_back(
@@ -603,15 +609,15 @@ namespace marsupial::vulkan
                     .setBinding( 0 )
                     .setLocation( 0 )
                     .setFormat( vk::Format::eR32G32B32Sfloat )
-                    .setOffset( static_cast<uint32_t>( offsetof( struct vertex, position_ ) ) )
+                    .setOffset( 0 )
                 );
             
             vertex_input_config_.attributes_.emplace_back(
                 vk::VertexInputAttributeDescription( )
-                    .setBinding( 0 )
+                    .setBinding( 1 )
                     .setLocation( 1 )
                     .setFormat( vk::Format::eR32G32B32A32Sfloat )
-                    .setOffset( static_cast<uint32_t>( offsetof( struct vertex, colour_ ) ) )
+                    .setOffset( 0 )
                 );
             //
             

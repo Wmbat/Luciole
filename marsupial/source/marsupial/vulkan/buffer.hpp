@@ -80,7 +80,7 @@ namespace marsupial::vulkan
             p_queue_family_indices_ = p_queue_family_indices;
             return *this;
         }
-        vertex_buffer_create_info_t& set_vertex_count( const uint32_t vertex_count )
+        vertex_buffer_create_info_t& set_vertex_count( const std::uint32_t vertex_count )
         {
             vertex_count_ = vertex_count;
             return *this;

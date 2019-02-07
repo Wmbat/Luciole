@@ -12,7 +12,8 @@ namespace marsupial::vulkan
 {
 	enum class mesh_buffer_attribute
 	{
-		vertex,
+		position,
+		colour,
 		index
 	};
 
@@ -59,7 +60,7 @@ namespace marsupial::vulkan
 			p_queue_family_indices_ = p_queue_family_indices;
 			return *this;
 		}
-		mesh_buffer_create_info& set_data_( const mesh data )
+		mesh_buffer_create_info& set_data( const mesh data )
 		{
 			data_ = data;
 			return *this;
@@ -88,14 +89,19 @@ namespace marsupial::vulkan
 		mesh_buffer& operator=( const mesh_buffer& rhs ) = delete;
 		mesh_buffer& operator=( mesh_buffer&& rhs ) noexcept;
 
-		const vk::Buffer get( ) const noexcept;
+		const vk::Buffer& get( ) const noexcept;
+		vk::Buffer& get( ) noexcept;
 		
 		template<mesh_buffer_attribute T>
-		std::enable_if_t<T == mesh_buffer_attribute::vertex, const vk::DeviceSize> get_offset( )
+		std::enable_if_t<T == mesh_buffer_attribute::position, const vk::DeviceSize> get_offset( )
 		{
-			return vertices_offset_;
+			return positions_offset_;
 		}
-
+		template<mesh_buffer_attribute T>
+		std::enable_if_t<T == mesh_buffer_attribute::colour, const vk::DeviceSize> get_offset( )
+		{
+			return colours_offset_;
+		}
 		template<mesh_buffer_attribute T>
 		std::enable_if_t<T == mesh_buffer_attribute::index, const vk::DeviceSize> get_offset( )
 		{
@@ -108,7 +114,8 @@ namespace marsupial::vulkan
 
 		vk::Buffer buffer_;
 
-		uint32_t vertices_offset_;
+		uint32_t positions_offset_;
+		uint32_t colours_offset_;
 		uint32_t indices_offset_;
 	};
 }

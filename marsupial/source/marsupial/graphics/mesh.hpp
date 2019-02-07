@@ -28,26 +28,27 @@ namespace marsupial
     struct mesh
     {
         mesh(
-            const std::vector<vertex>& vertices = { },
+            const std::vector<glm::vec3>& positions = { },
+            const std::vector<glm::vec4>& colours = { },
             const std::vector<uint32_t>& indices = { } )
             :
-            vertices_( vertices ),
-            indices_( indices )
+            positions_( positions ),
+            colours_( colours )
         { }
         
-        mesh& set_vertices( const std::vector<vertex>& vertices )
+        mesh& set_positions( const std::vector<glm::vec3>& positions )
         {
-            vertices_ = vertices;
+            positions_ = positions;
             return *this;
         }
-        mesh& set_indices( const std::vector<uint32_t> indices )
+        mesh& set_colours( const std::vector<glm::vec4>& colours )
         {
-            indices_ = indices;
+            colours_ = colours;
             return *this;
         }
         
-        std::vector<vertex> vertices_;
-        std::vector<uint32_t> indices_;
+        std::vector<glm::vec3> positions_;
+        std::vector<glm::vec4> colours_;
     };
 }
 

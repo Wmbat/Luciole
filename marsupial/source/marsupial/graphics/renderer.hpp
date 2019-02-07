@@ -34,6 +34,19 @@
 
 namespace marsupial
 {
+    enum class shader_type
+    {
+        vertex,
+        fragment
+    };
+
+    enum class pipeline_type
+    {
+        graphics,
+        compute
+    };
+ 
+
     class renderer
     {
     public:
@@ -45,14 +58,20 @@ namespace marsupial
         MARSUPIAL_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         MARSUPIAL_API renderer& operator=( renderer&& renderer ) noexcept;
         
-        template<vulkan::shader_type T>
-        uint32_t create_shader( const std::string& filepath, const std::string& entry_point )
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::vertex, uint32_t> create_shader( const std::string& filepath, const std::string& entry_point )
         {
-            return shader_manager_.insert<T>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
+            return shader_manager_.insert<vulkan::shader_type::vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
+        } 
+
+        template<shader_type T>
+        std::enable_if_t<T == shader_type::fragment, uint32_t> create_shader( const std::string& filepath, const std::string& entry_point )
+        {
+            return shader_manager_.insert<vulkan::shader_type::fragment>( vulkan::shader_create_info{ context_.device_.get( ), filepath, entry_point } );
         }
         
-        template<vulkan::pipeline_type T>
-        uint32_t create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::graphics, uint32_t> create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
         {
             std::vector<vk::Viewport> viewports = {
                 vk::Viewport( )
@@ -79,8 +98,40 @@ namespace marsupial
                 .set_viewports( viewports )
                 .set_scissors( scissors );
             
-            return pipeline_manager_.insert<T>( create_info );
+            return pipeline_manager_.insert<vulkan::pipeline_type::graphics>( create_info );
         }
+
+        template<pipeline_type T>
+        std::enable_if_t<T == pipeline_type::compute, uint32_t> create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
+        {
+            std::vector<vk::Viewport> viewports = {
+                vk::Viewport( )
+                    .setX( 0.0f )
+                    .setY( 0.0f )
+                    .setWidth( static_cast<float>( swapchain_.extent_.width ) )
+                    .setHeight( static_cast<float>( swapchain_.extent_.height ) )
+                    .setMinDepth( 0.0f )
+                    .setMaxDepth( 1.0f )
+            };
+    
+            std::vector<vk::Rect2D> scissors = {
+                vk::Rect2D( )
+                    .setOffset( { 0, 0 } )
+                    .setExtent( swapchain_.extent_ )
+            };
+            
+            const auto create_info = vulkan::pipeline_create_info( )
+                .set_device( context_.device_.get() )
+                .set_render_pass( render_pass_.get() )
+                .set_pipeline_definition( pipeline_definition )
+                .set_shader_manager( &shader_manager_ )
+                .set_shader_ids( vert_id, frag_id )
+                .set_viewports( viewports )
+                .set_scissors( scissors );
+            
+            return pipeline_manager_.insert<vulkan::pipeline_type::compute>( create_info );
+        }
+
         
         MARSUPIAL_API void set_pipeline( const uint32_t id );
         MARSUPIAL_API void switch_pipeline( const uint32_t id );
@@ -185,7 +236,9 @@ namespace marsupial
         
         vulkan::memory_allocator memory_allocator_;
         
-        vulkan::buffer<vulkan::buffer_type::vertex> vertex_buffer_;
+        vulkan::mesh_buffer test_mesh_buffer_;
+
+        // vulkan::buffer<vulkan::buffer_type::vertex> vertex_buffer_;
         vulkan::buffer<vulkan::buffer_type::index> index_buffer_;
         
         vulkan::shader_manager shader_manager_;
