@@ -3,6 +3,7 @@
 ################################################################################
 
 /.vs
+/.vscode
 /debug
 /release
 /.idea
@@ -10,3 +11,4 @@
 /build/x64-Release
 /build_debug
 /CMakeSettings.json
+/_config.yml

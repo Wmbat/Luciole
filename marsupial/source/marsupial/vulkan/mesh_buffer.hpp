@@ -16,9 +16,9 @@ namespace marsupial::vulkan
 		index
 	};
 
-	struct mesh_buffer_create_info_t
+	struct mesh_buffer_create_info
 	{
-		mesh_buffer_create_info_t(
+		mesh_buffer_create_info(
 			const VmaAllocator memory_allocator = VK_NULL_HANDLE,
 			const vk::Queue transfer_queue = vk::Queue{ },
 			const vk::CommandBuffer transfer_command_buffer = vk::CommandBuffer{ },
@@ -34,32 +34,32 @@ namespace marsupial::vulkan
 			data_( data )
 		{	}
 
-		mesh_buffer_create_info_t& set_memory_allocator( const VmaAllocator memory_allocator )
+		mesh_buffer_create_info& set_memory_allocator( const VmaAllocator memory_allocator )
 		{
 			memory_allocator_ = memory_allocator;
 			return *this;
 		}
-		mesh_buffer_create_info_t& set_transfer_queue( const vk::Queue transfer_queue )
+		mesh_buffer_create_info& set_transfer_queue( const vk::Queue transfer_queue )
 		{
 			transfer_queue_ = transfer_queue;
 			return *this;
 		}
-		mesh_buffer_create_info_t& set_transfer_command_buffer( const vk::CommandBuffer transfer_command_buffer )
+		mesh_buffer_create_info& set_transfer_command_buffer( const vk::CommandBuffer transfer_command_buffer )
 		{
 			transfer_command_buffer_ = transfer_command_buffer;
 			return *this;
 		}
-		mesh_buffer_create_info_t& set_queue_family_index_count( const uint32_t queue_family_index_count )
+		mesh_buffer_create_info& set_queue_family_index_count( const uint32_t queue_family_index_count )
 		{
 			queue_family_index_count_ = queue_family_index_count;
 			return *this;
 		}
-		mesh_buffer_create_info_t& set_p_queue_family_indices( uint32_t* p_queue_family_indices )
+		mesh_buffer_create_info& set_p_queue_family_indices( uint32_t* p_queue_family_indices )
 		{
 			p_queue_family_indices_ = p_queue_family_indices;
 			return *this;
 		}
-		mesh_buffer_create_info_t& set_data_( const mesh data )
+		mesh_buffer_create_info& set_data_( const mesh data )
 		{
 			data_ = data;
 			return *this;
@@ -80,7 +80,7 @@ namespace marsupial::vulkan
 	{
 	public:
 		mesh_buffer( ) = default;
-		mesh_buffer( const mesh_buffer_create_info_t& create_info );
+		mesh_buffer( const mesh_buffer_create_info& create_info );
 		mesh_buffer( const mesh_buffer& rhs ) = delete;
 		mesh_buffer( mesh_buffer&& rhs ) noexcept;
 		~mesh_buffer( );

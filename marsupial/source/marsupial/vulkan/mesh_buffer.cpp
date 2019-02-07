@@ -3,7 +3,7 @@
 
 namespace marsupial::vulkan
 {
-	mesh_buffer::mesh_buffer( const mesh_buffer_create_info_t& create_info )
+	mesh_buffer::mesh_buffer( const mesh_buffer_create_info& create_info )
 		:
 		memory_allocator_( create_info.memory_allocator_ )
 	{
@@ -13,9 +13,6 @@ namespace marsupial::vulkan
 
 		vertices_offset_ = 0;
 		indices_offset_ = vertices_size;
-
-		auto staging_buffer = vk::Buffer{ };
-		auto staging_memory = VmaAllocation{ };
 
 		auto sharing_mode = vk::SharingMode{ };
 
@@ -35,63 +32,70 @@ namespace marsupial::vulkan
 			}
 		}
 		
-		const auto staging_create_info = vk::BufferCreateInfo{ }
-			.setSize( buffer_size )
-			.setUsage( vk::BufferUsageFlagBits::eTransferSrc )
-			.setSharingMode( sharing_mode )
-			.setQueueFamilyIndexCount( create_info.queue_family_index_count_ )
-			.setPQueueFamilyIndices( create_info.p_queue_family_indices_ );
-
-		VmaAllocationCreateInfo staging_allocation_info = { };
-		staging_allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;  // TODO: remove hardcode query for it
-
-		vmaCreateBuffer( memory_allocator_,
-			reinterpret_cast< const VkBufferCreateInfo* >( &staging_create_info ), &staging_allocation_info,
-			reinterpret_cast< VkBuffer* >( &staging_buffer ), &staging_memory, nullptr );
-
-		void* data;
-		vmaMapMemory( memory_allocator_, staging_memory, &data );
-		memcpy( data, &create_info.data_, buffer_size );
-		vmaUnmapMemory( memory_allocator_, staging_memory );
-
-		const auto vertex_create_info = vk::BufferCreateInfo( )
-			.setSize( buffer_size )
-			.setUsage( vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer )
-			.setSharingMode( sharing_mode )
-			.setQueueFamilyIndexCount( create_info.queue_family_index_count_ )
-			.setPQueueFamilyIndices( create_info.p_queue_family_indices_ );
-
-		VmaAllocationCreateInfo allocation_info = { };
-		allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-		vmaCreateBuffer( memory_allocator_,
-			reinterpret_cast< const VkBufferCreateInfo* >( &vertex_create_info ), &allocation_info,
-			reinterpret_cast< VkBuffer* >( &buffer_ ), &memory_allocation_, nullptr );
-		///////////////////
-
-		const auto begin_info = vk::CommandBufferBeginInfo( )
-			.setFlags( vk::CommandBufferUsageFlagBits::eOneTimeSubmit );
-
-		create_info.transfer_command_buffer_.begin( begin_info );
-
-		const auto copy_region = vk::BufferCopy( )
-			.setSrcOffset( 0 )
-			.setDstOffset( 0 )
-			.setSize( buffer_size );
-
-		create_info.transfer_command_buffer_.copyBuffer( staging_buffer, buffer_, copy_region );
-
-		create_info.transfer_command_buffer_.end( );
-
-		const auto submit_info = vk::SubmitInfo( )
-			.setCommandBufferCount( 1 )
-			.setPCommandBuffers( &create_info.transfer_command_buffer_ );
-
-		// TODO: Use Fence.
-		create_info.transfer_queue_.submit( submit_info, nullptr );
-		create_info.transfer_queue_.waitIdle( );
-
-		vmaDestroyBuffer( memory_allocator_, staging_buffer, staging_memory );
+		auto staging_buffer = vk::Buffer( );
+        auto staging_memory = VmaAllocation( );
+    
+        // Staging Buffer //
+        const auto staging_create_info = vk::BufferCreateInfo( )
+            .setSize( buffer_size )
+            .setUsage( vk::BufferUsageFlagBits::eTransferSrc )
+            .setSharingMode( sharing_mode )
+            .setQueueFamilyIndexCount( create_info.queue_family_index_count_ )
+            .setPQueueFamilyIndices( create_info.p_queue_family_indices_ );
+    
+        VmaAllocationCreateInfo staging_allocation_info = { };
+        staging_allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;  // TODO: remove hardcode query for it
+    
+        vmaCreateBuffer( memory_allocator_,
+                         reinterpret_cast<const VkBufferCreateInfo*>( &staging_create_info ), &staging_allocation_info,
+                         reinterpret_cast<VkBuffer*>( &staging_buffer ), &staging_memory, nullptr );
+        ///////////////////
+    
+        void* data;
+        vmaMapMemory( memory_allocator_, staging_memory, &data );
+        memcpy( data, &create_info.data_, buffer_size );
+        vmaUnmapMemory( memory_allocator_, staging_memory );
+    
+        // Vertex Buffer //
+        const auto vertex_create_info = vk::BufferCreateInfo( )
+            .setSize( buffer_size )
+            .setUsage( vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer )
+            .setSharingMode( sharing_mode )
+            .setQueueFamilyIndexCount( create_info.queue_family_index_count_ )
+            .setPQueueFamilyIndices( create_info.p_queue_family_indices_ );
+    
+        VmaAllocationCreateInfo allocation_info = { };
+        allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    
+        vmaCreateBuffer( memory_allocator_,
+                         reinterpret_cast<const VkBufferCreateInfo*>( &vertex_create_info ), &allocation_info,
+                         reinterpret_cast<VkBuffer*>( &buffer_ ), &memory_allocation_, nullptr );
+        ///////////////////
+    
+    
+        const auto begin_info = vk::CommandBufferBeginInfo( )
+            .setFlags( vk::CommandBufferUsageFlagBits::eOneTimeSubmit );
+    
+        create_info.transfer_command_buffer_.begin( begin_info );
+    
+        const auto copy_region = vk::BufferCopy( )
+            .setSrcOffset( 0 )
+            .setDstOffset( 0 )
+            .setSize( buffer_size );
+    
+        create_info.transfer_command_buffer_.copyBuffer( staging_buffer, buffer_, copy_region );
+    
+        create_info.transfer_command_buffer_.end( );
+    
+        const auto submit_info = vk::SubmitInfo( )
+            .setCommandBufferCount( 1 )
+            .setPCommandBuffers( &create_info.transfer_command_buffer_ );
+    
+        // TODO: Use Fence.
+        create_info.transfer_queue_.submit( submit_info, nullptr );
+        create_info.transfer_queue_.waitIdle( );
+    
+        vmaDestroyBuffer( memory_allocator_, staging_buffer, staging_memory );
 	}
 	mesh_buffer::mesh_buffer( mesh_buffer && rhs ) noexcept
 	{
@@ -113,6 +117,12 @@ namespace marsupial::vulkan
 			rhs.memory_allocation_ = VK_NULL_HANDLE;
 
 			buffer_ = std::move( rhs.buffer_ );
+			
+			vertices_offset_ = rhs.vertices_offset_;
+			rhs.vertices_offset_ = 0;
+			
+			indices_offset_ = rhs.indices_offset_;
+			rhs.indices_offset_ = 0;
 		}
 
 		return *this;

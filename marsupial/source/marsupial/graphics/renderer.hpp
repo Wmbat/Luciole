@@ -30,6 +30,7 @@
 #include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/shader_manager.hpp"
 #include "../vulkan/pipeline_manager.hpp"
+#include "../vulkan/mesh_buffer.hpp"
 
 namespace marsupial
 {
