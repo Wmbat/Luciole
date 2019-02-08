@@ -239,10 +239,12 @@ namespace marsupial
         vulkan::mesh_buffer test_mesh_buffer_;
 
         // vulkan::buffer<vulkan::buffer_type::vertex> vertex_buffer_;
-        vulkan::buffer<vulkan::buffer_type::index> index_buffer_;
+        // vulkan::buffer<vulkan::buffer_type::index> index_buffer_;
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
+
+        
     };
 }
 

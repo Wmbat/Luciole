@@ -9,10 +9,12 @@ namespace marsupial::vulkan
 	{
 		const auto positions_size = sizeof( create_info.data_.positions_[0] ) * create_info.data_.positions_.size( );
 		const auto colour_size = sizeof( create_info.data_.colours_[0] ) * create_info.data_.colours_.size( );
-		const auto buffer_size = positions_size + colour_size;
+		const auto indices_size = sizeof( create_info.data_.indices_[0] ) * create_info.data_.indices_.size( );
+		const auto buffer_size = positions_size + colour_size + indices_size;
 
 		positions_offset_ = 0;
 		colours_offset_ = positions_size;
+		indices_offset_ = positions_size + colour_size;
 
 		auto sharing_mode = vk::SharingMode{ };
 
@@ -50,30 +52,18 @@ namespace marsupial::vulkan
             reinterpret_cast<const VkBufferCreateInfo*>( &staging_create_info ), &staging_allocation_info,
             reinterpret_cast<VkBuffer*>( &staging_buffer ), &staging_memory, nullptr );
         ///////////////////
-    
-		printf( "%d\n", colour_size );
 
 		char* data;
 		vmaMapMemory( memory_allocator_, staging_memory, reinterpret_cast<void**>( &data ) );
 		memcpy( data, create_info.data_.positions_.data( ), positions_size );
 		memcpy( data + colours_offset_, create_info.data_.colours_.data( ), colour_size );
+		memcpy( data + indices_offset_, create_info.data_.indices_.data( ), indices_size );
 		vmaUnmapMemory( memory_allocator_, staging_memory );
 
-/*
-        void* position_data;
-        vmaMapMemory( memory_allocator_, staging_memory, &position_data );
-    
-        vmaUnmapMemory( memory_allocator_, staging_memory );
-
-		void* colour_data;
-        vmaMapMemory( memory_allocator_, staging_memory, &colour_data );
-        memcpy( colour_data, create_info.data_.colours_.data( ), colour_size );
-        vmaUnmapMemory( memory_allocator_, staging_memory );
-  */  
         // Vertex Buffer //
         const auto vertex_create_info = vk::BufferCreateInfo( )
             .setSize( buffer_size )
-            .setUsage( vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer )
+            .setUsage( vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer )
             .setSharingMode( sharing_mode )
             .setQueueFamilyIndexCount( create_info.queue_family_index_count_ )
             .setPQueueFamilyIndices( create_info.p_queue_family_indices_ );
@@ -137,6 +127,9 @@ namespace marsupial::vulkan
 
 			colours_offset_ = rhs.colours_offset_;
 			rhs.colours_offset_ = 0;
+
+			indices_offset_ = rhs.indices_offset_;
+			rhs.indices_offset_ = 0;
 		}
 
 		return *this;

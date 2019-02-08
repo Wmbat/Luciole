@@ -46,9 +46,15 @@ namespace marsupial
             colours_ = colours;
             return *this;
         }
+        mesh& set_indices( const std::vector<std::uint32_t>& indices )
+        {
+            indices_ = indices;
+            return *this;
+        }
         
         std::vector<glm::vec3> positions_;
         std::vector<glm::vec4> colours_;
+        std::vector<std::uint32_t> indices_;
     };
 }
 

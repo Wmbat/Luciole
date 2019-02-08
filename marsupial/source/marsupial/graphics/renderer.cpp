@@ -50,7 +50,8 @@ static std::vector<uint32_t> indices = {
 
 static auto test_mesh = marsupial::mesh( )
     .set_positions( positions )
-    .set_colours( colours );
+    .set_colours( colours )
+    .set_indices( indices );
 
 namespace marsupial
 {
@@ -178,7 +179,7 @@ namespace marsupial
         
         test_mesh_buffer_ = vulkan::mesh_buffer( mesh_buffer_create_info );
         
-        
+        /*
         const auto index_buffer_create_info = vulkan::index_buffer_create_info_t( )
             .set_memory_allocator( memory_allocator_.get() )
             .set_transfer_queue( context_.transfer_queue_ )
@@ -189,6 +190,7 @@ namespace marsupial
             .set_p_vertices( indices.data() );
             
         index_buffer_ = vulkan::buffer<vulkan::buffer_type::index>( index_buffer_create_info );
+        */
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -286,7 +288,8 @@ namespace marsupial
                 };
                 render_command_buffers_[i][j]->bindVertexBuffers( 0, vertex_buffers, offsets );
 
-                render_command_buffers_[i][j]->bindIndexBuffer( index_buffer_.get( ), 0, vk::IndexType::eUint32 );
+                const auto index_offset = test_mesh_buffer_.get_offset<vulkan::mesh_buffer_attribute::index>( );
+                render_command_buffers_[i][j]->bindIndexBuffer( test_mesh_buffer_.get( ), index_offset, vk::IndexType::eUint32 );
 
                 /*
                 std::array<vk::Buffer, 1> vertex_buffers = { test_mesh_buffer_.get( ) };
