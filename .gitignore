@@ -7,8 +7,6 @@
 /debug
 /release
 /.idea
-/build/x64-Debug
-/build/x64-Release
-/build_debug
+/build
 /CMakeSettings.json
 /_config.yml
