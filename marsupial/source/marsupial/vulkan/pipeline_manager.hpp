@@ -36,15 +36,16 @@ namespace marsupial::vulkan
         
         MARSUPIAL_API pipeline_manager& operator=( const pipeline_manager& rhs ) = delete;
         MARSUPIAL_API pipeline_manager& operator=( pipeline_manager&& rhs ) noexcept;
-        
+
         template<pipeline_type T>
-        std::enable_if_t<T == pipeline_type::graphics, uint32_t> insert( const pipeline_create_info& create_info )
+        std::enable_if_t<T == pipeline_type::graphics, uint32_t> insert( const graphics_pipeline::create_info& create_info )
         {
             graphics_pipelines_.emplace( std::pair{ ++pipeline_id_count_, graphics_pipeline{ create_info } } );
         
             return pipeline_id_count_;
         }
         
+        /*
         template<pipeline_type T>
         std::enable_if_t<T == pipeline_type::compute, uint32_t> insert( const pipeline_create_info& create_info )
         {
@@ -52,7 +53,8 @@ namespace marsupial::vulkan
             
             return pipeline_id_count_;
         }
-        
+        */
+
         template<pipeline_type T>
         std::enable_if_t<T == pipeline_type::graphics, const pipeline<T>&> find( const uint32_t id ) const
         {

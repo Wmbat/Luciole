@@ -33,11 +33,11 @@ namespace marsupial
     public:
 		inline static void init( )
 		{
-			core_logger_ = spdlog::stdout_color_mt( "TWE_logger" );
+			core_logger_ = spdlog::stdout_color_mt( "Marsupial Logger" );
 			core_logger_->set_pattern( "%^[%T] %n: %v%$" );
 			core_logger_->set_level( spdlog::level::trace );
 
-			core_info( "spdlog -> TWE_logger Initialized." );
+			core_info( "spdlog -> Marsupial Logger Initialized." );
 		}
 
         inline static spdlog::logger& get_core_logger( )

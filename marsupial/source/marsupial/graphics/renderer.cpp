@@ -157,18 +157,6 @@ namespace marsupial
     
         memory_allocator_ = vulkan::memory_allocator( mem_allocator_create_info );
     
-        /*
-        const auto mesh_buffer_create_info = vulkan::mesh_buffer_create_info( )
-            .set_memory_allocator( memory_allocator_.get() )
-            .set_transfer_queue( context_.transfer_queue_ )
-            .set_transfer_command_buffer( transfer_command_buffers_[0].get() )
-            .set_queue_family_index_count( context_.queue_family_count_ )
-            .set_p_queue_family_indices( context_.queue_family_indices_.data() )
-            .set_data_( test_mesh );
-        
-        test_mesh_buffer_ = vulkan::mesh_buffer{ mesh_buffer_create_info };
-        */    
-    
         const auto mesh_buffer_create_info = vulkan::mesh_buffer_create_info()
             .set_memory_allocator( memory_allocator_.get() )
             .set_transfer_queue( context_.transfer_queue_ )
@@ -178,19 +166,6 @@ namespace marsupial
             .set_data( test_mesh );
         
         test_mesh_buffer_ = vulkan::mesh_buffer( mesh_buffer_create_info );
-        
-        /*
-        const auto index_buffer_create_info = vulkan::index_buffer_create_info_t( )
-            .set_memory_allocator( memory_allocator_.get() )
-            .set_transfer_queue( context_.transfer_queue_ )
-            .set_transfer_command_buffer( transfer_command_buffers_[0].get() )
-            .set_queue_family_index_count( context_.queue_family_count_ )
-            .set_p_queue_family_indices( context_.queue_family_indices_.data() )
-            .set_vertex_count( static_cast<std::uint32_t>( indices.size() ) )
-            .set_p_vertices( indices.data() );
-            
-        index_buffer_ = vulkan::buffer<vulkan::buffer_type::index>( index_buffer_create_info );
-        */
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -275,10 +250,10 @@ namespace marsupial
                 render_command_buffers_[i][j]->beginRenderPass( &render_pass_begin_info, vk::SubpassContents::eInline );
         
                 const auto& pipeline = pipeline_manager_.find<vulkan::pipeline_type::graphics>( current_pipeline_ );
-        
-                pipeline.set_dynamic_state<vulkan::dynamic_state_type::viewport>( render_command_buffers_[i][j].get(), 0, viewports );
-                pipeline.set_dynamic_state<vulkan::dynamic_state_type::scissor>( render_command_buffers_[i][j].get(), 0, scissors );
-        
+
+                pipeline.set_viewport( render_command_buffers_[i][j].get( ), 0, viewports );
+
+
                 pipeline.bind( render_command_buffers_[i][j].get() );
                 
                 std::array<vk::Buffer, 2> vertex_buffers = { test_mesh_buffer_.get( ), test_mesh_buffer_.get( ) };
@@ -291,14 +266,6 @@ namespace marsupial
                 const auto index_offset = test_mesh_buffer_.get_offset<vulkan::mesh_buffer_attribute::index>( );
                 render_command_buffers_[i][j]->bindIndexBuffer( test_mesh_buffer_.get( ), index_offset, vk::IndexType::eUint32 );
 
-                /*
-                std::array<vk::Buffer, 1> vertex_buffers = { test_mesh_buffer_.get( ) };
-                std::array<vk::DeviceSize, 1> offsets = { 0 };
-                render_command_buffers_[i][j]->bindVertexBuffers( 0, vertex_buffers, offsets );
-                
-                auto offset = test_mesh_buffer_.get_offset<vulkan::mesh_buffer_attribute::index>();
-                render_command_buffers_[i][j]->bindIndexBuffer( test_mesh_buffer_.get( ), offset , vk::IndexType::eUint32 );
-                */
                 render_command_buffers_[i][j]->drawIndexed( static_cast<uint32_t>( indices.size() ), 1, 0, 0, 0 );
             
                 render_command_buffers_[i][j]->endRenderPass( );

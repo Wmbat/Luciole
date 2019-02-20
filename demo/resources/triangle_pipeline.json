@@ -7,7 +7,7 @@
   "rasterization":
   {
     "depth_clamp_enable": "false",
-    "rasterization_discard_enable": "false",
+    "rasterizer_discard_enable": "false",
     "polygon_mode": "fill",
     "cull_mode": "back",
     "front_face": "clockwise",
@@ -55,8 +55,11 @@
     ]
   },
   "dynamic_states":
-  [
-    "viewport",
-    "scissors"
-  ]
+  {
+    "enabled_states":
+    [
+      "viewport",
+      "scissors"
+    ]
+  }
 }
