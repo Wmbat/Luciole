@@ -324,8 +324,6 @@ namespace marsupial::vulkan
             {
                 if ( info.is_dedicated_transfer( ))
                 {
-                    priorities_.empty( );
-                    
                     for ( size_t i = 0; i < info.queue_count_; ++i )
                     {
                         priorities_.emplace_back( 1.0f );
@@ -339,9 +337,7 @@ namespace marsupial::vulkan
                     queue_create_infos.push_back( create_info );
                 }
                 else if ( info.is_general_purpose( ))
-                {
-                    priorities_.empty( );
-                    
+                {                    
                     for ( size_t i = 0; i < info.queue_count_; ++i )
                     {
                         priorities_.emplace_back( 1.0f );

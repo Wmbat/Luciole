@@ -38,15 +38,75 @@ namespace marsupial::vulkan
         compute 
     };
 
+    template<auto json_type>
+    struct json_trait;
+
+    template<auto json_type>
+    using json_return_t = typename json_trait<json_type>::type;
+
     /*!
-     * 
+     *
      */
-    template<auto layout_type>
-    struct json_layout;
+    template<auto type>
+    class pipeline;
 
     template<>
-    struct json_layout<pipeline_type::graphics>
+    class pipeline<pipeline_type::graphics>
     {
+    public:
+        struct create_info
+        {
+            create_info& set_device( const vk::Device device )
+            {
+                device_ = device;
+                return *this;
+            }
+            create_info& set_render_pass( const vk::RenderPass render_pass )
+            {
+                render_pass_ = render_pass;
+                return *this;
+            }
+            create_info& set_pipeline_definition( const std::string& pipeline_json )
+            {
+                pipeline_json_ = pipeline_json;
+                return *this;
+            }
+            create_info& set_viewports( const std::vector<vk::Viewport>& viewports )
+            {
+                viewports_ = viewports;
+                return *this;
+            }
+            create_info& set_scissors( const std::vector<vk::Rect2D>& scissors )
+            {
+                scissors_ = scissors;
+                return *this;
+            }
+            create_info& set_shader_manager( shader_manager* p_shader_manager )
+            {
+                p_shader_manager_ = p_shader_manager;
+                return *this;
+            }
+            create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id )
+            {
+                vert_shader_id_ = vert_shader_id;
+                frag_shader_id_ = frag_shader_id;
+                return *this;
+            }
+
+            vk::Device device_;
+            vk::RenderPass render_pass_;
+
+            std::string pipeline_json_;
+
+            std::vector<vk::Viewport> viewports_;
+            std::vector<vk::Rect2D> scissors_;
+
+            shader_manager* p_shader_manager_;
+            uint32_t vert_shader_id_;
+            uint32_t frag_shader_id_;
+        };
+
+    private:
         enum class sections
         {
             input_assembly,
@@ -80,6 +140,48 @@ namespace marsupial::vulkan
             stencil_write_mask = VK_DYNAMIC_STATE_STENCIL_WRITE_MASK,
             stencil_reference = VK_DYNAMIC_STATE_STENCIL_REFERENCE,
         };  
+
+    public:
+        pipeline( ) = default;
+        pipeline( const create_info& create_info );
+        pipeline( const pipeline& rhs ) = delete;
+        pipeline( pipeline&& rhs ) noexcept;
+        ~pipeline( ) = default;
+
+        pipeline& operator=( const pipeline& rhs ) = delete;
+        pipeline& operator=( pipeline&& rhs ) noexcept;
+
+        void bind( const vk::CommandBuffer& command_buffer ) const noexcept
+        {
+            command_buffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pipeline_.get( ) );
+        }
+
+        void set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const noexcept
+        {
+            if ( is_viewport_dynamic_ )
+            {
+                command_buffer.setViewport( first, viewports );
+            }
+        }
+
+    private:
+        template<auto json_section>
+        const json_return_t<json_section> parse_json_section_t( const nlohmann::json& json, const char* pipeline_name ) const;
+
+        template<auto json_value>
+        const json_return_t<json_value> parse_json_value_t( const std::string& value, const char* pipeline_name, const char* location ) const;
+
+    private:
+        vk::UniquePipeline pipeline_;
+
+        std::uint32_t vert_shader_id_;
+        std::uint32_t frag_shader_id_;
+
+        bool is_viewport_dynamic_ = false;
+        bool is_scissor_dynamic_ = false;
+        bool is_line_width_dynamic_ = false;
+
+
         inline static const std::unordered_map<const char*, const vk::Bool32> bool_values_ {
             { "true", true },
             { "false", false }
@@ -164,257 +266,48 @@ namespace marsupial::vulkan
         };
     };
 
-    using graphics_pipeline_json_layout = json_layout<pipeline_type::graphics>;
-    using graphics_pipeline_section = graphics_pipeline_json_layout::sections;
-
-    /*!
-     * Default template specialization for json traits
-     */
-    template<auto json_type>
-    struct pipeline_trait;
+    using graphics_pipeline = pipeline<pipeline_type::graphics>;
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::input_assembly>
+    struct json_trait<graphics_pipeline::sections::input_assembly>
     {
         using type = vk::PipelineInputAssemblyStateCreateInfo;
     };
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::rasterization>
+    struct json_trait<graphics_pipeline::sections::rasterization>
     {
         using type = vk::PipelineRasterizationStateCreateInfo;
     };
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::multisampling>
+    struct json_trait<graphics_pipeline::sections::multisampling>
     {
         using type = vk::PipelineMultisampleStateCreateInfo;
     };
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::colour_blend_attachments>
+    struct json_trait<graphics_pipeline::sections::colour_blend_attachments>
     {
         using type = std::vector<vk::PipelineColorBlendAttachmentState>;
     };
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::colour_blend>
+    struct json_trait<graphics_pipeline::sections::colour_blend>
     {
         using type = vk::PipelineColorBlendStateCreateInfo; 
     }; 
 
     template<>
-    struct pipeline_trait<graphics_pipeline_section::dynamic_states>
+    struct json_trait<graphics_pipeline::sections::dynamic_states>
     {
         using type = std::vector<vk::DynamicState>;
     };
 
-    template<auto json_type>
-    using json_return_t = typename pipeline_trait<json_type>::type;
-
-
-    /*!
-     *
-     */
-    template<auto type>
-    class pipeline;
-
-    template<>
-    class pipeline<pipeline_type::graphics>
-    {
-    public:
-        struct create_info
-        {
-            create_info& set_device( const vk::Device device )
-            {
-                device_ = device;
-                return *this;
-            }
-            create_info& set_render_pass( const vk::RenderPass render_pass )
-            {
-                render_pass_ = render_pass;
-                return *this;
-            }
-            create_info& set_pipeline_definition( const std::string& pipeline_json )
-            {
-                pipeline_json_ = pipeline_json;
-                return *this;
-            }
-            create_info& set_viewports( const std::vector<vk::Viewport>& viewports )
-            {
-                viewports_ = viewports;
-                return *this;
-            }
-            create_info& set_scissors( const std::vector<vk::Rect2D>& scissors )
-            {
-                scissors_ = scissors;
-                return *this;
-            }
-            create_info& set_shader_manager( shader_manager* p_shader_manager )
-            {
-                p_shader_manager_ = p_shader_manager;
-                return *this;
-            }
-            create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id )
-            {
-                vert_shader_id_ = vert_shader_id;
-                frag_shader_id_ = frag_shader_id;
-                return *this;
-            }
-
-            vk::Device device_;
-            vk::RenderPass render_pass_;
-
-            std::string pipeline_json_;
-
-            std::vector<vk::Viewport> viewports_;
-            std::vector<vk::Rect2D> scissors_;
-
-            shader_manager* p_shader_manager_;
-            uint32_t vert_shader_id_;
-            uint32_t frag_shader_id_;
-        };
-
-    public:
-        pipeline( ) = default;
-        pipeline( const create_info& create_info );
-        pipeline( const pipeline& rhs ) = delete;
-        pipeline( pipeline&& rhs ) noexcept
-        {
-            *this = std::move( rhs );
-        }
-        ~pipeline( ) = default;
-
-        pipeline& operator=( const pipeline& rhs ) = delete;
-        pipeline& operator=( pipeline&& rhs )
-        {
-            if ( this != &rhs )
-            {
-            }
-
-            return *this;
-        }
-
-        void bind( const vk::CommandBuffer& command_buffer ) const noexcept
-        {
-            command_buffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pipeline_.get( ) );
-        }
-
-        void set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const noexcept
-        {
-            if ( is_viewport_dynamic_ )
-            {
-                command_buffer.setViewport( first, viewports );
-            }
-        }
-
-    private:
-        template<auto json_section>
-        const json_return_t<json_section> parse_json_section_t( const nlohmann::json& json, const char* pipeline_name ) const;
-
-        template<auto json_value>
-        const json_return_t<json_value> parse_json_value_t( const std::string& value, const char* pipeline_name, const char* location ) const
-        {
-
-        }
-
-    private:
-        vk::UniquePipeline pipeline_;
-
-        std::uint32_t vert_shader_id_;
-        std::uint32_t frag_shader_id_;
-
-        graphics_pipeline_json_layout json_layout_;
-
-        bool is_viewport_dynamic_ = false;
-        bool is_scissor_dynamic_ = false;
-        bool is_line_width_dynamic_ = false;
-    };
-
-    using graphics_pipeline = pipeline<pipeline_type::graphics>;
-
     /*!
      * Specialization of pipeline<pipeline_type::graphics>'s function "parse_json_value".
      */
-
-    template<>
-    const json_return_t<graphics_pipeline_section::input_assembly>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::input_assembly>( const nlohmann::json& json, const char* pipeline_name ) const
-    {   
-        //const auto section = json["input_assembly"];
-
-        const auto create_info = vk::PipelineInputAssemblyStateCreateInfo{ };
-        /*
-            .setPrimitiveRestartEnable( parse_json_value<pipeline_json_layout::values::boolean>( 
-                section["primitive_restart_enable"], pipeline_name, "\"input_assembly\"/\"primitive_restart_enable\"" ) )
-            .setTopology( parse_json_value<pipeline_json_layout::values::topology>(
-                section["topology"], pipeline_name, "\"input_assembly\"/\"topology\"" ) );
-        */
-
-        return create_info;
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline_section::rasterization>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::rasterization>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline_section::multisampling>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::multisampling>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline_section::colour_blend_attachments>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::colour_blend_attachments>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-        
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline_section::colour_blend>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::colour_blend>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline_section::dynamic_states>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline_section::dynamic_states>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-
-    }
-
-    graphics_pipeline::pipeline( const graphics_pipeline::create_info& create_info )
-        :
-        vert_shader_id_( create_info.vert_shader_id_ ),
-        frag_shader_id_( create_info.frag_shader_id_ )
-    {
-        const auto json = nlohmann::json::parse( read_from_file( create_info.pipeline_json_ ) );
-
-        const vk::PipelineShaderStageCreateInfo shader_stage_create_infos[] = {
-            create_info.p_shader_manager_->find<shader_type::vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),
-            create_info.p_shader_manager_->find<shader_type::fragment>( frag_shader_id_ ).get_shader_stage_create_info( )
-        };
-
-        const auto viewport_state = vk::PipelineViewportStateCreateInfo( )
-            .setViewportCount( static_cast<uint32_t>( create_info.viewports_.size() ) )
-            .setPViewports( create_info.viewports_.data() )
-            .setScissorCount( static_cast<uint32_t>( create_info.scissors_.size() ) )
-            .setPScissors( create_info.scissors_.data() );
-
-        const auto input_assembly = parse_json_section_t<graphics_pipeline_section::input_assembly>( json, create_info.pipeline_json_.c_str( ) );
-        const auto rasterization = parse_json_section_t<graphics_pipeline_section::rasterization>( json, create_info.pipeline_json_.c_str( ) );
-        const auto multisampling = parse_json_section_t<graphics_pipeline_section::multisampling>( json, create_info.pipeline_json_.c_str( ) );
-        const auto colour_blend_attachments = parse_json_section_t<graphics_pipeline_section::colour_blend_attachments>( json, create_info.pipeline_json_.c_str( ) );
-        
-
-        const auto pipeline_create_info = vk::GraphicsPipelineCreateInfo{ };
-    }
+    /*
 
 /*
     template<>
