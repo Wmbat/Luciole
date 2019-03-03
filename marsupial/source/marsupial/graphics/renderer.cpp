@@ -252,7 +252,7 @@ namespace marsupial
                 const auto& pipeline = pipeline_manager_.find<vulkan::pipeline_type::graphics>( current_pipeline_ );
 
                 pipeline.set_viewport( render_command_buffers_[i][j].get( ), 0, viewports );
-
+                pipeline.set_scissors( render_command_buffers_[i][j].get( ), 0, scissors );
 
                 pipeline.bind( render_command_buffers_[i][j].get() );
                 

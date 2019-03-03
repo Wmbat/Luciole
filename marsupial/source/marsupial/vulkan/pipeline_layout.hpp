@@ -21,6 +21,7 @@
 
 
 #include "vulkan.hpp"
+
 #include "../marsupial_core.hpp"
 
 namespace marsupial::vulkan

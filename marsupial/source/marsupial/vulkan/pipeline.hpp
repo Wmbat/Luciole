@@ -56,37 +56,37 @@ namespace marsupial::vulkan
     public:
         struct create_info
         {
-            create_info& set_device( const vk::Device device )
+            create_info& set_device( const vk::Device device ) noexcept
             {
                 device_ = device;
                 return *this;
             }
-            create_info& set_render_pass( const vk::RenderPass render_pass )
+            create_info& set_render_pass( const vk::RenderPass render_pass ) noexcept
             {
                 render_pass_ = render_pass;
                 return *this;
             }
-            create_info& set_pipeline_definition( const std::string& pipeline_json )
+            create_info& set_pipeline_definition( const std::string& pipeline_json ) noexcept
             {
                 pipeline_json_ = pipeline_json;
                 return *this;
             }
-            create_info& set_viewports( const std::vector<vk::Viewport>& viewports )
+            create_info& set_viewports( const std::vector<vk::Viewport>& viewports ) noexcept
             {
                 viewports_ = viewports;
                 return *this;
             }
-            create_info& set_scissors( const std::vector<vk::Rect2D>& scissors )
+            create_info& set_scissors( const std::vector<vk::Rect2D>& scissors ) noexcept
             {
                 scissors_ = scissors;
                 return *this;
             }
-            create_info& set_shader_manager( shader_manager* p_shader_manager )
+            create_info& set_shader_manager( shader_manager* p_shader_manager ) noexcept
             {
                 p_shader_manager_ = p_shader_manager;
                 return *this;
             }
-            create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id )
+            create_info& set_shader_ids( uint32_t vert_shader_id, uint32_t frag_shader_id ) noexcept
             {
                 vert_shader_id_ = vert_shader_id;
                 frag_shader_id_ = frag_shader_id;
@@ -106,44 +106,10 @@ namespace marsupial::vulkan
             uint32_t frag_shader_id_;
         };
 
-    private:
-        enum class sections
-        {
-            input_assembly,
-            rasterization,
-            multisampling,
-            colour_blend_attachments,
-            colour_blend,
-            dynamic_states,
-        };  
-        enum class values
-        {
-            boolean,
-            topology,
-            cull_mode,
-            polygon_mode,
-            front_face,
-            blend_factor,
-            blend_op,
-            logic_op,
-            dynamic_state
-        };  
-        enum class dynamic_states
-        {
-            viewport = VK_DYNAMIC_STATE_VIEWPORT,
-            scissor = VK_DYNAMIC_STATE_SCISSOR,
-            line_width = VK_DYNAMIC_STATE_LINE_WIDTH,
-            depth_bias = VK_DYNAMIC_STATE_DEPTH_BIAS,
-            blend_constants = VK_DYNAMIC_STATE_BLEND_CONSTANTS,
-            depth_bounds = VK_DYNAMIC_STATE_DEPTH_BOUNDS,
-            stencil_compare_mask = VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK,
-            stencil_write_mask = VK_DYNAMIC_STATE_STENCIL_WRITE_MASK,
-            stencil_reference = VK_DYNAMIC_STATE_STENCIL_REFERENCE,
-        };  
-
     public:
         pipeline( ) = default;
         pipeline( const create_info& create_info );
+        pipeline( vk::Pipeline&& pipeline );
         pipeline( const pipeline& rhs ) = delete;
         pipeline( pipeline&& rhs ) noexcept;
         ~pipeline( ) = default;
@@ -151,42 +117,37 @@ namespace marsupial::vulkan
         pipeline& operator=( const pipeline& rhs ) = delete;
         pipeline& operator=( pipeline&& rhs ) noexcept;
 
-        void bind( const vk::CommandBuffer& command_buffer ) const noexcept
-        {
-            command_buffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pipeline_.get( ) );
-        }
+        void bind( const vk::CommandBuffer& command_buffer ) const noexcept;
 
-        void set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const noexcept
-        {
-            if ( is_viewport_dynamic_ )
-            {
-                command_buffer.setViewport( first, viewports );
-            }
-        }
+        void set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const noexcept;
+        void set_scissors( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Rect2D>& scissors ) const noexcept;
+        void set_line_width( const vk::CommandBuffer& command_buffer, const float width ) const noexcept;
 
     private:
-        template<auto json_section>
-        const json_return_t<json_section> parse_json_section_t( const nlohmann::json& json, const char* pipeline_name ) const;
-
         template<auto json_value>
-        const json_return_t<json_value> parse_json_value_t( const std::string& value, const char* pipeline_name, const char* location ) const;
+        const json_return_t<json_value> parse_json_value( const nlohmann::json& json, const std::string_view value_name, const std::string_view pipeline_name ) const;
+
+        template<auto json_section>
+        const json_return_t<json_section> parse_json_section_t( const nlohmann::json& json, const std::string& pipeline_name ) const;
 
     private:
         vk::UniquePipeline pipeline_;
+        vk::UniquePipelineLayout layout_;
 
         std::uint32_t vert_shader_id_;
         std::uint32_t frag_shader_id_;
 
-        bool is_viewport_dynamic_ = false;
-        bool is_scissor_dynamic_ = false;
-        bool is_line_width_dynamic_ = false;
+        using umap_bool_storage_t = std::unordered_map<std::string, const vk::Bool32>;
+        using umap_topology_storage_t = std::unordered_map<std::string, const vk::PrimitiveTopology>;
+        using umap_poly_mode_storage_t = std::unordered_map<std::string, const vk::PolygonMode>;
 
-
-        inline static const std::unordered_map<const char*, const vk::Bool32> bool_values_ {
+        inline static const umap_bool_storage_t bool_values_ 
+        {
             { "true", true },
             { "false", false }
         };  
-        inline static const std::unordered_map<const char*, const vk::PrimitiveTopology> supported_topologies_ {
+        inline static const umap_topology_storage_t supported_topologies_ 
+        {
             { "triangle_list", vk::PrimitiveTopology::eTriangleList },
             { "triangle_list_with_adjacency", vk::PrimitiveTopology::eTriangleListWithAdjacency },
             { "triangle_strip", vk::PrimitiveTopology::eTriangleStrip },
@@ -199,22 +160,36 @@ namespace marsupial::vulkan
             { "patch_list", vk::PrimitiveTopology::ePatchList },
             { "point_list", vk::PrimitiveTopology::ePointList }
         };  
-        inline static const std::unordered_map<const char*, const vk::PolygonMode> supported_polygon_modes_ {
+        inline static const umap_poly_mode_storage_t supported_polygon_modes_ 
+        {
             { "point", vk::PolygonMode::ePoint },
             { "line", vk::PolygonMode::eLine },
             { "fill", vk::PolygonMode::eFill }
         };  
-        inline static const std::unordered_map<const char*, const vk::CullModeFlagBits> supported_cull_modes_ {
+        inline static const std::unordered_map<std::string, const vk::CullModeFlagBits> supported_cull_modes_ 
+        {
             { "none", vk::CullModeFlagBits::eNone }, 
             { "back", vk::CullModeFlagBits::eBack }, 
             { "front", vk::CullModeFlagBits::eFront }, 
             { "front_and_back", vk::CullModeFlagBits::eFrontAndBack }
         };  
-        inline static const std::unordered_map<const char*, const vk::FrontFace> supported_front_faces_ {
+        inline static const std::unordered_map<std::string, const vk::FrontFace> supported_front_faces_ 
+        {
             { "clockwise", vk::FrontFace::eClockwise },
             { "counter_clockwise", vk::FrontFace::eCounterClockwise }
         };  
-        inline static const std::unordered_map<const char*, const vk::BlendFactor> supported_blend_factors_ {
+        inline static const std::unordered_map<std::uint32_t, const vk::SampleCountFlagBits> supported_sample_counts_ 
+        {
+            { 1, vk::SampleCountFlagBits::e1 },
+            { 2, vk::SampleCountFlagBits::e2 },
+            { 4, vk::SampleCountFlagBits::e4 },
+            { 8, vk::SampleCountFlagBits::e8 },
+            { 16, vk::SampleCountFlagBits::e16 },
+            { 32, vk::SampleCountFlagBits::e32 },
+            { 64, vk::SampleCountFlagBits::e64 }
+        };
+        inline static const std::unordered_map<std::string, const vk::BlendFactor> supported_blend_factors_ 
+        {
             { "zero", vk::BlendFactor::eZero },
             { "one", vk::BlendFactor::eOne },
             { "src_colour", vk::BlendFactor::eSrcColor },
@@ -235,14 +210,16 @@ namespace marsupial::vulkan
             { "src_one_alpha", vk::BlendFactor::eSrc1Alpha },
             { "one_minus_src_one_alpha", vk::BlendFactor::eOneMinusSrc1Alpha }
         };  
-        inline static const std::unordered_map<const char*, const vk::BlendOp> supported_blend_ops_ {
+        inline static const std::unordered_map<std::string, const vk::BlendOp> supported_blend_ops_ 
+        {
             { "add", vk::BlendOp::eAdd },
             { "substract", vk::BlendOp::eSubtract },
             { "reverse_substract", vk::BlendOp::eReverseSubtract },
             { "min", vk::BlendOp::eMin },
             { "max", vk::BlendOp::eMax }
         };  
-        inline static const std::unordered_map<const char*, const vk::LogicOp> supported_logic_ops_ {
+        inline static const std::unordered_map<std::string, const vk::LogicOp> supported_logic_ops_ 
+        {
             { "clear", vk::LogicOp::eClear },
             { "and", vk::LogicOp::eAnd },
             { "and_reverse", vk::LogicOp::eAndReverse },
@@ -259,14 +236,146 @@ namespace marsupial::vulkan
             { "nand", vk::LogicOp::eNand },
             { "set", vk::LogicOp::eSet }
         };  
-        inline static const std::unordered_map<const char*, const vk::DynamicState> supported_dynamic_states_ {
+        inline static const std::unordered_map<std::string, const vk::DynamicState> supported_dynamic_states_ 
+        {
             { "viewport", vk::DynamicState::eViewport },
             { "scissor", vk::DynamicState::eScissor },
             { "line_width", vk::DynamicState::eLineWidth }
         };
+        inline static const std::unordered_map<std::string, const vk::ColorComponentFlagBits> supported_colour_components_
+        {
+            { "A", vk::ColorComponentFlagBits::eA },
+            { "R", vk::ColorComponentFlagBits::eR },
+            { "G", vk::ColorComponentFlagBits::eG },
+            { "B", vk::ColorComponentFlagBits::eB }
+        };
+
+        enum class sections
+        {
+            input_assembly,
+            rasterization,
+            multisampling,
+            colour_blend_attachments,
+            colour_blend,
+            dynamic_state,
+        };  
+        enum class values
+        {
+            bool32,
+            uint32,
+            floating_point,
+            topology,
+            cull_mode,
+            polygon_mode,
+            front_face,
+            sample_count,
+            blend_factor,
+            blend_op,
+            logic_op,
+            dynamic_states,
+            colour_components
+        };  
+        enum class dynamic_states
+        {
+            viewport = VK_DYNAMIC_STATE_VIEWPORT,
+            scissor = VK_DYNAMIC_STATE_SCISSOR,
+            line_width = VK_DYNAMIC_STATE_LINE_WIDTH,
+            depth_bias = VK_DYNAMIC_STATE_DEPTH_BIAS,
+            blend_constants = VK_DYNAMIC_STATE_BLEND_CONSTANTS,
+            depth_bounds = VK_DYNAMIC_STATE_DEPTH_BOUNDS,
+            stencil_compare_mask = VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK,
+            stencil_write_mask = VK_DYNAMIC_STATE_STENCIL_WRITE_MASK,
+            stencil_reference = VK_DYNAMIC_STATE_STENCIL_REFERENCE,
+        };  
     };
 
     using graphics_pipeline = pipeline<pipeline_type::graphics>;
+
+    /*!
+     *
+     */
+
+    template<>
+    struct json_trait<graphics_pipeline::values::bool32>
+    {
+        using type = vk::Bool32;  
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::uint32>
+    {
+        using type = std::uint32_t;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::floating_point>
+    {
+        using type = float;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::topology>
+    {
+        using type = vk::PrimitiveTopology;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::cull_mode>
+    {
+        using type = vk::CullModeFlagBits;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::polygon_mode>
+    {
+        using type = vk::PolygonMode;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::front_face>
+    {
+        using type = vk::FrontFace;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::sample_count>
+    {
+        using type = vk::SampleCountFlagBits;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::blend_factor>
+    {
+        using type = vk::BlendFactor;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::blend_op>
+    {
+        using type = vk::BlendOp;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::logic_op>
+    {
+        using type = vk::LogicOp;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::dynamic_states>
+    {
+        using type = std::vector<vk::DynamicState>;
+    };
+
+    template<>
+    struct json_trait<graphics_pipeline::values::colour_components>
+    {
+        using type = vk::ColorComponentFlags;
+    };
+
+    /*!
+     * 
+     */
 
     template<>
     struct json_trait<graphics_pipeline::sections::input_assembly>
@@ -299,163 +408,13 @@ namespace marsupial::vulkan
     }; 
 
     template<>
-    struct json_trait<graphics_pipeline::sections::dynamic_states>
+    struct json_trait<graphics_pipeline::sections::dynamic_state>
     {
-        using type = std::vector<vk::DynamicState>;
+        using type = vk::PipelineDynamicStateCreateInfo;
     };
 
-    /*!
-     * Specialization of pipeline<pipeline_type::graphics>'s function "parse_json_value".
-     */
-    /*
-
-/*
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::boolean>(
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.bool_values_.find( value.c_str( ) );
-
-        if ( it == json_layout_.bool_values_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-
-            return static_cast<vk::Bool32>( false );
-        }
-
-        return it->second;
-    }
-
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::topology>( 
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.supported_topologies_.find( value.c_str( ) );
-
-        if ( it == json_layout_.supported_topologies_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-
-            return vk::PrimitiveTopology::eTriangleStrip;
-        }
-
-        return it->second;
-    }
-
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::cull_mode>(
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.supported_cull_modes_.find( value.c_str( ) );
-
-        if ( it == json_layout_.supported_cull_modes_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-
-            return vk::CullModeFlagBits::eBack;
-        }
-
-        return it->second;
-    }
-
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::polygon_mode>(
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.supported_polygon_modes_.find( value.c_str( ) );
-
-        if ( it == json_layout_.supported_polygon_modes_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-
-            return vk::PolygonMode::eFill;
-        }
-
-        return it->second;
-    }
-
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::front_face>( 
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.supported_front_faces_.find( value.c_str( ) );
-
-        if ( it == json_layout_.supported_front_faces_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-
-            return vk::FrontFace::eClockwise;
-        }
-
-        return it->second;
-    }
-
-    template<>
-    const auto graphics_pipeline::parse_json_value<pipeline_json_layout::values::blend_factor>(
-        const std::string& value, const char* pipeline_name, const char* location ) const
-    {
-        const auto it = json_layout_.supported_blend_factors_.find( value.c_str( ) );
-
-        if ( it == json_layout_.supported_blend_factors_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for {2}. Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value, location );
-        
-            return vk::BlendFactor::eZero;
-        }
-
-        return it->second;
-    }
-    */
 
 
-    /*
-    template<>
-    const graphics_pipeline::section_return_type<pipeline_json_layout::sections::input_assembly> 
-    graphics_pipeline::parse_json_section<pipeline_json_layout::sections::input_assembly>( const nlohmann::json& json, const char* pipeline_name ) const
-    {
-        const auto section = json["input_assembly"];
-
-        const auto create_info = vk::PipelineInputAssemblyStateCreateInfo{ }
-            .setPrimitiveRestartEnable( parse_json_value<pipeline_json_layout::values::boolean>( 
-                section["primitive_restart_enable"], pipeline_name, "\"input_assembly\"/\"primitive_restart_enable\"" ) )
-            .setTopology( parse_json_value<pipeline_json_layout::values::topology>(
-                section["topology"], pipeline_name, "\"input_assembly\"/\"topology\"" ) );
-
-        return json_section_trait;
-    }
-
-    template<>
-    const vk::PipelineRasterizationStateCreateInfo 
-    graphics_pipeline::parse_json_section<vk::PipelineRasterizationStateCreateInfo, pipeline_json_layout::sections::rasterization>(
-        const nlohmann::json& json, const char* pipeline_name ) const
-    {
-        const auto section = json["rasterization"];
-    
-        const auto create_info = vk::PipelineRasterizationStateCreateInfo{ }
-            .setDepthClampEnable( parse_json_value<pipeline_json_layout::values::boolean>( 
-                section["depth_clamp_enable"], pipeline_name, "\"rasterization\"/\"depth_clamp_enable\"" ) )
-            .setRasterizerDiscardEnable( parse_json_value<pipeline_json_layout::values::boolean>(
-                section["rasteriazer_discard_enable"], pipeline_name, "\"rasterization\"/\"rasterizer_discard_enable\"" ) )
-            .setPolygonMode( parse_json_value<pipeline_json_layout::values::polygon_mode>(
-                section["polygon_mode"], pipeline_name, "\"rasterization\"/\"polygon_mode\"" ) )
-            .setFrontFace( parse_json_value<pipeline_json_layout::values::front_face>(
-                section["front_face"], pipeline_name, "\"rasterization\"/\"front_Face\"" ) )
-            .setDepthBiasEnable( parse_json_value<pipeline_json_layout::values::boolean>(
-                section["depth_bias_enable"], pipeline_name, "\"rasterization\"/\"depth_bias_enable\"" ) )
-            .setDepthBiasConstantFactor( section["depth_bias_constant_factor"] )
-            .setDepthBiasClamp( section["depth_bias_clamp"] )
-            .setDepthBiasSlopeFactor( section["depth_bias_slope_factor"] )
-            .setLineWidth( section["line_width"] );
-
-        return create_info;
-    }
-*/
     template<>
     class pipeline<pipeline_type::compute>
     {
@@ -478,59 +437,7 @@ namespace marsupial::vulkan
             vert_shader_id_( create_info.vert_shader_id_ ),
             frag_shader_id_( create_info.frag_shader_id_ )
         {
-            const auto json = nlohmann::json::parse( read_from_file( create_info.pipeline_json_ ));
-    
-
-                    
-            auto get_dynamic_states = [&create_info]( const std::vector<std::string>& names )
-            {
-                std::vector<vk::DynamicState> states;
-                
-                for( const auto data : names )
-                {
-                    if( data == "viewport" )
-                    {
-                        states.emplace_back( vk::DynamicState::eViewport );
-                    }
-                    else if ( data == "scissors" )
-                    {
-                        states.emplace_back( vk::DynamicState::eScissor );
-                    }
-                    else if ( data == "line_width" )
-                    {
-                        states.emplace_back( vk::DynamicState::eLineWidth );
-                    }
-                    else if ( data == "depth_bias" )
-                    {
-                        states.emplace_back( vk::DynamicState::eDepthBias );
-                    }
-                    else if ( data == "blend_constants" )
-                    {
-                        states.emplace_back( vk::DynamicState::eBlendConstants );
-                    }
-                    else if ( data == "stencil_compare_mask" )
-                    {
-                        states.emplace_back( vk::DynamicState::eStencilCompareMask );
-                    }
-                    else if ( data == "stencil_write_mask" )
-                    {
-                        states.emplace_back( vk::DynamicState::eStencilWriteMask );
-                    }
-                    else if ( data == "stencil_reference" )
-                    {
-                        states.emplace_back( vk::DynamicState::eStencilReference );
-                    }
-                    
-                    // TODO: add support for extensions.
-                }
-                
-                return states;
-            };
-            
-            const vk::PipelineShaderStageCreateInfo shader_stage_create_infos[] = {
-                create_info.p_shader_manager_->find<shader_type::vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),
-                create_info.p_shader_manager_->find<shader_type::fragment>( frag_shader_id_ ).get_shader_stage_create_info( )
-            };
+        
     
             //
             vertex_input_config_.bindings_.emplace_back(
