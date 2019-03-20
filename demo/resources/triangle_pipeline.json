@@ -55,11 +55,8 @@
     ]
   },
   "dynamic_states":
-  {
-    "enabled_states":
-    [
-      "viewport",
-      "scissors"
-    ]
-  }
+  [
+    "viewport",
+    "scissor"
+  ]
 }

@@ -49,7 +49,6 @@ public:
         std::string wireframe_triangle_pipeline = "../../demo/resources/wireframe_triangle_pipeline.json";
         
         pipeline_ids_.emplace_back( p_renderer_->create_pipeline<marsupial::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<marsupial::pipeline_type::graphics>( wireframe_triangle_pipeline, vert_id_, frag_id_ ) );
         
         p_renderer_->set_pipeline( pipeline_ids_[0] );
         

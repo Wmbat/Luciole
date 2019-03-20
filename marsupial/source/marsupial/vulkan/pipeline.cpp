@@ -269,12 +269,28 @@ namespace marsupial::vulkan
         return flags;
     }
 
+    template<>
+    const json_return_t<graphics_pipeline::values::blend_constants>
+    graphics_pipeline::parse_json_value<graphics_pipeline::values::blend_constants>(
+        const nlohmann::json& json, const std::string_view value_name, const std::string_view pipeline_name ) const
+    {
+        const auto values = json[value_name.data( )];
+        assert( values.is_array( ) );
+
+        for( auto value : values )
+        {
+            assert( value.is_number_float( ) );
+        }
+
+        return values;
+    }
+
     /*!
      *
      */
     template<>
     const json_return_t<graphics_pipeline::sections::input_assembly>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::input_assembly>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::input_assembly>( const nlohmann::json& json, const std::string& pipeline_name ) const
     {
         const auto section = json["input_assembly"];
 
@@ -289,7 +305,7 @@ namespace marsupial::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::rasterization>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::rasterization>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::rasterization>( const nlohmann::json& json, const std::string& pipeline_name ) const
     {
         const auto section = json["rasterization"];
 
@@ -312,7 +328,7 @@ namespace marsupial::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::multisampling>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::multisampling>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::multisampling>( const nlohmann::json& json, const std::string& pipeline_name ) const
     {
         const auto section = json["multisampling"];
 
@@ -331,7 +347,7 @@ namespace marsupial::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::colour_blend_attachments>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::colour_blend_attachments>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend_attachments>( const nlohmann::json& json, const std::string& pipeline_name ) const
     {
         const auto section = json["colour_blend_attachments"];
         assert( section.is_array( ) );
@@ -361,28 +377,18 @@ namespace marsupial::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::colour_blend>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::colour_blend>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend>( const nlohmann::json& json, const std::string& pipeline_name ) const
     {
-        using section = graphics_pipeline::sections;
+        const auto section = json["colour_blend"];
 
-        const auto colour_blend_attachments = parse_json_section_t<section::colour_blend_attachments>( json, pipeline_name );
+        using value = graphics_pipeline::values;
 
+        const auto colour_blend = vk::PipelineColorBlendStateCreateInfo{ }
+            .setLogicOpEnable( parse_json_value<values::bool32>( section, "logic_op_enable", pipeline_name ) )
+            .setLogicOp( parse_json_value<values::logic_op>( section, "logic_op", pipeline_name ) )
+            .setBlendConstants( parse_json_value<values::blend_constants>( section, "blend_constants", pipeline_name ) );
         
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline::sections::dynamic_state>
-    graphics_pipeline::parse_json_section_t<graphics_pipeline::sections::dynamic_state>( const nlohmann::json& json, const std::string& pipeline_name ) const
-    {
-        const auto section = json["dynamic_states"];
-
-        const auto dynamic_states = parse_json_value<graphics_pipeline::values::dynamic_states>( section, "enabled_states", pipeline_name );
-
-        const auto create_info = vk::PipelineDynamicStateCreateInfo{ }
-            .setDynamicStateCount( static_cast<std::uint32_t>( dynamic_states.size( ) ) )
-            .setPDynamicStates( dynamic_states.data( ) );
-
-        return create_info;
+        return colour_blend;
     }
 
     graphics_pipeline::pipeline( const graphics_pipeline::create_info& create_info )
@@ -434,11 +440,21 @@ namespace marsupial::vulkan
             .setVertexAttributeDescriptionCount( sizeof( attribute_description ) / sizeof( attribute_description[0] ) )
             .setPVertexAttributeDescriptions( attribute_description );
 
-        const auto dynamic_state = parse_json_section_t<graphics_pipeline::sections::dynamic_state>( json, create_info.pipeline_json_ );
-        const auto input_assembly_state = parse_json_section_t<graphics_pipeline::sections::input_assembly>( json, create_info.pipeline_json_ );
-        const auto rasterization_state = parse_json_section_t<graphics_pipeline::sections::rasterization>( json, create_info.pipeline_json_ );
-        const auto multisampling_state = parse_json_section_t<graphics_pipeline::sections::multisampling>( json, create_info.pipeline_json_ );
-        const auto colour_blend_state = parse_json_section_t<graphics_pipeline::sections::colour_blend>( json, create_info.pipeline_json_ );
+        const auto dynamic_states_data = parse_json_value<graphics_pipeline::values::dynamic_states>( json, "dynamic_states", create_info.pipeline_json_ );
+
+        const auto dynamic_state = vk::PipelineDynamicStateCreateInfo{ }
+            .setDynamicStateCount( dynamic_states_data.size( ) )
+            .setPDynamicStates( dynamic_states_data.data( ) );
+        
+        const auto input_assembly_state = parse_json_section<graphics_pipeline::sections::input_assembly>( json, create_info.pipeline_json_ );
+        const auto rasterization_state = parse_json_section<graphics_pipeline::sections::rasterization>( json, create_info.pipeline_json_ );
+        const auto multisampling_state = parse_json_section<graphics_pipeline::sections::multisampling>( json, create_info.pipeline_json_ );
+        const auto colour_blend_attachments = parse_json_section<graphics_pipeline::sections::colour_blend_attachments>( json, create_info.pipeline_json_ );
+        
+        
+        auto colour_blend_state = parse_json_section<graphics_pipeline::sections::colour_blend>( json, create_info.pipeline_json_ );
+        colour_blend_state.attachmentCount = colour_blend_attachments.size( );
+        colour_blend_state.pAttachments = colour_blend_attachments.data( );
 
         // TEMP
         const auto pipeline_layout_create_info = vk::PipelineLayoutCreateInfo{ };
@@ -491,15 +507,15 @@ namespace marsupial::vulkan
         command_buffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pipeline_.get( ) );
     }
 
-    void graphics_pipeline::set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const noexcept
+    void graphics_pipeline::set_viewport( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Viewport>& viewports ) const
     {
         command_buffer.setViewport( first, viewports );
     }
-    void graphics_pipeline::set_scissors( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Rect2D>& scissors ) const noexcept
+    void graphics_pipeline::set_scissors( const vk::CommandBuffer& command_buffer, const std::uint32_t first, const std::vector<vk::Rect2D>& scissors ) const
     {
         command_buffer.setScissor( first, scissors );
     }  
-    void graphics_pipeline::set_line_width( const vk::CommandBuffer& command_buffer, const float width ) const noexcept
+    void graphics_pipeline::set_line_width( const vk::CommandBuffer& command_buffer, const float width ) const
     {
         command_buffer.setLineWidth( width );
     }

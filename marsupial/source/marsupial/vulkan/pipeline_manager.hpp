@@ -44,16 +44,7 @@ namespace marsupial::vulkan
         
             return pipeline_id_count_;
         }
-        
-        /*
-        template<pipeline_type T>
-        std::enable_if_t<T == pipeline_type::compute, uint32_t> insert( const pipeline_create_info& create_info )
-        {
-            compute_pipelines_.emplace( std::pair{ ++pipeline_id_count_, compute_pipeline{ create_info } } );
-            
-            return pipeline_id_count_;
-        }
-        */
+
 
         template<pipeline_type T>
         std::enable_if_t<T == pipeline_type::graphics, const pipeline<T>&> find( const uint32_t id ) const
@@ -65,19 +56,8 @@ namespace marsupial::vulkan
             return it->second;
         }
         
-        template<pipeline_type T>
-        std::enable_if_t<T == pipeline_type::compute, const pipeline<T>&> find( const uint32_t id ) const
-        {
-            const auto it = compute_pipelines_.find( id );
-            
-            assert( it != compute_pipelines_.cend() );
-            
-            return it->second;
-        }
-        
     private:
         std::unordered_map<uint32_t, graphics_pipeline> graphics_pipelines_;
-        std::unordered_map<uint32_t, compute_pipeline> compute_pipelines_;
         
         static inline uint32_t pipeline_id_count_;
     };

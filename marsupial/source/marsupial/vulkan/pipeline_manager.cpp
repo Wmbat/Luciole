@@ -30,7 +30,6 @@ namespace marsupial::vulkan
         if( this != &rhs )
         {
             graphics_pipelines_ = std::move( rhs.graphics_pipelines_ );
-            compute_pipelines_ = std::move( rhs.compute_pipelines_ );
             
             pipeline_id_count_ = rhs.pipeline_id_count_;
             rhs.pipeline_id_count_ = 0;
