@@ -254,7 +254,7 @@ namespace marsupial::vulkan
             multisampling,
             colour_blend_attachments,
             colour_blend,
-            dynamic_state,
+            dynamic_states,
         };  
         enum class values
         {
@@ -269,7 +269,6 @@ namespace marsupial::vulkan
             blend_factor,
             blend_op,
             logic_op,
-            dynamic_states,
             colour_components,
             blend_constants
         };  
@@ -360,12 +359,6 @@ namespace marsupial::vulkan
     };
 
     template<>
-    struct json_trait<graphics_pipeline::values::dynamic_states>
-    {
-        using type = std::vector<vk::DynamicState>;
-    };
-
-    template<>
     struct json_trait<graphics_pipeline::values::colour_components>
     {
         using type = vk::ColorComponentFlags;
@@ -411,9 +404,9 @@ namespace marsupial::vulkan
     }; 
 
     template<>
-    struct json_trait<graphics_pipeline::sections::dynamic_state>
+    struct json_trait<graphics_pipeline::sections::dynamic_states>
     {
-        using type = vk::PipelineDynamicStateCreateInfo;
+        using type = std::vector<vk::DynamicState>;
     };
 }
 

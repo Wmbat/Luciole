@@ -93,6 +93,7 @@ target_sources( marsupial
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/volk/volk.c"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/volk/volk.h"
 
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/context.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/context.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/error.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/marsupial/vulkan/error.hpp"

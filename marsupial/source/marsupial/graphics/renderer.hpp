@@ -156,7 +156,7 @@ namespace marsupial
         const vk::UniqueSemaphore create_semaphore( ) const noexcept;
         
         const vk::UniqueFence create_fence( ) const noexcept;
-        
+
         template<class C>
         std::enable_if_t<std::is_same_v<C, vk::UniqueCommandBuffer>, std::vector<C>> create_handles( const vk::CommandPool command_pool, uint32_t count ) const noexcept
         {

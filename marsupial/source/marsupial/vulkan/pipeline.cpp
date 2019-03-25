@@ -20,10 +20,6 @@
 
 namespace marsupial::vulkan
 {
-    /*!
-     *
-     */
-
     template<>
     const json_return_t<graphics_pipeline::values::bool32>
     graphics_pipeline::parse_json_value<graphics_pipeline::values::bool32>( 
@@ -33,14 +29,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = bool_values_.find( value );
-
-        if ( it == bool_values_.cend( ) )
-        {
-            core_warn( "Error parsing pipeline data from \"{0}\". \"{1}\" is not a valid parameter for \"{1}\". Please "
-                "refer to documentation regarding supported cull modes.", pipeline_name , value );
-
-            return static_cast<vk::Bool32>( false );
-        }
+        assert( it != bool_values_.cend( ) );
 
         return it->second;
     }
@@ -73,16 +62,10 @@ namespace marsupial::vulkan
         const nlohmann::json& json, const std::string_view value_name, const std::string_view pipeline_name ) const
     {
         const auto value = json[value_name.data( )];
-        assert( value.is_string( ) ); // TODO: handle error.
+        assert( value.is_string( ) );
 
         const auto it = supported_topologies_.find( value );
-
-        if ( it == supported_topologies_.cend( ) )
-        {
-            // TODO: handle error.
-
-            return vk::PrimitiveTopology::eTriangleStrip;
-        }
+        assert( it != supported_topologies_.cend( ) );
 
         return it->second;
     }
@@ -96,12 +79,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
         
         const auto it = supported_cull_modes_.find( value );
-        if ( it == supported_cull_modes_.cend( ) )
-        {
-            // TODO: Handle error.;
-
-            return vk::CullModeFlagBits::eBack;
-        }
+        assert( it != supported_cull_modes_.cend( ) );
 
         return it->second;
     }
@@ -115,12 +93,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = supported_polygon_modes_.find( value );
-
-        if ( it == supported_polygon_modes_.cend( ) )
-        {
-            // TODO: handle error;
-            return vk::PolygonMode::eFill;
-        }
+        assert( it != supported_polygon_modes_.cend( ) );
 
         return it->second;
     }
@@ -135,10 +108,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = supported_front_faces_.find( value );
-        if ( it == supported_front_faces_.cend( ) )
-        {
-            return vk::FrontFace::eCounterClockwise;
-        }
+        assert( it != supported_front_faces_.cend( ) );
 
         return it->second;
     }
@@ -152,10 +122,7 @@ namespace marsupial::vulkan
         assert( value.is_number_unsigned( ) );
 
         const auto it = supported_sample_counts_.find( value );
-        if ( it == supported_sample_counts_.cend( ) )
-        {
-            return vk::SampleCountFlagBits::e1;
-        }
+        assert( it != supported_sample_counts_.cend( ) );
 
         return it->second;
     }
@@ -169,10 +136,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = supported_blend_factors_.find( value );
-        if ( it == supported_blend_factors_.cend() )
-        {
-            return vk::BlendFactor::eZero;
-        }
+        assert( it != supported_blend_factors_.cend( ) );
 
         return it->second;
     }
@@ -186,10 +150,7 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = supported_blend_ops_.find( value );
-        if ( it == supported_blend_ops_.cend() )
-        {
-            return vk::BlendOp::eAdd;
-        }
+        assert( it != supported_blend_ops_.cend( ) );
 
         return it->second;
     }
@@ -203,41 +164,9 @@ namespace marsupial::vulkan
         assert( value.is_string( ) );
 
         const auto it = supported_logic_ops_.find( value );
-        if ( it == supported_logic_ops_.cend() )
-        {
-            return vk::LogicOp::eAnd;
-        }
+        assert( it != supported_logic_ops_.cend( ) );
 
         return it->second;
-    }
-
-    template<>
-    const json_return_t<graphics_pipeline::values::dynamic_states>
-    graphics_pipeline::parse_json_value<graphics_pipeline::values::dynamic_states>(
-        const nlohmann::json& json, const std::string_view value_name, const std::string_view pipeline_name ) const
-    {
-        const auto values = json[value_name.data( )];
-        assert( values.is_array( ) );
-
-        std::vector<vk::DynamicState> states;
-        states.reserve( values.size( ) );
-
-        for ( auto& value : values )
-        {
-            assert( value.is_string( ) );
-
-            const auto it = supported_dynamic_states_.find( value );
-            if ( it == supported_dynamic_states_.cend( ) )
-            {
-                // WARN:
-            }
-            else
-            {
-                states.push_back( it->second );
-            }
-        }
-        
-        return states;
     }
     
     template<>
@@ -255,15 +184,9 @@ namespace marsupial::vulkan
             assert( value.is_string( ) );
 
             const auto it = supported_colour_components_.find( value );
-            if ( it == supported_colour_components_.cend( ) )
-            {
+            assert( it != supported_colour_components_.cend( ) );
 
-            }
-            else
-            {
-                flags = flags | it->second;
-            }
-            
+            flags = flags | it->second;
         }
 
         return flags;
@@ -391,6 +314,29 @@ namespace marsupial::vulkan
         return colour_blend;
     }
 
+    template<>
+    const json_return_t<graphics_pipeline::sections::dynamic_states>
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::dynamic_states>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    {
+        const auto values = json["dynamic_states"];
+        assert( values.is_array( ) );
+
+        std::vector<vk::DynamicState> states;
+        states.reserve( values.size( ) );
+
+        for ( auto& value : values )
+        {
+            assert( value.is_string( ) );
+
+            const auto it = supported_dynamic_states_.find( value );
+            assert( it != supported_dynamic_states_.cend( ) );
+
+            states.push_back( it->second );
+        }
+        
+        return states;
+    }
+
     graphics_pipeline::pipeline( const graphics_pipeline::create_info& create_info )
         :
         vert_shader_id_( create_info.vert_shader_id_ ),
@@ -440,7 +386,7 @@ namespace marsupial::vulkan
             .setVertexAttributeDescriptionCount( sizeof( attribute_description ) / sizeof( attribute_description[0] ) )
             .setPVertexAttributeDescriptions( attribute_description );
 
-        const auto dynamic_states_data = parse_json_value<graphics_pipeline::values::dynamic_states>( json, "dynamic_states", create_info.pipeline_json_ );
+        const auto dynamic_states_data = parse_json_section<graphics_pipeline::sections::dynamic_states>( json, create_info.pipeline_json_ );
 
         const auto dynamic_state = vk::PipelineDynamicStateCreateInfo{ }
             .setDynamicStateCount( dynamic_states_data.size( ) )

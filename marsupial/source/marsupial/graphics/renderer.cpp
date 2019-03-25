@@ -86,8 +86,8 @@ namespace marsupial
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
         
-        const auto context_create_info = vulkan::context::create_info_type( )
-            .set_window( p_wnd )
+        const auto context_create_info = vulkan::context::create_info( )
+            .set_p_window( p_wnd )
             .set_app_name( app_name )
             .set_app_version( app_version )
             .set_max_frames_in_flight( MAX_FRAMES_IN_FLIGHT );
