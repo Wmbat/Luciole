@@ -18,49 +18,62 @@
 
 #include <iostream>
 
-#include <marsupial/marsupial.hpp>
+#include <luciole/luciole.hpp>
+
+#include <luciole/window/xcb_window.hpp>
+
+int main( int args, char** argv )
+{
+    lcl::log::init( );
+
+    lcl::xcb_window window( "Demo" );
+    lcl::renderer renderer( &window, "Demo", 0 );
+    
+    return 0;
+}
 
 class player
 {
 public:
-    void on_key_event( const marsupial::key_event& event )
+    void on_key_event( const lcl::key_event& event )
     {
     
     }
-    void on_mouse_button( const marsupial::mouse_button_event& event )
+    void on_mouse_button( const lcl::mouse_button_event& event )
     {
         // std::cout << "Mouse button pressed: " << static_cast<uint32_t>( event.code_ ) << std::endl;
     }
 };
 
-class demo : public marsupial::application
+/*
+class demo : public lcl::application
 {
 public:
     demo( const std::string& title )
         :
-        marsupial::application( title )
+        lcl::application( title )
     {
         p_renderer_->set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
         
-        vert_id_ = p_renderer_->create_shader<marsupial::shader_type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
-        frag_id_ = p_renderer_->create_shader<marsupial::shader_type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
+        vert_id_ = p_renderer_->create_shader<lcl::shader_type::vertex>( "../../demo/resources/shaders/vert.spv", "main" );
+        frag_id_ = p_renderer_->create_shader<lcl::shader_type::fragment>( "../../demo/resources/shaders/frag.spv", "main" );
         
         std::string triangle_pipeline = "../../demo/resources/triangle_pipeline.json";
         std::string wireframe_triangle_pipeline = "../../demo/resources/wireframe_triangle_pipeline.json";
         
-        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<marsupial::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
+        pipeline_ids_.emplace_back( p_renderer_->create_pipeline<lcl::pipeline_type::graphics>( triangle_pipeline, vert_id_, frag_id_ ) );
         
         p_renderer_->set_pipeline( pipeline_ids_[0] );
         
-        p_wnd_->set_event_callback( marsupial::key_event_delg( player_, &player::on_key_event ) );
-        p_wnd_->set_event_callback( marsupial::mouse_button_event_delg( player_, &player::on_mouse_button ) );
+        p_wnd_->set_event_callback( lcl::key_event_delg( player_, &player::on_key_event ) );
+        p_wnd_->set_event_callback( lcl::mouse_button_event_delg( player_, &player::on_mouse_button ) );
         
-        p_wnd_->set_event_callback( marsupial::mouse_button_event_delg( [this]( const marsupial::mouse_button_event& event )
+        p_wnd_->set_event_callback( lcl::mouse_button_event_delg( [this]( const lcl::mouse_button_event& event )
             {
-                if ( event.code_ == marsupial::mouse::button::l_button )
+                if ( event.code_ == lcl::mouse::button::l_button )
                     p_renderer_->switch_pipeline ( pipeline_ids_[1] );
     
-                if ( event.code_ == marsupial::mouse::button::r_button )
+                if ( event.code_ == lcl::mouse::button::r_button )
                     p_renderer_->switch_pipeline ( pipeline_ids_[0] );
             } ) );
     }
@@ -103,9 +116,10 @@ private:
     std::vector<uint32_t> pipeline_ids_;
 };
 
-std::unique_ptr<marsupial::application> marsupial::create_application( )
+std::unique_ptr<lcl::application> lcl::create_application( )
 {
     auto p_demo = std::make_unique<demo>( "Demo" );
     
     return std::move( p_demo );
 }
+*/

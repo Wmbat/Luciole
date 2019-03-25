@@ -67,5 +67,5 @@ add_subdirectory( external/spdlog )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 
-add_subdirectory( marsupial )
+add_subdirectory( luciole )
 add_subdirectory( demo )

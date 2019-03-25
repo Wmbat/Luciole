@@ -41,14 +41,22 @@ if( NOT WIN32 )
                 nlohmann
                 tinygltf
                 glm
-                marsupial )
+                luciole )
     else( )
         target_link_libraries( demo
-                marsupial )
+                PUBLIC ${XCB_LIBRARIES}
+                PUBLIC dl
+                PUBLIC vulkan
+                PUBLIC stb
+                PUBLIC spdlog
+                PUBLIC nlohmann
+                PUBLIC tinygltf
+                PUBLIC glm
+                PUBLIC luciole )
     endif()
 else()
     target_link_libraries( demo
-            marsupial )
+            luciole )
 endif( )
 
 target_sources( demo
