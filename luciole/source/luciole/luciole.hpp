@@ -33,8 +33,4 @@
 
 #include "graphics/renderer.hpp"
 
-//
-// #include "entry_point.hpp"
-//
-
 #endif //LUCIOLE_LUCIOLE_HPP
