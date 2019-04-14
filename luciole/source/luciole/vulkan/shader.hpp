@@ -19,10 +19,13 @@
 #ifndef LUCIOLE_VULKAN_SHADER_H
 #define LUCIOLE_VULKAN_SHADER_H
 
+#include <wmbats_bazaar/file_io.hpp>
+
 #include "vulkan.hpp"
+
 #include "../luciole_core.hpp"
 #include "../utilities/log.hpp"
-#include "../utilities/file_io.hpp"
+
 
 namespace lcl::vulkan
 {
@@ -38,20 +41,20 @@ namespace lcl::vulkan
     {
         vk::Device device_;
         
-        std::string filepath_;
-        std::string entry_point_;
+        std::string_view filepath_;
+        std::string_view entry_point_;
     
         shader_create_info& set_device( const vk::Device device )
         {
             device_ = device;
             return *this;
         }
-        shader_create_info& set_filepath( const std::string& filepath )
+        shader_create_info& set_filepath( const std::string_view filepath )
         {
             filepath_ = filepath;
             return *this;
         }
-        shader_create_info& set_entry_point( const std::string& entry_point )
+        shader_create_info& set_entry_point( const std::string_view entry_point )
         {
             entry_point_ = entry_point;
             return *this;
@@ -67,7 +70,7 @@ namespace lcl::vulkan
             :
             entry_point_( create_info.entry_point_ )
         {
-            const std::string shader_code = read_from_binary_file( create_info.filepath_ );
+            const std::string shader_code = bzr::read_from_binary_file( create_info.filepath_ );
     
             const auto module_create_info = vk::ShaderModuleCreateInfo( )
                 .setCodeSize( shader_code.size( ) )

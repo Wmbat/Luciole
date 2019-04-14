@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MARSUPIAL_GRAPHICS_VERTEX_HPP
-#define MARSUPIAL_GRAPHICS_VERTEX_HPP
+#ifndef LUCIOLE_GRAPHICS_VERTEX_HPP
+#define LUCIOLE_GRAPHICS_VERTEX_HPP
 
 #include <glm/glm.hpp>
 
@@ -39,4 +39,4 @@ namespace lcl
     };
 }
 
-#endif //MARSUPIAL_GRAPHICS_VERTEX_HPP
+#endif //LUCIOLE_GRAPHICS_VERTEX_HPP

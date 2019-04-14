@@ -24,10 +24,36 @@
 
 int main( int args, char** argv )
 {
-    lcl::log::init( );
-
     lcl::xcb_window window( "Demo" );
     lcl::renderer renderer( &window, "Demo", 0 );
+    renderer.set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
+
+    const std::uint32_t vert_id = renderer.create_vertex_shader( "resources/shaders/vert.spv" );
+    const std::uint32_t frag_id = renderer.create_fragment_shader( "resources/shaders/frag.spv" );
+
+    const auto pipeline_id = renderer.create_graphics_pipeline( "resources/triangle_pipeline.json", vert_id, frag_id );
+
+    renderer.set_pipeline( pipeline_id );
+
+    auto time_point = std::chrono::steady_clock::now( );
+    float max_dt = 1.0f / 20.0f;
+        
+    while( window.is_open() )
+    {
+        window.poll_events();
+            
+        float dt;
+        {
+            const auto new_time_point = std::chrono::steady_clock::now( );
+            dt = std::chrono::duration<float>( new_time_point - time_point ).count( );
+            time_point = new_time_point;
+        }
+            // dt = std::min( dt, max_dt );
+            
+            // std::cout << "dt: " << 1/dt << '\n';
+            
+        renderer.draw_frame( );
+    }
     
     return 0;
 }

@@ -16,85 +16,73 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MARSUPIAL_UTILITIES_LOG_HPP
-#define MARSUPIAL_UTILITIES_LOG_HPP
+#ifndef LUCIOLE_UTILITIES_LOG_HPP
+#define LUCIOLE_UTILITIES_LOG_HPP
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include <wmbats_bazaar/logger.hpp>
 
 #include "../luciole_core.hpp"
 
 namespace lcl
 {
-	inline static void core_info( const std::string& msg );
-
-    class log
-    {
-    public:
-		inline static void init( )
-		{
-			core_logger_ = spdlog::stdout_color_mt( "Marsupial Logger" );
-			core_logger_->set_pattern( "%^[%T] %n: %v%$" );
-			core_logger_->set_level( spdlog::level::trace );
-
-			core_info( "spdlog -> Marsupial Logger Initialized." );
-		}
-
-        inline static spdlog::logger& get_core_logger( )
-        {
-            return *core_logger_;
-        }
-
-    private:
-        inline static std::shared_ptr<spdlog::logger> core_logger_;
-    };
-
     inline static void core_info( const std::string& msg )
     {
-        log::get_core_logger().info( msg );
+#ifndef NDEBUG
+        bzr::logger::get_logger().info( msg );
+#endif
     }
     inline static void core_trace( const std::string& msg )
     {
-        log::get_core_logger().trace( msg );
+#ifndef NDEBUG
+        bzr::logger::get_logger().trace( msg );
+#endif
     }
     inline static void core_warn( const std::string& msg )
     {
-        log::get_core_logger().warn( msg );
+#ifndef NDEBUG
+        bzr::logger::get_logger().warn( msg );
+#endif
     }
     inline static void core_critical( const std::string& msg )
     {
-        log::get_core_logger().critical( msg );
+        bzr::logger::get_logger().critical( msg );
     }
     inline static void core_error( const std::string& msg )
     {
-        log::get_core_logger().error( msg );
+        bzr::logger::get_logger().error( msg );
     }
 
     template<typename... arguments>
     inline static void core_info( const std::string& msg, const arguments&... args )
     {
-        log::get_core_logger().info( msg.c_str( ), args... );
+#ifndef NDEBUG
+        bzr::logger::get_logger().info( msg.c_str( ), args... );
+#endif
     }
     template<typename... arguments>
     inline static void core_trace( const std::string& msg, const arguments&... args )
     {
-        log::get_core_logger().trace( msg.c_str( ), args... );
+#ifndef NDEBUG
+        bzr::logger::get_logger().trace( msg.c_str( ), args... );
+#endif
     }
     template<typename... arguments>
     inline static void core_warn( const std::string& msg, const arguments&... args )
     {
-        log::get_core_logger().warn( msg.c_str( ), args... );
+#ifndef NDEBUG
+        bzr::logger::get_logger().warn( msg.c_str( ), args... );
+#endif
     }
     template<typename... arguments>
     inline static void core_critical( const std::string& msg, const arguments&... args )
     {
-        log::get_core_logger().critical( msg.c_str(), args... );
+        bzr::logger::get_logger().critical( msg.c_str(), args... );
     }
     template<typename... arguments>
     inline static void core_error( const std::string& msg, const arguments&... args )
     {
-        log::get_core_logger().error( msg.c_str( ), args... );
+        bzr::logger::get_logger().error( msg.c_str( ), args... );
     }
 }
 
-#endif //MARSUPIAL_UTILITIES_LOG_HPP
+#endif //LUCIOLE_UTILITIES_LOG_HPP

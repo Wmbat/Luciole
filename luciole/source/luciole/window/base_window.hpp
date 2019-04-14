@@ -29,6 +29,7 @@ namespace lcl
     class base_window
     {
     public:
+        LUCIOLE_API base_window( );
         virtual ~base_window( ) = default;
     
         LUCIOLE_API virtual void poll_events( ) = 0;

@@ -101,9 +101,9 @@ namespace lcl::vulkan
         {
             queue_family_info(
                 const std::uint32_t queue_count = 0,
-                const std::optional<std::uint32_t> graphics = std::optional<std::uint32_t>( ),
-                const std::optional<std::uint32_t> present = std::optional<std::uint32_t>( ),
-                const std::optional<std::uint32_t> transfer = std::optional<std::uint32_t>( ) );
+                const std::optional<std::uint32_t> graphics = std::nullopt,
+                const std::optional<std::uint32_t> present = std::nullopt,
+                const std::optional<std::uint32_t> transfer = std::nullopt );
             
             /* Helper functions to set the values of the struct. */
             queue_family_info& set_queue_count( std::uint32_t queue_count ) noexcept;
@@ -179,6 +179,7 @@ namespace lcl::vulkan
         vk::PhysicalDevice pick_physical_device( ) const;
         vk::UniqueDevice create_logical_device( const std::vector<queue_family_info>& queue_family_infos ) const;
         vk::UniqueCommandPool create_command_pool( uint32_t queue_family_index ) const noexcept;
+
         
         /*!
          * @brief A helper function to chuck if the GPU is 

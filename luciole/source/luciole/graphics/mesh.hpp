@@ -16,8 +16,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MARSUPIAL_GRAPHICS_MESH_HPP
-#define MARSUPIAL_GRAPHICS_MESH_HPP
+#ifndef LUCIOLE_GRAPHICS_MESH_HPP
+#define LUCIOLE_GRAPHICS_MESH_HPP
 
 #include <vector>
 
@@ -58,4 +58,4 @@ namespace lcl
     };
 }
 
-#endif //MARSUPIAL_GRAPHICS_MESH_HPP
+#endif //LUCIOLE_GRAPHICS_MESH_HPP

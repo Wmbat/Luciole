@@ -213,7 +213,7 @@ namespace lcl::vulkan
      */
     template<>
     const json_return_t<graphics_pipeline::sections::input_assembly>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::input_assembly>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::input_assembly>( const nlohmann::json& json, const std::string_view pipeline_name ) const
     {
         const auto section = json["input_assembly"];
 
@@ -228,7 +228,7 @@ namespace lcl::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::rasterization>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::rasterization>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::rasterization>( const nlohmann::json& json, const std::string_view pipeline_name ) const
     {
         const auto section = json["rasterization"];
 
@@ -251,7 +251,7 @@ namespace lcl::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::multisampling>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::multisampling>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::multisampling>( const nlohmann::json& json, const std::string_view pipeline_name ) const
     {
         const auto section = json["multisampling"];
 
@@ -270,7 +270,7 @@ namespace lcl::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::colour_blend_attachments>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend_attachments>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend_attachments>( const nlohmann::json& json,const std::string_view pipeline_name ) const
     {
         const auto section = json["colour_blend_attachments"];
         assert( section.is_array( ) );
@@ -300,7 +300,7 @@ namespace lcl::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::colour_blend>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::colour_blend>( const nlohmann::json& json, const std::string_view pipeline_name ) const
     {
         const auto section = json["colour_blend"];
 
@@ -316,7 +316,7 @@ namespace lcl::vulkan
 
     template<>
     const json_return_t<graphics_pipeline::sections::dynamic_states>
-    graphics_pipeline::parse_json_section<graphics_pipeline::sections::dynamic_states>( const nlohmann::json& json, const std::string& pipeline_name ) const
+    graphics_pipeline::parse_json_section<graphics_pipeline::sections::dynamic_states>( const nlohmann::json& json, const std::string_view pipeline_name ) const
     {
         const auto values = json["dynamic_states"];
         assert( values.is_array( ) );
@@ -342,7 +342,7 @@ namespace lcl::vulkan
         vert_shader_id_( create_info.vert_shader_id_ ),
         frag_shader_id_( create_info.frag_shader_id_ )
     {
-        const auto json = nlohmann::json::parse( read_from_file( create_info.pipeline_json_ ) );
+        const auto json = nlohmann::json::parse( bzr::read_from_file( create_info.pipeline_json_ ) );
 
         const vk::PipelineShaderStageCreateInfo shader_stage_create_infos[] = {
             create_info.p_shader_manager_->find<shader_type::vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),

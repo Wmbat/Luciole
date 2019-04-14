@@ -18,25 +18,17 @@
 
 #include "memory_allocator.hpp"
 
-#include "../utilities/basic_error.hpp"
 #include "../utilities/log.hpp"
 
 namespace lcl::vulkan
 {
     memory_allocator::memory_allocator( const VmaAllocatorCreateInfo& create_info )
     {
-        try
-        {
-            auto result = vmaCreateAllocator( &create_info, &allocator_ );
+        auto result = vmaCreateAllocator( &create_info, &allocator_ );
     
-            if( result != VK_SUCCESS )
-            {
-                throw basic_error{ basic_error::code::engine_error, "Failed to create VMA allocator." };
-            }
-        }
-        catch( const basic_error& e )
+        if( result != VK_SUCCESS )
         {
-            core_error( e.what() );
+            core_error( "Failed to create VMA allocator" );
         }
     
     }

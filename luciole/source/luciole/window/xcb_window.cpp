@@ -38,6 +38,8 @@ namespace lcl
     }
     
     xcb_window::xcb_window( const std::string& title )
+        :
+        base_window( )
     {
         core_info ( "Using XCB for window creation." );
     

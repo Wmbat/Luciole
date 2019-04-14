@@ -18,8 +18,6 @@
 
 #include "shader_manager.hpp"
 
-#include "../utilities/basic_error.hpp"
-
 namespace lcl::vulkan
 {
     shader_manager::shader_manager( shader_manager&& rhs ) noexcept

@@ -26,6 +26,8 @@
 namespace lcl
 {
     win32_window::win32_window ( const std::string& title )
+        :
+        base_window( )
     {
         core_info ( "Using Win32 for window creation." );
 

@@ -16,12 +16,12 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MARSUPIAL_UTILITIES_MESSAGE_HPP
-#define MARSUPIAL_UTILITIES_MESSAGE_HPP
+#ifndef LUCIOLE_UTILITIES_MESSAGE_HPP
+#define LUCIOLE_UTILITIES_MESSAGE_HPP
 
 #include <vector>
 
-#include "delegate.hpp"
+#include <wmbats_bazaar/delegate.hpp>
 
 namespace lcl
 {
@@ -29,7 +29,7 @@ namespace lcl
     class message_handler
     {
     public:
-        void add_callback( const delegate<void( C )>& callback )
+        void add_callback( const bzr::delegate<void( C )>& callback )
         {
             callbacks_.push_back( callback );
         }
@@ -43,8 +43,8 @@ namespace lcl
         }
     
     private:
-        std::vector<delegate<void( C )>> callbacks_;
+        std::vector<bzr::delegate<void( C )>> callbacks_;
     };
 }
 
-#endif //MARSUPIAL_UTILITIES_MESSAGE_HPP
+#endif //LUCIOLE_UTILITIES_MESSAGE_HPP

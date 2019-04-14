@@ -189,7 +189,7 @@ namespace lcl::vulkan
     {
         if( auto result = volkInitialize( ); result != VK_SUCCESS )
         {
-
+            throw error{ vk::Result::eIncomplete, "Failed to intiliaze volk." };
         }
             
         auto api_version = volkGetInstanceVersion( );
@@ -213,20 +213,19 @@ namespace lcl::vulkan
             
         device_extensions_.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
             
-        if ( check_extension_support<vk::Instance>( vk::enumerateInstanceExtensionProperties( ) ) )
+        if ( !check_extension_support<vk::Instance>( vk::enumerateInstanceExtensionProperties( ) ) )
         {
-            // TODO: handle_error
+            core_error( "Instance layers not supported" );
         }
             
         if constexpr ( enable_debug_layers )
         {
-            if ( check_extension_support<vk::DebugReportCallbackEXT>( vk::enumerateInstanceLayerProperties( )))
+            if ( !check_extension_support<vk::DebugReportCallbackEXT>( vk::enumerateInstanceLayerProperties( )))
             {
-                    // TODO: handle_error
+                core_error( "Debug layers not supported." ); 
             }
         }
-            
-            
+        
         instance_ = create_instance( api_version, create_info.app_name_, create_info.app_version_ );
             
         // Load the functions used by the instance.

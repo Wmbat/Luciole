@@ -17,14 +17,9 @@
 cmake_minimum_required( VERSION 3.11 )
 project( luciole VERSION 0.0.6 )
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    add_compile_options("-Wall")
-#    add_compile_options("-Wextra")
-#    add_compile_options("-Wconversion")
-#    add_compile_options("-pedantic")
-#    add_compile_options("-Wfatal-errors")
-
-endif()
+if( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE Release )
+endif( )
 
 add_library( luciole SHARED )
 
@@ -58,6 +53,7 @@ if( NOT WIN32 )
                 PUBLIC vulkan
                 PUBLIC stb
                 PUBLIC spdlog
+                PUBLIC wmbats_bazaar
                 PUBLIC nlohmann
                 PUBLIC tinygltf
                 PUBLIC glm )
@@ -78,10 +74,6 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/vertex.hpp"
 
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/basic_error.cpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/basic_error.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/delegate.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/file_io.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/log.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/message.hpp"
 
@@ -128,5 +120,10 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole_core.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole.hpp"
         )
+
+if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
+endif( )
 
 target_include_directories( luciole INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/source" )

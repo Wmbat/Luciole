@@ -21,9 +21,10 @@
 
 #include <glm/glm.hpp>
 
+#include <wmbats_bazaar/delegate.hpp>
+
 #include "keyboard.hpp"
 #include "mouse.hpp"
-#include "../utilities/delegate.hpp"
 
 namespace lcl
 {
@@ -131,11 +132,11 @@ namespace lcl
         }
     };
     
-    using key_event_delg = delegate<void( const key_event& )>;
-    using mouse_button_event_delg = delegate<void( const mouse_button_event& )>;
-    using mouse_motion_event_delg = delegate<void( const mouse_motion_event& )>;
-    using window_close_event_delg = delegate<void( const window_close_event& )>;
-    using framebuffer_resize_event_delg = delegate<void( const framebuffer_resize_event& )>;
+    using key_event_delg = bzr::delegate<void( const key_event& )>;
+    using mouse_button_event_delg = bzr::delegate<void( const mouse_button_event& )>;
+    using mouse_motion_event_delg = bzr::delegate<void( const mouse_motion_event& )>;
+    using window_close_event_delg = bzr::delegate<void( const window_close_event& )>;
+    using framebuffer_resize_event_delg = bzr::delegate<void( const framebuffer_resize_event& )>;
 }
 
 

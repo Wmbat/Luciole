@@ -24,8 +24,6 @@
 #include "renderer.hpp"
 #include "vertex.hpp"
 #include "../utilities/log.hpp"
-#include "../utilities/file_io.hpp"
-#include "../utilities/basic_error.hpp"
 #include "../vulkan/error.hpp"
 
 #undef max
@@ -96,8 +94,9 @@ namespace lcl
     
         const auto surface_format = choose_swapchain_surface_format( context_.gpu_.getSurfaceFormatsKHR( context_.surface_.get() ) );
         
-        render_pass_ = create_handle<vk::UniqueRenderPass>( surface_format );
-    
+        auto temp_render_pass = create_render_pass( surface_format );
+        render_pass_ = std::move( temp_render_pass );
+
         const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
             .set_gpu( context_.gpu_ )
             .set_device( context_.device_.get() )
@@ -126,11 +125,13 @@ namespace lcl
         
         for( auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
         {
-            render_command_buffers_[i] = create_handles<vk::UniqueCommandBuffer>( context_.graphics_command_pools_[i].get( ), swapchain_.image_count_ );
+            auto render_command_buffers = create_command_buffers( context_.graphics_command_pools_[i].get( ), swapchain_.image_count_ ); 
+            render_command_buffers_[i] = std::move( render_command_buffers );
         }
         
-        transfer_command_buffers_ = create_handles<vk::UniqueCommandBuffer>( context_.transfer_command_pool_.get(), 1 );
-    
+        auto transfer_command_buffers = create_command_buffers( context_.transfer_command_pool_.get(), 1 );
+        transfer_command_buffers_ = std::move( transfer_command_buffers );
+
         auto mem_allocator_create_info = VmaAllocatorCreateInfo( );
         mem_allocator_create_info.physicalDevice = context_.gpu_;
         mem_allocator_create_info.device = context_.device_.get();
@@ -203,6 +204,46 @@ namespace lcl
         return *this;
     }
     
+    std::uint32_t renderer::create_vertex_shader( const std::string_view filepath, const std::string_view entry_point )
+    {
+        return shader_manager_.insert<vulkan::shader_type::vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
+    }
+
+    std::uint32_t renderer::create_fragment_shader( const std::string_view filepath, const std::string_view entry_point )
+    {
+        return shader_manager_.insert<vulkan::shader_type::fragment>( vulkan::shader_create_info{ context_.device_.get( ), filepath, entry_point } );
+    }
+
+    std::uint32_t renderer::create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id )
+    {
+        std::vector<vk::Viewport> viewports = {
+            vk::Viewport( )
+                .setX( 0.0f )
+                .setY( 0.0f )
+                .setWidth( static_cast<float>( swapchain_.extent_.width ) )
+                .setHeight( static_cast<float>( swapchain_.extent_.height ) )
+                .setMinDepth( 0.0f )
+                .setMaxDepth( 1.0f )
+        };
+    
+        std::vector<vk::Rect2D> scissors = {
+            vk::Rect2D( )
+                .setOffset( { 0, 0 } )
+                .setExtent( swapchain_.extent_ )
+        };
+            
+        const auto create_info = vulkan::graphics_pipeline::create_info( )
+            .set_device( context_.device_.get() )
+            .set_render_pass( render_pass_.get() )
+            .set_pipeline_definition( filepath )
+            .set_shader_manager( &shader_manager_ )
+            .set_shader_ids( vertex_shader_id, fragment_shader_id )
+            .set_viewports( viewports )
+            .set_scissors( scissors );
+            
+        return pipeline_manager_.insert<vulkan::pipeline_type::graphics>( create_info );
+    }
+
     void renderer::record_draw_calls( )
     {
         std::vector<vk::Viewport> viewports;
@@ -232,8 +273,7 @@ namespace lcl
                     .setFlags( vk::CommandBufferUsageFlagBits::eSimultaneousUse );
         
                 render_command_buffers_[i][j]->begin( begin_info );
-        
-        
+    
                 const auto clear_colour_value= vk::ClearColorValue( )
                     .setFloat32( std::array<float, 4>{ clear_colour_.r / 255.f, clear_colour_.g / 255.f, clear_colour_.b / 255.f, clear_colour_.a / 255.f } );
         
@@ -318,36 +358,29 @@ namespace lcl
                 swapchain_.swapchain_.get(),
                 std::numeric_limits<uint64_t>::max(),
                 image_available_semaphores_[current_frame_].get(), {} );
-            
-            try
+
+            if ( result == vk::Result::eErrorOutOfDateKHR )
             {
-                if ( result == vk::Result::eErrorOutOfDateKHR )
+                const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
+                    .set_gpu( context_.gpu_ )
+                    .set_device( context_.device_.get() )
+                    .set_surface( context_.surface_.get() )
+                    .set_render_pass( render_pass_.get() )
+                    .set_width( window_width_ )
+                    .set_height( window_height_ );
+    
+                swapchain_.recreate( swapchain_create_info );
+    
+                for( auto& command_pool : context_.graphics_command_pools_ )
                 {
-                    const auto swapchain_create_info = vulkan::swapchain::create_info_type( )
-                        .set_gpu( context_.gpu_ )
-                        .set_device( context_.device_.get() )
-                        .set_surface( context_.surface_.get() )
-                        .set_render_pass( render_pass_.get() )
-                        .set_width( window_width_ )
-                        .set_height( window_height_ );
-    
-                    swapchain_.recreate( swapchain_create_info );
-    
-                    for( auto& command_pool : context_.graphics_command_pools_ )
-                    {
-                        context_.device_->resetCommandPool( command_pool.get(), { } );
-                    }
-    
-                    record_draw_calls( );
+                    context_.device_->resetCommandPool( command_pool.get(), { } );
                 }
-                else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
-                {
-                    throw vulkan::error{ result, "Failed to acquire swapchain image" };
-                }
+    
+                record_draw_calls( );
             }
-            catch ( const vulkan::error& e )
+            else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
             {
-                core_error ( e.what ( ) );
+                core_error( "Failed to acquire swapchain image" );
             }
 
             const vk::PipelineStageFlags wait_stages[] = { vk::PipelineStageFlagBits ::eColorAttachmentOutput };
@@ -437,6 +470,60 @@ namespace lcl
             .setFlags( vk::FenceCreateFlagBits::eSignaled );
         
         return context_.device_->createFenceUnique( create_info );
+    }
+
+    const std::vector<vk::UniqueCommandBuffer> renderer::create_command_buffers( 
+        const vk::CommandPool command_pool, 
+        std::uint32_t count ) const
+    {
+        const auto allocate_info = vk::CommandBufferAllocateInfo( )
+            .setCommandPool( command_pool )
+            .setCommandBufferCount( count )
+            .setLevel( vk::CommandBufferLevel::ePrimary );
+    
+        return context_.device_->allocateCommandBuffersUnique( allocate_info );
+    }
+
+    const vk::UniqueRenderPass renderer::create_render_pass( 
+        const vk::SurfaceFormatKHR surface_format,
+        const vk::PipelineBindPoint bind_point ) const noexcept
+    {
+        const auto colour_attachment = vk::AttachmentDescription( )
+            .setFormat( surface_format.format )
+            .setSamples( vk::SampleCountFlagBits::e1 )
+            .setLoadOp( vk::AttachmentLoadOp::eClear )
+            .setStoreOp( vk::AttachmentStoreOp::eStore )
+            .setStencilLoadOp( vk::AttachmentLoadOp::eDontCare )
+            .setStencilStoreOp( vk::AttachmentStoreOp::eDontCare )
+            .setInitialLayout( vk::ImageLayout::eUndefined )
+            .setFinalLayout( vk::ImageLayout::ePresentSrcKHR );
+    
+        const auto colour_attachment_ref = vk::AttachmentReference( )
+            .setAttachment( 0 )
+            .setLayout( vk::ImageLayout::eColorAttachmentOptimal );
+    
+        const auto subpass_description = vk::SubpassDescription( )
+            .setPipelineBindPoint( bind_point )
+            .setColorAttachmentCount( 1 )
+            .setPColorAttachments( &colour_attachment_ref );
+    
+        const auto dependency = vk::SubpassDependency( )
+            .setSrcSubpass( VK_SUBPASS_EXTERNAL )
+            .setDstSubpass( 0 )
+            .setSrcStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+            .setDstStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
+            .setSrcAccessMask( vk::AccessFlagBits{ } )
+            .setDstAccessMask( vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite );
+    
+        const auto create_info = vk::RenderPassCreateInfo( )
+            .setAttachmentCount( 1 )
+            .setPAttachments( &colour_attachment )
+            .setSubpassCount( 1 )
+            .setPSubpasses( &subpass_description )
+            .setDependencyCount( 1 )
+            .setPDependencies( &dependency );
+    
+        return std::move( context_.device_->createRenderPassUnique( create_info ) );
     }
 
     const vk::SurfaceFormatKHR renderer::choose_swapchain_surface_format(

@@ -23,12 +23,12 @@
 #include <string_view>
 
 #include <nlohmann/json.hpp>
+#include <wmbats_bazaar/file_io.hpp>
 
 #include "shader_manager.hpp"
 
 #include "../luciole_core.hpp"
 #include "../graphics/vertex.hpp"
-#include "../utilities/file_io.hpp"
 #include "../utilities/log.hpp"
 
 namespace lcl::vulkan
@@ -64,7 +64,7 @@ namespace lcl::vulkan
                 render_pass_ = render_pass;
                 return *this;
             }
-            create_info& set_pipeline_definition( const std::string& pipeline_json ) noexcept
+            create_info& set_pipeline_definition( const std::string_view pipeline_json ) noexcept
             {
                 pipeline_json_ = pipeline_json;
                 return *this;
@@ -94,7 +94,7 @@ namespace lcl::vulkan
             vk::Device device_;
             vk::RenderPass render_pass_;
 
-            std::string pipeline_json_;
+            std::string_view pipeline_json_;
 
             std::vector<vk::Viewport> viewports_;
             std::vector<vk::Rect2D> scissors_;
@@ -126,7 +126,7 @@ namespace lcl::vulkan
         const json_return_t<json_value> parse_json_value( const nlohmann::json& json, const std::string_view value_name, const std::string_view pipeline_name ) const;
 
         template<auto json_section>
-        const json_return_t<json_section> parse_json_section( const nlohmann::json& json, const std::string& pipeline_name ) const;
+        const json_return_t<json_section> parse_json_section( const nlohmann::json& json, const std::string_view pipeline_name ) const;
 
     private:
         vk::UniquePipeline pipeline_;

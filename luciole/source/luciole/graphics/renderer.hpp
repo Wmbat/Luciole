@@ -16,19 +16,19 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MARSUPIAL_GRAPHICS_RENDERER_HPP
-#define MARSUPIAL_GRAPHICS_RENDERER_HPP
+#ifndef LUCIOLE_GRAPHICS_RENDERER_HPP
+#define LUCIOLE_GRAPHICS_RENDERER_HPP
 
 #include <optional>
 
 #include <tiny_gltf/tiny_gltf.h>
+#include <wmbats_bazaar/delegate.hpp>
 
 #include "../luciole_core.hpp"
 
 #include "../window/base_window.hpp"
 
 #include "../vulkan/context.hpp"
-#include "../vulkan/error.hpp"
 #include "../vulkan/swapchain.hpp"
 #include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/shader_manager.hpp"
@@ -37,12 +37,6 @@
 
 namespace lcl
 {
-    enum class shader_type
-    {
-        vertex,
-        fragment
-    };
-
     enum class pipeline_type
     {
         graphics,
@@ -61,86 +55,32 @@ namespace lcl
         LUCIOLE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         LUCIOLE_API renderer& operator=( renderer&& renderer ) noexcept;
         
+        /*!
+         * @brief Creates a vertex shader and place it in the shader manager.
+         * 
+         * @param the filepath of the shader.
+         * @param the name of the main function of the shader.
+         * @return an index to allow the programmer access to the shader.
+         */
+        LUCIOLE_API std::uint32_t create_vertex_shader( const std::string_view filepath, const std::string_view entry_point = "main" ); 
+        /*!
+         * @brief Creates a fragment shader and place it in the shader manager.
+         * 
+         * @param the filepath of the shader.
+         * @param the name of the main function of the shader.
+         * @return an index to allow the programmer access to the shader.
+         */
+        LUCIOLE_API std::uint32_t create_fragment_shader( const std::string_view filepath, const std::string_view entry_point = "main" );        
 
-        // TODO: use specialization
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::vertex, uint32_t> create_shader( const std::string& filepath, const std::string& entry_point )
-        {
-            return shader_manager_.insert<vulkan::shader_type::vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
-        } 
-
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::fragment, uint32_t> create_shader( const std::string& filepath, const std::string& entry_point )
-        {
-            return shader_manager_.insert<vulkan::shader_type::fragment>( vulkan::shader_create_info{ context_.device_.get( ), filepath, entry_point } );
-        }
-        
-
-
-        // TODO: allow string_view;
-        template<pipeline_type T>
-        std::enable_if_t<T == pipeline_type::graphics, uint32_t> create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
-        {
-            std::vector<vk::Viewport> viewports = {
-                vk::Viewport( )
-                    .setX( 0.0f )
-                    .setY( 0.0f )
-                    .setWidth( static_cast<float>( swapchain_.extent_.width ) )
-                    .setHeight( static_cast<float>( swapchain_.extent_.height ) )
-                    .setMinDepth( 0.0f )
-                    .setMaxDepth( 1.0f )
-            };
-    
-            std::vector<vk::Rect2D> scissors = {
-                vk::Rect2D( )
-                    .setOffset( { 0, 0 } )
-                    .setExtent( swapchain_.extent_ )
-            };
-            
-            const auto create_info = vulkan::graphics_pipeline::create_info( )
-                .set_device( context_.device_.get() )
-                .set_render_pass( render_pass_.get() )
-                .set_pipeline_definition( pipeline_definition )
-                .set_shader_manager( &shader_manager_ )
-                .set_shader_ids( vert_id, frag_id )
-                .set_viewports( viewports )
-                .set_scissors( scissors );
-            
-            return pipeline_manager_.insert<vulkan::pipeline_type::graphics>( create_info );
-        }
-
-/*
-        template<pipeline_type T>
-        std::enable_if_t<T == pipeline_type::compute, uint32_t> create_pipeline( const std::string& pipeline_definition, uint32_t vert_id, uint32_t frag_id )
-        {
-            std::vector<vk::Viewport> viewports = {
-                vk::Viewport( )
-                    .setX( 0.0f )
-                    .setY( 0.0f )
-                    .setWidth( static_cast<float>( swapchain_.extent_.width ) )
-                    .setHeight( static_cast<float>( swapchain_.extent_.height ) )
-                    .setMinDepth( 0.0f )
-                    .setMaxDepth( 1.0f )
-            };
-    
-            std::vector<vk::Rect2D> scissors = {
-                vk::Rect2D( )
-                    .setOffset( { 0, 0 } )
-                    .setExtent( swapchain_.extent_ )
-            };
-            
-            const auto create_info = vulkan::pipeline_create_info( )
-                .set_device( context_.device_.get() )
-                .set_render_pass( render_pass_.get() )
-                .set_pipeline_definition( pipeline_definition )
-                .set_shader_manager( &shader_manager_ )
-                .set_shader_ids( vert_id, frag_id )
-                .set_viewports( viewports )
-                .set_scissors( scissors );
-            
-            return pipeline_manager_.insert<vulkan::pipeline_type::compute>( create_info );
-        }
-*/
+        /*!
+         * @brief Creates a graphics pipeline.
+         * 
+         * @param the filepath to the json file holding the pipeline information.
+         * @param the id of the vertex shader to use in this pipeline.
+         * @param the id of the fragment shader to use in this pipeline.
+         * @return the id of the pipeline that was just created.
+         */
+        LUCIOLE_API std::uint32_t create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id );
         
         LUCIOLE_API void set_pipeline( const uint32_t id );
         LUCIOLE_API void switch_pipeline( const uint32_t id );
@@ -156,61 +96,16 @@ namespace lcl
     
     private:
         const vk::UniqueSemaphore create_semaphore( ) const noexcept;
-        
-        const vk::UniqueFence create_fence( ) const noexcept;
 
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, vk::UniqueCommandBuffer>, std::vector<C>> create_handles( const vk::CommandPool command_pool, uint32_t count ) const noexcept
-        {
-            const auto allocate_info = vk::CommandBufferAllocateInfo( )
-                .setCommandPool( command_pool )
-                .setCommandBufferCount( count )
-                .setLevel( vk::CommandBufferLevel::ePrimary );
-    
-            return context_.device_->allocateCommandBuffersUnique( allocate_info );
-        }
-        template<class C>
-        std::enable_if_t<std::is_same_v<C, vk::UniqueRenderPass>, C> create_handle(
+        const vk::UniqueFence create_fence( ) const noexcept;
+        
+        const std::vector<vk::UniqueCommandBuffer> create_command_buffers( 
+            const vk::CommandPool command_pool, 
+            std::uint32_t count ) const;
+        
+        const vk::UniqueRenderPass create_render_pass( 
             const vk::SurfaceFormatKHR surface_format,
-            const vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept
-        {
-            const auto colour_attachment = vk::AttachmentDescription( )
-                .setFormat( surface_format.format )
-                .setSamples( vk::SampleCountFlagBits::e1 )
-                .setLoadOp( vk::AttachmentLoadOp::eClear )
-                .setStoreOp( vk::AttachmentStoreOp::eStore )
-                .setStencilLoadOp( vk::AttachmentLoadOp::eDontCare )
-                .setStencilStoreOp( vk::AttachmentStoreOp::eDontCare )
-                .setInitialLayout( vk::ImageLayout::eUndefined )
-                .setFinalLayout( vk::ImageLayout::ePresentSrcKHR );
-    
-            const auto colour_attachment_ref = vk::AttachmentReference( )
-                .setAttachment( 0 )
-                .setLayout( vk::ImageLayout::eColorAttachmentOptimal );
-    
-            const auto subpass_description = vk::SubpassDescription( )
-                .setPipelineBindPoint( bind_point )
-                .setColorAttachmentCount( 1 )
-                .setPColorAttachments( &colour_attachment_ref );
-    
-            const auto dependency = vk::SubpassDependency( )
-                .setSrcSubpass( VK_SUBPASS_EXTERNAL )
-                .setDstSubpass( 0 )
-                .setSrcStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
-                .setDstStageMask( vk::PipelineStageFlagBits::eColorAttachmentOutput )
-                .setSrcAccessMask( vk::AccessFlagBits{ } )
-                .setDstAccessMask( vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite );
-    
-            const auto create_info = vk::RenderPassCreateInfo( )
-                .setAttachmentCount( 1 )
-                .setPAttachments( &colour_attachment )
-                .setSubpassCount( 1 )
-                .setPSubpasses( &subpass_description )
-                .setDependencyCount( 1 )
-                .setPDependencies( &dependency );
-    
-            return context_.device_->createRenderPassUnique( create_info );
-        }
+            const vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
     
         const vk::SurfaceFormatKHR choose_swapchain_surface_format(
             const std::vector<vk::SurfaceFormatKHR> &available_formats ) const noexcept;
@@ -252,4 +147,4 @@ namespace lcl
     };
 }
 
-#endif //MARSUPIAL_GRAPHICS_RENDERER_HPP
+#endif // LUCIOLE_GRAPHICS_RENDERER_HPP

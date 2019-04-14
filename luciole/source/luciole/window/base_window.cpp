@@ -16,10 +16,17 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wmbats_bazaar/logger.hpp>
+
 #include "base_window.hpp"
 
 namespace lcl
 {
+    base_window::base_window( )
+    {
+        bzr::logger::init( "Luciole Logger", "%^[%T] %n: %v%$" );
+    }
+
     bool base_window::is_open( ) const noexcept
     {
         return open_;
