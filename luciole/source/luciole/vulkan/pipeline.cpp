@@ -345,8 +345,8 @@ namespace lcl::vulkan
         const auto json = nlohmann::json::parse( bzr::read_from_file( create_info.pipeline_json_ ) );
 
         const vk::PipelineShaderStageCreateInfo shader_stage_create_infos[] = {
-            create_info.p_shader_manager_->find<shader_type::vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),
-            create_info.p_shader_manager_->find<shader_type::fragment>( frag_shader_id_ ).get_shader_stage_create_info( )
+            create_info.p_shader_manager_->find<shader_type::e_vertex>( vert_shader_id_ ).get_shader_stage_create_info( ),
+            create_info.p_shader_manager_->find<shader_type::e_fragment>( frag_shader_id_ ).get_shader_stage_create_info( )
         };
 
         const auto viewport_state = vk::PipelineViewportStateCreateInfo{ }

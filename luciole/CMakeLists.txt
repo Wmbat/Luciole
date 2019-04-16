@@ -72,6 +72,8 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/mesh.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.hpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/uniform_buffers.cpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/uniform_buffers.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/vertex.hpp"
 
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/log.hpp"

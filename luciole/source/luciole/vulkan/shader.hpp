@@ -31,10 +31,8 @@ namespace lcl::vulkan
 {
     enum class shader_type
     {
-        vertex,
-        fragment,
-        compute,
-        geometry
+        e_vertex,
+        e_fragment
     };
     
     struct shader_create_info
@@ -61,7 +59,7 @@ namespace lcl::vulkan
         }
     };
     
-    template<shader_type T>
+    template<shader_type type>
     class shader
     {
     public:
@@ -102,38 +100,32 @@ namespace lcl::vulkan
         {
             vk::ShaderStageFlagBits stage_flag{ };
     
-            if( T == shader_type::vertex )
+            if constexpr ( type == shader_type::e_vertex )
             {
                 stage_flag = vk::ShaderStageFlagBits::eVertex;
             }
-            else if( T == shader_type::fragment )
+            else if( type == shader_type::e_fragment )
             {
                 stage_flag = vk::ShaderStageFlagBits::eFragment;
-            }
-            else if( T == shader_type::compute )
-            {
-                stage_flag = vk::ShaderStageFlagBits::eCompute;
-            }
-            else if( T == shader_type::geometry )
-            {
-                stage_flag = vk::ShaderStageFlagBits::eGeometry;
             }
     
             return vk::PipelineShaderStageCreateInfo( )
                 .setModule( shader_.get() )
                 .setStage( stage_flag )
                 .setPName( entry_point_.c_str( ) );
-        }
+        } 
         
     private:
         vk::UniqueShaderModule shader_;
         
+        vk::DescriptorSetLayout descriptor_set_layout_;
+        std::vector<vk::DescriptorSet> descriptor_sets_;
+
         std::string entry_point_;
     };
     
-    using vertex_shader = shader<shader_type::vertex>;
-    using fragment_shader = shader<shader_type::fragment>;
-    using compute_shader = shader<shader_type::compute>;
+    using vertex_shader = shader<shader_type::e_vertex>;
+    using fragment_shader = shader<shader_type::e_fragment>;
 }
 
 #endif //LUCIOLE_VULKAN_SHADER_H

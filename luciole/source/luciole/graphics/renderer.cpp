@@ -206,12 +206,12 @@ namespace lcl
     
     std::uint32_t renderer::create_vertex_shader( const std::string_view filepath, const std::string_view entry_point )
     {
-        return shader_manager_.insert<vulkan::shader_type::vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
+        return shader_manager_.insert<vulkan::shader_type::e_vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
     }
 
     std::uint32_t renderer::create_fragment_shader( const std::string_view filepath, const std::string_view entry_point )
     {
-        return shader_manager_.insert<vulkan::shader_type::fragment>( vulkan::shader_create_info{ context_.device_.get( ), filepath, entry_point } );
+        return shader_manager_.insert<vulkan::shader_type::e_fragment>( vulkan::shader_create_info{ context_.device_.get( ), filepath, entry_point } );
     }
 
     std::uint32_t renderer::create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id )

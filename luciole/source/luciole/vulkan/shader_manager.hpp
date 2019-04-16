@@ -36,42 +36,40 @@ namespace lcl::vulkan
         LUCIOLE_API shader_manager& operator=( const shader_manager& rhs ) = delete;
         LUCIOLE_API shader_manager& operator=( shader_manager&& rhs ) noexcept;
         
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::vertex, uint32_t> insert( const shader_create_info& create_info )
+        template<shader_type type>
+        std::uint32_t insert( const shader_create_info& create_info )
         {
-            auto id = ++shader_id_count_;
-            
-            vertex_shaders_.emplace( std::pair{ id, vertex_shader{ create_info } } );
-            
-            return id;
-        }
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::fragment, uint32_t> insert( const shader_create_info& create_info )
-        {
-            auto id = ++shader_id_count_;
-            
-            fragment_shaders_.emplace( std::pair{ id, fragment_shader{ create_info } } );
-            
+            const auto id = ++shader_id_count_;
+
+            if constexpr ( type == shader_type::e_vertex )
+            {
+                vertex_shaders_.emplace( std::pair{ id, vertex_shader{ create_info } } );
+            }
+            else if ( type == shader_type::e_fragment )
+            {
+                fragment_shaders_.emplace( std::pair{ id, fragment_shader{ create_info } } );
+            }
+
             return id;
         }
         
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::vertex, const shader<T>& > find( const uint32_t id ) const
+        template<shader_type type>
+        const shader<type>& find( std::uint32_t id ) const
         {
-            const auto it = vertex_shaders_.find( id );
-            
-            assert( it != vertex_shaders_.cend() );
-            
-            return it->second;
-        }
-        template<shader_type T>
-        std::enable_if_t<T == shader_type::fragment, const shader<T>&> find( const uint32_t id ) const
-        {
-            const auto it = fragment_shaders_.find( id );
-            
-            assert( it != fragment_shaders_.cend() );
-            
-            return it->second;
+            if constexpr ( type == shader_type::e_vertex )
+            {
+                const auto it = vertex_shaders_.find( id );
+
+                // TODO: throw exception.
+
+                return it->second;
+            }
+            else
+            {
+                const auto it = fragment_shaders_.find( id );
+
+                return it->second;
+            }
         }
     
     private:

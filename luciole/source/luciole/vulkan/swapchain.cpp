@@ -145,12 +145,14 @@ namespace lcl::vulkan
         }
         
         const auto iter =
-            std::find_if( available_formats.cbegin( ), available_formats.cend( ),
-                          []( const vk::SurfaceFormatKHR& format )
-                          {
-                              return format.format == vk::Format::eB8G8R8A8Unorm &&
-                                     format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
-                          } );
+            std::find_if( 
+                available_formats.cbegin( ), 
+                available_formats.cend( ),
+                []( const vk::SurfaceFormatKHR& format )
+                {
+                    return format.format == vk::Format::eB8G8R8A8Unorm &&
+                           format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
+                } );
         
         if ( iter != available_formats.cend( ))
         {
