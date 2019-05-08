@@ -81,6 +81,25 @@ namespace lcl
         window_height_( p_wnd->get_height() ),
         clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f )
     {
+        //////////////////////////
+        if( auto result = volkInitialize( ); result != VK_SUCCESS )
+        {
+            // throw vulkan::error{ vk::Result::eErrorInitializationFailed, "Failed to intiliaze volk." };
+        }
+
+        std::vector<const char*> test_extensions;
+        inst_ = vulkan::instance{ test_extensions };
+        surface_ = vulkan::surface{ *p_wnd, inst_ };
+
+        std::vector<vulkan::extension> device_extensions = 
+        {
+            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, vulkan::extension_mode::e_required }
+        };
+
+        device_ = vulkan::device{ inst_, surface_, device_extensions };
+
+        ///////////////////////////
+
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
         

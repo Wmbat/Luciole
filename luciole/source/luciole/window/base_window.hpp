@@ -40,7 +40,7 @@ namespace lcl
     
         LUCIOLE_API uint32_t get_width( ) const noexcept;
         LUCIOLE_API uint32_t get_height( ) const noexcept;
-    
+
         template<class C>
         std::enable_if_t<std::is_same_v<C, key_event_delg>, void > set_event_callback ( const C& callback )
         {

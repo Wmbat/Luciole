@@ -189,7 +189,7 @@ namespace lcl::vulkan
     {
         if( auto result = volkInitialize( ); result != VK_SUCCESS )
         {
-            throw error{ vk::Result::eIncomplete, "Failed to intiliaze volk." };
+            throw error{ vk::Result::eErrorInitializationFailed, "Failed to intiliaze volk." };
         }
             
         auto api_version = volkGetInstanceVersion( );
@@ -246,7 +246,7 @@ namespace lcl::vulkan
             
         /* Load all functions used from VkDevice */
         volkLoadDevice( device_.get() );
-            
+
         /* Prepare one VkCommandPool for graphics queues per frame. */
         graphics_command_pools_.resize( create_info.max_frames_in_flight_ );
             

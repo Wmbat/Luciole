@@ -25,6 +25,9 @@
 #include <wmbats_bazaar/delegate.hpp>
 
 #include "../luciole_core.hpp"
+#include "../instance.hpp"
+#include "../surface.hpp"
+#include "../device.hpp"
 
 #include "../window/base_window.hpp"
 
@@ -144,6 +147,10 @@ namespace lcl
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
+
+        vulkan::instance inst_;
+        vulkan::surface surface_;
+        vulkan::device device_;
     };
 }
 

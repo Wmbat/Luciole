@@ -72,8 +72,6 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/mesh.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/uniform_buffers.cpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/uniform_buffers.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/vertex.hpp"
 
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/log.hpp"
@@ -102,6 +100,8 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/pipeline_manager.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/swapchain.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/swapchain.hpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/uniform_buffers.cpp"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/uniform_buffers.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader_manager.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader_manager.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader.hpp"
@@ -119,8 +119,16 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/xcb_window.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/xcb_window.hpp"
 
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/device.cpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/device.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/extensions.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/instance.cpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/instance.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/layers.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole_core.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole.hpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/surface.cpp"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/surface.hpp"
         )
 
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )

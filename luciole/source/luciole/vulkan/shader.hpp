@@ -22,6 +22,7 @@
 #include <wmbats_bazaar/file_io.hpp>
 
 #include "vulkan.hpp"
+#include "uniform_buffers.hpp"
 
 #include "../luciole_core.hpp"
 #include "../utilities/log.hpp"
@@ -34,7 +35,19 @@ namespace lcl::vulkan
         e_vertex,
         e_fragment
     };
-    
+
+    enum class binding_type
+    {
+        e_uniform_buffer
+    };
+     
+    struct shader_bindings
+    {
+        std::uint32_t binding_;
+        std::uint32_t count_;
+        binding_type type_;
+    };
+
     struct shader_create_info
     {
         vk::Device device_;
@@ -120,6 +133,8 @@ namespace lcl::vulkan
         
         vk::DescriptorSetLayout descriptor_set_layout_;
         std::vector<vk::DescriptorSet> descriptor_sets_;
+
+        std::vector<uniform_buffers> uniform_buffers_;
 
         std::string entry_point_;
     };
