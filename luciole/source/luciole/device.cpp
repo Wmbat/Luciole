@@ -40,13 +40,13 @@ namespace lcl::vulkan
 
         gpu_ = candidates.begin()->second;
 
-        for ( const auto& desired_extension : desired_extensions )
+        for ( const auto& extension_property : gpu_.enumerateDeviceExtensionProperties( ) )
         {
-            for ( const auto& extension_property : gpu_.enumerateDeviceExtensionProperties( ) )
+            for( const auto& extension : extensions_.extensions_ )
             {
-                if ( strcmp( desired_extension.name_, extension_property.extensionName ) == 0 )
+                if ( strcmp( extension_property.extensionName, extension.name_ ) == 0 )
                 {
-                    extensions_.enable( desired_extension.name_ );
+                    extensions_.enable( extension_property.extensionName );
                 }
             }
         }
@@ -57,6 +57,9 @@ namespace lcl::vulkan
         {
             core_info( "Device extension \"{}\" enabled.", std::string{ extension } );
         }
+
+        
+
     }
 
     bool device::is_gpu_suitable( const vk::PhysicalDevice& gpu, const surface& surface, const std::vector<extension>& desired_extensions ) const
@@ -65,68 +68,39 @@ namespace lcl::vulkan
 
         device_extensions curr_extensions;
 
-        // Check if all the desired extensions are supported by the GPU.
-        for ( const auto& desired_extension : desired_extensions )
+        // Enable all extensions supported by the GPU.
+        for ( const auto& extension_property : extension_properties )
         {
-            for ( const auto& extension_property : extension_properties )
+            for( const auto& extension : curr_extensions.extensions_ )
             {
-                if ( strcmp( desired_extension.name_, extension_property.extensionName ) == 0 )
+                if ( strcmp( extension_property.extensionName, extension.name_ ) == 0 )
                 {
-                    curr_extensions.enable( desired_extension.name_ );
+                    curr_extensions.enable( extension_property.extensionName );
                 }
             }
         }
 
-        // If not all the required extensions are available, print an error message.
         if ( !curr_extensions.is_core_enabled( ) )
         {
-            for ( const auto& extension : curr_extensions.extensions_ )
-            {
-                bool is_supported = false;
-
-                for ( const auto& extension_property : extension_properties )
-                {
-                    if ( strcmp( extension.name_, extension_property.extensionName ) == 0 )
-                    {
-                        is_supported = true;
-                    }
-                }
-
-                if ( is_supported )
-                {
-                    if ( extension.mode_ == extension_mode::e_required && extension.enabled_ == false )
-                    {
-                        core_warn( "Device extension \"{}\" missing, it is required for the library to function properly. "
-                        "Please add the extension to the list of desired extensions.", std::string{ extension.name_ } );
-                    }
-                }
-                else
-                {
-                    core_error( "Device extension \"{}\" is not supported by the GPU", std::string{ extension.name_ } );
-                }
-            }
-
             return false;
         }
 
-        for ( const auto desired_extension : desired_extensions )
+        // Check if all desired extensions are supported.
+        for ( const auto& desired_extension : desired_extensions )
         {
             bool is_supported = false;
 
-            for ( const auto& extension : curr_extensions.get_enabled_extension_names( ) )
+            for ( const auto& enabled_extension : curr_extensions.get_enabled_extension_names( ) )
             {
-                if ( strcmp( extension, desired_extension.name_ ) == 0 )
+                if ( strcmp( desired_extension.name_, enabled_extension ) == 0 )
                 {
                     is_supported = true;
                 }
             }
 
-            if ( !is_supported )
+            if ( !is_supported && desired_extension.mode_ == extension_mode::e_required )
             {
-                if ( desired_extension.mode_ == extension_mode::e_required )
-                {
-                    return false;
-                }
+                return false;
             }
         }
 

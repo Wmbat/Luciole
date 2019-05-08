@@ -88,15 +88,9 @@ namespace lcl
         }
 
         std::vector<const char*> test_extensions;
-        inst_ = vulkan::instance{ test_extensions };
-        surface_ = vulkan::surface{ *p_wnd, inst_ };
-
-        std::vector<vulkan::extension> device_extensions = 
-        {
-            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, vulkan::extension_mode::e_required }
-        };
-
-        device_ = vulkan::device{ inst_, surface_, device_extensions };
+        instance_ = vulkan::instance{ test_extensions };
+        surface_ = vulkan::surface{ *p_wnd, instance_ };
+        device_ = vulkan::device{ instance_, surface_, { } };
 
         ///////////////////////////
 

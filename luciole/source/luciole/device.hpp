@@ -16,13 +16,14 @@ namespace lcl::vulkan
 
     private:
         /**
-         * @brief - 
+         * @brief - Check if a graphics card is suitable for rendering and has support for the users
+         * required extensions.
          * 
-         * @param [in] gpu -
-         * @param [in] surface - 
-         * @param [in] desired_extensions - 
-         * @return true -
-         * @return false -
+         * @param [in] gpu - The graphics card to check for rendering support.
+         * @param [in] surface - The Surface to use for rendering.
+         * @param [in] desired_extensions - The extensions the user wants to have enabled if supported
+         * @return - true if the graphics card is suitable for rendering.
+         * @return - false if the graphics card does not meet the requirements for rendering.
          */
         bool is_gpu_suitable( const vk::PhysicalDevice& gpu, const surface& surface, const std::vector<extension>& desired_extensions ) const;
 

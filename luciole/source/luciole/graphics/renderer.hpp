@@ -148,7 +148,7 @@ namespace lcl
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
 
-        vulkan::instance inst_;
+        vulkan::instance instance_;
         vulkan::surface surface_;
         vulkan::device device_;
     };

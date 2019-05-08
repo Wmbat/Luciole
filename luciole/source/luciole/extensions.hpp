@@ -82,9 +82,9 @@ namespace lcl::vulkan
     struct device_extensions
     {
         /**
-         * @brief Get the enabled extension names object
+         * @brief = Get the names of the enabled extensions.
          * 
-         * @return const std::vector<const char*> 
+         * @return const std::vector<const char*> - The names of the enabled extensions.
          */
         inline const std::vector<const char*> get_enabled_extension_names( ) const
         {
@@ -103,10 +103,10 @@ namespace lcl::vulkan
         }
 
         /**
-         * @brief Check if all the extensions required by the library are enabled.
+         * @brief - Check if all the extensions required by the library are enabled.
          * 
-         * @return true 
-         * @return false 
+         * @return - true if all required extensions are enabled. 
+         * @return - false if a required extension is not enabled. 
          */
         inline bool is_core_enabled( ) const
         {
@@ -125,9 +125,9 @@ namespace lcl::vulkan
         }
 
         /**
-         * @brief 
+         * @brief - Enable an extension.
          * 
-         * @param [in] - name 
+         * @param [in] name - The name of the extension to enable. 
          */
         inline void enable( const char* name )
         {
