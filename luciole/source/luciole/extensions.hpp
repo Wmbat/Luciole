@@ -141,7 +141,8 @@ namespace lcl::vulkan
         }
 
         std::vector<extension> extensions_ = {
-            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, extension_mode::e_required }
+            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, extension_mode::e_required },
+            { VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, extension_mode::e_optional }
         };
     };
 };

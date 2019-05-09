@@ -39,7 +39,7 @@ namespace lcl::vulkan
         }
 
         gpu_ = candidates.begin()->second;
-
+        
         for ( const auto& extension_property : gpu_.enumerateDeviceExtensionProperties( ) )
         {
             for( const auto& extension : extensions_.extensions_ )
@@ -57,9 +57,6 @@ namespace lcl::vulkan
         {
             core_info( "Device extension \"{}\" enabled.", std::string{ extension } );
         }
-
-        
-
     }
 
     bool device::is_gpu_suitable( const vk::PhysicalDevice& gpu, const surface& surface, const std::vector<extension>& desired_extensions ) const
