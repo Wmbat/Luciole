@@ -24,7 +24,6 @@
 #include "renderer.hpp"
 #include "vertex.hpp"
 #include "../utilities/log.hpp"
-#include "../vulkan/error.hpp"
 
 #undef max
 
@@ -52,29 +51,7 @@ static auto test_mesh = lcl::mesh( )
     .set_indices( indices );
 
 namespace lcl
-{
-    VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback_function( VkDebugReportFlagsEXT flags,
-        VkDebugReportObjectTypeEXT objType,
-        uint64_t obj, size_t location,
-        int32_t code, const char* layerPrefix,
-        const char* msg, void* userData )
-    {
-        if ( flags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
-        {
-            core_warn( "Validation Layers -> {0}.", msg );
-        }
-        else if ( flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
-        {
-            core_warn( "Validation Layers -> {0}.", msg );
-        }
-        else if ( flags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
-        {
-            core_error( "Validation Layers -> {0}.", msg );
-        }
-        
-        return VK_FALSE;
-    }
-    
+{    
     renderer::renderer( base_window* p_wnd, const std::string& app_name, uint32_t app_version )
         :
         window_width_( p_wnd->get_width() ),
@@ -82,21 +59,16 @@ namespace lcl
         clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f )
     {
         //////////////////////////
-        if( auto result = volkInitialize( ); result != VK_SUCCESS )
-        {
-            // throw vulkan::error{ vk::Result::eErrorInitializationFailed, "Failed to intiliaze volk." };
-        }
-
-        std::vector<const char*> test_extensions;
-        instance_ = vulkan::instance{ test_extensions };
         surface_ = vulkan::surface{ *p_wnd, instance_ };
-        device_ = vulkan::device{ instance_, surface_, { } };
+        //device_ = vulkan::device{ instance_, surface_ };
 
         ///////////////////////////
 
+/*
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
-        
+  */      
+        /*
         const auto context_create_info = vulkan::context::create_info( )
             .set_p_window( p_wnd )
             .set_app_name( app_name )
@@ -180,6 +152,7 @@ namespace lcl
             .set_data( test_mesh );
         
         test_mesh_buffer_ = vulkan::mesh_buffer( mesh_buffer_create_info );
+        */
     }
     renderer::renderer( renderer&& rhs ) noexcept
     {
@@ -187,7 +160,7 @@ namespace lcl
     }
     renderer::~renderer( )
     {
-        context_.device_->waitIdle( );
+        // context_.device_->waitIdle( );
     }
     
     renderer& renderer::operator=( renderer&& rhs ) noexcept
@@ -200,6 +173,7 @@ namespace lcl
             window_height_ = rhs.window_height_;
             rhs.window_height_ = 0;
             
+            /*
             clear_colour_ = std::move( rhs.clear_colour_ );
             
             in_flight_fences_ = std::move( rhs.in_flight_fences_ );
@@ -212,11 +186,13 @@ namespace lcl
             }
             
             render_pass_ = std::move( rhs.render_pass_ );
+            */
         }
     
         return *this;
     }
     
+    /*
     std::uint32_t renderer::create_vertex_shader( const std::string_view filepath, const std::string_view entry_point )
     {
         return shader_manager_.insert<vulkan::shader_type::e_vertex>( vulkan::shader_create_info{ context_.device_.get(), filepath, entry_point } );
@@ -564,4 +540,5 @@ namespace lcl
             return available_formats[0];
         }
     }
+    */
 }

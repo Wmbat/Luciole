@@ -40,7 +40,7 @@ namespace lcl
 
         LUCIOLE_API void poll_events ( ) override;
 
-        LUCIOLE_API vk::UniqueSurfaceKHR create_surface ( const vk::Instance& instance ) const noexcept override;
+        // LUCIOLE_API vk::UniqueSurfaceKHR create_surface ( const vk::Instance& instance ) const noexcept override;
 
     private:
         static LRESULT WINAPI handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );

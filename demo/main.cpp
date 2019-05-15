@@ -26,6 +26,7 @@ int main( int args, char** argv )
 {
     lcl::xcb_window window( "Demo" );
     lcl::renderer renderer( &window, "Demo", 0 );
+/*
     renderer.set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
 
     const std::uint32_t vert_id = renderer.create_vertex_shader( "resources/shaders/vert.spv" );
@@ -54,7 +55,7 @@ int main( int args, char** argv )
             
         renderer.draw_frame( );
     }
-    
+  */  
     return 0;
 }
 

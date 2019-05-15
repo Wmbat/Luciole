@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "vulkan/vulkan.hpp"
+#include "vulkan/volk/volk.h"
 
 namespace lcl::vulkan
 {
@@ -64,11 +64,13 @@ namespace lcl::vulkan
                     extension.enabled_ = true;
                 }
             }
+
         }
 
         std::vector<extension> extensions_ = {
             { VK_EXT_DEBUG_REPORT_EXTENSION_NAME, extension_mode::e_optional },
             { VK_KHR_SURFACE_EXTENSION_NAME, extension_mode::e_required },
+            { VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, extension_mode::e_optional },
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
             { VK_KHR_WIN32_SURFACE_EXTENSION_NAME, extension_mode::e_required }
 #elif defined( VK_USE_PLATFORM_WAYLAND_KHR )
@@ -141,8 +143,7 @@ namespace lcl::vulkan
         }
 
         std::vector<extension> extensions_ = {
-            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, extension_mode::e_required },
-            { VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, extension_mode::e_optional }
+            { VK_KHR_SWAPCHAIN_EXTENSION_NAME, extension_mode::e_required }
         };
     };
 };

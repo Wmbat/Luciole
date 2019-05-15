@@ -31,12 +31,14 @@
 
 #include "../window/base_window.hpp"
 
+/*
 #include "../vulkan/context.hpp"
 #include "../vulkan/swapchain.hpp"
 #include "../vulkan/memory_allocator.hpp"
 #include "../vulkan/shader_manager.hpp"
 #include "../vulkan/pipeline_manager.hpp"
 #include "../vulkan/mesh_buffer.hpp"
+*/
 
 namespace lcl
 {
@@ -58,6 +60,7 @@ namespace lcl
         LUCIOLE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
         LUCIOLE_API renderer& operator=( renderer&& renderer ) noexcept;
         
+
         /*!
          * @brief Creates a vertex shader and place it in the shader manager.
          * 
@@ -65,7 +68,7 @@ namespace lcl
          * @param the name of the main function of the shader.
          * @return an index to allow the programmer access to the shader.
          */
-        LUCIOLE_API std::uint32_t create_vertex_shader( const std::string_view filepath, const std::string_view entry_point = "main" ); 
+        // LUCIOLE_API std::uint32_t create_vertex_shader( const std::string_view filepath, const std::string_view entry_point = "main" ); 
         /*!
          * @brief Creates a fragment shader and place it in the shader manager.
          * 
@@ -73,7 +76,7 @@ namespace lcl
          * @param the name of the main function of the shader.
          * @return an index to allow the programmer access to the shader.
          */
-        LUCIOLE_API std::uint32_t create_fragment_shader( const std::string_view filepath, const std::string_view entry_point = "main" );        
+        // LUCIOLE_API std::uint32_t create_fragment_shader( const std::string_view filepath, const std::string_view entry_point = "main" );        
 
         /*!
          * @brief Creates a graphics pipeline.
@@ -83,8 +86,9 @@ namespace lcl
          * @param the id of the fragment shader to use in this pipeline.
          * @return the id of the pipeline that was just created.
          */
-        LUCIOLE_API std::uint32_t create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id );
+        // LUCIOLE_API std::uint32_t create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id );
         
+        /*
         LUCIOLE_API void set_pipeline( const uint32_t id );
         LUCIOLE_API void switch_pipeline( const uint32_t id );
 
@@ -96,8 +100,9 @@ namespace lcl
         LUCIOLE_API void on_framebuffer_resize( const framebuffer_resize_event& event );
 
         LUCIOLE_API void set_clear_colour( const glm::vec4& colour );
-    
+        */
     private:
+    /*
         const vk::UniqueSemaphore create_semaphore( ) const noexcept;
 
         const vk::UniqueFence create_fence( ) const noexcept;
@@ -112,7 +117,7 @@ namespace lcl
     
         const vk::SurfaceFormatKHR choose_swapchain_surface_format(
             const std::vector<vk::SurfaceFormatKHR> &available_formats ) const noexcept;
-        
+      */  
     private:
         static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
         
@@ -128,6 +133,7 @@ namespace lcl
         
         uint32_t current_pipeline_;
 
+/*
         vulkan::context context_;
         vulkan::swapchain swapchain_;
     
@@ -147,7 +153,7 @@ namespace lcl
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
-
+*/
         vulkan::instance instance_;
         vulkan::surface surface_;
         vulkan::device device_;

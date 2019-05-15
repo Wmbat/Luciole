@@ -1,7 +1,7 @@
 #ifndef LUCIOLE_LAYERS_HPP
 #define LUCIOLE_LAYERS_HPP
 
-#include "vulkan/vulkan.hpp"
+#include "vulkan/volk/volk.h"
 
 namespace lcl::vulkan
 {

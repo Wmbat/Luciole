@@ -33,8 +33,7 @@ VkResult volkInitialize(void)
 	if (!module)
 		return VK_ERROR_INITIALIZATION_FAILED;
 
-	// note: function pointer is cast through void function pointer to silence cast-function-type warning on gcc8
-	vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)(void(*)(void))GetProcAddress(module, "vkGetInstanceProcAddr");
+	vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)GetProcAddress(module, "vkGetInstanceProcAddr");
 #elif defined(__APPLE__)
 	void* module = dlopen("libvulkan.dylib", RTLD_NOW | RTLD_LOCAL);
 	if (!module)
@@ -165,24 +164,12 @@ static void volkGenLoadInstance(void* context, PFN_vkVoidFunction (*load)(void*,
 #if defined(VK_EXT_display_surface_counter)
 	vkGetPhysicalDeviceSurfaceCapabilities2EXT = (PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT)load(context, "vkGetPhysicalDeviceSurfaceCapabilities2EXT");
 #endif /* defined(VK_EXT_display_surface_counter) */
-#if defined(VK_EXT_full_screen_exclusive)
-	vkGetPhysicalDeviceSurfacePresentModes2EXT = (PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT)load(context, "vkGetPhysicalDeviceSurfacePresentModes2EXT");
-#endif /* defined(VK_EXT_full_screen_exclusive) */
-#if defined(VK_EXT_headless_surface)
-	vkCreateHeadlessSurfaceEXT = (PFN_vkCreateHeadlessSurfaceEXT)load(context, "vkCreateHeadlessSurfaceEXT");
-#endif /* defined(VK_EXT_headless_surface) */
-#if defined(VK_EXT_metal_surface)
-	vkCreateMetalSurfaceEXT = (PFN_vkCreateMetalSurfaceEXT)load(context, "vkCreateMetalSurfaceEXT");
-#endif /* defined(VK_EXT_metal_surface) */
 #if defined(VK_EXT_sample_locations)
 	vkGetPhysicalDeviceMultisamplePropertiesEXT = (PFN_vkGetPhysicalDeviceMultisamplePropertiesEXT)load(context, "vkGetPhysicalDeviceMultisamplePropertiesEXT");
 #endif /* defined(VK_EXT_sample_locations) */
 #if defined(VK_FUCHSIA_imagepipe_surface)
 	vkCreateImagePipeSurfaceFUCHSIA = (PFN_vkCreateImagePipeSurfaceFUCHSIA)load(context, "vkCreateImagePipeSurfaceFUCHSIA");
 #endif /* defined(VK_FUCHSIA_imagepipe_surface) */
-#if defined(VK_GGP_stream_descriptor_surface)
-	vkCreateStreamDescriptorSurfaceGGP = (PFN_vkCreateStreamDescriptorSurfaceGGP)load(context, "vkCreateStreamDescriptorSurfaceGGP");
-#endif /* defined(VK_GGP_stream_descriptor_surface) */
 #if defined(VK_KHR_android_surface)
 	vkCreateAndroidSurfaceKHR = (PFN_vkCreateAndroidSurfaceKHR)load(context, "vkCreateAndroidSurfaceKHR");
 #endif /* defined(VK_KHR_android_surface) */
@@ -419,9 +406,6 @@ static void volkGenLoadDevice(void* context, PFN_vkVoidFunction (*load)(void*, c
 #if defined(VK_AMD_buffer_marker)
 	vkCmdWriteBufferMarkerAMD = (PFN_vkCmdWriteBufferMarkerAMD)load(context, "vkCmdWriteBufferMarkerAMD");
 #endif /* defined(VK_AMD_buffer_marker) */
-#if defined(VK_AMD_display_native_hdr)
-	vkSetLocalDimmingAMD = (PFN_vkSetLocalDimmingAMD)load(context, "vkSetLocalDimmingAMD");
-#endif /* defined(VK_AMD_display_native_hdr) */
 #if defined(VK_AMD_draw_indirect_count)
 	vkCmdDrawIndexedIndirectCountAMD = (PFN_vkCmdDrawIndexedIndirectCountAMD)load(context, "vkCmdDrawIndexedIndirectCountAMD");
 	vkCmdDrawIndirectCountAMD = (PFN_vkCmdDrawIndirectCountAMD)load(context, "vkCmdDrawIndirectCountAMD");
@@ -472,16 +456,9 @@ static void volkGenLoadDevice(void* context, PFN_vkVoidFunction (*load)(void*, c
 #if defined(VK_EXT_external_memory_host)
 	vkGetMemoryHostPointerPropertiesEXT = (PFN_vkGetMemoryHostPointerPropertiesEXT)load(context, "vkGetMemoryHostPointerPropertiesEXT");
 #endif /* defined(VK_EXT_external_memory_host) */
-#if defined(VK_EXT_full_screen_exclusive)
-	vkAcquireFullScreenExclusiveModeEXT = (PFN_vkAcquireFullScreenExclusiveModeEXT)load(context, "vkAcquireFullScreenExclusiveModeEXT");
-	vkReleaseFullScreenExclusiveModeEXT = (PFN_vkReleaseFullScreenExclusiveModeEXT)load(context, "vkReleaseFullScreenExclusiveModeEXT");
-#endif /* defined(VK_EXT_full_screen_exclusive) */
 #if defined(VK_EXT_hdr_metadata)
 	vkSetHdrMetadataEXT = (PFN_vkSetHdrMetadataEXT)load(context, "vkSetHdrMetadataEXT");
 #endif /* defined(VK_EXT_hdr_metadata) */
-#if defined(VK_EXT_host_query_reset)
-	vkResetQueryPoolEXT = (PFN_vkResetQueryPoolEXT)load(context, "vkResetQueryPoolEXT");
-#endif /* defined(VK_EXT_host_query_reset) */
 #if defined(VK_EXT_image_drm_format_modifier)
 	vkGetImageDrmFormatModifierPropertiesEXT = (PFN_vkGetImageDrmFormatModifierPropertiesEXT)load(context, "vkGetImageDrmFormatModifierPropertiesEXT");
 #endif /* defined(VK_EXT_image_drm_format_modifier) */
@@ -595,9 +572,6 @@ static void volkGenLoadDevice(void* context, PFN_vkVoidFunction (*load)(void*, c
 	vkRegisterObjectsNVX = (PFN_vkRegisterObjectsNVX)load(context, "vkRegisterObjectsNVX");
 	vkUnregisterObjectsNVX = (PFN_vkUnregisterObjectsNVX)load(context, "vkUnregisterObjectsNVX");
 #endif /* defined(VK_NVX_device_generated_commands) */
-#if defined(VK_NVX_image_view_handle)
-	vkGetImageViewHandleNVX = (PFN_vkGetImageViewHandleNVX)load(context, "vkGetImageViewHandleNVX");
-#endif /* defined(VK_NVX_image_view_handle) */
 #if defined(VK_NV_clip_space_w_scaling)
 	vkCmdSetViewportWScalingNV = (PFN_vkCmdSetViewportWScalingNV)load(context, "vkCmdSetViewportWScalingNV");
 #endif /* defined(VK_NV_clip_space_w_scaling) */
@@ -635,9 +609,6 @@ static void volkGenLoadDevice(void* context, PFN_vkVoidFunction (*load)(void*, c
 	vkCmdSetCoarseSampleOrderNV = (PFN_vkCmdSetCoarseSampleOrderNV)load(context, "vkCmdSetCoarseSampleOrderNV");
 	vkCmdSetViewportShadingRatePaletteNV = (PFN_vkCmdSetViewportShadingRatePaletteNV)load(context, "vkCmdSetViewportShadingRatePaletteNV");
 #endif /* defined(VK_NV_shading_rate_image) */
-#if (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive))
-	vkGetDeviceGroupSurfacePresentModes2EXT = (PFN_vkGetDeviceGroupSurfacePresentModes2EXT)load(context, "vkGetDeviceGroupSurfacePresentModes2EXT");
-#endif /* (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive)) */
 #if (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1))
 	vkCmdPushDescriptorSetWithTemplateKHR = (PFN_vkCmdPushDescriptorSetWithTemplateKHR)load(context, "vkCmdPushDescriptorSetWithTemplateKHR");
 #endif /* (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1)) */
@@ -797,9 +768,6 @@ static void volkGenLoadDeviceTable(struct VolkDeviceTable* table, void* context,
 #if defined(VK_AMD_buffer_marker)
 	table->vkCmdWriteBufferMarkerAMD = (PFN_vkCmdWriteBufferMarkerAMD)load(context, "vkCmdWriteBufferMarkerAMD");
 #endif /* defined(VK_AMD_buffer_marker) */
-#if defined(VK_AMD_display_native_hdr)
-	table->vkSetLocalDimmingAMD = (PFN_vkSetLocalDimmingAMD)load(context, "vkSetLocalDimmingAMD");
-#endif /* defined(VK_AMD_display_native_hdr) */
 #if defined(VK_AMD_draw_indirect_count)
 	table->vkCmdDrawIndexedIndirectCountAMD = (PFN_vkCmdDrawIndexedIndirectCountAMD)load(context, "vkCmdDrawIndexedIndirectCountAMD");
 	table->vkCmdDrawIndirectCountAMD = (PFN_vkCmdDrawIndirectCountAMD)load(context, "vkCmdDrawIndirectCountAMD");
@@ -850,16 +818,9 @@ static void volkGenLoadDeviceTable(struct VolkDeviceTable* table, void* context,
 #if defined(VK_EXT_external_memory_host)
 	table->vkGetMemoryHostPointerPropertiesEXT = (PFN_vkGetMemoryHostPointerPropertiesEXT)load(context, "vkGetMemoryHostPointerPropertiesEXT");
 #endif /* defined(VK_EXT_external_memory_host) */
-#if defined(VK_EXT_full_screen_exclusive)
-	table->vkAcquireFullScreenExclusiveModeEXT = (PFN_vkAcquireFullScreenExclusiveModeEXT)load(context, "vkAcquireFullScreenExclusiveModeEXT");
-	table->vkReleaseFullScreenExclusiveModeEXT = (PFN_vkReleaseFullScreenExclusiveModeEXT)load(context, "vkReleaseFullScreenExclusiveModeEXT");
-#endif /* defined(VK_EXT_full_screen_exclusive) */
 #if defined(VK_EXT_hdr_metadata)
 	table->vkSetHdrMetadataEXT = (PFN_vkSetHdrMetadataEXT)load(context, "vkSetHdrMetadataEXT");
 #endif /* defined(VK_EXT_hdr_metadata) */
-#if defined(VK_EXT_host_query_reset)
-	table->vkResetQueryPoolEXT = (PFN_vkResetQueryPoolEXT)load(context, "vkResetQueryPoolEXT");
-#endif /* defined(VK_EXT_host_query_reset) */
 #if defined(VK_EXT_image_drm_format_modifier)
 	table->vkGetImageDrmFormatModifierPropertiesEXT = (PFN_vkGetImageDrmFormatModifierPropertiesEXT)load(context, "vkGetImageDrmFormatModifierPropertiesEXT");
 #endif /* defined(VK_EXT_image_drm_format_modifier) */
@@ -973,9 +934,6 @@ static void volkGenLoadDeviceTable(struct VolkDeviceTable* table, void* context,
 	table->vkRegisterObjectsNVX = (PFN_vkRegisterObjectsNVX)load(context, "vkRegisterObjectsNVX");
 	table->vkUnregisterObjectsNVX = (PFN_vkUnregisterObjectsNVX)load(context, "vkUnregisterObjectsNVX");
 #endif /* defined(VK_NVX_device_generated_commands) */
-#if defined(VK_NVX_image_view_handle)
-	table->vkGetImageViewHandleNVX = (PFN_vkGetImageViewHandleNVX)load(context, "vkGetImageViewHandleNVX");
-#endif /* defined(VK_NVX_image_view_handle) */
 #if defined(VK_NV_clip_space_w_scaling)
 	table->vkCmdSetViewportWScalingNV = (PFN_vkCmdSetViewportWScalingNV)load(context, "vkCmdSetViewportWScalingNV");
 #endif /* defined(VK_NV_clip_space_w_scaling) */
@@ -1013,9 +971,6 @@ static void volkGenLoadDeviceTable(struct VolkDeviceTable* table, void* context,
 	table->vkCmdSetCoarseSampleOrderNV = (PFN_vkCmdSetCoarseSampleOrderNV)load(context, "vkCmdSetCoarseSampleOrderNV");
 	table->vkCmdSetViewportShadingRatePaletteNV = (PFN_vkCmdSetViewportShadingRatePaletteNV)load(context, "vkCmdSetViewportShadingRatePaletteNV");
 #endif /* defined(VK_NV_shading_rate_image) */
-#if (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive))
-	table->vkGetDeviceGroupSurfacePresentModes2EXT = (PFN_vkGetDeviceGroupSurfacePresentModes2EXT)load(context, "vkGetDeviceGroupSurfacePresentModes2EXT");
-#endif /* (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive)) */
 #if (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1))
 	table->vkCmdPushDescriptorSetWithTemplateKHR = (PFN_vkCmdPushDescriptorSetWithTemplateKHR)load(context, "vkCmdPushDescriptorSetWithTemplateKHR");
 #endif /* (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1)) */
@@ -1206,9 +1161,6 @@ PFN_vkUpdateDescriptorSetWithTemplate vkUpdateDescriptorSetWithTemplate;
 #if defined(VK_AMD_buffer_marker)
 PFN_vkCmdWriteBufferMarkerAMD vkCmdWriteBufferMarkerAMD;
 #endif /* defined(VK_AMD_buffer_marker) */
-#if defined(VK_AMD_display_native_hdr)
-PFN_vkSetLocalDimmingAMD vkSetLocalDimmingAMD;
-#endif /* defined(VK_AMD_display_native_hdr) */
 #if defined(VK_AMD_draw_indirect_count)
 PFN_vkCmdDrawIndexedIndirectCountAMD vkCmdDrawIndexedIndirectCountAMD;
 PFN_vkCmdDrawIndirectCountAMD vkCmdDrawIndirectCountAMD;
@@ -1278,26 +1230,12 @@ PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT vkGetPhysicalDeviceSurfaceCapabil
 #if defined(VK_EXT_external_memory_host)
 PFN_vkGetMemoryHostPointerPropertiesEXT vkGetMemoryHostPointerPropertiesEXT;
 #endif /* defined(VK_EXT_external_memory_host) */
-#if defined(VK_EXT_full_screen_exclusive)
-PFN_vkAcquireFullScreenExclusiveModeEXT vkAcquireFullScreenExclusiveModeEXT;
-PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT vkGetPhysicalDeviceSurfacePresentModes2EXT;
-PFN_vkReleaseFullScreenExclusiveModeEXT vkReleaseFullScreenExclusiveModeEXT;
-#endif /* defined(VK_EXT_full_screen_exclusive) */
 #if defined(VK_EXT_hdr_metadata)
 PFN_vkSetHdrMetadataEXT vkSetHdrMetadataEXT;
 #endif /* defined(VK_EXT_hdr_metadata) */
-#if defined(VK_EXT_headless_surface)
-PFN_vkCreateHeadlessSurfaceEXT vkCreateHeadlessSurfaceEXT;
-#endif /* defined(VK_EXT_headless_surface) */
-#if defined(VK_EXT_host_query_reset)
-PFN_vkResetQueryPoolEXT vkResetQueryPoolEXT;
-#endif /* defined(VK_EXT_host_query_reset) */
 #if defined(VK_EXT_image_drm_format_modifier)
 PFN_vkGetImageDrmFormatModifierPropertiesEXT vkGetImageDrmFormatModifierPropertiesEXT;
 #endif /* defined(VK_EXT_image_drm_format_modifier) */
-#if defined(VK_EXT_metal_surface)
-PFN_vkCreateMetalSurfaceEXT vkCreateMetalSurfaceEXT;
-#endif /* defined(VK_EXT_metal_surface) */
 #if defined(VK_EXT_sample_locations)
 PFN_vkCmdSetSampleLocationsEXT vkCmdSetSampleLocationsEXT;
 PFN_vkGetPhysicalDeviceMultisamplePropertiesEXT vkGetPhysicalDeviceMultisamplePropertiesEXT;
@@ -1319,9 +1257,6 @@ PFN_vkMergeValidationCachesEXT vkMergeValidationCachesEXT;
 #if defined(VK_FUCHSIA_imagepipe_surface)
 PFN_vkCreateImagePipeSurfaceFUCHSIA vkCreateImagePipeSurfaceFUCHSIA;
 #endif /* defined(VK_FUCHSIA_imagepipe_surface) */
-#if defined(VK_GGP_stream_descriptor_surface)
-PFN_vkCreateStreamDescriptorSurfaceGGP vkCreateStreamDescriptorSurfaceGGP;
-#endif /* defined(VK_GGP_stream_descriptor_surface) */
 #if defined(VK_GOOGLE_display_timing)
 PFN_vkGetPastPresentationTimingGOOGLE vkGetPastPresentationTimingGOOGLE;
 PFN_vkGetRefreshCycleDurationGOOGLE vkGetRefreshCycleDurationGOOGLE;
@@ -1491,9 +1426,6 @@ PFN_vkGetPhysicalDeviceGeneratedCommandsPropertiesNVX vkGetPhysicalDeviceGenerat
 PFN_vkRegisterObjectsNVX vkRegisterObjectsNVX;
 PFN_vkUnregisterObjectsNVX vkUnregisterObjectsNVX;
 #endif /* defined(VK_NVX_device_generated_commands) */
-#if defined(VK_NVX_image_view_handle)
-PFN_vkGetImageViewHandleNVX vkGetImageViewHandleNVX;
-#endif /* defined(VK_NVX_image_view_handle) */
 #if defined(VK_NV_clip_space_w_scaling)
 PFN_vkCmdSetViewportWScalingNV vkCmdSetViewportWScalingNV;
 #endif /* defined(VK_NV_clip_space_w_scaling) */
@@ -1537,9 +1469,6 @@ PFN_vkCmdBindShadingRateImageNV vkCmdBindShadingRateImageNV;
 PFN_vkCmdSetCoarseSampleOrderNV vkCmdSetCoarseSampleOrderNV;
 PFN_vkCmdSetViewportShadingRatePaletteNV vkCmdSetViewportShadingRatePaletteNV;
 #endif /* defined(VK_NV_shading_rate_image) */
-#if (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive))
-PFN_vkGetDeviceGroupSurfacePresentModes2EXT vkGetDeviceGroupSurfacePresentModes2EXT;
-#endif /* (defined(VK_EXT_full_screen_exclusive) && defined(VK_VERSION_1_1)) || (defined(VK_KHR_device_group) && defined(VK_EXT_full_screen_exclusive)) */
 #if (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1))
 PFN_vkCmdPushDescriptorSetWithTemplateKHR vkCmdPushDescriptorSetWithTemplateKHR;
 #endif /* (defined(VK_KHR_descriptor_update_template) && defined(VK_KHR_push_descriptor)) || (defined(VK_KHR_push_descriptor) && defined(VK_VERSION_1_1)) */

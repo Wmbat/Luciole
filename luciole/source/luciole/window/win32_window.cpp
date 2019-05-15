@@ -128,6 +128,7 @@ namespace lcl
         }
     };
 
+/*
     vk::UniqueSurfaceKHR win32_window::create_surface ( const vk::Instance& instance ) const noexcept
     {
         const auto create_info = vk::Win32SurfaceCreateInfoKHR ( )
@@ -136,6 +137,7 @@ namespace lcl
 
         return instance.createWin32SurfaceKHRUnique ( create_info );
     }
+    */
 
     LRESULT __stdcall win32_window::handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
     {

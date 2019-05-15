@@ -22,8 +22,6 @@
 
 #include <glm/glm.hpp>
 
-#include "../vulkan/vulkan.hpp"
-
 namespace lcl
 {
     struct vertex
@@ -32,11 +30,13 @@ namespace lcl
         glm::vec4 colour_;
     };
     
+    /*
     struct vertex_input_config
     {
         std::vector<vk::VertexInputBindingDescription> bindings_;
         std::vector<vk::VertexInputAttributeDescription> attributes_;
     };
+    */
 }
 
 #endif //LUCIOLE_GRAPHICS_VERTEX_HPP

@@ -303,6 +303,7 @@ namespace lcl
         }
     }
     
+    /*
     vk::UniqueSurfaceKHR xcb_window::create_surface( const vk::Instance& instance ) const noexcept
     {
         const auto create_info = vk::XcbSurfaceCreateInfoKHR( )
@@ -310,6 +311,24 @@ namespace lcl
             .setWindow( xcb_window_ );
         
         return instance.createXcbSurfaceKHRUnique( create_info );
+    }
+    */
+
+    VkSurfaceKHR xcb_window::create_surface( const VkInstance instance ) const
+    {
+        VkSurfaceKHR surface;
+
+        VkXcbSurfaceCreateInfoKHR create_info{ };
+        create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        create_info.connection = p_xcb_connection_.get( );
+        create_info.window = xcb_window_;
+
+        if ( vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ) != VK_SUCCESS )
+        {
+            core_error( "Failed to create Surface" );
+        }
+
+        return surface;
     }
 }
 

@@ -22,7 +22,9 @@
 #include "event.hpp"
 #include "../luciole_core.hpp"
 #include "../utilities/message.hpp"
-#include "../vulkan/vulkan.hpp"
+
+
+#include "../vulkan/volk/volk.h"
 
 namespace lcl
 {
@@ -36,7 +38,8 @@ namespace lcl
     
         LUCIOLE_API bool is_open( ) const noexcept;
     
-        LUCIOLE_API virtual vk::UniqueSurfaceKHR create_surface( const vk::Instance& instance ) const noexcept = 0;
+        // LUCIOLE_API virtual vk::UniqueSurfaceKHR create_surface( const vk::Instance& instance ) const noexcept = 0;
+        LUCIOLE_API virtual VkSurfaceKHR create_surface( const VkInstance instance ) const = 0;
     
         LUCIOLE_API uint32_t get_width( ) const noexcept;
         LUCIOLE_API uint32_t get_height( ) const noexcept;

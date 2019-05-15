@@ -21,7 +21,6 @@
 
 #include <string>
 
-#include "error.hpp"
 #include "../luciole_core.hpp"
 
 
@@ -32,41 +31,6 @@ namespace lcl::vulkan
 #else
     static constexpr bool enable_debug_layers = true;
 #endif
-    
-    /**
-     *  @brief Helper function to check if an object was successfully created. Throws
-     *  an exception if it is not, otherwise, returns the desired object.
-     *  @tparam T, The desired object type.
-     *  @param return_obj, Struct containing the desired object and its creation result.
-     *  @param error_msg, Message to display in case of creation failure.
-     *  @return The successfully creation object.
-     */
-    template<typename T>
-    inline const T check_vk_result_value( const vk::ResultValue<T> &return_obj, const std::string& msg  )
-    {
-        if( return_obj.result != vk::Result::eSuccess )
-        {
-            throw error{ return_obj.result, msg };
-        }
-        else
-        {
-            return return_obj.value;
-        }
-    }
-    
-    /**
-     *  @brief Helper func to check if an object was successfully created. Throws
-     *  an exception if it is not.
-     *  @param result, The result to check.
-     *  @param error_msg, The message to display in case of error.
-     */
-    inline void check_vk_result( const vk::Result& result, const std::string& msg )
-    {
-        if( result != vk::Result::eSuccess )
-        {
-            throw error{ result, msg };
-        }
-    }
 }
 
 #endif //MARSUPIAL_VULKAN_UTILS_H
