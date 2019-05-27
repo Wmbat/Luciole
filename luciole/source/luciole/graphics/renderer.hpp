@@ -25,9 +25,10 @@
 #include <wmbats_bazaar/delegate.hpp>
 
 #include "../luciole_core.hpp"
-#include "../instance.hpp"
-#include "../surface.hpp"
-#include "../device.hpp"
+#include "../vulkan/instance.hpp"
+#include "../vulkan/surface.hpp"
+#include "../vulkan/device.hpp"
+#include "../vulkan/command_pool.hpp"
 
 #include "../window/base_window.hpp"
 
@@ -157,6 +158,8 @@ namespace lcl
         vulkan::instance instance_;
         vulkan::surface surface_;
         vulkan::device device_;
+
+        std::vector<vulkan::command_pool> command_pools_;
     };
 }
 

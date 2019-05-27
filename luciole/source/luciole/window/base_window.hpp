@@ -19,12 +19,11 @@
 #ifndef LUCIOLE_WINDOW_BASE_WINDOW_HPP
 #define LUCIOLE_WINDOW_BASE_WINDOW_HPP
 
+#include <vulkan/vulkan.h>
+
 #include "event.hpp"
 #include "../luciole_core.hpp"
 #include "../utilities/message.hpp"
-
-
-#include "../vulkan/volk/volk.h"
 
 namespace lcl
 {

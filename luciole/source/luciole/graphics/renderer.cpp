@@ -60,8 +60,8 @@ namespace lcl
     {
         //////////////////////////
         surface_ = vulkan::surface{ *p_wnd, instance_ };
-        //device_ = vulkan::device{ instance_, surface_ };
-
+        device_ = vulkan::device{ instance_, surface_ };
+        command_pools_ = device_.get_command_pools( );
         ///////////////////////////
 
 /*

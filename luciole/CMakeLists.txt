@@ -39,7 +39,6 @@ if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( luciole
                 ${WAYLAND_CLIENT_LIBRARIES}
-                dl
                 vulkan
                 stb
                 spdlog
@@ -49,7 +48,6 @@ if( NOT WIN32 )
     else( )
         target_link_libraries( luciole
                 PUBLIC ${XCB_LIBRARIES}
-                PUBLIC dl
                 PUBLIC vulkan
                 PUBLIC stb
                 PUBLIC spdlog
@@ -81,10 +79,6 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/vma/vk_mem_alloc.h"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/vma/vma_define.cpp"
 
-        # volk
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/volk/volk.c"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/volk/volk.h"
-
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/context.cpp"
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/context.hpp"
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/error.cpp"
@@ -105,7 +99,16 @@ target_sources( luciole
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader_manager.cpp"
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader_manager.hpp"
 #        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/shader.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/utils.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/command_pool.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/device.cpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/device.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/extensions.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/instance.cpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/instance.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/layers.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/surface.cpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/surface.hpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/utils.hpp"
 
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/base_window.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/base_window.hpp"
@@ -119,16 +122,8 @@ target_sources( luciole
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/xcb_window.cpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/window/xcb_window.hpp"
 
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/device.cpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/device.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/extensions.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/instance.cpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/instance.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/layers.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole_core.hpp"
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/luciole.hpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/surface.cpp"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/surface.hpp"
         )
 
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )

@@ -19,10 +19,7 @@
 #ifndef LUCIOLE_VULKAN_UTILS_H
 #define LUCIOLE_VULKAN_UTILS_H
 
-#include <string>
-
-#include "../luciole_core.hpp"
-
+#include <vulkan/vulkan.h>
 
 namespace lcl::vulkan
 {
