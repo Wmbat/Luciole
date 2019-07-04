@@ -16,36 +16,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_SURFACE_HPP
-#define LUCIOLE_SURFACE_HPP
-
-#include "instance.hpp"
-#include "utils.hpp"
+#include "../context.hpp"
 
 #include "../window/base_window.hpp"
 
-namespace lcl::vulkan
+namespace lcl::gfx
 {
-    struct surface
+    class context : public core::context
     {
     public:
-        LUCIOLE_API surface( ) = default;
-        LUCIOLE_API surface( const base_window& window, const instance& instance );
-        surface( const surface& other ) = delete;
-        LUCIOLE_API surface( surface&& other );
-        LUCIOLE_API ~surface( );
-
-        surface& operator=( const surface& rhs ) = delete;
-        LUCIOLE_API surface& operator=( surface&& rhs );
-
-
-    public:
-        VkSurfaceKHR handle_ = VK_NULL_HANDLE;
+        LUCIOLE_API context( ) = default;
+        LUCIOLE_API context( base_window* p_wnd, const std::string& app_name, std::uint32_t app_version );
+        LUCIOLE_API virtual ~context( );
 
     private:
-        VkInstance instance_ = VK_NULL_HANDLE;
+        void create_surface( base_window* p_wnd ) noexcept;
+        void destroy_surface( ) noexcept;
+
+        virtual void pick_gpu( ) noexcept;
+        virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept;
+
+    private:
+        VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     };
-
-} // lcl::vulkan
-
-#endif // LUCIOLE_SURFACE_HPP
+} // namespace lcl::gfx

@@ -25,10 +25,6 @@
 #include <wmbats_bazaar/delegate.hpp>
 
 #include "../luciole_core.hpp"
-#include "../vulkan/instance.hpp"
-#include "../vulkan/surface.hpp"
-#include "../vulkan/device.hpp"
-#include "../vulkan/command_pool.hpp"
 
 #include "../window/base_window.hpp"
 
@@ -154,12 +150,15 @@ namespace lcl
         
         vulkan::shader_manager shader_manager_;
         vulkan::pipeline_manager pipeline_manager_;
-*/
+
         vulkan::instance instance_;
         vulkan::surface surface_;
         vulkan::device device_;
 
         std::vector<vulkan::command_pool> command_pools_;
+
+        vulkan::swapchain swapchain_;
+*/
     };
 }
 

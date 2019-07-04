@@ -58,16 +58,11 @@ namespace lcl
         window_height_( p_wnd->get_height() ),
         clear_colour_( 0.0f, 0.0f, 0.0f, 1.0f )
     {
-        //////////////////////////
-        surface_ = vulkan::surface{ *p_wnd, instance_ };
-        device_ = vulkan::device{ instance_, surface_ };
-        command_pools_ = device_.get_command_pools( );
-        ///////////////////////////
-
-/*
+        /*
         p_wnd->set_event_callback( window_close_event_delg( *this, &renderer::on_window_close ) );
         p_wnd->set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
-  */      
+        */
+    
         /*
         const auto context_create_info = vulkan::context::create_info( )
             .set_p_window( p_wnd )

@@ -19,13 +19,16 @@
 #include <iostream>
 
 #include <luciole/luciole.hpp>
+#include <luciole/graphics/context.hpp>
 
 #include <luciole/window/xcb_window.hpp>
 
 int main( int args, char** argv )
 {
     lcl::xcb_window window( "Demo" );
-    lcl::renderer renderer( &window, "Demo", 0 );
+    lcl::gfx::context context( &window, "Demo", 0 );
+    
+    //lcl::renderer renderer( &window, "Demo", 0 );
 /*
     renderer.set_clear_colour( glm::vec4( 48.f, 10.f, 36.f, 1.f ) );
 

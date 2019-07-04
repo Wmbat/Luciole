@@ -23,11 +23,7 @@
 
 namespace lcl::vulkan
 {
-#if defined( NDEBUG )
-    static constexpr bool enable_debug_layers = false;
-#else
-    static constexpr bool enable_debug_layers = true;
-#endif
+
 }
 
 #endif //MARSUPIAL_VULKAN_UTILS_H
