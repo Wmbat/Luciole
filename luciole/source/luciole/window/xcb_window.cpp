@@ -30,11 +30,11 @@
 
 namespace lcl
 {
-    static inline std::unique_ptr<xcb_intern_atom_reply_t> intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
+    inline xcb_intern_atom_reply_t* intern_atom_helper( xcb_connection_t *p_connection, bool only_if_exists, const std::string& str )
     {
         xcb_intern_atom_cookie_t cookie = xcb_intern_atom( p_connection, only_if_exists, static_cast<uint16_t>( str.size() ), str.c_str() );
         
-        return std::unique_ptr<xcb_intern_atom_reply_t>( xcb_intern_atom_reply( p_connection, cookie, NULL ) );
+        return xcb_intern_atom_reply( p_connection, cookie, NULL );
     }
     
     xcb_window::xcb_window( const std::string& title )
@@ -115,14 +115,14 @@ namespace lcl
     
         core_info( "XCB -> window created." );
     
-        auto reply = intern_atom_helper( p_xcb_connection_.get(), true, "WM_PROTOCOLS" );
+        auto* p_reply = intern_atom_helper( p_xcb_connection_.get(), true, "WM_PROTOCOLS" );
     
         p_xcb_wm_delete_window_ = intern_atom_helper( p_xcb_connection_.get(), false, "WM_DELETE_WINDOW" );
     
         /** Allows checking of window closing event. */
         xcb_change_property(
             p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
-            xcb_window_, reply->atom, 4, 32, 1,
+            xcb_window_, p_reply->atom, 4, 32, 1,
             &p_xcb_wm_delete_window_->atom );
     
         /** Change the title of the window. */
@@ -131,7 +131,8 @@ namespace lcl
             xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
             title_.size(), title_.c_str() );
     
-    
+        free( p_reply );
+
         /** Set the window to fullscreen if fullscreen is enabled. */
         if ( settings_.fullscreen_ )
         {
@@ -144,8 +145,7 @@ namespace lcl
                 XCB_ATOM_ATOM, 32, 1,
                 &p_atom_wm_fullscreen->atom );
         }
-    
-    
+
         xcb_map_window( p_xcb_connection_.get(), xcb_window_ );
         xcb_flush( p_xcb_connection_.get() );
     }
@@ -155,6 +155,8 @@ namespace lcl
     }
     xcb_window::~xcb_window( )
     {
+        delete p_xcb_wm_delete_window_;
+
         xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
     
         core_info( "XCB -> window destroyed." );

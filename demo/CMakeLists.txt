@@ -34,7 +34,6 @@ if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( demo
                 ${WAYLAND_CLIENT_LIBRARIES}
-                dl
                 vulkan
                 stb
                 spdlog
@@ -45,7 +44,6 @@ if( NOT WIN32 )
     else( )
         target_link_libraries( demo
                 PUBLIC ${XCB_LIBRARIES}
-                PUBLIC dl
                 PUBLIC vulkan
                 PUBLIC stb
                 PUBLIC spdlog

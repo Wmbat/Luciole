@@ -52,7 +52,7 @@ namespace lcl
         xcb_screen_t* p_xcb_screen_;
         xcb_window_t xcb_window_;
         
-        std::unique_ptr<xcb_intern_atom_reply_t> p_xcb_wm_delete_window_;
+        xcb_intern_atom_reply_t* p_xcb_wm_delete_window_ = nullptr;
     };
 }
 #endif

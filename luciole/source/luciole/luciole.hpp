@@ -20,17 +20,23 @@
 #ifndef LUCIOLE_LUCIOLE_HPP
 #define LUCIOLE_LUCIOLE_HPP
 
-#include <memory>
-
-#include "luciole_core.hpp"
-
 #include "window/base_window.hpp"
-#include "window/event.hpp"
-#include "window/keyboard.hpp"
-#include "window/mouse.hpp"
 
-#include "utilities/log.hpp"
+#if defined( VK_USE_PLATFORM_XCB_KHR )
+#include "window/xcb_window.hpp"
+#endif
 
-#include "graphics/renderer.hpp"
+
+namespace lcl
+{
+    std::unique_ptr<lcl::base_window> create_window( const std::string& title )
+    {
+#if defined( VK_USE_PLATFORM_XCB_KHR )
+        return std::make_unique<lcl::xcb_window>( title );
+#endif
+
+        return nullptr;
+    }
+}
 
 #endif //LUCIOLE_LUCIOLE_HPP

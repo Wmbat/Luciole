@@ -20,13 +20,14 @@
 
 #include <luciole/luciole.hpp>
 #include <luciole/graphics/context.hpp>
-
-#include <luciole/window/xcb_window.hpp>
+#include <luciole/graphics/swapchain.hpp>
 
 int main( int args, char** argv )
 {
-    lcl::xcb_window window( "Demo" );
-    lcl::gfx::context context( &window, "Demo", 0 );
+    std::unique_ptr<lcl::base_window> window = lcl::create_window( "Demo" );
+
+    lcl::gfx::context context( window.get(), "Demo", 0 );
+    lcl::gfx::swapchain swapchain( );
     
     //lcl::renderer renderer( &window, "Demo", 0 );
 /*

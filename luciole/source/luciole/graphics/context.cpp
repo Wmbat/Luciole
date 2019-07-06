@@ -219,6 +219,8 @@ namespace lcl::gfx
         for( size_t i = 0; i < extension_count; ++i )
         {
             device_extensions_.emplace_back( extensions[i].extensionName );
+
+            core_info( "Device Extension \"{}\" ENABLED.", extensions[i].extensionName );
         }
 
         const VkDeviceCreateInfo create_info

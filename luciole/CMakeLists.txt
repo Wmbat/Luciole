@@ -69,13 +69,15 @@ endif( )
 target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/context.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/context.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/mesh.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.cpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/vertex.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/mesh.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/renderer.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/swapchain.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/swapchain.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/graphics/vertex.hpp"
 
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/log.hpp"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/message.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/log.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/utilities/message.hpp"
 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/vma/vk_mem_alloc.h"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/luciole/vulkan/vma/vma_define.cpp"

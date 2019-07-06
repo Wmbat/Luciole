@@ -90,7 +90,7 @@ namespace lcl::core
         {
             instance_extensions.push_back( extension_properties[i].extensionName );
 
-            core_info( "Instance Extension \"{}\" enabled.", extension_properties[i].extensionName );
+            core_info( "Instance Extension \"{}\" ENABLED .", extension_properties[i].extensionName );
         }
 
         if constexpr ( core::enable_debug_layers )
