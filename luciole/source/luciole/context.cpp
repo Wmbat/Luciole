@@ -203,18 +203,24 @@ namespace lcl::core
         }
 
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        std::vector<float> priorities( queue_info.size( ) );
+        std::vector<std::vector<float>> priorities( queue_info.size( ) );
 
         for ( size_t i = 0; i < queue_info.size( ); ++i )
         {
-            priorities[i] = 1.0f;
+            std::vector<float> queue_prorities( queue_info[i].count_ );
+            for( auto& priority : queue_prorities )
+            {
+                priority = 1.0f;
+            }
+            priorities[i] = queue_prorities;
+
 
             const VkDeviceQueueCreateInfo queue_create_info
             {
                 .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                 .queueFamilyIndex = queue_info[i].index_,
                 .queueCount = queue_info[i].count_,
-                .pQueuePriorities = &priorities[i]
+                .pQueuePriorities = priorities[i].data( )
             };
 
             queue_create_infos.emplace_back( queue_create_info );
@@ -248,19 +254,106 @@ namespace lcl::core
             core_error( "Failed to create Device." );
         }
 
-        bool is_compute_only = false;
-        bool is_transfer_only = false;
+        bool has_compute_only = false;
+        bool has_transfer_only = false;
         for( const auto& info : queue_info )
         {
             if ( info.is_compute_only( ) )
             {
-                
+                VkQueue compute_queue = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, info.index_, 0, &compute_queue );
+
+                struct queue queue
+                {
+                    .flags_ = VK_QUEUE_COMPUTE_BIT,
+                    .handle_ = compute_queue,
+                    .index_ = 0,
+                    .family_ = info.index_
+                };
+
+                queues_.emplace_back( queue );
+
+                has_compute_only = true;
             }
             if ( info.is_transfer_only( ) )
             {
-                
+                VkQueue transfer_queue = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, info.index_, 0, &transfer_queue );
+
+                struct queue queue
+                {
+                    .flags_ = VK_QUEUE_TRANSFER_BIT,
+                    .handle_ = transfer_queue,
+                    .index_ = 0,
+                    .family_ = info.index_
+                };
+
+                queues_.emplace_back( queue );
+
+                has_transfer_only = true;
             }
         }
+
+        for( const auto& info : queue_info )
+        {
+            if( info.is_general_purpose( ) )
+            {
+                VkQueue graphics_queue = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, info.index_, 0, &graphics_queue );
+
+                {
+                    struct queue queue
+                    {
+                        .flags_ = VK_QUEUE_GRAPHICS_BIT,
+                        .handle_ = graphics_queue,
+                        .index_ = 0,
+                        .family_ = info.index_
+                    };
+
+                    queues_.emplace_back( queue );
+                }
+
+                if ( info.count_ > 1 )
+                {
+                    if ( !has_compute_only )
+                    {
+                        VkQueue compute_queue = VK_NULL_HANDLE;
+                        vkGetDeviceQueue( device_, info.index_, 0, &compute_queue );
+
+                        struct queue queue
+                        {
+                            .flags_ = VK_QUEUE_COMPUTE_BIT,
+                            .handle_ = compute_queue,
+                            .index_ = 1,
+                            .family_ = info.index_
+                        };
+
+                        queues_.emplace_back( queue );
+                    }
+                }
+
+                if ( info.count_ > 2 )
+                {
+                    if ( !has_transfer_only )
+                    {
+                        VkQueue transfer_queue = VK_NULL_HANDLE;
+                        vkGetDeviceQueue( device_, info.index_, 0, &transfer_queue );
+
+                        struct queue queue
+                        {
+                            .flags_ = VK_QUEUE_TRANSFER_BIT,
+                            .handle_ = transfer_queue,
+                            .index_ = 2,
+                            .family_ = info.index_
+                        };
+
+                        queues_.emplace_back( queue );
+                    }
+                }
+            }
+        }
+
+        queues_.shrink_to_fit( );
     }
 
     void context::destroy_device( ) noexcept
