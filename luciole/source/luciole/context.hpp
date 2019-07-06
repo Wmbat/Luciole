@@ -43,12 +43,12 @@ namespace lcl::core
         LUCIOLE_API void create_debug_messenger( ) noexcept;
         LUCIOLE_API void destroy_debug_messenger( ) noexcept;
 
-        LUCIOLE_API void create_device( ) noexcept;
+        LUCIOLE_API virtual void pick_gpu( ) noexcept = 0;
+        LUCIOLE_API virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept = 0;
+
+        LUCIOLE_API virtual void create_device( ) noexcept = 0;
         LUCIOLE_API void destroy_device( ) noexcept;
-
-        virtual void pick_gpu( ) noexcept { };
-        virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept { };
-
+ 
     protected:
         struct queue_info
         {

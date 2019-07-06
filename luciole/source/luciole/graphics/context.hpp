@@ -33,8 +33,10 @@ namespace lcl::gfx
         void create_surface( base_window* p_wnd ) noexcept;
         void destroy_surface( ) noexcept;
 
-        virtual void pick_gpu( ) noexcept;
-        virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept;
+        virtual void pick_gpu( ) noexcept override;
+        virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept override;
+
+        virtual void create_device( ) noexcept override;
 
     private:
         VkSurfaceKHR surface_ = VK_NULL_HANDLE;
