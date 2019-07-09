@@ -1,5 +1,7 @@
-/*!
- *  Copyright (C) 2018 Wmbat
+/*
+ *  Copyright (C) 2018-2019 Wmbat
+ *
+ *  wmbat@protonmail.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,18 +16,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_WINDOW_WAYLAND_WINDOW_HPP
-#define LUCIOLE_WINDOW_WAYLAND_WINDOW_HPP
+#include "window/base_window.hpp"
 
-#include "base_window.hpp"
-
-#if defined( VK_USE_PLATFORM_WAYLAND_KHR )
-
-namespace lcl
+int main( )
 {
 
+    return 0;
 }
-
-#endif
-
-#endif //LUCIOLE_WINDOW_WAYLAND_WINDOW_HPP

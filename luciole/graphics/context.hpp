@@ -16,6 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LUCIOLE_GRAPHICS_CONTEXT_HPP
+#define LUCIOLE_GRAPHICS_CONTEXT_HPP   
+
 #include "../context.hpp"
 
 #include "../window/base_window.hpp"
@@ -29,6 +32,12 @@ namespace lcl::gfx
         LUCIOLE_API context( base_window* p_wnd, const std::string& app_name, std::uint32_t app_version );
         LUCIOLE_API virtual ~context( );
 
+        LUCIOLE_API VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const;
+        LUCIOLE_API std::vector<VkSurfaceFormatKHR> get_surface_formats( ) const;
+        LUCIOLE_API std::vector<VkPresentModeKHR> get_present_modes( ) const;
+
+        LUCIOLE_API VkExtent2D get_surface_extent( const VkSurfaceCapabilitiesKHR& capabilities ) const;
+    
     private:
         void create_surface( base_window* p_wnd ) noexcept;
         void destroy_surface( ) noexcept;
@@ -42,3 +51,5 @@ namespace lcl::gfx
         VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     };
 } // namespace lcl::gfx
+
+#endif // LUCIOLE_GRAPHICS_CONTEXT_HPP

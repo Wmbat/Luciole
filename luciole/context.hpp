@@ -16,6 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LUCIOLE_LUCIOLE_CONTEXT_HPP
+#define LUCIOLE_LUCIOLE_CONTEXT_HPP
+
 #include <vector>
 
 #include <vulkan/vulkan.h>
@@ -33,21 +36,24 @@ namespace lcl::core
     class context
     {
     public:
-        LUCIOLE_API context( ) = default;
-        LUCIOLE_API virtual ~context( ) = default;
+        context( ) = default;
+        virtual ~context( ) = default;
+
+        // temporary
+        const VkPhysicalDevice get_physical_device( ) const;
 
     protected:
-        LUCIOLE_API void create_instance( const VkApplicationInfo& app_info ) noexcept;
-        LUCIOLE_API void destroy_instance( ) noexcept;
+        void create_instance( const VkApplicationInfo& app_info ) noexcept;
+        void destroy_instance( ) noexcept;
         
-        LUCIOLE_API void create_debug_messenger( ) noexcept;
-        LUCIOLE_API void destroy_debug_messenger( ) noexcept;
+        void create_debug_messenger( ) noexcept;
+        void destroy_debug_messenger( ) noexcept;
 
-        LUCIOLE_API virtual void pick_gpu( ) noexcept = 0;
-        LUCIOLE_API virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept = 0;
+        virtual void pick_gpu( ) noexcept = 0;
+        virtual int rate_gpu( const VkPhysicalDevice gpu ) noexcept = 0;
 
-        LUCIOLE_API virtual void create_device( ) noexcept = 0;
-        LUCIOLE_API void destroy_device( ) noexcept;
+        virtual void create_device( ) noexcept = 0;
+        void destroy_device( ) noexcept;
  
     protected:
         struct queue_info
@@ -106,8 +112,7 @@ namespace lcl::core
         VkDevice device_ = VK_NULL_HANDLE;
 
         std::vector<queue> queues_;
-
-        std::vector<const char*> instance_extensions;
+        std::vector<const char*> instance_extensions_;
         std::vector<const char*> device_extensions_;
 
         const std::vector<const char*> validation_layers = {
@@ -115,3 +120,5 @@ namespace lcl::core
         };
     };
 } // namespace lcl
+
+#endif // LUCIOLE_LUCIOLE_CONTEXT_HPP

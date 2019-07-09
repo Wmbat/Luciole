@@ -16,10 +16,32 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace lcl::gfx
-{
-    class swapchain
-    {
+#ifndef LUCIOLE_UTILITIES_MESSAGE_HPP
+#define LUCIOLE_UTILITIES_MESSAGE_HPP
 
-    };
-} // namespace lcl::gfx
+#include <vector>
+
+#include <wmbats_bazaar/delegate.hpp>
+
+template<class C>
+class message_handler
+{
+public:
+    void add_callback( const bzr::delegate<void( C )>& callback )
+    {
+        callbacks_.push_back( callback );
+    }
+        
+    void send_message( const C& message )
+    {
+        for( auto& delegate : callbacks_ )
+        {
+            delegate( message );
+        }
+    }
+    
+private:
+    std::vector<bzr::delegate<void( C )>> callbacks_;
+};
+
+#endif //LUCIOLE_UTILITIES_MESSAGE_HPP

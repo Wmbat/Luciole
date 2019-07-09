@@ -77,6 +77,11 @@ namespace lcl::core
         }
     }
 
+    const VkPhysicalDevice context::get_physical_device( ) const
+    {
+        return gpu_;
+    }
+
     void context::create_instance( const VkApplicationInfo& app_info ) noexcept
     {
         // Get Instance Extensions
@@ -85,13 +90,14 @@ namespace lcl::core
         VkExtensionProperties* extension_properties = reinterpret_cast<VkExtensionProperties*>( alloca( sizeof( VkExtensionProperties ) * instance_extension_count ) );
         vkEnumerateInstanceExtensionProperties( nullptr, &instance_extension_count, extension_properties );
 
-        instance_extensions.reserve( instance_extension_count );
+        instance_extensions_.reserve( instance_extension_count );
         for ( size_t i = 0; i < instance_extension_count; ++i )
         {
-            instance_extensions.push_back( extension_properties[i].extensionName );
+            instance_extensions_.push_back( extension_properties[i].extensionName );
 
             core_info( "Instance Extension \"{}\" ENABLED .", extension_properties[i].extensionName );
         }
+
 
         if constexpr ( core::enable_debug_layers )
         {
@@ -112,8 +118,8 @@ namespace lcl::core
                 .pApplicationInfo = &app_info,
                 .enabledLayerCount = static_cast<std::uint32_t>( validation_layers.size( ) ),
                 .ppEnabledLayerNames = validation_layers.data( ),
-                .enabledExtensionCount = static_cast<std::uint32_t>( instance_extensions.size( ) ),
-                .ppEnabledExtensionNames = instance_extensions.data( )
+                .enabledExtensionCount = static_cast<std::uint32_t>( instance_extensions_.size( ) ),
+                .ppEnabledExtensionNames = instance_extensions_.data( )
             };
 
             if ( vkCreateInstance( &create_info, nullptr, &instance_ ) != VK_SUCCESS )
@@ -129,8 +135,8 @@ namespace lcl::core
                 .pApplicationInfo = &app_info,
                 .enabledLayerCount = 0,
                 .ppEnabledLayerNames = nullptr,
-                .enabledExtensionCount = static_cast<std::uint32_t>( instance_extensions.size( ) ),
-                .ppEnabledExtensionNames = instance_extensions.data( )
+                .enabledExtensionCount = static_cast<std::uint32_t>( instance_extensions_.size( ) ),
+                .ppEnabledExtensionNames = instance_extensions_.data( )
             };
 
             if ( vkCreateInstance( &create_info, nullptr, &instance_ ) != VK_SUCCESS ) 
@@ -139,6 +145,7 @@ namespace lcl::core
             }
         }
     }
+
     void context::destroy_instance( ) noexcept
     {
         if ( instance_ != VK_NULL_HANDLE )

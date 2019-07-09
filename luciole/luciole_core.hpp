@@ -16,30 +16,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wmbats_bazaar/logger.hpp>
 
-#include "base_window.hpp"
+#ifndef LUCIOLE_LUCIOLE_CORE_HPP
+#define LUCIOLE_LUCIOLE_CORE_HPP
 
-namespace lcl
-{
-    base_window::base_window( )
-    {
-        bzr::logger::init( "Luciole Logger", "%^[%T] %n: %v%$" );
-    }
+#include <cstdint>
 
-    bool base_window::is_open( ) const noexcept
-    {
-        return open_;
-    }
+static constexpr uint32_t kilobyte = 1024;
+static constexpr uint32_t megabyte = kilobyte * kilobyte;
     
-    uint32_t base_window::get_width( ) const noexcept
-    {
-        return settings_.width_;
-    }
-    
-    uint32_t base_window::get_height( ) const noexcept
-    {
-        return settings_.height_;
-    }
-    
-}
+constexpr unsigned long long operator "" _kg( unsigned long long size ) { return size * kilobyte; }
+constexpr unsigned long long operator "" _mb( unsigned long long size ) { return size * megabyte; }
+
+#endif //LUCIOLE_LUCIOLE_CORE_HPP

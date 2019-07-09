@@ -16,30 +16,39 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef LUCIOLE_LUCIOLE_CORE_HPP
-#define LUCIOLE_LUCIOLE_CORE_HPP
+#ifndef LUCIOLE_WINDOW_MOUSE_HPP
+#define LUCIOLE_WINDOW_MOUSE_HPP
 
 #include <cstdint>
 
-#if defined( LUCIOLE_PLATFORM_WINDOWS )
-#if defined( LUCIOLE_BUILD_DLL )
-#define LUCIOLE_API __declspec( dllexport )
-#else
-#define LUCIOLE_API __declspec( dllimport )
-#endif
-#else
-#define LUCIOLE_API
-#endif
-
-namespace lcl
+/**
+ *  @brief Holds the key mapping of a mouse button layout
+ *  as well as the handling of the mouse button events.
+ */
+class mouse
 {
-    static constexpr uint32_t kilobyte = 1024;
-    static constexpr uint32_t megabyte = kilobyte * kilobyte;
+public:
+    enum class button_state : std::int32_t
+    {
+        invalid = -1,
+        pressed = 0,
+        released = 1
+    };
     
-    constexpr unsigned long long operator "" _kg( unsigned long long size ) { return size * kilobyte; }
-    constexpr unsigned long long operator "" _mb( unsigned long long size ) { return size * megabyte; }
-}
+    enum class button : std::int32_t
+    {
+        invalid = -1,
+        l_button = 1,
+        scroll_button = 2,
+        r_button = 3,
+        scroll_up = 4,
+        scroll_down = 5,
+        scroll_left = 6,
+        scroll_right = 7,
+        side_button_1 = 8,
+        side_button_2 = 9,
+        last = 16
+    };
+};
 
-
-#endif //LUCIOLE_LUCIOLE_CORE_HPP
+#endif //LUCIOLE_WINDOW_MOUSE_HPP

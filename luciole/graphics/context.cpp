@@ -58,6 +58,34 @@ namespace lcl::gfx
         destroy_instance( );
     }
 
+    VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR( gpu_, surface_, &capabilities );
+
+        return capabilities;
+    }
+
+    std::vector<VkSurfaceFormatKHR> context::get_surface_formats( ) const
+    {
+        std::uint32_t count;
+        vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &count, nullptr );
+        std::vector<VkSurfaceFormatKHR> formats( count );
+        vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &count, formats.data( ) );
+
+        return formats;
+    }
+
+    std::vector<VkPresentModeKHR> context::get_present_modes( ) const
+    {
+        std::uint32_t count;
+        vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &count, nullptr );
+        std::vector<VkPresentModeKHR> present_modes( count );
+        vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &count, present_modes.data( ) );
+
+        return present_modes;
+    }
+
     void context::create_surface( base_window* p_wnd ) noexcept
     {
         surface_ = p_wnd->create_surface( instance_ );

@@ -1,2 +1,5 @@
-- Handle Extensions and validation layers better.
-- 
+- Luciole: Handle Extensions and validation layers better.
+- Luciole: Work on Swapchain.
+- Luciole: Do better gpu picking (check swapchain extension support and such)
+
+- Look more into memory leaks.

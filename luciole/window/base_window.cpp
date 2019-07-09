@@ -16,35 +16,25 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_UTILITIES_MESSAGE_HPP
-#define LUCIOLE_UTILITIES_MESSAGE_HPP
+#include <wmbats_bazaar/logger.hpp>
 
-#include <vector>
+#include "base_window.hpp"
 
-#include <wmbats_bazaar/delegate.hpp>
-
-namespace lcl
+base_window::base_window( )
 {
-    template<class C>
-    class message_handler
-    {
-    public:
-        void add_callback( const bzr::delegate<void( C )>& callback )
-        {
-            callbacks_.push_back( callback );
-        }
-        
-        void send_message( const C& message )
-        {
-            for( auto& delegate : callbacks_ )
-            {
-                delegate( message );
-            }
-        }
-    
-    private:
-        std::vector<bzr::delegate<void( C )>> callbacks_;
-    };
+    bzr::logger::init( "Luciole Logger", "%^[%T] %n: %v%$" );
+}
+bool base_window::is_open( ) const noexcept
+{
+    return open_;
 }
 
-#endif //LUCIOLE_UTILITIES_MESSAGE_HPP
+uint32_t base_window::get_width( ) const noexcept
+{
+    return settings_.width_;
+}
+
+uint32_t base_window::get_height( ) const noexcept
+{
+    return settings_.height_;
+}
