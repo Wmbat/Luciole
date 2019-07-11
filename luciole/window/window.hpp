@@ -16,8 +16,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_WINDOW_BASE_WINDOW_HPP
-#define LUCIOLE_WINDOW_BASE_WINDOW_HPP
+#ifndef LUCIOLE_WINDOW_WINDOW_HPP
+#define LUCIOLE_WINDOW_WINDOW_HPP
 
 #include <vulkan/vulkan.h>
 
@@ -25,11 +25,11 @@
 #include "../luciole_core.hpp"
 #include "../utilities/message.hpp"
 
-class base_window
+class window
 {
 public:
-    base_window( );
-    virtual ~base_window( ) = default;
+    window( );
+    virtual ~window( ) = default;
 
     virtual void poll_events( ) = 0;
 
@@ -96,4 +96,4 @@ protected:
     message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
 };
 
-#endif //LUCIOLE_WINDOW_BASE_WINDOW_HPP
+#endif //LUCIOLE_WINDOW_WINDOW_HPP

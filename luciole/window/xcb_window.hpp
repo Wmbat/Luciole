@@ -26,9 +26,9 @@
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
 
-#include "base_window.hpp"
+#include "window.hpp"
 
-class xcb_window : public base_window
+class xcb_window : public window
 {
 public:
     xcb_window( ) = default;

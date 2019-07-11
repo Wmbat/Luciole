@@ -37,7 +37,7 @@ inline xcb_intern_atom_reply_t* intern_atom_helper( xcb_connection_t *p_connecti
 
 xcb_window::xcb_window( const std::string& title )
     :
-    base_window( )
+    window( )
 {
     core_info ( "Using XCB for window creation." );
 
@@ -151,7 +151,7 @@ xcb_window::xcb_window( xcb_window&& rhs ) noexcept
 }
 xcb_window::~xcb_window( )
 {
-    delete p_xcb_wm_delete_window_;
+    free( p_xcb_wm_delete_window_ );
     xcb_destroy_window( p_xcb_connection_.get(), xcb_window_ );
 
     core_info( "XCB -> window destroyed." );

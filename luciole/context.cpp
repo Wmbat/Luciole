@@ -106,11 +106,7 @@ namespace lcl::core
             VkLayerProperties* layer_properties = reinterpret_cast<VkLayerProperties*>( alloca( sizeof( VkLayerProperties ) * layer_count ) );
             vkEnumerateInstanceLayerProperties( &layer_count, layer_properties );
 
-            bool is_validation_layer_supported = false;
-            for ( const char* layer_name : validation_layers )
-            {
-                
-            }
+
 
             const VkInstanceCreateInfo create_info 
             {

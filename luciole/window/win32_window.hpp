@@ -20,11 +20,11 @@
 #ifndef LUCIOLE_WINDOW_WIN32_WINDOW_HPP
 #define LUCIOLE_WINDOW_WIN32_WINDOW_HPP
 
-#include "base_window.hpp"
+#include "window.hpp"
 
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
 
-class win32_window : public base_window
+class win32_window : public window
 {
 public:
     win32_window ( ) = default;

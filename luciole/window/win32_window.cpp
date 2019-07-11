@@ -25,7 +25,7 @@
 
 win32_window::win32_window ( const std::string& title )
     :
-    base_window( )
+    window( )
 {
     core_info ( "Using Win32 for window creation." );
     title_ = title;

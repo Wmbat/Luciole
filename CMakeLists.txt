@@ -129,19 +129,22 @@ target_sources( luciole
 
     #PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/utils.hpp"
 
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/base_window.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/base_window.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/event.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/keyboard.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/mouse.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.hpp"
 
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.cpp"
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.hpp"
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
     )
 

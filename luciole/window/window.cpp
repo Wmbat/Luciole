@@ -18,23 +18,23 @@
 
 #include <wmbats_bazaar/logger.hpp>
 
-#include "base_window.hpp"
+#include "window.hpp"
 
-base_window::base_window( )
+window::window( )
 {
     bzr::logger::init( "Luciole Logger", "%^[%T] %n: %v%$" );
 }
-bool base_window::is_open( ) const noexcept
+bool window::is_open( ) const noexcept
 {
     return open_;
 }
 
-uint32_t base_window::get_width( ) const noexcept
+uint32_t window::get_width( ) const noexcept
 {
     return settings_.width_;
 }
 
-uint32_t base_window::get_height( ) const noexcept
+uint32_t window::get_height( ) const noexcept
 {
     return settings_.height_;
 }

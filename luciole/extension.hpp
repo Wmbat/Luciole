@@ -16,12 +16,25 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef LUCIOLE_EXTENSION_HPP
+#define LUCIOLE_EXTENSION_HPP
 
-int main( )
+#include <string>
+
+#include <vulkan/vulkan.h>
+
+struct extension
 {
-    application app;
-    app.run( );
+    enum class priority
+    {
+        e_none,
+        e_required,
+        e_optional
+    };
 
-    return 0;
-}
+    priority priority_ = priority::e_none;
+    bool found_ = false;
+    std::string name_ = { };
+};
+
+#endif // LUCIOLE_EXTENSION_HPP
