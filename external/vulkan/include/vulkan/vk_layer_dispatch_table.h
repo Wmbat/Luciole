@@ -1,10 +1,10 @@
 // *** THIS FILE IS GENERATED - DO NOT EDIT ***
-// See loader_extension_generator.py for modifications
+// See layer_dispatch_table_generator.py for modifications
 
 /*
- * Copyright (c) 2015-2017 The Khronos Group Inc.
- * Copyright (c) 2015-2017 Valve Corporation
- * Copyright (c) 2015-2017 LunarG, Inc.
+ * Copyright (c) 2015-2019 The Khronos Group Inc.
+ * Copyright (c) 2015-2019 Valve Corporation
+ * Copyright (c) 2015-2019 LunarG, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,10 +219,16 @@ typedef struct VkLayerInstanceDispatchTable_ {
     // ---- VK_NV_cooperative_matrix extension commands
     PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV GetPhysicalDeviceCooperativeMatrixPropertiesNV;
 
+    // ---- VK_NV_coverage_reduction_mode extension commands
+    PFN_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV;
+
     // ---- VK_EXT_full_screen_exclusive extension commands
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT GetPhysicalDeviceSurfacePresentModes2EXT;
 #endif // VK_USE_PLATFORM_WIN32_KHR
+
+    // ---- VK_EXT_headless_surface extension commands
+    PFN_vkCreateHeadlessSurfaceEXT CreateHeadlessSurfaceEXT;
 } VkLayerInstanceDispatchTable;
 
 // Device function pointer dispatch table
@@ -386,7 +392,6 @@ typedef struct VkLayerDispatchTable_ {
     PFN_vkGetDeviceGroupPeerMemoryFeaturesKHR GetDeviceGroupPeerMemoryFeaturesKHR;
     PFN_vkCmdSetDeviceMaskKHR CmdSetDeviceMaskKHR;
     PFN_vkCmdDispatchBaseKHR CmdDispatchBaseKHR;
-    PFN_vkGetDeviceGroupSurfacePresentModes2EXT GetDeviceGroupSurfacePresentModes2EXT;
 
     // ---- VK_KHR_maintenance1 extension commands
     PFN_vkTrimCommandPoolKHR TrimCommandPoolKHR;
@@ -610,6 +615,9 @@ typedef struct VkLayerDispatchTable_ {
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     PFN_vkReleaseFullScreenExclusiveModeEXT ReleaseFullScreenExclusiveModeEXT;
+#endif // VK_USE_PLATFORM_WIN32_KHR
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    PFN_vkGetDeviceGroupSurfacePresentModes2EXT GetDeviceGroupSurfacePresentModes2EXT;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
     // ---- VK_EXT_host_query_reset extension commands

@@ -16,6 +16,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <map>
+
 #include "application.hpp"
 
 #include "utilities/log.hpp"
@@ -79,9 +81,9 @@ void destroy_debug_utils_messenger (
 application::application( )
 {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-    wnd_ = std::make_unique<win32_window>( "Luciole" );
+    p_wnd_ = std::make_unique<win32_window>( "Luciole" );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-    wnd_ = std::make_unique<xcb_window>( "Luciole" );
+    p_wnd_ = std::make_unique<xcb_window>( "Luciole" );
 #endif 
 
     std::uint32_t api_version;
@@ -100,20 +102,25 @@ application::application( )
 
     create_instance( app_info );
     create_debug_messenger( );
+    create_surface( );
+    pick_gpu( );
+    create_device( );
 
 }
 application::~application( )
 {
+    destroy_device( );
+    destroy_surface( );
     destroy_debug_messenger( );
     destroy_instance( );
 }
 
 void application::run( )
 {
-    while( wnd_->is_open( ) )
+    while( p_wnd_->is_open( ) )
     {
 
-        wnd_->poll_events( );
+        p_wnd_->poll_events( );
     }
 }
 
@@ -242,7 +249,7 @@ void application::create_debug_messenger( )
             .pUserData = nullptr
         };
 
-        if (  create_debug_utils_messenger( instance_, &debug_messenger_create_info, nullptr, &debug_messenger_ ) != VK_SUCCESS ) 
+        if ( create_debug_utils_messenger( instance_, &debug_messenger_create_info, nullptr, &debug_messenger_ ) != VK_SUCCESS ) 
         {
             core_error( "Failed to create Vulkan Debug Messenger" );
         }
@@ -258,4 +265,189 @@ void application::destroy_debug_messenger( )
             debug_messenger_ = VK_NULL_HANDLE;
         }
     } 
+}
+
+void application::create_surface( )
+{
+    surface_ = p_wnd_->create_surface( instance_ );
+}
+void application::destroy_surface( )
+{
+    if ( surface_ != VK_NULL_HANDLE )
+    {
+        vkDestroySurfaceKHR( instance_, surface_, nullptr );
+        surface_ = VK_NULL_HANDLE;
+    }
+}
+
+void application::pick_gpu( )
+{
+    std::uint32_t physical_device_count = 0;
+    vkEnumeratePhysicalDevices( instance_, &physical_device_count, nullptr );
+    VkPhysicalDevice* physical_devices = reinterpret_cast<VkPhysicalDevice*>( alloca( sizeof( VkPhysicalDevice ) * physical_device_count ) );
+    vkEnumeratePhysicalDevices( instance_, &physical_device_count, physical_devices );
+
+    std::multimap<std::uint32_t, VkPhysicalDevice> candidates;
+
+    for( size_t i = 0; i < physical_device_count; ++i )
+    {
+        std::uint32_t rating = rate_gpu( physical_devices[i] );
+        candidates.insert( { rating, physical_devices[i] } );
+    }
+
+    if ( candidates.rbegin( )->first > 0 )
+    {
+        gpu_ = candidates.begin( )->second;
+    }
+    else
+    {
+        core_error( "Failed to find a suitable GPU" );
+    }
+}
+
+int application::rate_gpu( const VkPhysicalDevice gpu )
+{
+    std::uint32_t properties_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, nullptr );
+    VkQueueFamilyProperties* queue_family_properties = reinterpret_cast<VkQueueFamilyProperties*>( alloca( sizeof( VkQueueFamilyProperties ) * properties_count ) );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, queue_family_properties );
+
+    bool is_rendering_capable = false;
+    for( size_t i = 0; i < properties_count; ++i )
+    {
+        if ( queue_family_properties[i].queueCount > 0 )
+        {
+            VkBool32 surface_support = VK_FALSE;
+            vkGetPhysicalDeviceSurfaceSupportKHR( gpu, i, surface_, &surface_support );
+
+            if ( ( queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) && ( surface_support == VK_TRUE ) )
+            {
+                is_rendering_capable = true;
+            }
+        }
+    }
+
+    if ( !is_rendering_capable )
+        return 0;
+
+    std::uint32_t surface_format_count = 0;
+    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu, surface_, &surface_format_count, nullptr );
+
+    if ( surface_format_count == 0 )
+        return 0;
+
+    std::uint32_t present_mode_count = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu, surface_, &present_mode_count, nullptr );
+
+    if ( present_mode_count == 0 )
+        return 0;
+
+    std::uint32_t score = 0;
+
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties( gpu, &properties );
+
+    if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+    {
+        score += 2;
+    }
+    else if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU )
+    {
+        score += 1;
+    }
+    return score;
+}
+
+void application::create_device( )
+{
+    std::uint32_t properties_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu_, &properties_count, nullptr );
+    VkQueueFamilyProperties* queue_family_properties = reinterpret_cast<VkQueueFamilyProperties*>( alloca( sizeof( VkQueueFamilyProperties ) * properties_count ) );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu_, &properties_count, queue_family_properties );
+
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+
+    for( size_t i = 0; i < properties_count; ++i )
+    {
+        if ( queue_family_properties[i].queueCount > 0 )
+        {
+            VkDeviceQueueCreateInfo create_info
+            {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .queueFamilyIndex = static_cast<std::uint32_t>( i ),
+                .queueCount = queue_family_properties[i].queueCount,
+                .pQueuePriorities = nullptr
+            };
+
+            queue_create_infos.emplace_back( create_info );
+        }
+    }
+
+    VkPhysicalDeviceFeatures features;
+    vkGetPhysicalDeviceFeatures( gpu_, &features );
+
+    std::uint32_t extension_count = 0;
+    vkEnumerateDeviceExtensionProperties( gpu_, nullptr, &extension_count, nullptr );
+    VkExtensionProperties* extensions = reinterpret_cast<VkExtensionProperties*>( alloca( sizeof( VkExtensionProperties ) * extension_count ) );
+    vkEnumerateDeviceExtensionProperties( gpu_, nullptr, &extension_count, extensions );
+
+    for( size_t i = 0; i < extension_count; ++i )
+    {
+        for( auto& extension : device_extensions_ )
+        {
+            if ( strcmp( extensions[i].extensionName, extension.name_.c_str( ) ) ) 
+            {
+                extension.found_ = true;
+            }
+        }
+    }
+
+    std::vector<const char*> enabled_extensions;
+    enabled_extensions.reserve( device_extensions_.size( ) );
+
+    bool not_supported = false;
+    for( const auto& extension : device_extensions_ )
+    {
+        if ( ( !extension.found_ ) && extension.priority_ == extension::priority::e_required )
+        {
+            not_supported = true;
+        }
+
+        if ( extension.found_ )
+        {
+            enabled_extensions.emplace_back( extension.name_.c_str( ) );
+
+            core_info( "Device Extension \"{}\" ENABLED .", extension.name_ );
+        }
+    }
+
+    if ( not_supported )
+    {
+        core_error( "Required Extension not supported" );
+
+        throw;
+    }
+
+    const VkDeviceCreateInfo create_info
+    {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .queueCreateInfoCount = static_cast<std::uint32_t>( queue_create_infos.size( ) ),
+        .pQueueCreateInfos = queue_create_infos.data( ),
+        .enabledExtensionCount = static_cast<std::uint32_t>( enabled_extensions.size( ) ),
+        .ppEnabledExtensionNames = enabled_extensions.data( ),
+        .pEnabledFeatures = &features
+    };
+
+    if ( vkCreateDevice( gpu_, &create_info, nullptr, &device_ ) != VK_NULL_HANDLE )
+    {
+        core_error( "Failed to create Device." );
+    }
+}
+void application::destroy_device( )
+{
+    if ( device_ != VK_NULL_HANDLE )
+    {
+        vkDestroyDevice( device_, nullptr );
+        device_ = VK_NULL_HANDLE;
+    }
 }

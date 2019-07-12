@@ -24,7 +24,7 @@
 #include <vulkan/vulkan.h>
 
 #include "extension.hpp"
-
+ 
 #include "window/window.hpp"
 
 #if defined( NDEBUG )
@@ -48,11 +48,25 @@ private:
     void create_debug_messenger( );
     void destroy_debug_messenger( );
 
+    void create_surface( );
+    void destroy_surface( );
+
+    void pick_gpu( );
+    int rate_gpu( const VkPhysicalDevice gpu );
+
+    void create_device( );
+    void destroy_device( );
+
 private:
-    std::unique_ptr<window> wnd_;
+    std::unique_ptr<window> p_wnd_;
 
     VkInstance instance_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+    VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
+    VkDevice device_ = VK_NULL_HANDLE;
+    VkQueue graphics_queue = VK_NULL_HANDLE;
+    VkQueue transfer_queue = VK_NULL_HANDLE;
 
     const std::vector<const char*> validation_layers_ = { "VK_LAYER_KHRONOS_validation" };
 
