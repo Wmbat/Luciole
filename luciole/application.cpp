@@ -442,6 +442,54 @@ void application::create_device( )
     {
         core_error( "Failed to create Device." );
     }
+
+    bool has_transfer_only_ = false;
+    bool has_compute_only_ = false;
+    for( size_t i = 0; i < properties_count; ++i )
+    {
+        if ( queue_family_properties[i].queueCount > 0 )
+        {
+            if ( queue_family_properties[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
+            {
+                vkGetDeviceQueue( device_, i, 0, &transfer_queue_ );
+
+                has_transfer_only_ = true;
+            }
+
+            if ( queue_family_properties[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
+            {
+                vkGetDeviceQueue( device_, i, 0, &compute_queue_ );
+
+                has_compute_only_ = true;
+            }
+        }
+    }
+
+    for( size_t i = 0; i < properties_count; ++i )
+    {
+        if ( queue_family_properties[i].queueCount > 0 )
+        {
+            if ( queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT && queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
+            {
+                std::uint32_t index = 0;
+
+                vkGetDeviceQueue( device_, i, index, &graphics_queue_ );
+                ++index;
+
+                if ( !has_transfer_only_ )
+                {
+                    vkGetDeviceQueue( device_, i, index, &transfer_queue_ );
+                    ++index;
+                }
+
+                if ( !has_compute_only_ )
+                {
+                    vkGetDeviceQueue( device_, i, index, &compute_queue_ );
+                    ++index;
+                }
+            }
+        }
+    }
 }
 void application::destroy_device( )
 {

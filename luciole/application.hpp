@@ -65,8 +65,10 @@ private:
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
     VkDevice device_ = VK_NULL_HANDLE;
-    VkQueue graphics_queue = VK_NULL_HANDLE;
-    VkQueue transfer_queue = VK_NULL_HANDLE;
+    
+    VkQueue graphics_queue_ = VK_NULL_HANDLE;
+    VkQueue transfer_queue_ = VK_NULL_HANDLE;
+    VkQueue compute_queue_ = VK_NULL_HANDLE;
 
     const std::vector<const char*> validation_layers_ = { "VK_LAYER_KHRONOS_validation" };
 
