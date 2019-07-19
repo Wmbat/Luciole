@@ -64,6 +64,14 @@ private:
     void create_image_views( );
     void destroy_image_views( );
 
+    void create_render_pass( );
+    void destroy_render_pass( );
+
+    void create_graphics_pipeline( );
+    void destroy_graphics_pipeline( );
+
+    VkShaderModule create_shader_module( const std::string& code );
+
     VkSurfaceFormatKHR choose_swapchain_surface_format( );
     VkPresentModeKHR choose_swapchain_present_mode( );
     VkExtent2D choose_swapchain_extent( const VkSurfaceCapabilitiesKHR& capabilities );
@@ -86,6 +94,10 @@ private:
 
     VkFormat swapchain_image_format_;
     VkExtent2D swapchain_extent_;
+
+    VkRenderPass render_pass_ = VK_NULL_HANDLE;
+    VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout graphics_pipeline_layout_ = VK_NULL_HANDLE;
 
     const std::vector<const char*> validation_layers_ = { "VK_LAYER_KHRONOS_validation" };
 
