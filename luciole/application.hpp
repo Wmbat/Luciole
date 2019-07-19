@@ -20,6 +20,7 @@
 #define LUCIOLE_APPLICATION_HPP
 
 #include <memory>
+#include <optional>
 
 #include <vulkan/vulkan.h>
 
@@ -57,6 +58,16 @@ private:
     void create_device( );
     void destroy_device( );
 
+    void create_swapchain( );
+    void destroy_swapchain( );
+
+    void create_image_views( );
+    void destroy_image_views( );
+
+    VkSurfaceFormatKHR choose_swapchain_surface_format( );
+    VkPresentModeKHR choose_swapchain_present_mode( );
+    VkExtent2D choose_swapchain_extent( const VkSurfaceCapabilitiesKHR& capabilities );
+
 private:
     std::unique_ptr<window> p_wnd_;
 
@@ -65,10 +76,16 @@ private:
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
     VkDevice device_ = VK_NULL_HANDLE;
-    
     VkQueue graphics_queue_ = VK_NULL_HANDLE;
     VkQueue transfer_queue_ = VK_NULL_HANDLE;
     VkQueue compute_queue_ = VK_NULL_HANDLE;
+    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
+
+    std::vector<VkImage> swapchain_images = { };
+    std::vector<VkImageView> swapchain_image_views = { };
+
+    VkFormat swapchain_image_format_;
+    VkExtent2D swapchain_extent_;
 
     const std::vector<const char*> validation_layers_ = { "VK_LAYER_KHRONOS_validation" };
 

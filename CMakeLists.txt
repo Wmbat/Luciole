@@ -121,8 +121,8 @@ target_sources( luciole
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/swapchain.hpp"
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/vertex.hpp"
 
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
 
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vk_mem_alloc.h"
     #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vma_define.cpp"
@@ -139,9 +139,7 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.hpp"
 
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.cpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
