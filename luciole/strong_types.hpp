@@ -16,16 +16,32 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef LUCIOLE_STRONG_TYPES_HPP
+#define LUCIOLE_STRONG_TYPES_HPP
 
-#include <iostream>
+#include <cstdint>
+#include <string>
 
-int main( )
+template <typename type, typename parameter>
+class strong_type
 {
-    bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
+public:
+    explicit strong_type( type const& value ) 
+        : 
+        value_( value ) 
+    {   }
 
-    application app;
-    app.run( );
+    template<typename type_ = type>
+    explicit strong_type( type&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
+    : 
+    value_( std::move( value ) ) 
+    {   }
+ 
+public:
+    type value_;
+};
 
-    return 0;
-}
+struct count_parameter { };
+using count32_t = strong_type<std::uint32_t, count_parameter>;
+
+#endif // LUCIOLE_STRONG_TYPES_HPP

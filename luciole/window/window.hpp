@@ -23,6 +23,7 @@
 
 #include "event.hpp"
 #include "../luciole_core.hpp"
+#include "../strong_types.hpp"
 #include "../utilities/message.hpp"
 
 class window

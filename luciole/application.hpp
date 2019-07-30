@@ -20,19 +20,20 @@
 #define LUCIOLE_APPLICATION_HPP
 
 #include <memory>
-#include <optional>
+#include <unordered_map>
 
 #include <vulkan/vulkan.h>
-
-#include "extension.hpp"
  
+#include "graphics/renderer.hpp"
+
 #include "window/window.hpp"
 
-#if defined( NDEBUG )
-    static constexpr bool enable_debug_layers = false;
-#else
-    static constexpr bool enable_debug_layers = true;
-#endif
+#include "strong_types.hpp"
+
+#include "context.hpp"
+
+struct queue;
+struct command_pool;
 
 class application
 {
@@ -43,13 +44,16 @@ public:
     void run( );
 
 private:
-    void create_instance( const VkApplicationInfo& app_info );
+    std::vector<extension> get_instance_extensions( ) const;
+    std::optional<std::vector<const char*>> check_instance_extension_support( ) const;
+
+    VkInstance create_instance( const VkApplicationInfo& app_info, const std::vector<const char*>& enabled_extensions ) const;
     void destroy_instance( );
 
     void create_debug_messenger( );
     void destroy_debug_messenger( );
 
-    void create_surface( );
+    VkSurfaceKHR create_surface( ) const;
     void destroy_surface( );
 
     void pick_gpu( );
@@ -58,39 +62,52 @@ private:
     void create_device( );
     void destroy_device( );
 
+    std::vector<command_pool> create_command_pools( ) const;
+    void destroy_command_pools( );
+
+    std::vector<VkCommandBuffer> create_command_buffers( count32_t count ) const;
+
     void create_swapchain( );
     void destroy_swapchain( );
 
-    void create_image_views( );
+    std::vector<VkImageView> create_image_views( count32_t count ) const;
     void destroy_image_views( );
 
-    void create_render_pass( );
+    VkRenderPass create_render_pass( ) const;
     void destroy_render_pass( );
 
     void create_graphics_pipeline( );
     void destroy_graphics_pipeline( );
 
-    VkShaderModule create_shader_module( const std::string& code );
+    void create_framebuffers( );
+    void destroy_framebuffers( );
+
+    VkShaderModule create_shader_module( const std::string& code ) const;
 
     VkSurfaceFormatKHR choose_swapchain_surface_format( );
     VkPresentModeKHR choose_swapchain_present_mode( );
     VkExtent2D choose_swapchain_extent( const VkSurfaceCapabilitiesKHR& capabilities );
 
-private:
+private: 
     std::unique_ptr<window> p_wnd_;
 
+    context context_;
+    renderer renderer_;
+/* */
     VkInstance instance_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
     VkDevice device_ = VK_NULL_HANDLE;
-    VkQueue graphics_queue_ = VK_NULL_HANDLE;
-    VkQueue transfer_queue_ = VK_NULL_HANDLE;
-    VkQueue compute_queue_ = VK_NULL_HANDLE;
-    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
 
-    std::vector<VkImage> swapchain_images = { };
-    std::vector<VkImageView> swapchain_image_views = { };
+    std::vector<queue> queues_ = { };
+
+    std::vector<command_pool> command_pools_ = { };
+
+    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
+    std::vector<VkImage> swapchain_images_ = { };
+    std::vector<VkImageView> swapchain_image_views_ = { };
+    std::vector<VkFramebuffer> swapchain_framebuffers_ = { };
 
     VkFormat swapchain_image_format_;
     VkExtent2D swapchain_extent_;
@@ -101,18 +118,7 @@ private:
 
     const std::vector<const char*> validation_layers_ = { "VK_LAYER_KHRONOS_validation" };
 
-    std::vector<extension> instance_extensions_ = 
-    {
-#if defined( VK_USE_PLATFORM_WIN32_KHR )
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_win32_surface" },
-#elif defined( VK_USE_PLATFORM_XCB_KHR )
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_xcb_surface" },
-#endif
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_surface" },
-        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_KHR_get_surface_capabilities2" },
-        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_EXT_debug_utils" }
-    };
-
+    std::vector<extension> instance_extensions_;
     std::vector<extension> device_extensions_ =
     {
         extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_swapchain" }

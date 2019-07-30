@@ -16,16 +16,29 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef LUCIOLE_THREAD_POOL_HPP
+#define LUCIOLE_THREAD_POOL_HPP
 
-#include <iostream>
+#include <vector>
+#include <queue>
+#include <thread>
 
-int main( )
+#include <wmbats_bazaar/delegate.hpp>
+
+#include "strong_types.hpp"
+
+class thread_pool
 {
-    bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
+public:
+    using task = bzr::delegate<void( )>;
 
-    application app;
-    app.run( );
+public:
+    thread_pool( );
+    explicit thread_pool( const count32_t thread_count );
 
-    return 0;
-}
+private:
+    std::vector<std::queue<task>> task_queues_;
+    std::vector<std::thread> threads_; 
+};
+
+#endif // LUCIOLE_THREAD_POOL_HPP

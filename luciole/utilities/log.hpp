@@ -21,8 +21,6 @@
 
 #include <wmbats_bazaar/logger.hpp>
 
-#include "../luciole_core.hpp"
-
 inline static void core_info( const std::string& msg )
 {
 #ifndef NDEBUG

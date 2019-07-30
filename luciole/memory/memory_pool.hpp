@@ -16,16 +16,43 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef LUCIOLE_MEMORY_POOL_HPP
+#define LUCIOLE_MEMORY_POOL_HPP
 
-#include <iostream>
+#include <cstdint>
+#include <list>
 
-int main( )
+/*
+
+constexpr std::uint32_t cache_line = 64;
+
+template<std::size_t block_count = 64>
+class memory_pool
 {
-    bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
+private:
+    struct block
+    {
+        alignas( cache_line ) char memory[cache_line];
+    };
 
-    application app;
-    app.run( );
+public:
+    template<typename type>
+    type* allocate( std::size_t count )
+    {
+        return new ( data_->memory ) type[count];
+    }
 
-    return 0;
-}
+    template<typename type>
+    void deallocate( type* p_type )
+    {
+        
+    }
+
+public:
+    block* data_ = new block( );
+
+    std::vector<std::size_t> offsets_;
+};
+ */
+
+#endif //LUCIOLE_MEMORY_POOL_HPP

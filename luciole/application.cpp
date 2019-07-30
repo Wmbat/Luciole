@@ -17,6 +17,7 @@
  */
 
 #include <map>
+#include <set>
 
 #include <wmbats_bazaar/file_io.hpp>
 
@@ -30,6 +31,7 @@
 #include "window/xcb_window.hpp"
 #endif 
 
+/*
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -78,7 +80,7 @@ void destroy_debug_utils_messenger (
         func(instance, debugMessenger, pAllocator);
     }
 }
-
+ */
 
 application::application( )
 {
@@ -87,6 +89,8 @@ application::application( )
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
     p_wnd_ = std::make_unique<xcb_window>( "Luciole" );
 #endif 
+
+    context_ = context( *p_wnd_.get( ) );
 
     std::uint32_t api_version;
     vkEnumerateInstanceVersion( &api_version );
@@ -102,22 +106,40 @@ application::application( )
         .apiVersion = api_version
     };
 
-    create_instance( app_info );
+    instance_extensions_ = get_instance_extensions( );
+
+    auto enabled_instance_extensions = check_instance_extension_support( );
+
+    if ( !enabled_instance_extensions.has_value( ) )
+    {
+        core_error( "Not all required extensions are supported." );
+    }
+
+    for( const auto extension : enabled_instance_extensions.value( ) )
+    {
+        core_info( "Instance Extension \"{}\" ENABLED .", extension );
+    }
+
+    instance_ = create_instance( app_info, enabled_instance_extensions.value( ) );
     create_debug_messenger( );
-    create_surface( );
+    surface_ = create_surface( );
     pick_gpu( );
     create_device( );
+    command_pools_ = create_command_pools( );
     create_swapchain( );
-    create_image_views( );
-    create_render_pass( );
+    swapchain_image_views_ = create_image_views( count32_t( swapchain_images_.size( ) ) );
+    render_pass_ = create_render_pass( );
     create_graphics_pipeline( );
+    create_framebuffers( );
 }
 application::~application( )
 {
+    destroy_framebuffers( );
     destroy_graphics_pipeline( );
     destroy_render_pass( );
     destroy_image_views( );
     destroy_swapchain( );
+    destroy_command_pools( );
     destroy_device( );
     destroy_surface( );
     destroy_debug_messenger( );
@@ -133,8 +155,20 @@ void application::run( )
     }
 }
 
-void application::create_instance( const VkApplicationInfo& app_info )
+std::vector<extension> application::get_instance_extensions( ) const
 {
+    std::vector<extension> exts = 
+    {
+#if defined( VK_USE_PLATFORM_WIN32_KHR )
+        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_win32_surface" },
+#elif defined( VK_USE_PLATFORM_XCB_KHR )
+        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_xcb_surface" },
+#endif
+        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_surface" },
+        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_KHR_get_surface_capabilities2" },
+        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_EXT_debug_utils" }
+    };
+
     std::uint32_t instance_extension_count = 0;
     vkEnumerateInstanceExtensionProperties( nullptr, &instance_extension_count, nullptr );
     VkExtensionProperties* extension_properties = reinterpret_cast<VkExtensionProperties*>( alloca( sizeof( VkExtensionProperties ) * instance_extension_count ) );
@@ -142,7 +176,7 @@ void application::create_instance( const VkApplicationInfo& app_info )
 
     for ( size_t i = 0; i < instance_extension_count; ++i )
     {
-        for( auto& extension : instance_extensions_ )
+        for( auto& extension : exts )
         {
             if ( strcmp( extension.name_.c_str( ), extension_properties[i].extensionName ) == 0 )
             {
@@ -151,31 +185,33 @@ void application::create_instance( const VkApplicationInfo& app_info )
         }
     }
 
+    return exts;
+}
+
+std::optional<std::vector<const char*>> application::check_instance_extension_support( ) const
+{
     std::vector<const char*> enabled_extensions;
     enabled_extensions.reserve( instance_extensions_.size( ) );
 
-    bool not_supported = false;
     for( const auto& extension : instance_extensions_ )
     {
         if ( ( !extension.found_ ) && extension.priority_ == extension::priority::e_required )
         {
-            not_supported = true;
+            return std::nullopt;
         }
 
         if ( extension.found_ )
         {
             enabled_extensions.emplace_back( extension.name_.c_str( ) );
-
-            core_info( "Instance Extension \"{}\" ENABLED .", extension.name_ );
         }
     }
 
-    if ( not_supported )
-    {
-        core_error( "Required Extension not supported" );
+    return enabled_extensions;
+}
 
-        throw;
-    }
+VkInstance application::create_instance( const VkApplicationInfo& app_info, const std::vector<const char*>& enabled_extensions ) const
+{
+    VkInstance handle = VK_NULL_HANDLE;
 
     if constexpr ( enable_debug_layers )
     {
@@ -212,7 +248,7 @@ void application::create_instance( const VkApplicationInfo& app_info )
             .ppEnabledExtensionNames = enabled_extensions.data( )
         };
 
-        if ( vkCreateInstance( &create_info, nullptr, &instance_ ) != VK_SUCCESS )
+        if ( vkCreateInstance( &create_info, nullptr, &handle ) != VK_SUCCESS )
         {
             core_error( "Failed to create Vulkan Instance" );
         }
@@ -229,11 +265,13 @@ void application::create_instance( const VkApplicationInfo& app_info )
             .ppEnabledExtensionNames = enabled_extensions.data( )
         };
 
-        if ( vkCreateInstance( &create_info, nullptr, &instance_ ) != VK_SUCCESS )
+        if ( vkCreateInstance( &create_info, nullptr, &handle ) != VK_SUCCESS )
         {
             core_error( "Failed to create Vulkan Instance" );
         }
     }
+
+    return handle;
 }
 void application::destroy_instance( )
 {
@@ -246,6 +284,7 @@ void application::destroy_instance( )
 
 void application::create_debug_messenger( )
 {
+    /* 
     if constexpr ( enable_debug_layers ) 
     {
         const VkDebugUtilsMessengerCreateInfoEXT debug_messenger_create_info 
@@ -263,9 +302,11 @@ void application::create_debug_messenger( )
             core_error( "Failed to create Vulkan Debug Messenger" );
         }
     }
+    */
 }
 void application::destroy_debug_messenger( )
-{
+{   
+    /* 
     if constexpr ( enable_debug_layers )
     {
         if ( debug_messenger_ != VK_NULL_HANDLE )
@@ -274,11 +315,12 @@ void application::destroy_debug_messenger( )
             debug_messenger_ = VK_NULL_HANDLE;
         }
     } 
+    */
 }
 
-void application::create_surface( )
+VkSurfaceKHR application::create_surface( ) const
 {
-    surface_ = p_wnd_->create_surface( instance_ );
+    return p_wnd_->create_surface( instance_ );
 }
 void application::destroy_surface( )
 {
@@ -460,14 +502,36 @@ void application::create_device( )
         {
             if ( queue_family_properties[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
             {
-                vkGetDeviceQueue( device_, i, 0, &transfer_queue_ );
+                VkQueue handle = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, i, 0, &handle );
+
+                struct queue transfer_queue
+                {
+                    .handle_ = handle,
+                    .flags_ = VK_QUEUE_TRANSFER_BIT,
+                    .family_ = i,
+                    .index_ = 0
+                };
+
+                queues_.emplace_back( transfer_queue );
 
                 has_transfer_only_ = true;
             }
 
             if ( queue_family_properties[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
             {
-                vkGetDeviceQueue( device_, i, 0, &compute_queue_ );
+                VkQueue handle = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, i, 0, &handle );
+            
+                struct queue compute_queue
+                {
+                    .handle_ = handle,
+                    .flags_ = VK_QUEUE_COMPUTE_BIT,
+                    .family_ = i,
+                    .index_ = 0
+                };
+
+                queues_.emplace_back( compute_queue );
 
                 has_compute_only_ = true;
             }
@@ -484,18 +548,54 @@ void application::create_device( )
             {
                 std::uint32_t index = 0;
 
-                vkGetDeviceQueue( device_, i, index, &graphics_queue_ );
+                VkQueue gfx_handle = VK_NULL_HANDLE;
+                vkGetDeviceQueue( device_, i, index, &gfx_handle );
+                
+                struct queue transfer_queue
+                {
+                    .handle_ = gfx_handle,
+                    .flags_ = queue_family_properties[i].queueFlags,
+                    .family_ = i,
+                    .index_ = index
+                };
+
+                queues_.emplace_back( transfer_queue );
+
                 ++index;
 
                 if ( !has_transfer_only_ )
                 {
-                    vkGetDeviceQueue( device_, i, index, &transfer_queue_ );
+                    VkQueue handle = VK_NULL_HANDLE;
+                    vkGetDeviceQueue( device_, i, 0, &handle );
+
+                    struct queue transfer_queue
+                    {
+                        .handle_ = handle,
+                        .flags_ = queue_family_properties[i].queueFlags,
+                        .family_ = i,
+                        .index_ = 0
+                    };
+
+                    queues_.emplace_back( transfer_queue );
+
                     ++index;
                 }
 
                 if ( !has_compute_only_ )
                 {
-                    vkGetDeviceQueue( device_, i, index, &compute_queue_ );
+                    VkQueue handle = VK_NULL_HANDLE;
+                    vkGetDeviceQueue( device_, i, 0, &handle );
+            
+                    struct queue compute_queue
+                    {
+                        .handle_ = handle,
+                        .flags_ = queue_family_properties[i].queueFlags,
+                        .family_ = i,
+                        .index_ = 0
+                    };
+
+                    queues_.emplace_back( compute_queue );
+
                     ++index;
                 }
             }
@@ -509,6 +609,64 @@ void application::destroy_device( )
         vkDestroyDevice( device_, nullptr );
         device_ = VK_NULL_HANDLE;
     }
+}
+
+std::vector<command_pool> application::create_command_pools( ) const
+{
+    std::vector<command_pool> command_pools;
+
+    for ( const auto& queue : queues_ )
+    {
+        bool is_already_present = false;
+        for ( const auto& command_pool : command_pools )
+        {
+            is_already_present = command_pool.family_ == queue.family_;
+        }
+
+        if ( !is_already_present )
+        {
+            VkCommandPool handle = VK_NULL_HANDLE;
+
+            VkCommandPoolCreateInfo create_info 
+            {
+                .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+                .flags = 0,
+                .queueFamilyIndex = queue.family_
+            };
+
+            if ( vkCreateCommandPool( device_, &create_info, nullptr, &handle ) != VK_SUCCESS )
+            {
+                core_error( "Failed to create Command Pool!" );
+            }
+
+            struct command_pool command_pool 
+            {
+                .handle_ = handle,
+                .family_ = queue.family_,
+                .flags_ = queue.flags_
+            };
+
+            command_pools.push_back( command_pool );
+        }
+    }
+
+    return command_pools;
+}
+void application::destroy_command_pools( )
+{
+    for( auto& command_pool : command_pools_ )
+    {
+        if ( command_pool.handle_ != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool( device_, command_pool.handle_, nullptr );
+            command_pool.handle_ = VK_NULL_HANDLE;
+        }
+    }
+}
+
+std::vector<VkCommandBuffer> application::create_command_buffers( count32_t count ) const
+{
+
 }
 
 void application::create_swapchain( )
@@ -554,8 +712,8 @@ void application::create_swapchain( )
     }
 
     vkGetSwapchainImagesKHR( device_, swapchain_, &image_count, nullptr );
-    swapchain_images.resize( image_count );
-    vkGetSwapchainImagesKHR( device_, swapchain_, &image_count, swapchain_images.data( ) );
+    swapchain_images_.resize( image_count );
+    vkGetSwapchainImagesKHR( device_, swapchain_, &image_count, swapchain_images_.data( ) );
 
     swapchain_image_format_ = surface_format.format;
     swapchain_extent_ = extent;
@@ -569,18 +727,21 @@ void application::destroy_swapchain( )
     }
 }
 
-void application::create_image_views( )
+std::vector<VkImageView> application::create_image_views( count32_t count ) const
 {
-    swapchain_image_views.resize( swapchain_images.size( ) );
+    std::vector<VkImageView> image_views;
+    image_views.reserve( count.value_ );
 
-    for ( size_t i = 0; i < swapchain_image_views.size( ); ++i )
+    for ( size_t i = 0; i < count.value_; ++i )
     {
+        VkImageView handle = VK_NULL_HANDLE;
+
         VkImageViewCreateInfo create_info 
         {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .pNext = nullptr,
             .flags = { },
-            .image = swapchain_images[i],
+            .image = swapchain_images_[i],
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = swapchain_image_format_,
             .components = VkComponentMapping
@@ -600,15 +761,19 @@ void application::create_image_views( )
             }
         };
 
-        if ( vkCreateImageView( device_, &create_info, nullptr, &swapchain_image_views[i] ) != VK_SUCCESS )
+        if ( vkCreateImageView( device_, &create_info, nullptr, &handle ) != VK_SUCCESS )
         {
             core_error( "Failed to create image views!" );
         }
+
+        image_views.emplace_back( handle );
     }
+
+    return image_views;
 }
 void application::destroy_image_views( )
 {
-    for ( auto& image_view : swapchain_image_views )
+    for ( auto& image_view : swapchain_image_views_ )
     {
         if ( image_view != VK_NULL_HANDLE )
         {
@@ -618,8 +783,10 @@ void application::destroy_image_views( )
     }
 }
 
-void application::create_render_pass( )
+VkRenderPass application::create_render_pass( ) const
 {
+    VkRenderPass handle = VK_NULL_HANDLE;
+
     VkAttachmentDescription colour_attachment
     {
         .format = swapchain_image_format_,
@@ -662,10 +829,12 @@ void application::create_render_pass( )
         .pDependencies = nullptr
     };
 
-    if ( vkCreateRenderPass( device_, &create_info, nullptr, &render_pass_ ) != VK_SUCCESS )
+    if ( vkCreateRenderPass( device_, &create_info, nullptr, &handle ) != VK_SUCCESS )
     {
         core_error( "Failed to create render pass!" );
     }
+
+    return handle;
 }
 void application::destroy_render_pass( )
 {
@@ -874,8 +1043,48 @@ void application::destroy_graphics_pipeline( )
     }
 }
 
+void application::create_framebuffers( )
+{
+    swapchain_framebuffers_.resize( swapchain_image_views_.size( ) );
 
-VkShaderModule application::create_shader_module( const std::string& code )
+    for ( size_t i = 0; i <swapchain_framebuffers_.size( ); ++i )
+    {
+        VkImageView attachments[] = 
+        {
+            swapchain_image_views_[i]
+        };
+
+        VkFramebufferCreateInfo create_info 
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass = render_pass_,
+            .attachmentCount = sizeof( attachments ) / sizeof ( VkImageView ),
+            .pAttachments = attachments,
+            .width = swapchain_extent_.width,
+            .height = swapchain_extent_.height,
+            .layers = 1
+        };
+
+        if ( vkCreateFramebuffer( device_, &create_info, nullptr, &swapchain_framebuffers_[i] ) != VK_NULL_HANDLE )
+        {
+            core_error( "Failed to create framebuffer!" );
+        }
+    }
+}
+void application::destroy_framebuffers( )
+{
+    for ( auto& framebuffer : swapchain_framebuffers_ )
+    {
+        if ( framebuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyFramebuffer( device_, framebuffer, nullptr );
+            framebuffer = VK_NULL_HANDLE;
+        }
+    }
+}
+
+
+VkShaderModule application::create_shader_module( const std::string& code ) const
 {
     VkShaderModule shader_module = VK_NULL_HANDLE;
 

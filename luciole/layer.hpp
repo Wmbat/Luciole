@@ -16,16 +16,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#ifndef LUCIOLE_LAYER_HPP
+#define LUCIOLE_LAYER_HPP
 
-#include <iostream>
+#include <string>
 
-int main( )
+struct layer
 {
-    bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
+    enum class priority
+    {
+        e_none,
+        e_required,
+        e_optional
+    };
 
-    application app;
-    app.run( );
+    priority priority_ = priority::e_none;
+    bool found_ = false;
+    std::string name_ = { };
+};
 
-    return 0;
-}
+#endif // LUCIOLE_LAYER_HPP

@@ -19,147 +19,26 @@
 #ifndef LUCIOLE_GRAPHICS_RENDERER_HPP
 #define LUCIOLE_GRAPHICS_RENDERER_HPP
 
-#include <optional>
+#include <vector>
 
-#include <tiny_gltf/tiny_gltf.h>
-#include <wmbats_bazaar/delegate.hpp>
+#include <vulkan/vulkan.h>
 
-#include "../luciole_core.hpp"
-
-#include "../window/base_window.hpp"
-
-/*
-#include "../vulkan/context.hpp"
-#include "../vulkan/swapchain.hpp"
-#include "../vulkan/memory_allocator.hpp"
-#include "../vulkan/shader_manager.hpp"
-#include "../vulkan/pipeline_manager.hpp"
-#include "../vulkan/mesh_buffer.hpp"
-*/
-
-namespace lcl
+class renderer
 {
-    enum class pipeline_type
-    {
-        graphics,
-        compute
-    };
- 
+public:
 
-    class renderer
-    {
-    public:
-        LUCIOLE_API renderer( base_window* p_window, const std::string& app_name, uint32_t app_version );
-        LUCIOLE_API renderer( const renderer& renderer ) noexcept = delete;
-        LUCIOLE_API renderer( renderer&& renderer ) noexcept;
-        LUCIOLE_API ~renderer( );
+private:
+    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
+    std::vector<VkImage> swapchain_images_ = { };
+    std::vector<VkImageView> swapchain_image_views_ = { };
+    std::vector<VkFramebuffer> swapchain_framebuffers_ = { };
 
-        LUCIOLE_API renderer& operator=( const renderer& renderer ) noexcept = delete;
-        LUCIOLE_API renderer& operator=( renderer&& renderer ) noexcept;
-        
+    VkFormat swapchain_image_format_;
+    VkExtent2D swapchain_extent_;
 
-        /*!
-         * @brief Creates a vertex shader and place it in the shader manager.
-         * 
-         * @param the filepath of the shader.
-         * @param the name of the main function of the shader.
-         * @return an index to allow the programmer access to the shader.
-         */
-        // LUCIOLE_API std::uint32_t create_vertex_shader( const std::string_view filepath, const std::string_view entry_point = "main" ); 
-        /*!
-         * @brief Creates a fragment shader and place it in the shader manager.
-         * 
-         * @param the filepath of the shader.
-         * @param the name of the main function of the shader.
-         * @return an index to allow the programmer access to the shader.
-         */
-        // LUCIOLE_API std::uint32_t create_fragment_shader( const std::string_view filepath, const std::string_view entry_point = "main" );        
-
-        /*!
-         * @brief Creates a graphics pipeline.
-         * 
-         * @param the filepath to the json file holding the pipeline information.
-         * @param the id of the vertex shader to use in this pipeline.
-         * @param the id of the fragment shader to use in this pipeline.
-         * @return the id of the pipeline that was just created.
-         */
-        // LUCIOLE_API std::uint32_t create_graphics_pipeline( const std::string_view filepath, std::uint32_t vertex_shader_id, std::uint32_t fragment_shader_id );
-        
-        /*
-        LUCIOLE_API void set_pipeline( const uint32_t id );
-        LUCIOLE_API void switch_pipeline( const uint32_t id );
-
-        LUCIOLE_API void draw_frame( );
-
-        LUCIOLE_API void record_draw_calls( );
-
-        LUCIOLE_API void on_window_close( const window_close_event& event );
-        LUCIOLE_API void on_framebuffer_resize( const framebuffer_resize_event& event );
-
-        LUCIOLE_API void set_clear_colour( const glm::vec4& colour );
-        */
-    private:
-    /*
-        const vk::UniqueSemaphore create_semaphore( ) const noexcept;
-
-        const vk::UniqueFence create_fence( ) const noexcept;
-        
-        const std::vector<vk::UniqueCommandBuffer> create_command_buffers( 
-            const vk::CommandPool command_pool, 
-            std::uint32_t count ) const;
-        
-        const vk::UniqueRenderPass create_render_pass( 
-            const vk::SurfaceFormatKHR surface_format,
-            const vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics ) const noexcept;
-    
-        const vk::SurfaceFormatKHR choose_swapchain_surface_format(
-            const std::vector<vk::SurfaceFormatKHR> &available_formats ) const noexcept;
-      */  
-    private:
-        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-        
-        uint32_t window_width_;
-        uint32_t window_height_;
-
-        bool is_window_closed_ = false;
-        bool framebuffer_resized_ = false;
-    
-        glm::vec4 clear_colour_;
-        
-        size_t current_frame_ = 0;
-        
-        uint32_t current_pipeline_;
-
-/*
-        vulkan::context context_;
-        vulkan::swapchain swapchain_;
-    
-        std::vector<vk::UniqueSemaphore> image_available_semaphores_;
-        std::vector<vk::UniqueSemaphore> render_finished_semaphores_;
-        std::vector<vk::UniqueFence> in_flight_fences_;
-    
-        std::vector<vk::UniqueCommandBuffer> render_command_buffers_[MAX_FRAMES_IN_FLIGHT];
-        
-        std::vector<vk::UniqueCommandBuffer> transfer_command_buffers_;
-    
-        vk::UniqueRenderPass render_pass_;
-        
-        vulkan::memory_allocator memory_allocator_;
-        
-        vulkan::mesh_buffer test_mesh_buffer_;
-        
-        vulkan::shader_manager shader_manager_;
-        vulkan::pipeline_manager pipeline_manager_;
-
-        vulkan::instance instance_;
-        vulkan::surface surface_;
-        vulkan::device device_;
-
-        std::vector<vulkan::command_pool> command_pools_;
-
-        vulkan::swapchain swapchain_;
-*/
-    };
-}
+    VkRenderPass render_pass_ = VK_NULL_HANDLE;
+    VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout graphics_pipeline_layout_ = VK_NULL_HANDLE;
+};
 
 #endif // LUCIOLE_GRAPHICS_RENDERER_HPP

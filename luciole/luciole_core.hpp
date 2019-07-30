@@ -21,6 +21,39 @@
 #define LUCIOLE_LUCIOLE_CORE_HPP
 
 #include <cstdint>
+#include <optional>
+#include <string>
+
+#include "utilities/log.hpp"
+
+#include "strong_types.hpp"
+
+struct error_msg_parameter { };
+using error_msg_t = strong_type<std::string, error_msg_parameter>;
+
+template<typename type>
+type vk_check( const type handle, const error_msg_t& err_msg )
+{
+    if ( handle == VK_NULL_HANDLE )
+    {
+        core_error( err_msg.value_ );
+        throw;
+    }
+
+    return handle;
+}
+
+template<typename type>
+std::vector<type> vk_check_array( const std::vector<type>& handles, const error_msg_t& err_msg )
+{
+    if ( handles.size( ) == 0 )
+    {
+        core_error( err_msg.value_ );
+        throw;
+    }
+
+    return handles;
+}
 
 static constexpr uint32_t kilobyte = 1024;
 static constexpr uint32_t megabyte = kilobyte * kilobyte;

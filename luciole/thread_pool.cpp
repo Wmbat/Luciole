@@ -16,16 +16,14 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application.hpp"
+#include "thread_pool.hpp"
 
-#include <iostream>
-
-int main( )
+thread_pool::thread_pool( )
 {
-    bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
 
-    application app;
-    app.run( );
+}
 
-    return 0;
+thread_pool::thread_pool( const count32_t thread_count )
+{
+    
 }

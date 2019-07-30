@@ -21,8 +21,6 @@
 
 #include <string>
 
-#include <vulkan/vulkan.h>
-
 struct extension
 {
     enum class priority

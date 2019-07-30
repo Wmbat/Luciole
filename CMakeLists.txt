@@ -112,14 +112,11 @@ else()
 endif( )
 
 target_sources( luciole
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/context.cpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/context.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/mesh.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/swapchain.cpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/swapchain.hpp"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/vertex.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.hpp"
 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
@@ -142,12 +139,18 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/layer.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/thread_pool.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/thread_pool.hpp"
     )
 
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fsanitize=leak> )
+    #target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fsanitize=leak> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )

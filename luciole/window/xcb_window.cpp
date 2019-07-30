@@ -312,15 +312,18 @@ vk::UniqueSurfaceKHR xcb_window::create_surface( const vk::Instance& instance ) 
 */
 VkSurfaceKHR xcb_window::create_surface( const VkInstance instance ) const
 {
-    VkSurfaceKHR surface;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+
     VkXcbSurfaceCreateInfoKHR create_info{ };
     create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
     create_info.connection = p_xcb_connection_.get( );
     create_info.window = xcb_window_;
+
     if ( vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ) != VK_SUCCESS )
     {
-        core_error( "Failed to create Surface" );
+        return VK_NULL_HANDLE;
     }
+    
     return surface;
 }
 
