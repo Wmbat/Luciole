@@ -28,23 +28,42 @@
 
 #include "strong_types.hpp"
 
+struct vulkan_default_parameter { };
+
+template<typename T>
+using vk_strong_type = strong_type<T, vulkan_default_parameter>;
+
+using vk_instance_t = vk_strong_type<VkInstance>;
+using vk_debug_messenger_t = vk_strong_type<VkDebugUtilsMessengerEXT>;
+using vk_surface_t = vk_strong_type<VkSurfaceKHR>;
+using vk_physical_device_t = vk_strong_type<VkPhysicalDevice>;
+using vk_device_t = vk_strong_type<VkDevice>;
+using vk_swapchain_t = vk_strong_type<VkSwapchainKHR>;
+using vk_swapchain_create_info_t = vk_strong_type<VkSwapchainCreateInfoKHR const&>;
+using vk_image_view_t = vk_strong_type<VkImageView>;
+using vk_image_view_create_info_t = strong_type<VkImageViewCreateInfo const&>;
+using vk_render_pass_t = vk_strong_type<VkRenderPass>;
+using vk_render_pass_create_info_t = vk_strong_type<VkRenderPassCreateInfo const&>;
+
+constexpr auto cache_line = std::size_t{ 64 };
+
 struct error_msg_parameter { };
 using error_msg_t = strong_type<std::string, error_msg_parameter>;
 
-template<typename type>
-type vk_check( const type handle, const error_msg_t& err_msg )
+template<typename T>
+T vk_check( vk_strong_type<T> handle, const error_msg_t& err_msg )
 {
-    if ( handle == VK_NULL_HANDLE )
+    if ( handle.value_ == VK_NULL_HANDLE )
     {
         core_error( err_msg.value_ );
         throw;
     }
 
-    return handle;
+    return handle.value_;
 }
 
-template<typename type>
-std::vector<type> vk_check_array( const std::vector<type>& handles, const error_msg_t& err_msg )
+template<typename T>
+std::vector<T> vk_check_array( const std::vector<T>& handles, const error_msg_t& err_msg )
 {
     if ( handles.size( ) == 0 )
     {

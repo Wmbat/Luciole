@@ -16,29 +16,29 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_THREAD_POOL_HPP
-#define LUCIOLE_THREAD_POOL_HPP
+#ifndef LUCIOLE_GRAPHICS_SHADER_HPP
+#define LUCIOLE_GRAPHICS_SHADER_HPP
 
-#include <vector>
-#include <queue>
-#include <thread>
+#include <wmbats_bazaar/file_io.hpp>
+#include <vulkan/vulkan.h>
+#include <glslang/Public/ShaderLang.h>
+#include <SPIRV/GlslangToSpv.h>
+#include <StandAlone/DirStackFileIncluder.h>
 
-#include <wmbats_bazaar/delegate.hpp>
+#include "../luciole_core.hpp"
 
-#include "strong_types.hpp"
-
-class thread_pool
+class shader
 {
 public:
-    using task = bzr::delegate<void( )>;
+    struct shader_filepath_parameter{ };
+    using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
 
 public:
-    thread_pool( );
-    explicit thread_pool( const count32_t thread_count );
-
+    shader( ) = default;
+    shader( shader_filepath_t filepath );
+    
 private:
-    std::vector<std::queue<task>> task_queues_;
-    std::vector<std::thread> threads_; 
+
 };
 
-#endif // LUCIOLE_THREAD_POOL_HPP
+#endif // LUCIOLE_GRAPHICS_SHADER_HPP

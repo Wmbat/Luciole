@@ -93,7 +93,7 @@ private:
 
     context context_;
     renderer renderer_;
-/* */
+
     VkInstance instance_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;

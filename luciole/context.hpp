@@ -24,6 +24,7 @@
 #include <optional>
 
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 #include "window/window.hpp"
 
@@ -60,14 +61,32 @@ private:
 
 public:
     context( ) = default;
-    context( const window& wnd );
+    explicit context( const window& wnd );
     context( const context& other ) = delete;
     context( context&& other );
     ~context( );
 
-    context& operator=( const context& rhs ) = delete;
+    context& operator=( context const& rhs ) = delete;
     context& operator=( context&& rhs );
-
+    
+    VkSwapchainCreateInfoKHR swapchain_create_info( ) const noexcept;
+    
+    VkSwapchainKHR create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept;
+    void destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept;
+    
+    VkImageView create_image_view( vk_image_view_create_info_t create_info ) const noexcept;
+    void destroy_image_view( vk_image_view_t image_view ) const noexcept;
+    
+    VkRenderPass create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept;
+    void destroy_render_pass( vk_render_pass_t render_pass ) const noexcept;
+    
+    std::vector<VkImage> get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const;
+    
+    VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept;
+    
+    std::vector<VkSurfaceFormatKHR> get_surface_format( ) const;
+    std::vector<VkPresentModeKHR> get_present_modes( ) const;
+    VkExtent2D get_window_extent( ) const;
 private:
     std::vector<layer> load_validation_layers( ) const;
     std::vector<extension> load_instance_extensions( ) const;
@@ -85,17 +104,21 @@ private:
     std::vector<queue> get_queues( const queue_properties_t& queue_properties ) const;
 
     std::vector<command_pool> create_command_pools( ) const;
+    
+    std::vector<VkCommandBuffer> create_command_buffers( const VkCommandPool command_pool, count32_t count ) const;
 
     int rate_gpu( const VkPhysicalDevice gpu ) const;
 
     std::vector<VkQueueFamilyProperties> query_queue_family_properties( ) const;
 
 private:
-    VkInstance instance_                        = VK_NULL_HANDLE;
-    VkDebugUtilsMessengerEXT debug_messenger_   = VK_NULL_HANDLE;
-    VkSurfaceKHR surface_                       = VK_NULL_HANDLE;
-    VkPhysicalDevice gpu_                       = VK_NULL_HANDLE;
-    VkDevice device_                            = VK_NULL_HANDLE;
+    glm::u32vec2 wnd_size_;
+    
+    VkInstance instance_ = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+    VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
+    VkDevice device_ = VK_NULL_HANDLE;
 
     std::vector<queue> queues_;
 

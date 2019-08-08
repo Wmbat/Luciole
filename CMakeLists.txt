@@ -67,6 +67,7 @@ endif( )
 add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
+add_subdirectory( external/glslang )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
@@ -78,28 +79,31 @@ if( WIN32 )
     target_compile_definitions( luciole PUBLIC LUCIOLE_BUILD_DLL )
 endif( )
 
+include_directories( luciole "${CMAKE_CURRENT_SOURCE_DIR}/external/glslang" )
+
 # Declare the library's libs.
 if( NOT WIN32 )
     if( USE_WAYLAND_WSI )
         target_link_libraries( luciole
-                ${WAYLAND_CLIENT_LIBRARIES}
-                vulkan
-                stb
-                spdlog
-                nlohmann
-                tinygltf
-                glm )
+            ${WAYLAND_CLIENT_LIBRARIES}
+            vulkan
+            stb
+            spdlog
+            nlohmann
+            tinygltf
+            glm )
     else( )
         target_link_libraries( luciole
             PUBLIC ${XCB_LIBRARIES}
-            PUBLIC lsan
             PUBLIC vulkan
             PUBLIC stb
             PUBLIC spdlog
             PUBLIC wmbats_bazaar
             PUBLIC nlohmann
             PUBLIC tinygltf
-            PUBLIC glm )
+            PUBLIC glm
+            PUBLIC glslang
+            PUBLIC SPIRV )
     endif()
 else()
     target_link_libraries( luciole
@@ -114,9 +118,15 @@ endif( )
 target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.cpp"
 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/atomic_queue.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.hpp"
 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
@@ -145,12 +155,10 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/layer.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/thread_pool.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/thread_pool.hpp"
     )
 
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    #target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fsanitize=leak> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )

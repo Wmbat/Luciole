@@ -20,6 +20,7 @@
 #include <set>
 
 #include <wmbats_bazaar/file_io.hpp>
+#include <glslang/Public/ShaderLang.h>
 
 #include "application.hpp"
 
@@ -88,71 +89,27 @@ application::application( )
     p_wnd_ = std::make_unique<win32_window>( "Luciole" );
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
     p_wnd_ = std::make_unique<xcb_window>( "Luciole" );
-#endif 
-
+#endif
+    
+    glslang::InitializeProcess();
+        
     context_ = context( *p_wnd_.get( ) );
-
-    std::uint32_t api_version;
-    vkEnumerateInstanceVersion( &api_version );
-
-    const VkApplicationInfo app_info
-    {
-        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-        .pNext = nullptr,
-        .pApplicationName = "Luciole",
-        .applicationVersion = VK_MAKE_VERSION( 0, 0, 0 ),
-        .pEngineName = nullptr,
-        .engineVersion = VK_MAKE_VERSION( 0, 0, 0 ),
-        .apiVersion = api_version
-    };
-
-    instance_extensions_ = get_instance_extensions( );
-
-    auto enabled_instance_extensions = check_instance_extension_support( );
-
-    if ( !enabled_instance_extensions.has_value( ) )
-    {
-        core_error( "Not all required extensions are supported." );
-    }
-
-    for( const auto extension : enabled_instance_extensions.value( ) )
-    {
-        core_info( "Instance Extension \"{}\" ENABLED .", extension );
-    }
-
-    instance_ = create_instance( app_info, enabled_instance_extensions.value( ) );
-    create_debug_messenger( );
-    surface_ = create_surface( );
-    pick_gpu( );
-    create_device( );
-    command_pools_ = create_command_pools( );
-    create_swapchain( );
-    swapchain_image_views_ = create_image_views( count32_t( swapchain_images_.size( ) ) );
-    render_pass_ = create_render_pass( );
-    create_graphics_pipeline( );
-    create_framebuffers( );
+    renderer_ = renderer( p_context_t( &context_ ) );
 }
 application::~application( )
 {
-    destroy_framebuffers( );
-    destroy_graphics_pipeline( );
-    destroy_render_pass( );
-    destroy_image_views( );
-    destroy_swapchain( );
-    destroy_command_pools( );
-    destroy_device( );
-    destroy_surface( );
-    destroy_debug_messenger( );
-    destroy_instance( );
+
 }
 
 void application::run( )
 {
+    /*
     while( p_wnd_->is_open( ) )
     {
 
         p_wnd_->poll_events( );
     }
+     */
 }
 
 std::vector<extension> application::get_instance_extensions( ) const
@@ -467,8 +424,6 @@ void application::create_device( )
         if ( extension.found_ )
         {
             enabled_extensions.emplace_back( extension.name_.c_str( ) );
-
-            core_info( "Device Extension \"{}\" ENABLED .", extension.name_ );
         }
     }
 

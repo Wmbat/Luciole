@@ -75,6 +75,8 @@ void destroy_debug_utils_messenger (
 
 context::context( const window& wnd )
 {
+    wnd_size_ = { wnd.get_width(), wnd.get_height() };
+    
     std::uint32_t api_version;
     vkEnumerateInstanceVersion( &api_version );
 
@@ -100,6 +102,14 @@ context::context( const window& wnd )
             core_error( "1 or more validation layers are not supported." );
             throw;
         }
+        else
+        {
+            for ( auto const& name : layer_names )
+            {
+                core_info( "Validation Layer \"{}\" ENABLED.", name );
+            }
+        }
+        
     }
 
     const auto instance_ext_names = check_ext_support( extensions_t( instance_extensions_ ) );
@@ -107,19 +117,33 @@ context::context( const window& wnd )
     {
         core_error( "1 or more instance extensions are not supported." );
         throw;
-    }    
+    }
+    else
+    {
+        for( auto const& name : instance_ext_names )
+        {
+            core_info( "Instance Extension \"{}\" ENABLED.", name );
+        }
+    }
 
-    instance_ = vk_check( 
-        create_instance( app_info, extension_names_t( instance_ext_names ), layer_names_t( layer_names ) ), 
+    instance_ = vk_check(
+        vk_instance_t( create_instance( app_info, extension_names_t( instance_ext_names ), layer_names_t( layer_names ) ) ),
         error_msg_t( "Failed to create Instance." ) );
 
     if constexpr ( enable_debug_layers )
     {
-        debug_messenger_ = vk_check( create_debug_messenger( ), error_msg_t( "Failed to create Debug Utils Messenger!" ) );
+        debug_messenger_ = vk_check(
+            vk_debug_messenger_t( create_debug_messenger( ) ),
+            error_msg_t( "Failed to create Debug Utils Messenger!" ) );
     }
 
-    surface_ = vk_check( create_surface( wnd ), error_msg_t( "Failed to create Surface!" ) );
-    gpu_ = vk_check( pick_gpu( ), error_msg_t( "Failed to find a suitable Physical Device!" ) );
+    surface_ = vk_check(
+        vk_surface_t( create_surface( wnd ) ),
+        error_msg_t( "Failed to create Surface!" ) );
+    
+    gpu_ = vk_check(
+        vk_physical_device_t( pick_gpu( ) ),
+        error_msg_t( "Failed to find a suitable Physical Device!" ) );
 
     device_extensions_ = load_device_extensions( );
 
@@ -132,7 +156,7 @@ context::context( const window& wnd )
     }
 
     device_ = vk_check( 
-        create_device( extension_names_t( device_ext_names ), queue_properties_t( queue_properties ) ), 
+        vk_device_t ( create_device( extension_names_t( device_ext_names ), queue_properties_t( queue_properties ) ) ),
         error_msg_t( "Failed to create Logical Device!" ) );
 
     queues_ = get_queues( queue_properties_t( queue_properties ) );
@@ -145,6 +169,17 @@ context::context( context&& other )
 }
 context::~context( )
 {
+    for ( auto& command_pool : command_pools_ )
+    {
+        if ( command_pool.handle_ != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool( device_, command_pool.handle_, nullptr );
+            command_pool.handle_ = VK_NULL_HANDLE;
+            command_pool.family_ = 0;
+            command_pool.flags_ = 0;
+        }
+    }
+    
     if ( device_ != VK_NULL_HANDLE )
     {
         vkDestroyDevice( device_, nullptr );
@@ -182,13 +217,135 @@ context& context::operator=( context&& rhs )
         std::swap( surface_, rhs.surface_ );
         std::swap( gpu_, rhs.gpu_ );
         std::swap( device_, rhs.device_ );
+        
+        std::swap( queues_, rhs.queues_ );
+        std::swap( command_pools_, rhs.command_pools_ );
 
+        std::swap( wnd_size_, rhs.wnd_size_ );
+        
         validation_layers_ = std::move( rhs.validation_layers_ );
         instance_extensions_ = std::move( rhs.instance_extensions_ );
         device_extensions_ = std::move( rhs.device_extensions_ );
     }
 
     return *this;
+}
+
+VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
+{
+    VkSwapchainCreateInfoKHR const create_info
+    {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .flags = 0,
+        .surface = surface_
+    };
+    
+    return create_info;
+}
+
+VkSwapchainKHR context::create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept
+{
+    if ( VkSwapchainKHR handle = VK_NULL_HANDLE; vkCreateSwapchainKHR( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
+    {
+        return VK_NULL_HANDLE;
+    }
+    else
+    {
+        return handle;
+    }
+}
+void context::destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept
+{
+    vkDestroySwapchainKHR( device_, swapchain, nullptr );
+}
+
+VkImageView context::create_image_view( vk_image_view_create_info_t create_info ) const noexcept
+{
+    if ( VkImageView handle = VK_NULL_HANDLE; vkCreateImageView( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
+    {
+        return VK_NULL_HANDLE;
+    }
+    else
+    {
+        return handle;
+    }
+}
+
+void context::destroy_image_view( vk_image_view_t image_view ) const noexcept
+{
+    vkDestroyImageView( device_, image_view.value_, nullptr );
+}
+
+VkRenderPass context::create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept
+{
+    VkRenderPass handle = VK_NULL_HANDLE;
+    
+    if ( vkCreateRenderPass( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
+    {
+        return VK_NULL_HANDLE;
+    }
+    else
+    {
+        return handle;
+    }
+}
+
+void context::destroy_render_pass( vk_render_pass_t render_pass ) const noexcept
+{
+    if ( render_pass.value_ == VK_NULL_HANDLE )
+    {
+        vkDestroyRenderPass( device_, render_pass.value_, nullptr );
+    }
+}
+
+std::vector<VkImage> context::get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const
+{
+    if ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, nullptr ) != VK_SUCCESS )
+    {
+        return { };
+    }
+    
+    std::vector<VkImage> images( image_count.value_ );
+    if ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, images.data() ) != VK_SUCCESS )
+    {
+        return { };
+    }
+    
+    return images;
+}
+
+VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR( gpu_, surface_, &capabilities );
+    
+    return capabilities;
+}
+
+std::vector<VkSurfaceFormatKHR> context::get_surface_format( ) const
+{
+    std::uint32_t format_count = 0;
+    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &format_count, nullptr );
+    std::vector<VkSurfaceFormatKHR> formats( format_count );
+    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &format_count, formats.data() );
+    
+    return formats;
+}
+
+std::vector<VkPresentModeKHR> context::get_present_modes( ) const
+{
+    std::uint32_t mode_count = 0u;
+    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &mode_count, nullptr );
+    std::vector<VkPresentModeKHR> present_modes( mode_count );
+    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &mode_count, present_modes.data() );
+    
+    return present_modes;
+}
+
+VkExtent2D context::get_window_extent( ) const
+{
+    return VkExtent2D{ wnd_size_.x, wnd_size_.y };
 }
 
 std::vector<layer> context::load_validation_layers( ) const
@@ -503,7 +660,7 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
                 {
                     .handle_ = handle,
                     .flags_ = VK_QUEUE_TRANSFER_BIT,
-                    .family_ = i,
+                    .family_ = static_cast<std::uint32_t>( i ),
                     .index_ = 0
                 };
 
@@ -521,7 +678,7 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
                 {
                     .handle_ = handle,
                     .flags_ = VK_QUEUE_COMPUTE_BIT,
-                    .family_ = i,
+                    .family_ = static_cast<std::uint32_t>( i ),
                     .index_ = 0
                 };
 
@@ -548,8 +705,8 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
                 struct queue gfx_queue
                 {
                     .handle_ = gfx_handle,
-                    .flags_ = queue_properties.value_[i].queueFlags,
-                    .family_ = i,
+                    .flags_ = VK_QUEUE_GRAPHICS_BIT,
+                    .family_ = static_cast<std::uint32_t>( i ),
                     .index_ = index
                 };
 
@@ -565,8 +722,8 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
                     struct queue transfer_queue
                     {
                         .handle_ = handle,
-                        .flags_ = queue_properties.value_[i].queueFlags,
-                        .family_ = i,
+                        .flags_ = VK_QUEUE_TRANSFER_BIT,
+                        .family_ = static_cast<std::uint32_t>( i ),
                         .index_ = index
                     };
 
@@ -583,8 +740,8 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
                     struct queue compute_queue
                     {
                         .handle_ = handle,
-                        .flags_ = queue_properties.value_[i].queueFlags,
-                        .family_ = i,
+                        .flags_ = VK_QUEUE_COMPUTE_BIT,
+                        .family_ = static_cast<std::uint32_t>( i ),
                         .index_ = index
                     };
 
@@ -641,6 +798,27 @@ std::vector<command_pool>context::create_command_pools( ) const
     }
 
     return command_pools;
+}
+
+std::vector<VkCommandBuffer> context::create_command_buffers( const VkCommandPool command_pool, count32_t count ) const
+{
+    std::vector<VkCommandBuffer> handles( count.value_ );
+    
+    const VkCommandBufferAllocateInfo allocate_info
+    {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = command_pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = count.value_
+    };
+    
+    if ( vkAllocateCommandBuffers( device_, &allocate_info, handles.data() ) != VK_SUCCESS )
+    {
+        return { };
+    }
+    
+    return handles;
 }
 
 

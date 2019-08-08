@@ -22,23 +22,25 @@
 #include <cstdint>
 #include <string>
 
-template <typename type, typename parameter>
+struct default_parameter { };
+
+template <typename T, typename parameter = default_parameter>
 class strong_type
 {
 public:
-    explicit strong_type( type const& value ) 
+    explicit strong_type( const T& value )
         : 
         value_( value ) 
     {   }
 
-    template<typename type_ = type>
-    explicit strong_type( type&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
+    template<typename type_ = T>
+    explicit strong_type( T&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
     : 
     value_( std::move( value ) ) 
     {   }
- 
+    
 public:
-    type value_;
+    T value_;
 };
 
 struct count_parameter { };

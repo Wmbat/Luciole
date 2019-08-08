@@ -23,11 +23,40 @@
 
 #include <vulkan/vulkan.h>
 
+#include "../context.hpp"
+
+using p_context_t = strong_type<context const*>;
+
 class renderer
 {
+private:
+    struct shader_filepath_parameter{ };
+    using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
+    
 public:
+    renderer( ) = default;
+    explicit renderer( p_context_t p_context );
+    renderer( renderer const& rhs ) = delete;
+    renderer( renderer&& rhs );
+    ~renderer( );
+    
+    renderer& operator=( renderer const& rhs ) = delete;
+    renderer& operator=( renderer&& rhs );
 
 private:
+    VkSwapchainKHR create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
+    std::vector<VkImageView> create_image_views( count32_t image_count ) const;
+    VkRenderPass create_render_pass( ) const;
+    
+    VkShaderModule create_shader_module( shader_filepath_t filepath );
+    
+    VkSurfaceFormatKHR pick_swapchain_format( ) const;
+    VkPresentModeKHR pick_swapchain_present_mode( ) const;
+    VkExtent2D pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capabilities ) const;
+    
+private:
+    const context* p_context_;
+    
     VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
     std::vector<VkImage> swapchain_images_ = { };
     std::vector<VkImageView> swapchain_image_views_ = { };
