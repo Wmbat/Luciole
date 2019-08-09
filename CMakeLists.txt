@@ -15,7 +15,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.11 )
-project( engine )
+project( luciole )
+
+if( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE Release )
+endif( )
 
 set( CMAKE_CXX_STANDARD 17 )
 
@@ -28,7 +32,7 @@ endif( )
 
 if( WIN32 )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )        
-	set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
+    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
 elseif( UNIX )
     if( USE_WAYLAND_WSI )
         find_package( Wayland REQUIRED )
@@ -63,9 +67,99 @@ endif( )
 add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
-add_subdirectory( external/spdlog )
+add_subdirectory( external/glslang )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
+add_subdirectory( external/wmbats_bazaar )
 
-add_subdirectory( marsupial )
-add_subdirectory( demo )
+add_executable( luciole )
+
+if( WIN32 )
+    target_compile_definitions( luciole PUBLIC LUCIOLE_PLATFORM_WINDOWS )
+    target_compile_definitions( luciole PUBLIC LUCIOLE_BUILD_DLL )
+endif( )
+
+include_directories( luciole "${CMAKE_CURRENT_SOURCE_DIR}/external/glslang" )
+
+# Declare the library's libs.
+if( NOT WIN32 )
+    if( USE_WAYLAND_WSI )
+        target_link_libraries( luciole
+            ${WAYLAND_CLIENT_LIBRARIES}
+            vulkan
+            stb
+            spdlog
+            nlohmann
+            tinygltf
+            glm )
+    else( )
+        target_link_libraries( luciole
+            PUBLIC ${XCB_LIBRARIES}
+            PUBLIC vulkan
+            PUBLIC stb
+            PUBLIC spdlog
+            PUBLIC wmbats_bazaar
+            PUBLIC nlohmann
+            PUBLIC tinygltf
+            PUBLIC glm
+            PUBLIC glslang
+            PUBLIC SPIRV )
+    endif()
+else()
+    target_link_libraries( luciole
+           PUBLIC vulkan
+           PUBLIC stb
+           PUBLIC spdlog
+           PUBLIC nlohmann
+           PUBLIC tinygltf
+           PUBLIC glm )
+endif( )
+
+target_sources( luciole
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.cpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/atomic_queue.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
+
+    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vk_mem_alloc.h"
+    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vma_define.cpp"
+
+    #PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/utils.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/event.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/keyboard.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/mouse.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.hpp"
+
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/layer.hpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp"
+    )
+
+if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
+endif( )

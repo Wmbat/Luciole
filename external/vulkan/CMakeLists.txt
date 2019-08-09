@@ -17,6 +17,32 @@
 cmake_minimum_required( VERSION 3.11 )
 project( vulkan )
 
+find_package( Vulkan )
+
 add_library( vulkan INTERFACE )
 
+if ( NOT Vulkan_FOUND )
+    if ( WIN32 )
+        find_library( Vulkan_LIBRARY NAMES vulkan-1 vulkan PATHS ${CMAKE_SOURCE_DIR}/lib )
+
+        if ( Vulkan_LIBRARY )
+            set ( Vulkan_FOUND ON )
+            message( STATUS "Using bundled vulkan library version." )
+        endif( )
+    else( )
+        find_library( Vulkan_LIBRARY NAMES vulkan-1 vulkan PATHS ${CMAKE_SOURCE_DIR}/lib )
+
+        if ( Vulkan_LIBRARY )
+            set ( Vulkan_FOUND on )
+            message( STATUS "Using bundled vulkan library version." )
+        endif( )
+    endif( )
+endif ( )
+
 target_include_directories( vulkan INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+if ( WIN32 )
+
+else( )
+    target_link_libraries( vulkan INTERFACE libvulkan.so )
+endif( )
