@@ -218,7 +218,21 @@ context& context::operator=( context&& rhs )
         std::swap( gpu_, rhs.gpu_ );
         std::swap( device_, rhs.device_ );
         
-        std::swap( queues_, rhs.queues_ );
+        queues_.empty();
+        for( size_t i = 0; i < rhs.queues_.size( ); ++i )
+        {
+            struct queue temp;
+
+            temp.handle_ = rhs.queues_[i].handle_;
+            rhs.queues_[i].handle_ = VK_NULL_HANDLE;
+
+            temp.family_ = rhs.queues_[i].family_;
+            temp.flags_ = rhs.queues_[i].flags_;
+            temp.index_ = rhs.queues_[i].index_;
+
+            queues_.emplace_back( temp );
+        }
+
         std::swap( command_pools_, rhs.command_pools_ );
 
         std::swap( wnd_size_, rhs.wnd_size_ );
@@ -246,57 +260,140 @@ VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
 
 VkSwapchainKHR context::create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept
 {
-    if ( VkSwapchainKHR handle = VK_NULL_HANDLE; vkCreateSwapchainKHR( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
-    {
-        return VK_NULL_HANDLE;
-    }
-    else
-    {
-        return handle;
-    }
+    VkSwapchainKHR handle = VK_NULL_HANDLE;
+
+    return ( vkCreateSwapchainKHR( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
 }
 void context::destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept
 {
     vkDestroySwapchainKHR( device_, swapchain, nullptr );
 }
 
+
 VkImageView context::create_image_view( vk_image_view_create_info_t create_info ) const noexcept
 {
-    if ( VkImageView handle = VK_NULL_HANDLE; vkCreateImageView( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
-    {
-        return VK_NULL_HANDLE;
-    }
-    else
-    {
-        return handle;
-    }
-}
+    VkImageView handle = VK_NULL_HANDLE;
 
+    return ( vkCreateImageView( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
 void context::destroy_image_view( vk_image_view_t image_view ) const noexcept
 {
     vkDestroyImageView( device_, image_view.value_, nullptr );
 }
 
+
 VkRenderPass context::create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept
 {
     VkRenderPass handle = VK_NULL_HANDLE;
     
-    if ( vkCreateRenderPass( device_, &create_info.value_, nullptr, &handle ) != VK_SUCCESS )
-    {
-        return VK_NULL_HANDLE;
-    }
-    else
-    {
-        return handle;
-    }
+    return ( vkCreateRenderPass( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
 }
-
 void context::destroy_render_pass( vk_render_pass_t render_pass ) const noexcept
 {
-    if ( render_pass.value_ == VK_NULL_HANDLE )
+    vkDestroyRenderPass( device_, render_pass.value_, nullptr );
+}
+
+VkPipelineLayout context::create_pipeline_layout( vk_pipeline_layout_create_info_t create_info ) const noexcept
+{
+    VkPipelineLayout handle = VK_NULL_HANDLE;
+
+    return ( vkCreatePipelineLayout( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_pipeline_layout( vk_pipeline_layout_t pipeline_layout ) const noexcept
+{
+    vkDestroyPipelineLayout( device_, pipeline_layout.value_, nullptr );
+}
+
+
+VkPipeline context::create_pipeline( vk_graphics_pipeline_create_info_t create_info ) const noexcept
+{
+    VkPipeline handle = VK_NULL_HANDLE;
+
+    return ( vkCreateGraphicsPipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+VkPipeline context::create_pipeline( vk_compute_pipeline_create_info_t create_info ) const noexcept
+{
+    VkPipeline handle = VK_NULL_HANDLE;
+
+    return ( vkCreateComputePipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_pipeline( vk_pipeline_t pipeline ) const noexcept
+{
+     vkDestroyPipeline( device_, pipeline.value_, nullptr );
+}
+
+
+VkShaderModule context::create_shader_module( vk_shader_module_create_info_t create_info ) const noexcept
+{
+    VkShaderModule handle;
+
+    return ( vkCreateShaderModule( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_shader_module( vk_shader_module_t shader_module ) const noexcept
+{
+    vkDestroyShaderModule( device_, shader_module.value_, nullptr );
+}
+
+
+VkFramebuffer context::create_framebuffer( vk_framebuffer_create_info_t create_info ) const noexcept
+{
+    VkFramebuffer handle = VK_NULL_HANDLE;
+    
+    return ( vkCreateFramebuffer( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_framebuffer( vk_framebuffer_t framebuffer ) const noexcept
+{
+    vkDestroyFramebuffer( device_, framebuffer.value_, nullptr ); 
+}
+
+
+VkSemaphore context::create_semaphore( vk_semaphore_create_info_t create_info ) const noexcept
+{
+    VkSemaphore handle = VK_NULL_HANDLE;
+
+    return ( vkCreateSemaphore( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_semaphore( vk_semaphore_t semaphore ) const noexcept
+{
+    vkDestroySemaphore( device_, semaphore.value_, nullptr );
+}
+
+VkFence context::create_fence( vk_fence_create_info_t create_info ) const noexcept
+{
+    VkFence handle = VK_NULL_HANDLE;
+
+    return ( vkCreateFence( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+}
+void context::destroy_fence( vk_fence_t fence ) const noexcept
+{
+    vkDestroyFence( device_, fence.value_, nullptr );
+}
+
+std::vector<VkCommandBuffer> context::create_command_buffers( VkQueueFlags flag, count32_t buffer_count ) const 
+{
+    std::vector<VkCommandBuffer> handles( buffer_count.value_ );
+
+    for( auto const& pool : command_pools_ )
     {
-        vkDestroyRenderPass( device_, render_pass.value_, nullptr );
+        if ( pool.flags_ == flag )
+        {
+            VkCommandBufferAllocateInfo const allocate_info
+            {
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                .pNext = nullptr,
+                .commandPool = pool.handle_,
+                .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                .commandBufferCount = buffer_count.value_
+            };
+
+            if ( vkAllocateCommandBuffers( device_, &allocate_info, handles.data( ) ) != VK_SUCCESS )
+            {
+                return { }; 
+            }
+        }
     }
+
+    return handles;
 }
 
 std::vector<VkImage> context::get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const
@@ -346,6 +443,34 @@ std::vector<VkPresentModeKHR> context::get_present_modes( ) const
 VkExtent2D context::get_window_extent( ) const
 {
     return VkExtent2D{ wnd_size_.x, wnd_size_.y };
+}
+
+VkResult context::submit_queue( VkQueueFlags flag, vk_submit_info_t submit_info, vk_fence_t fence ) const noexcept
+{
+    for( auto const& queue : queues_ )
+    {
+        if ( queue.flags_ == flag )
+            return vkQueueSubmit( queue.handle_, 1, &submit_info.value_, fence.value_ );
+    }
+
+    return VK_ERROR_DEVICE_LOST;
+}
+void context::present_queue( VkQueueFlags flag, vk_present_info_t present_info ) const noexcept
+{
+    for( auto const& queue : queues_ )
+    {
+        if ( queue.flags_ == flag )
+            vkQueuePresentKHR( queue.handle_, &present_info.value_ );
+    }
+}
+
+void context::wait_for_fence( vk_fence_t fence ) const noexcept
+{
+    vkWaitForFences( device_, 1, &fence.value_, VK_TRUE, std::numeric_limits<std::uint64_t>::max() );
+}
+void context::reset_fence( vk_fence_t fence ) const noexcept
+{
+    vkResetFences( device_, 1, &fence.value_ );
 }
 
 std::vector<layer> context::load_validation_layers( ) const
@@ -640,7 +765,7 @@ VkDevice context::create_device( const extension_names_t& enabled_ext_name, cons
     return handle;
 }
 
-std::vector<queue> context::get_queues( const queue_properties_t& queue_properties ) const
+std::vector<context::queue> context::get_queues( const queue_properties_t& queue_properties ) const
 {
     std::vector<queue> queues;
     queues.reserve( 3 );
@@ -758,7 +883,7 @@ std::vector<queue> context::get_queues( const queue_properties_t& queue_properti
     return queues;
 }
 
-std::vector<command_pool>context::create_command_pools( ) const
+std::vector<context::command_pool>context::create_command_pools( ) const
 {
     std::vector<command_pool> command_pools;
 
@@ -799,28 +924,6 @@ std::vector<command_pool>context::create_command_pools( ) const
 
     return command_pools;
 }
-
-std::vector<VkCommandBuffer> context::create_command_buffers( const VkCommandPool command_pool, count32_t count ) const
-{
-    std::vector<VkCommandBuffer> handles( count.value_ );
-    
-    const VkCommandBufferAllocateInfo allocate_info
-    {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = nullptr,
-        .commandPool = command_pool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = count.value_
-    };
-    
-    if ( vkAllocateCommandBuffers( device_, &allocate_info, handles.data() ) != VK_SUCCESS )
-    {
-        return { };
-    }
-    
-    return handles;
-}
-
 
 int context::rate_gpu( const VkPhysicalDevice gpu ) const
 {

@@ -44,6 +44,21 @@ struct command_pool;
 class context
 {
 private:
+    struct queue
+    {
+        VkQueue handle_ = VK_NULL_HANDLE;
+        VkQueueFlags flags_ = 0;
+        std::uint32_t family_ = 0;
+        std::uint32_t index_ = 0;
+    };
+
+    struct command_pool
+    {
+        VkCommandPool handle_ = VK_NULL_HANDLE;
+        std::uint32_t family_ = 0;
+        VkQueueFlags flags_ = 0;
+    };
+
     struct extensions_parameter{ };
     using extensions_t = strong_type<std::vector<extension>, extensions_parameter>;
 
@@ -69,24 +84,58 @@ public:
     context& operator=( context const& rhs ) = delete;
     context& operator=( context&& rhs );
     
-    VkSwapchainCreateInfoKHR swapchain_create_info( ) const noexcept;
+    [[nodiscard]] VkSwapchainCreateInfoKHR swapchain_create_info( ) const noexcept;
     
-    VkSwapchainKHR create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept;
+    [[nodiscard]] VkSwapchainKHR create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept;
     void destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept;
     
-    VkImageView create_image_view( vk_image_view_create_info_t create_info ) const noexcept;
+    [[nodiscard]] VkImageView create_image_view( vk_image_view_create_info_t create_info ) const noexcept;
     void destroy_image_view( vk_image_view_t image_view ) const noexcept;
     
-    VkRenderPass create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept;
+    [[nodiscard]] VkRenderPass create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept;
     void destroy_render_pass( vk_render_pass_t render_pass ) const noexcept;
     
-    std::vector<VkImage> get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const;
+    [[nodiscard]] VkPipelineLayout create_pipeline_layout( vk_pipeline_layout_create_info_t create_info ) const noexcept;
+    void destroy_pipeline_layout( vk_pipeline_layout_t pipeline_layout ) const noexcept;
+
+    [[nodiscard]] VkPipeline create_pipeline( vk_graphics_pipeline_create_info_t create_info ) const noexcept;
+    [[nodiscard]] VkPipeline create_pipeline( vk_compute_pipeline_create_info_t create_info ) const noexcept;
+    void destroy_pipeline( vk_pipeline_t pipeline ) const noexcept;
+
+    [[nodiscard]] VkShaderModule create_shader_module( vk_shader_module_create_info_t create_info ) const noexcept;
+    void destroy_shader_module( vk_shader_module_t shader_module ) const noexcept;
+
+    [[nodiscard]] VkFramebuffer create_framebuffer( vk_framebuffer_create_info_t create_info ) const noexcept;
+    void destroy_framebuffer( vk_framebuffer_t framebuffer ) const noexcept;
+
+    [[nodiscard]] VkSemaphore create_semaphore( vk_semaphore_create_info_t create_info ) const noexcept;
+    void destroy_semaphore( vk_semaphore_t semaphore ) const noexcept;
+
+    [[nodiscard]] VkFence create_fence( vk_fence_create_info_t create_info ) const noexcept;
+    void destroy_fence( vk_fence_t fence ) const noexcept;
+
+    [[nodiscard]] std::vector<VkCommandBuffer> create_command_buffers( VkQueueFlags flag, count32_t buffer_count ) const;
+
+    [[nodiscard]] std::vector<VkImage> get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const;
     
-    VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept;
+    [[nodiscard]] VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept;
     
-    std::vector<VkSurfaceFormatKHR> get_surface_format( ) const;
-    std::vector<VkPresentModeKHR> get_present_modes( ) const;
-    VkExtent2D get_window_extent( ) const;
+    [[nodiscard]] std::vector<VkSurfaceFormatKHR> get_surface_format( ) const;
+    [[nodiscard]] std::vector<VkPresentModeKHR> get_present_modes( ) const;
+    [[nodiscard]] VkExtent2D get_window_extent( ) const;
+
+    VkResult submit_queue( VkQueueFlags flag, vk_submit_info_t submit_info, vk_fence_t fence ) const noexcept;
+    void present_queue( VkQueueFlags flag, vk_present_info_t present_info ) const noexcept;
+
+    void wait_for_fence( vk_fence_t fence ) const noexcept;
+    void reset_fence( vk_fence_t fence ) const noexcept;
+
+    //TODO: Fix this
+    VkDevice get( ) const
+    {
+        return device_;
+    }
+
 private:
     std::vector<layer> load_validation_layers( ) const;
     std::vector<extension> load_instance_extensions( ) const;
@@ -100,12 +149,11 @@ private:
     VkSurfaceKHR create_surface( const window& wnd ) const;
     VkPhysicalDevice pick_gpu( ) const;
     VkDevice create_device( const extension_names_t& enabled_ext_name, const queue_properties_t& queue_properties ) const; 
-    
+
+
     std::vector<queue> get_queues( const queue_properties_t& queue_properties ) const;
 
     std::vector<command_pool> create_command_pools( ) const;
-    
-    std::vector<VkCommandBuffer> create_command_buffers( const VkCommandPool command_pool, count32_t count ) const;
 
     int rate_gpu( const VkPhysicalDevice gpu ) const;
 
@@ -129,21 +177,6 @@ private:
     std::vector<extension> device_extensions_;
 };
 
-struct queue
-{
-    VkQueue handle_ = VK_NULL_HANDLE;
-    VkQueueFlags flags_ = 0;
-    std::uint32_t family_ = 0;
-    std::uint32_t index_ = 0;
-};
-
-struct command_pool
-{
-    VkCommandPool handle_ = VK_NULL_HANDLE;
-    std::uint32_t family_ = 0;
-    VkQueueFlags flags_ = 0;
-
-    std::vector<VkCommandBuffer> command_buffers_ = { };
-};
+using p_context_t = strong_type<context const*>;
 
 #endif // LUCIOLE_CONTEXT_HPP

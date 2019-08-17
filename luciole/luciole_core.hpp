@@ -24,6 +24,10 @@
 #include <optional>
 #include <string>
 
+#include <vulkan/vulkan.h>
+
+#include <gtest/gtest.h>
+
 #include "utilities/log.hpp"
 
 #include "strong_types.hpp"
@@ -38,12 +42,28 @@ using vk_debug_messenger_t = vk_strong_type<VkDebugUtilsMessengerEXT>;
 using vk_surface_t = vk_strong_type<VkSurfaceKHR>;
 using vk_physical_device_t = vk_strong_type<VkPhysicalDevice>;
 using vk_device_t = vk_strong_type<VkDevice>;
+using vk_queue_t = vk_strong_type<VkQueue>;
+using vk_submit_info_t = vk_strong_type<VkSubmitInfo const&>;
+using vk_present_info_t = vk_strong_type<VkPresentInfoKHR const&>;
 using vk_swapchain_t = vk_strong_type<VkSwapchainKHR>;
 using vk_swapchain_create_info_t = vk_strong_type<VkSwapchainCreateInfoKHR const&>;
 using vk_image_view_t = vk_strong_type<VkImageView>;
 using vk_image_view_create_info_t = strong_type<VkImageViewCreateInfo const&>;
 using vk_render_pass_t = vk_strong_type<VkRenderPass>;
 using vk_render_pass_create_info_t = vk_strong_type<VkRenderPassCreateInfo const&>;
+using vk_pipeline_layout_t = vk_strong_type<VkPipelineLayout>;
+using vk_pipeline_layout_create_info_t = vk_strong_type<VkPipelineLayoutCreateInfo const&>;
+using vk_pipeline_t = vk_strong_type<VkPipeline>;
+using vk_graphics_pipeline_create_info_t = vk_strong_type<VkGraphicsPipelineCreateInfo const&>;
+using vk_compute_pipeline_create_info_t = vk_strong_type<VkComputePipelineCreateInfo const&>;
+using vk_shader_module_t = vk_strong_type<VkShaderModule>;
+using vk_shader_module_create_info_t = vk_strong_type<VkShaderModuleCreateInfo const&>;
+using vk_framebuffer_t = vk_strong_type<VkFramebuffer>;
+using vk_framebuffer_create_info_t = vk_strong_type<VkFramebufferCreateInfo const&>;
+using vk_semaphore_t = vk_strong_type<VkSemaphore>;
+using vk_semaphore_create_info_t = vk_strong_type<VkSemaphoreCreateInfo const&>;
+using vk_fence_t = vk_strong_type<VkFence>;
+using vk_fence_create_info_t = vk_strong_type<VkFenceCreateInfo const&>;
 
 constexpr auto cache_line = std::size_t{ 64 };
 

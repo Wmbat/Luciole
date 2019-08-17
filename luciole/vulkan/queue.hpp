@@ -16,29 +16,32 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_GRAPHICS_SHADER_HPP
-#define LUCIOLE_GRAPHICS_SHADER_HPP
-
-#include <wmbats_bazaar/file_io.hpp>
-#include <vulkan/vulkan.h>
-#include <glslang/Public/ShaderLang.h>
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
+#ifndef LUCIOLE_VULKAN_QUEUE_HPP
+#define LUCIOLE_VULKAN_QUEUE_HPP
 
 #include "../luciole_core.hpp"
+#include "../context.hpp"
 
-class shader
+class queue
 {
 public:
-    struct shader_filepath_parameter{ };
-    using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
+    enum class flag
+    {
+        e_none,
+        e_graphics,
+        e_compute,
+        e_transfer
+    };
+
+    using flag_t = strong_type<flag>;
 
 public:
-    shader( ) = default;
-    shader( shader_filepath_t filepath );
-    
-private:
+    queue( ) = default;
+    queue( p_context_t p_context, flag_t flag );
 
+private:
+    VkQueue handle_  = VK_NULL_HANDLE;
+    flag flag_ = flag::e_none; 
 };
 
-#endif // LUCIOLE_GRAPHICS_SHADER_HPP
+#endif // LUCIOLE_VULKAN_QUEUE_HPP

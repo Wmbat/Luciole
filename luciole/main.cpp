@@ -16,18 +16,19 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "luciole_core.hpp"
+
 #include "application.hpp"
 
-#include "threads/atomic_queue.hpp"
 
-#include <iostream>
-
-int main( )
+int main( int argc, char* argv[] )
 {
+    testing::InitGoogleTest( &argc, argv );
+
     bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
 
     application app;
     app.run( );
     
-    return 0;
+    return RUN_ALL_TESTS( );
 }

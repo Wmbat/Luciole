@@ -25,8 +25,6 @@
 
 #include "../context.hpp"
 
-using p_context_t = strong_type<context const*>;
-
 class renderer
 {
 private:
@@ -43,18 +41,28 @@ public:
     renderer& operator=( renderer const& rhs ) = delete;
     renderer& operator=( renderer&& rhs );
 
+    void draw_frame();
+
 private:
-    VkSwapchainKHR create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
-    std::vector<VkImageView> create_image_views( count32_t image_count ) const;
-    VkRenderPass create_render_pass( ) const;
-    
-    VkShaderModule create_shader_module( shader_filepath_t filepath );
-    
-    VkSurfaceFormatKHR pick_swapchain_format( ) const;
-    VkPresentModeKHR pick_swapchain_present_mode( ) const;
-    VkExtent2D pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capabilities ) const;
+    void record_command_buffers( );
+
+    [[nodiscard]] VkSwapchainKHR create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
+    [[nodiscard]] std::vector<VkImageView> create_image_views( count32_t image_count ) const;
+    [[nodiscard]] VkRenderPass create_render_pass( ) const;
+    [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_t filepath ) const;
+    [[nodiscard]] VkPipelineLayout create_default_pipeline_layout( ) const;
+    [[nodiscard]] VkPipeline create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const;
+    [[nodiscard]] VkSemaphore create_semaphore( ) const;
+    [[nodiscard]] VkFence create_fence( ) const noexcept;
+    [[nodiscard]] std::vector<VkFramebuffer> create_framebuffers( count32_t count ) const noexcept;
+
+    [[nodiscard]] VkSurfaceFormatKHR pick_swapchain_format( ) const;
+    [[nodiscard]] VkPresentModeKHR pick_swapchain_present_mode( ) const;
+    [[nodiscard]] VkExtent2D pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capabilities ) const;
     
 private:
+    static constexpr int MAX_FRAMES_IN_FLIGHT_ = 2;
+
     const context* p_context_;
     
     VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
@@ -66,8 +74,16 @@ private:
     VkExtent2D swapchain_extent_;
 
     VkRenderPass render_pass_ = VK_NULL_HANDLE;
-    VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout graphics_pipeline_layout_ = VK_NULL_HANDLE;
+    VkPipeline default_graphics_pipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+
+    std::vector<VkCommandBuffer> render_command_buffers_ = { };
+
+    VkSemaphore image_available_semaphore_[MAX_FRAMES_IN_FLIGHT_] = { };
+    VkSemaphore render_finished_semaphore_[MAX_FRAMES_IN_FLIGHT_] = { };
+    VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT_] = { };
+
+    size_t current_frame = 0;
 };
 
 #endif // LUCIOLE_GRAPHICS_RENDERER_HPP

@@ -16,14 +16,4 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_VULKAN_UTILS_H
-#define LUCIOLE_VULKAN_UTILS_H
-
-#include <vulkan/vulkan.h>
-
-namespace lcl::vulkan
-{
-
-}
-
-#endif //MARSUPIAL_VULKAN_UTILS_H
+#include "queue.hpp"

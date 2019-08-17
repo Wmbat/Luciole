@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.11 )
-project( luciole )
+project( luciole LANGUAGES CXX )
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
@@ -67,10 +67,10 @@ endif( )
 add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
-add_subdirectory( external/glslang )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
+add_subdirectory( external/googletest )
 
 add_executable( luciole )
 
@@ -102,8 +102,7 @@ if( NOT WIN32 )
             PUBLIC nlohmann
             PUBLIC tinygltf
             PUBLIC glm
-            PUBLIC glslang
-            PUBLIC SPIRV )
+            PUBLIC gtest )
     endif()
 else()
     target_link_libraries( luciole
@@ -118,8 +117,6 @@ endif( )
 target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/shader.cpp"
 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.hpp"
@@ -131,11 +128,9 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
 
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vk_mem_alloc.h"
-    #PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/vma/vma_define.cpp"
-
-    #PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/utils.hpp"
-
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.cpp"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.hpp"
+    
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/event.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/keyboard.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/mouse.hpp"
@@ -163,3 +158,11 @@ if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
 endif( )
+
+add_custom_target( copy_resources 
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        ${CMAKE_BINARY_DIR}/resources
+    DEPENDS ${CMAKE_SOURCE_DIR}/resources )
+
+add_dependencies( luciole copy_resources )
