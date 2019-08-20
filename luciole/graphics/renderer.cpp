@@ -193,8 +193,6 @@ void renderer::draw_frame( )
     std::uint32_t image_index = 0;
     vkAcquireNextImageKHR( p_context_->get( ), swapchain_, std::numeric_limits<std::uint64_t>::max( ), image_available_semaphore_[current_frame], VK_NULL_HANDLE, &image_index );
 
-    core_info( "{}", image_index );
-
     VkSemaphore wait_semaphores[] = { image_available_semaphore_[current_frame] };
     VkSemaphore signal_semaphores[] = { render_finished_semaphore_[current_frame] };
     VkSwapchainKHR swapchains[] = { swapchain_ };

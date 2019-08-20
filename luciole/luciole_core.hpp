@@ -26,7 +26,9 @@
 
 #include <vulkan/vulkan.h>
 
+#if defined( BUILD_TEST )
 #include <gtest/gtest.h>
+#endif
 
 #include "utilities/log.hpp"
 

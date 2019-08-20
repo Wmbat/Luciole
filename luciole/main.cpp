@@ -23,12 +23,18 @@
 
 int main( int argc, char* argv[] )
 {
+#if defined( BUILD_TEST )
     testing::InitGoogleTest( &argc, argv );
-
+#endif
+    
     bzr::logger::init( "luciole_logger", "%^[%T] %n [thread %t]: %v%$" );
 
     application app;
     app.run( );
-    
+
+#if defined( BUILD_TEST )    
     return RUN_ALL_TESTS( );
+#else
+    return 0;
+#endif
 }

@@ -17,6 +17,8 @@
 cmake_minimum_required( VERSION 3.11 )
 project( luciole LANGUAGES CXX )
 
+option( BUILD_TEST "Enable unit testing" OFF )
+
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
 endif( )
@@ -31,7 +33,7 @@ if( UNIX )
 endif( )
 
 if( WIN32 )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )        
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )        
     set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
 elseif( UNIX )
     if( USE_WAYLAND_WSI )
@@ -74,9 +76,9 @@ add_subdirectory( external/googletest )
 
 add_executable( luciole )
 
-if( WIN32 )
-    target_compile_definitions( luciole PUBLIC LUCIOLE_PLATFORM_WINDOWS )
-    target_compile_definitions( luciole PUBLIC LUCIOLE_BUILD_DLL )
+if ( BUILD_TEST )
+    message( STATUS "Building unit tests." )
+    target_compile_definitions( luciole PUBLIC BUILD_TEST )
 endif( )
 
 include_directories( luciole "${CMAKE_CURRENT_SOURCE_DIR}/external/glslang" )
