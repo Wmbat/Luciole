@@ -4,9 +4,9 @@
 
 /.vs
 /.vscode
-/debug
-/release
+/[Bb]ebug
+/[Rr]elease
 /.idea
-/build
+/[Bb]uild
 /CMakeSettings.json
 /_config.yml
