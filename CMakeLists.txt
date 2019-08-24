@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.11 )
+cmake_minimum_required( VERSION 3.12 )
 project( luciole LANGUAGES CXX )
 
 option( BUILD_TEST "Enable unit testing" OFF )
@@ -22,6 +22,7 @@ option( BUILD_TEST "Enable unit testing" OFF )
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
 endif( )
+
 
 set( CMAKE_CXX_STANDARD 17 )
 
@@ -62,10 +63,6 @@ elseif( UNIX )
     endif()
 endif( )
 
-if( MSVC )
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-endif( )
-
 add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
@@ -74,6 +71,17 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 add_subdirectory( external/googletest )
 
+if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
+    target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
+elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" )
+	target_compile_features( luciole PUBLIC cxx_std_20 )
+
+	target_compile_definitions( luciole PUBLIC "/EHsc" )
+endif( )
+
 add_executable( luciole )
 
 if ( BUILD_TEST )
@@ -81,39 +89,27 @@ if ( BUILD_TEST )
     target_compile_definitions( luciole PUBLIC BUILD_TEST )
 endif( )
 
-include_directories( luciole "${CMAKE_CURRENT_SOURCE_DIR}/external/glslang" )
-
-# Declare the library's libs.
 if( NOT WIN32 )
-    if( USE_WAYLAND_WSI )
-        target_link_libraries( luciole
-            ${WAYLAND_CLIENT_LIBRARIES}
-            vulkan
-            stb
-            spdlog
-            nlohmann
-            tinygltf
-            glm )
-    else( )
-        target_link_libraries( luciole
-            PUBLIC ${XCB_LIBRARIES}
-            PUBLIC vulkan
-            PUBLIC stb
-            PUBLIC spdlog
-            PUBLIC wmbats_bazaar
-            PUBLIC nlohmann
-            PUBLIC tinygltf
-            PUBLIC glm
-            PUBLIC gtest )
-    endif()
+	target_link_libraries( luciole
+	    PUBLIC ${XCB_LIBRARIES}
+        PUBLIC vulkan
+        PUBLIC stb
+        PUBLIC spdlog
+        PUBLIC wmbats_bazaar
+        PUBLIC nlohmann
+        PUBLIC tinygltf
+        PUBLIC glm
+        PUBLIC gtest )
 else()
     target_link_libraries( luciole
-           PUBLIC vulkan
-           PUBLIC stb
-           PUBLIC spdlog
-           PUBLIC nlohmann
-           PUBLIC tinygltf
-           PUBLIC glm )
+        PUBLIC vulkan
+        PUBLIC stb
+        PUBLIC spdlog
+		PUBLIC wmbats_bazaar
+        PUBLIC nlohmann
+        PUBLIC tinygltf
+        PUBLIC glm
+		PUBLIC gtest )
 endif( )
 
 target_sources( luciole
@@ -151,15 +147,7 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/layer.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp"
-    )
-
-if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
-endif( )
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp" )
 
 add_custom_target( copy_resources 
     COMMAND ${CMAKE_COMMAND} -E copy_directory

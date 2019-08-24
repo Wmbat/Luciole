@@ -107,14 +107,22 @@ void win32_window::poll_events ( )
     }
 };
 
-vk::UniqueSurfaceKHR win32_window::create_surface ( const vk::Instance& instance ) const noexcept
+VkSurfaceKHR win32_window::create_surface( VkInstance instance ) const
 {
-    const auto create_info = vk::Win32SurfaceCreateInfoKHR ( )
-        .setHinstance ( h_inst_ )
-        .setHwnd ( h_wnd_ );
-    return instance.createWin32SurfaceKHRUnique ( create_info );
+	VkSurfaceKHR handle = VK_NULL_HANDLE;
+
+	VkWin32SurfaceCreateInfoKHR const create_info
+	{
+		.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+		.pNext = nullptr,
+		.flags = 0,
+		.hinstance = h_inst_,
+		.hwnd = h_wnd_
+	};
+
+	return ( vkCreateWin32SurfaceKHR( instance, &create_info, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
 }
-*/
+
 LRESULT __stdcall win32_window::handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param )
 {
     // use create parameter passed in from CreateWindow() to store window class pointer at WinAPI side

@@ -16,7 +16,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef LUCIOLE_WINDOW_WIN32_WINDOW_HPP
 #define LUCIOLE_WINDOW_WIN32_WINDOW_HPP
 
@@ -37,7 +36,7 @@ public:
     win32_window& operator=( win32_window&& rhs ) noexcept;
 
     void poll_events ( ) override;
-    // LUCIOLE_API vk::UniqueSurfaceKHR create_surface ( const vk::Instance& instance ) const noexcept override;
+    virtual VkSurfaceKHR create_surface ( VkInstance instance ) const override;
 
 private:
     static LRESULT WINAPI handle_msg_setup ( HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param );
@@ -51,5 +50,4 @@ private:
 };
 
 #endif
-
 #endif // LUCIOLE_WINDOW_WIN32_WINDOW_HPP

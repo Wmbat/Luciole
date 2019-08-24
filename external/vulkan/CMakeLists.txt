@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.11 )
+cmake_minimum_required( VERSION 3.12 )
 project( vulkan )
 
 find_package( Vulkan )
@@ -42,7 +42,7 @@ endif ( )
 target_include_directories( vulkan INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if ( WIN32 )
-
+	target_link_libraries( vulkan INTERFACE vulkan-1.lib )
 else( )
     target_link_libraries( vulkan INTERFACE libvulkan.so )
 endif( )
