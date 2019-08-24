@@ -49,5 +49,5 @@ private:
     HWND h_wnd_ = nullptr;
 };
 
-#endif
+#endif // defined( VK_USE_PLATFORM_WIN32_KHR 
 #endif // LUCIOLE_WINDOW_WIN32_WINDOW_HPP

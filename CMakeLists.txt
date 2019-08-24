@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.12 )
+cmake_minimum_required( VERSION 3.15 )
 project( luciole LANGUAGES CXX )
 
 option( BUILD_TEST "Enable unit testing" OFF )
@@ -22,9 +22,6 @@ option( BUILD_TEST "Enable unit testing" OFF )
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
 endif( )
-
-
-set( CMAKE_CXX_STANDARD 17 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
@@ -71,6 +68,8 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 add_subdirectory( external/googletest )
 
+add_executable( luciole )
+
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
     target_compile_options( luciole 
         PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
@@ -78,12 +77,13 @@ if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
         PUBLIC $<$<CONFIG:DEBUG>:-o0>
         PUBLIC $<$<CONFIG:RELEASE>:-o3> 
     )
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "CLANG" )
-	target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
-	target_compile_options( luciole PUBLIC $<$<<CONFIG:RELEASE>:-o3 )
-endif( )
+elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 
-add_executable( luciole )
+elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+
+	set_target_properties( luciole PROPERTIES 
+		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
+endif( )
 
 if ( BUILD_TEST )
     message( STATUS "Building unit tests." )
@@ -157,3 +157,7 @@ add_custom_target( copy_resources
     DEPENDS ${CMAKE_SOURCE_DIR}/resources )
 
 add_dependencies( luciole copy_resources )
+
+target_compile_options( luciole 
+	PUBLIC $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+	PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> )
