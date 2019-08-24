@@ -71,18 +71,18 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 add_subdirectory( external/googletest )
 
-if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
-    target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" )
-	target_compile_features( luciole PUBLIC cxx_std_20 )
-
-	target_compile_definitions( luciole PUBLIC "/EHsc" )
-endif( )
-
 add_executable( luciole )
+
+if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
+    target_compile_options( luciole 
+        PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
+        PUBLIC $<$<CONFIG:DEBUG>:-Wall>
+        PUBLIC $<$<CONFIG:DEBUG>:-o0>
+        PUBLIC $<$<CONFIG:RELEASE>:-o3> 
+    )
+elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" )
+	
+endif( )
 
 if ( BUILD_TEST )
     message( STATUS "Building unit tests." )
