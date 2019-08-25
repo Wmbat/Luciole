@@ -42,7 +42,7 @@ endif ( )
 target_include_directories( vulkan INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if ( WIN32 )
-	target_link_libraries( vulkan INTERFACE vulkan-1.lib )
+	target_link_libraries( vulkan INTERFACE ${Vulkan_LIBRARIES} )
 else( )
     target_link_libraries( vulkan INTERFACE libvulkan.so )
 endif( )

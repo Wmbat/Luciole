@@ -71,15 +71,18 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 add_subdirectory( external/googletest )
 
+if ( WIN32 )
+	SET 
+endif( )
+
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-Wall> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
     target_compile_options( luciole PUBLIC $<$<CONFIG:RELEASE>:-o3> )
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" )
-	target_compile_features( luciole PUBLIC cxx_std_20 )
-
-	target_compile_definitions( luciole PUBLIC "/EHsc" )
+elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "CLANG" )
+	target_compile_options( luciole PUBLIC $<$<CONFIG:DEBUG>:-o0> )
+	target_compile_options( luciole PUBLIC $<$<<CONFIG:RELEASE>:-o3 )
 endif( )
 
 add_executable( luciole )
