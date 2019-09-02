@@ -28,6 +28,8 @@
 
 #include "window.hpp"
 
+#include "../vulkan/errors.hpp"
+
 class xcb_window : public window
 {
 public:
@@ -43,7 +45,7 @@ public:
     void poll_events( ) override;
     
     // LUCIOLE_API vk::UniqueSurfaceKHR create_surface( const vk::Instance& instance ) const noexcept override;
-    VkSurfaceKHR create_surface( const VkInstance instance ) const override;
+    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> create_surface( const VkInstance instance ) const override;
     
 private:
     std::unique_ptr<xcb_connection_t, std::function<void( xcb_connection_t* )>> p_xcb_connection_;

@@ -18,6 +18,7 @@
 
 #include <cstring>
 #include <map>
+#include <variant>
 
 #include "utilities/log.hpp"
 
@@ -80,7 +81,7 @@ context::context( const window& wnd )
     std::uint32_t api_version;
     vkEnumerateInstanceVersion( &api_version );
 
-    const VkApplicationInfo app_info
+    VkApplicationInfo const app_info
     {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
@@ -94,7 +95,7 @@ context::context( const window& wnd )
     validation_layers_ = load_validation_layers( );  
     instance_extensions_ = load_instance_extensions( );
 
-    const auto layer_names = check_layer_support( layers_t( validation_layers_ ) );
+    auto const layer_names = check_layer_support( layers_t( validation_layers_ ) );
     if constexpr( enable_debug_layers )
     {
         if ( layer_names.empty( ) )
@@ -112,7 +113,7 @@ context::context( const window& wnd )
         
     }
 
-    const auto instance_ext_names = check_ext_support( extensions_t( instance_extensions_ ) );
+    auto const instance_ext_names = check_ext_support( extensions_t( instance_extensions_ ) );
     if ( instance_ext_names.empty( ) )
     {
         core_error( "1 or more instance extensions are not supported." );
@@ -126,42 +127,107 @@ context::context( const window& wnd )
         }
     }
 
-    instance_ = vk_check(
-        vk_instance_t( create_instance( app_info, extension_names_t( instance_ext_names ), layer_names_t( layer_names ) ) ),
-        error_msg_t( "Failed to create Instance." ) );
-
-    if constexpr ( enable_debug_layers )
+    /*
+     *  Check for any error on the instance creation.
+     */
+    if ( auto res = create_instance( app_info, extension_names_t( instance_ext_names ), layer_names_t( layer_names ) );
+         auto p_val = std::get_if<VkInstance>( &res) )
     {
-        debug_messenger_ = vk_check(
-            vk_debug_messenger_t( create_debug_messenger( ) ),
-            error_msg_t( "Failed to create Debug Utils Messenger!" ) );
+        instance_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Instance creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
     }
 
-    surface_ = vk_check(
-        vk_surface_t( create_surface( wnd ) ),
-        error_msg_t( "Failed to create Surface!" ) );
+    /*
+     *  Check for any errors on the debug utils messenger creation.
+     */ 
+    if constexpr ( enable_debug_layers )
+    {
+        if ( auto res = create_debug_messenger( ); auto p_val = std::get_if<VkDebugUtilsMessengerEXT>( &res ) )
+        {
+            debug_messenger_ = *p_val;
+        }
+        else
+        {
+            core_error( "Vulkan Error: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+    }
+
+    /*
+     *  Check for any errors on the surface creation.
+     */
+    if ( auto res = create_surface( wnd ); auto p_val = std::get_if<VkSurfaceKHR>( &res ) )
+    {
+        surface_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
     
-    gpu_ = vk_check(
-        vk_physical_device_t( pick_gpu( ) ),
-        error_msg_t( "Failed to find a suitable Physical Device!" ) );
+    /*
+     *  Check for any errors on the gpu picking.
+     */
+    if ( auto res = pick_gpu( ); auto p_val = std::get_if<VkPhysicalDevice>( &res ) )
+    {
+        gpu_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
 
     device_extensions_ = load_device_extensions( );
 
-    const auto queue_properties = query_queue_family_properties( );
-    const auto device_ext_names = check_ext_support( extensions_t( device_extensions_ ) );
+    auto const queue_properties = query_queue_family_properties( );
+    auto const device_ext_names = check_ext_support( extensions_t( device_extensions_ ) );
     if ( device_ext_names.empty( ) )
     {
         core_error( "1 or more device extensions are not supported!" );
         throw;
     }
 
-    device_ = vk_check( 
-        vk_device_t ( create_device( extension_names_t( device_ext_names ), queue_properties_t( queue_properties ) ) ),
-        error_msg_t( "Failed to create Logical Device!" ) );
+    /*
+     * Check for any errors on logical device creation.
+     */
+    if ( auto res = create_device( extension_names_t( device_ext_names ), queue_properties_t( queue_properties ) );
+         auto p_val = std::get_if<VkDevice>( &res ) )
+    {   
+        device_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Device creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
 
     queues_ = get_queues( queue_properties_t( queue_properties ) );
+    
+    /*
+     *  Check for any errors on the command pools creation.
+     */
+    if ( auto res = create_command_pools( ); auto p_val = std::get_if<command_pools_container_t>( &res ) )
+    {
+        command_pools_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
 
-    command_pools_ = vk_check_array( create_command_pools( ), error_msg_t( "Failed to create 1 or more Command pools" ) );
+        abort( );
+    }
+    
 }
 context::context( context&& other )
 {
@@ -171,12 +237,11 @@ context::~context( )
 {
     for ( auto& command_pool : command_pools_ )
     {
-        if ( command_pool.handle_ != VK_NULL_HANDLE )
+        if ( command_pool.second.handle_ != VK_NULL_HANDLE )
         {
-            vkDestroyCommandPool( device_, command_pool.handle_, nullptr );
-            command_pool.handle_ = VK_NULL_HANDLE;
-            command_pool.family_ = 0;
-            command_pool.flags_ = 0;
+            vkDestroyCommandPool( device_, command_pool.second.handle_, nullptr );
+            command_pool.second.handle_ = VK_NULL_HANDLE;
+            command_pool.second.flags_ = queue::flag::e_none;
         }
     }
     
@@ -217,22 +282,7 @@ context& context::operator=( context&& rhs )
         std::swap( surface_, rhs.surface_ );
         std::swap( gpu_, rhs.gpu_ );
         std::swap( device_, rhs.device_ );
-        
-        queues_.empty();
-        for( size_t i = 0; i < rhs.queues_.size( ); ++i )
-        {
-            struct queue temp;
-
-            temp.handle_ = rhs.queues_[i].handle_;
-            rhs.queues_[i].handle_ = VK_NULL_HANDLE;
-
-            temp.family_ = rhs.queues_[i].family_;
-            temp.flags_ = rhs.queues_[i].flags_;
-            temp.index_ = rhs.queues_[i].index_;
-
-            queues_.emplace_back( temp );
-        }
-
+        std::swap( queues_, rhs.queues_ );
         std::swap( command_pools_, rhs.command_pools_ );
 
         std::swap( wnd_size_, rhs.wnd_size_ );
@@ -258,158 +308,253 @@ VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
     return create_info;
 }
 
-VkSwapchainKHR context::create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept
+std::variant<VkSwapchainKHR, vk::error::type> context::create_swapchain( vk::swapchain_create_info_t const& create_info ) const noexcept
 {
     VkSwapchainKHR handle = VK_NULL_HANDLE;
-
-    return ( vkCreateSwapchainKHR( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+ 
+    switch ( vkCreateSwapchainKHR( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        case VK_ERROR_DEVICE_LOST:
+            return vk::error::type::e_device_lost;
+        case VK_ERROR_SURFACE_LOST_KHR:
+            return vk::error::type::e_surface_lost;
+        case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+            return vk::error::type::e_native_window_in_use;
+        case VK_ERROR_INITIALIZATION_FAILED:
+            return vk::error::type::e_initialization_failed;
+        default:
+            return handle;
+    }
 }
-void context::destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept
+void context::destroy_swapchain( vk::swapchain_t swapchain ) const noexcept
 {
-    vkDestroySwapchainKHR( device_, swapchain, nullptr );
+    vkDestroySwapchainKHR( device_, swapchain.value_, nullptr );
 }
 
 
-VkImageView context::create_image_view( vk_image_view_create_info_t create_info ) const noexcept
+std::variant<VkImageView, vk::error::type> context::create_image_view( vk::image_view_create_info_t const& create_info ) const noexcept
 {
     VkImageView handle = VK_NULL_HANDLE;
 
-    return ( vkCreateImageView( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch ( vkCreateImageView( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_image_view( vk_image_view_t image_view ) const noexcept
+void context::destroy_image_view( vk::image_view_t image_view ) const noexcept
 {
     vkDestroyImageView( device_, image_view.value_, nullptr );
 }
 
 
-VkRenderPass context::create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept
+std::variant<VkRenderPass, vk::error::type> context::create_render_pass( vk::render_pass_create_info_t const& create_info ) const noexcept
 {
     VkRenderPass handle = VK_NULL_HANDLE;
     
-    return ( vkCreateRenderPass( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateRenderPass( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_render_pass( vk_render_pass_t render_pass ) const noexcept
+void context::destroy_render_pass( vk::render_pass_t render_pass ) const noexcept
 {
     vkDestroyRenderPass( device_, render_pass.value_, nullptr );
 }
 
-VkPipelineLayout context::create_pipeline_layout( vk_pipeline_layout_create_info_t create_info ) const noexcept
+std::variant<VkPipelineLayout, vk::error::type> context::create_pipeline_layout( vk::pipeline_layout_create_info_t const& create_info ) const noexcept
 {
     VkPipelineLayout handle = VK_NULL_HANDLE;
 
-    return ( vkCreatePipelineLayout( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreatePipelineLayout( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_pipeline_layout( vk_pipeline_layout_t pipeline_layout ) const noexcept
+void context::destroy_pipeline_layout( vk::pipeline_layout_t pipeline_layout ) const noexcept
 {
     vkDestroyPipelineLayout( device_, pipeline_layout.value_, nullptr );
 }
 
 
-VkPipeline context::create_pipeline( vk_graphics_pipeline_create_info_t create_info ) const noexcept
+std::variant<VkPipeline, vk::error::type> context::create_pipeline( vk::graphics_pipeline_create_info_t const& create_info ) const noexcept
 {
     VkPipeline handle = VK_NULL_HANDLE;
 
-    return ( vkCreateGraphicsPipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateGraphicsPipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-VkPipeline context::create_pipeline( vk_compute_pipeline_create_info_t create_info ) const noexcept
+std::variant<VkPipeline, vk::error::type> context::create_pipeline( vk::compute_pipeline_create_info_t const& create_info ) const noexcept
 {
     VkPipeline handle = VK_NULL_HANDLE;
 
-    return ( vkCreateComputePipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateComputePipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_pipeline( vk_pipeline_t pipeline ) const noexcept
+void context::destroy_pipeline( vk::pipeline_t pipeline ) const noexcept
 {
      vkDestroyPipeline( device_, pipeline.value_, nullptr );
 }
 
 
-VkShaderModule context::create_shader_module( vk_shader_module_create_info_t create_info ) const noexcept
+VkShaderModule context::create_shader_module( vk::shader_module_create_info_t const& create_info ) const noexcept
 {
     VkShaderModule handle;
 
     return ( vkCreateShaderModule( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
 }
-void context::destroy_shader_module( vk_shader_module_t shader_module ) const noexcept
+void context::destroy_shader_module( vk::shader_module_t shader_module ) const noexcept
 {
     vkDestroyShaderModule( device_, shader_module.value_, nullptr );
 }
 
 
-VkFramebuffer context::create_framebuffer( vk_framebuffer_create_info_t create_info ) const noexcept
+std::variant<VkFramebuffer, vk::error::type> context::create_framebuffer( vk::framebuffer_create_info_t const& create_info ) const noexcept
 {
     VkFramebuffer handle = VK_NULL_HANDLE;
     
-    return ( vkCreateFramebuffer( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateFramebuffer( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_framebuffer( vk_framebuffer_t framebuffer ) const noexcept
+void context::destroy_framebuffer( vk::framebuffer_t framebuffer ) const noexcept
 {
     vkDestroyFramebuffer( device_, framebuffer.value_, nullptr ); 
 }
 
-
-VkSemaphore context::create_semaphore( vk_semaphore_create_info_t create_info ) const noexcept
+std::variant<VkSemaphore, vk::error::type> context::create_semaphore( vk::semaphore_create_info_t const& create_info ) const noexcept
 {
     VkSemaphore handle = VK_NULL_HANDLE;
 
-    return ( vkCreateSemaphore( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateSemaphore( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_semaphore( vk_semaphore_t semaphore ) const noexcept
+void context::destroy_semaphore( vk::semaphore_t semaphore ) const noexcept
 {
     vkDestroySemaphore( device_, semaphore.value_, nullptr );
 }
 
-VkFence context::create_fence( vk_fence_create_info_t create_info ) const noexcept
+std::variant<VkFence, vk::error::type> context::create_fence( vk::fence_create_info_t const& create_info ) const noexcept
 {
     VkFence handle = VK_NULL_HANDLE;
 
-    return ( vkCreateFence( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+    switch( vkCreateFence( device_, &create_info.value_, nullptr, &handle ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handle;
+    }
 }
-void context::destroy_fence( vk_fence_t fence ) const noexcept
+void context::destroy_fence( vk::fence_t fence ) const noexcept
 {
     vkDestroyFence( device_, fence.value_, nullptr );
 }
 
-std::vector<VkCommandBuffer> context::create_command_buffers( VkQueueFlags flag, count32_t buffer_count ) const 
+std::variant<std::vector<VkCommandBuffer>, vk::error::type> context::create_command_buffers( queue::flag_t flag, count32_t buffer_count ) const 
 {
-    std::vector<VkCommandBuffer> handles( buffer_count.value_ );
+    auto pool = command_pools_.find( queues_.find( flag.value_ )->second.get_family_index( ) );
 
-    for( auto const& pool : command_pools_ )
+    VkCommandBufferAllocateInfo const allocate_info
     {
-        if ( pool.flags_ == flag )
-        {
-            VkCommandBufferAllocateInfo const allocate_info
-            {
-                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-                .pNext = nullptr,
-                .commandPool = pool.handle_,
-                .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                .commandBufferCount = buffer_count.value_
-            };
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = pool->second.handle_,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = buffer_count.value_
+    };
 
-            if ( vkAllocateCommandBuffers( device_, &allocate_info, handles.data( ) ) != VK_SUCCESS )
-            {
-                return { }; 
-            }
-        }
+    std::vector<VkCommandBuffer> handles( buffer_count.value_ );
+    switch( vkAllocateCommandBuffers( device_, &allocate_info, handles.data( ) ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return handles;
     }
-
-    return handles;
 }
 
-std::vector<VkImage> context::get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const
+std::variant<std::vector<VkImage>, vk::error::type> context::get_swapchain_images( vk::swapchain_t swapchain, count32_t image_count ) const
 {
-    if ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, nullptr ) != VK_SUCCESS )
+    switch ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, nullptr ) )
     {
-        return { };
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+            break;
+
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+            break;
+
+        default:
+            break;
     }
     
     std::vector<VkImage> images( image_count.value_ );
-    if ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, images.data() ) != VK_SUCCESS )
+
+    switch ( vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, images.data( ) ) )
     {
-        return { };
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+            break;
+
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+            break;
+
+        default:
+            return images;
+            break;
     }
-    
-    return images;
 }
 
 VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
@@ -445,30 +590,37 @@ VkExtent2D context::get_window_extent( ) const
     return VkExtent2D{ wnd_size_.x, wnd_size_.y };
 }
 
-VkResult context::submit_queue( VkQueueFlags flag, vk_submit_info_t submit_info, vk_fence_t fence ) const noexcept
+bool context::submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept
 {
-    for( auto const& queue : queues_ )
+    if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
     {
-        if ( queue.flags_ == flag )
-            return vkQueueSubmit( queue.handle_, 1, &submit_info.value_, fence.value_ );
+        return queue->second.submit( submit_info, fence );
     }
-
-    return VK_ERROR_DEVICE_LOST;
-}
-void context::present_queue( VkQueueFlags flag, vk_present_info_t present_info ) const noexcept
-{
-    for( auto const& queue : queues_ )
+    else
     {
-        if ( queue.flags_ == flag )
-            vkQueuePresentKHR( queue.handle_, &present_info.value_ );
+        return false;
     }
 }
+bool context::present_queue( queue::flag_t flag, vk::present_info_t const& present_info ) const noexcept
+{
+    if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
+    {
+        queue->second.present( present_info );
 
-void context::wait_for_fence( vk_fence_t fence ) const noexcept
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    
+}
+
+void context::wait_for_fence( vk::fence_t fence ) const noexcept
 {
     vkWaitForFences( device_, 1, &fence.value_, VK_TRUE, std::numeric_limits<std::uint64_t>::max() );
 }
-void context::reset_fence( vk_fence_t fence ) const noexcept
+void context::reset_fence( vk::fence_t fence ) const noexcept
 {
     vkResetFences( device_, 1, &fence.value_ );
 }
@@ -611,7 +763,10 @@ std::vector<std::string> context::check_ext_support( const extensions_t& extensi
     return enabled_extensions;
 }
 
-VkInstance context::create_instance( const VkApplicationInfo& app_info, const extension_names_t& enabled_ext_name, const layer_names_t& enabled_layer_names ) const
+std::variant<VkInstance, vk::error::type> context::create_instance( 
+    const VkApplicationInfo& app_info, 
+    const extension_names_t& enabled_ext_name, 
+    const layer_names_t& enabled_layer_names ) const
 {
     VkInstance handle = VK_NULL_HANDLE;
 
@@ -639,10 +794,19 @@ VkInstance context::create_instance( const VkApplicationInfo& app_info, const ex
             .ppEnabledExtensionNames = extensions.data( )
         };
 
-        if ( vkCreateInstance( &create_info, nullptr, &handle ) != VK_SUCCESS )
+        switch( vkCreateInstance( &create_info, nullptr, &handle ) )
         {
-            return VK_NULL_HANDLE;
-        }     
+            case VK_ERROR_OUT_OF_HOST_MEMORY:
+                return vk::error::type::e_out_of_host_memory;
+            case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+                return vk::error::type::e_out_of_device_memory;
+            case VK_ERROR_INITIALIZATION_FAILED:
+                return vk::error::type::e_initialization_failed;
+            case VK_ERROR_INCOMPATIBLE_DRIVER:
+                return vk::error::type::e_incompatible_driver;
+            default:
+                return handle;
+        }  
     }
     else
     {
@@ -656,16 +820,23 @@ VkInstance context::create_instance( const VkApplicationInfo& app_info, const ex
             .ppEnabledExtensionNames = extensions.data( )
         };
 
-        if ( vkCreateInstance( &create_info, nullptr, &handle ) != VK_SUCCESS )
+        switch( vkCreateInstance( &create_info, nullptr, &handle ) )
         {
-            return VK_NULL_HANDLE;
-        }        
+            case VK_ERROR_OUT_OF_HOST_MEMORY:
+                return vk::error::type::e_out_of_host_memory;
+            case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+                return vk::error::type::e_out_of_device_memory;
+            case VK_ERROR_INITIALIZATION_FAILED:
+                return vk::error::type::e_initialization_failed;
+            case VK_ERROR_INCOMPATIBLE_DRIVER:
+                return vk::error::type::e_incompatible_driver;
+            default:
+                return handle;
+        }    
     }
-
-    return handle;
 }
 
-VkDebugUtilsMessengerEXT context::create_debug_messenger( ) const
+std::variant<VkDebugUtilsMessengerEXT, vk::error::type> context::create_debug_messenger( ) const
 {
     VkDebugUtilsMessengerEXT handle = VK_NULL_HANDLE;
 
@@ -681,23 +852,28 @@ VkDebugUtilsMessengerEXT context::create_debug_messenger( ) const
 
     if ( create_debug_utils_messenger( instance_, &debug_messenger_create_info, nullptr, &handle ) != VK_SUCCESS )
     {
-        return VK_NULL_HANDLE;
+        return vk::error::type::e_out_of_host_memory;
     }
     
     return handle;
 }
 
-VkSurfaceKHR context::create_surface( const window& wnd ) const
+std::variant<VkSurfaceKHR, vk::error::type> context::create_surface( const window& wnd ) const
 {
     return wnd.create_surface( instance_ );
 }
 
-VkPhysicalDevice context::pick_gpu( ) const
+std::variant<VkPhysicalDevice, vk::error::type> context::pick_gpu( ) const
 {
     std::uint32_t physical_device_count = 0;
     vkEnumeratePhysicalDevices( instance_, &physical_device_count, nullptr );
     VkPhysicalDevice* physical_devices = reinterpret_cast<VkPhysicalDevice*>( alloca( sizeof( VkPhysicalDevice ) * physical_device_count ) );
     vkEnumeratePhysicalDevices( instance_, &physical_device_count, physical_devices );
+
+    if ( physical_device_count == 0 )
+    {
+        return vk::error::type::e_no_physical_device_found;
+    }
 
     std::multimap<std::uint32_t, VkPhysicalDevice> candidates;
 
@@ -712,12 +888,12 @@ VkPhysicalDevice context::pick_gpu( ) const
         return candidates.begin( )->second;
     }
 
-    return VK_NULL_HANDLE;
+    return vk::error::type::e_no_suitable_physical_devices;
 }
 
-VkDevice context::create_device( const extension_names_t& enabled_ext_name, const queue_properties_t& queue_properties ) const
+std::variant<VkDevice, vk::error::type> context::create_device( extension_names_t const& enabled_ext_name, queue_properties_t const& queue_properties ) const
 {
-    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos; 
     queue_create_infos.reserve( queue_properties.value_.size( ) );
 
     for( size_t i = 0; i < queue_properties.value_.size( ); ++i )
@@ -757,59 +933,71 @@ VkDevice context::create_device( const extension_names_t& enabled_ext_name, cons
         .pEnabledFeatures = &features
     };
 
-    if ( vkCreateDevice( gpu_, &create_info, nullptr, &handle ) != VK_NULL_HANDLE )
+    switch ( vkCreateDevice( gpu_, &create_info, nullptr, &handle ) )
     {
-        return VK_NULL_HANDLE;
-    }
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+            break;
 
-    return handle;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+            break;
+
+        case VK_ERROR_INITIALIZATION_FAILED:
+            return vk::error::type::e_initialization_failed;
+            break;
+
+        case VK_ERROR_TOO_MANY_OBJECTS:
+            return vk::error::type::e_too_many_objects;
+            break;
+
+        case VK_ERROR_DEVICE_LOST:
+            return vk::error::type::e_device_lost;
+            break;
+
+        default:
+            return handle;
+            break;
+    }
 }
 
-std::vector<context::queue> context::get_queues( const queue_properties_t& queue_properties ) const
+std::unordered_map<queue::flag, queue> context::get_queues( const queue_properties_t& queue_properties ) const
 {
-    std::vector<queue> queues;
+    std::unordered_map<queue::flag, queue> queues;
     queues.reserve( 3 );
 
-    bool has_transfer_only_ = false;
-    bool has_compute_only_ = false;
+    bool has_transfer_only = false;
+    bool has_compute_only = false;
     for( size_t i = 0; i < queue_properties.value_.size( ); ++i )
     {
         if ( queue_properties.value_[i].queueCount > 0 )
         {
             if ( queue_properties.value_[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
             {
-                VkQueue handle = VK_NULL_HANDLE;
-                vkGetDeviceQueue( device_, i, 0, &handle );
+                has_transfer_only = true;
 
-                struct queue transfer_queue
-                {
-                    .handle_ = handle,
-                    .flags_ = VK_QUEUE_TRANSFER_BIT,
-                    .family_ = static_cast<std::uint32_t>( i ),
-                    .index_ = 0
-                };
-
-                queues.emplace_back( transfer_queue );
-
-                has_transfer_only_ = true;
+                queues.insert( { 
+                    queue::flag::e_transfer,
+                    queue( 
+                        vk::device_t( device_ ),  
+                        queue::family_index_t( i ), 
+                        queue::index_t( 0 ) 
+                    ) 
+                } );
             }
 
             if ( queue_properties.value_[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
             {
-                VkQueue handle = VK_NULL_HANDLE;
-                vkGetDeviceQueue( device_, i, 0, &handle );
+                has_compute_only = true;
             
-                struct queue compute_queue
-                {
-                    .handle_ = handle,
-                    .flags_ = VK_QUEUE_COMPUTE_BIT,
-                    .family_ = static_cast<std::uint32_t>( i ),
-                    .index_ = 0
-                };
-
-                queues.emplace_back( compute_queue );
-
-                has_compute_only_ = true;
+                queues.insert( { 
+                    queue::flag::e_compute,
+                    queue( 
+                        vk::device_t( device_ ),  
+                        queue::family_index_t( i ), 
+                        queue::index_t( 0 ) 
+                    ) 
+                } );
             }
         }
     }
@@ -824,53 +1012,41 @@ std::vector<context::queue> context::get_queues( const queue_properties_t& queue
             {
                 std::uint32_t index = 0;
 
-                VkQueue gfx_handle = VK_NULL_HANDLE;
-                vkGetDeviceQueue( device_, i, index, &gfx_handle );
-                
-                struct queue gfx_queue
-                {
-                    .handle_ = gfx_handle,
-                    .flags_ = VK_QUEUE_GRAPHICS_BIT,
-                    .family_ = static_cast<std::uint32_t>( i ),
-                    .index_ = index
-                };
-
-                queues.emplace_back( gfx_queue );
+                queues.insert( { 
+                    queue::flag::e_graphics,
+                    queue( 
+                        vk::device_t( device_ ),  
+                        queue::family_index_t( i ), 
+                        queue::index_t( index ) 
+                    ) 
+                } );
 
                 ++index;
 
-                if ( !has_transfer_only_ )
+                if ( !has_transfer_only )
                 {
-                    VkQueue handle = VK_NULL_HANDLE;
-                    vkGetDeviceQueue( device_, i, index, &handle );
-
-                    struct queue transfer_queue
-                    {
-                        .handle_ = handle,
-                        .flags_ = VK_QUEUE_TRANSFER_BIT,
-                        .family_ = static_cast<std::uint32_t>( i ),
-                        .index_ = index
-                    };
-
-                    queues.emplace_back( transfer_queue );
+                    queues.insert( { 
+                        queue::flag::e_transfer,
+                        queue( 
+                            vk::device_t( device_ ),  
+                            queue::family_index_t( i ), 
+                            queue::index_t( index ) 
+                        ) 
+                    } );
 
                     ++index;
                 }
 
-                if ( !has_compute_only_ )
+                if ( !has_compute_only )
                 {
-                    VkQueue handle = VK_NULL_HANDLE;
-                    vkGetDeviceQueue( device_, i, index, &handle );
-            
-                    struct queue compute_queue
-                    {
-                        .handle_ = handle,
-                        .flags_ = VK_QUEUE_COMPUTE_BIT,
-                        .family_ = static_cast<std::uint32_t>( i ),
-                        .index_ = index
-                    };
-
-                    queues.emplace_back( compute_queue );
+                    queues.insert( { 
+                        queue::flag::e_compute,
+                        queue( 
+                            vk::device_t( device_ ),  
+                            queue::family_index_t( i ), 
+                            queue::index_t( index ) 
+                        ) 
+                    } );
 
                     ++index;
                 }
@@ -878,24 +1054,21 @@ std::vector<context::queue> context::get_queues( const queue_properties_t& queue
         }
     }
 
-    queues.shrink_to_fit( );
-
     return queues;
 }
 
-std::vector<context::command_pool>context::create_command_pools( ) const
+std::variant<context::command_pools_container_t, vk::error::type> context::create_command_pools( ) const
 {
-    std::vector<command_pool> command_pools;
+    context::command_pools_container_t command_pools;
+    command_pools.reserve( queues_.size( ) );
 
     for ( const auto& queue : queues_ )
     {
-        bool is_already_present = false;
-        for ( const auto& command_pool : command_pools )
+        if ( auto it = command_pools.find( queue.second.get_family_index( ) ); it != command_pools.end( ) )
         {
-            is_already_present = command_pool.family_ == queue.family_;
+            it->second.flags_ |= queue.first;
         }
-
-        if ( !is_already_present )
+        else
         {
             VkCommandPool handle = VK_NULL_HANDLE;
 
@@ -903,22 +1076,21 @@ std::vector<context::command_pool>context::create_command_pools( ) const
             {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .flags = 0,
-                .queueFamilyIndex = queue.family_
+                .queueFamilyIndex = queue.second.get_family_index( )
             };
 
             if ( vkCreateCommandPool( device_, &create_info, nullptr, &handle ) != VK_SUCCESS )
             {
-                return { };
+                return vk::error::type::e_command_pool_creation_failed;
             }
 
-            struct command_pool command_pool 
-            {
-                .handle_ = handle,
-                .family_ = queue.family_,
-                .flags_ = queue.flags_
-            };
-
-            command_pools.push_back( command_pool );
+            command_pools.insert( { 
+                queue.second.get_family_index( ),
+                command_pool {
+                    .handle_ = handle,
+                    .flags_ = queue.first
+                }
+            } );   
         }
     }
 

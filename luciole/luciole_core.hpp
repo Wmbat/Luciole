@@ -34,67 +34,42 @@
 
 #include "strong_types.hpp"
 
-struct vulkan_default_parameter { };
+namespace vk
+{
+    struct default_param{ }; 
 
-template<typename T>
-using vk_strong_type = strong_type<T, vulkan_default_parameter>;
+    using instance_t = strong_type<VkInstance, default_param>;
+    using debug_messenger_t = strong_type<VkDebugUtilsMessengerEXT, default_param>;
+    using surface_t = strong_type<VkSurfaceKHR, default_param>;
+    using physical_device_t = strong_type<VkPhysicalDevice, default_param>;
+    using device_t = strong_type<VkDevice, default_param>;
+    using queue_t = strong_type<VkQueue, default_param>;
+    using submit_info_t = strong_type<VkSubmitInfo, default_param>;
+    using present_info_t = strong_type<VkPresentInfoKHR, default_param>;
+    using swapchain_t = strong_type<VkSwapchainKHR, default_param>;
+    using swapchain_create_info_t = strong_type<VkSwapchainCreateInfoKHR, default_param>;
+    using image_t = strong_type<VkImage, default_param>;
+    using image_view_t = strong_type<VkImageView, default_param>;
+    using image_view_create_info_t = strong_type<VkImageViewCreateInfo, default_param>;
+    using render_pass_t = strong_type<VkRenderPass, default_param>;
+    using render_pass_create_info_t = strong_type<VkRenderPassCreateInfo, default_param>;
+    using pipeline_layout_t = strong_type<VkPipelineLayout, default_param>;
+    using pipeline_layout_create_info_t = strong_type<VkPipelineLayoutCreateInfo, default_param>;
+    using pipeline_t = strong_type<VkPipeline, default_param>;
+    using graphics_pipeline_create_info_t = strong_type<VkGraphicsPipelineCreateInfo, default_param>;
+    using compute_pipeline_create_info_t = strong_type<VkComputePipelineCreateInfo, default_param>;
+    using shader_module_t = strong_type<VkShaderModule, default_param>;
+    using shader_module_create_info_t = strong_type<VkShaderModuleCreateInfo, default_param>;
+    using framebuffer_t = strong_type<VkFramebuffer, default_param>;
+    using framebuffer_create_info_t = strong_type<VkFramebufferCreateInfo, default_param>;
+    using semaphore_t = strong_type<VkSemaphore, default_param>;
+    using semaphore_create_info_t = strong_type<VkSemaphoreCreateInfo, default_param>;
+    using fence_t = strong_type<VkFence, default_param>;
+    using fence_create_info_t = strong_type<VkFenceCreateInfo, default_param>;
+}
 
-using vk_instance_t = vk_strong_type<VkInstance>;
-using vk_debug_messenger_t = vk_strong_type<VkDebugUtilsMessengerEXT>;
-using vk_surface_t = vk_strong_type<VkSurfaceKHR>;
-using vk_physical_device_t = vk_strong_type<VkPhysicalDevice>;
-using vk_device_t = vk_strong_type<VkDevice>;
-using vk_queue_t = vk_strong_type<VkQueue>;
-using vk_submit_info_t = vk_strong_type<VkSubmitInfo const&>;
-using vk_present_info_t = vk_strong_type<VkPresentInfoKHR const&>;
-using vk_swapchain_t = vk_strong_type<VkSwapchainKHR>;
-using vk_swapchain_create_info_t = vk_strong_type<VkSwapchainCreateInfoKHR const&>;
-using vk_image_view_t = vk_strong_type<VkImageView>;
-using vk_image_view_create_info_t = strong_type<VkImageViewCreateInfo const&>;
-using vk_render_pass_t = vk_strong_type<VkRenderPass>;
-using vk_render_pass_create_info_t = vk_strong_type<VkRenderPassCreateInfo const&>;
-using vk_pipeline_layout_t = vk_strong_type<VkPipelineLayout>;
-using vk_pipeline_layout_create_info_t = vk_strong_type<VkPipelineLayoutCreateInfo const&>;
-using vk_pipeline_t = vk_strong_type<VkPipeline>;
-using vk_graphics_pipeline_create_info_t = vk_strong_type<VkGraphicsPipelineCreateInfo const&>;
-using vk_compute_pipeline_create_info_t = vk_strong_type<VkComputePipelineCreateInfo const&>;
-using vk_shader_module_t = vk_strong_type<VkShaderModule>;
-using vk_shader_module_create_info_t = vk_strong_type<VkShaderModuleCreateInfo const&>;
-using vk_framebuffer_t = vk_strong_type<VkFramebuffer>;
-using vk_framebuffer_create_info_t = vk_strong_type<VkFramebufferCreateInfo const&>;
-using vk_semaphore_t = vk_strong_type<VkSemaphore>;
-using vk_semaphore_create_info_t = vk_strong_type<VkSemaphoreCreateInfo const&>;
-using vk_fence_t = vk_strong_type<VkFence>;
-using vk_fence_create_info_t = vk_strong_type<VkFenceCreateInfo const&>;
 
 constexpr auto cache_line = std::size_t{ 64 };
-
-struct error_msg_parameter { };
-using error_msg_t = strong_type<std::string, error_msg_parameter>;
-
-template<typename T>
-T vk_check( vk_strong_type<T> handle, const error_msg_t& err_msg )
-{
-    if ( handle.value_ == VK_NULL_HANDLE )
-    {
-        core_error( err_msg.value_ );
-        throw;
-    }
-
-    return handle.value_;
-}
-
-template<typename T>
-std::vector<T> vk_check_array( const std::vector<T>& handles, const error_msg_t& err_msg )
-{
-    if ( handles.size( ) == 0 )
-    {
-        core_error( err_msg.value_ );
-        throw;
-    }
-
-    return handles;
-}
 
 static constexpr uint32_t kilobyte = 1024;
 static constexpr uint32_t megabyte = kilobyte * kilobyte;

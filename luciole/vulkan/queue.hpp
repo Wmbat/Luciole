@@ -20,28 +20,49 @@
 #define LUCIOLE_VULKAN_QUEUE_HPP
 
 #include "../luciole_core.hpp"
-#include "../context.hpp"
+
+#include "../utilities/enum_operators.hpp"
 
 class queue
 {
+private:
+    struct param { };
+    struct index_param { };
+    struct family_index_param { };
+
 public:
     enum class flag
     {
-        e_none,
-        e_graphics,
-        e_compute,
-        e_transfer
+        e_none      = 0,
+        e_graphics  = 1 << 1,
+        e_transfer  = 1 << 2,
+        e_compute   = 1 << 3
     };
 
-    using flag_t = strong_type<flag>;
+    using flag_t = strong_type<flag, param>;
+    using index_t = strong_type<std::uint32_t, index_param>;
+    using family_index_t = strong_type<std::uint32_t, family_index_param>;
 
 public:
     queue( ) = default;
-    queue( p_context_t p_context, flag_t flag );
+    queue( vk::device_t device, family_index_t family_index, index_t index );
+    queue( queue const& rhs ) = delete;
+    queue( queue && rhs );
+
+    queue& operator=( queue const& rhs ) = delete;
+    queue& operator=( queue && rhs );
+
+    bool submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept;
+    void present( vk::present_info_t info ) const noexcept;
+
+    [[nodiscard]] std::uint32_t get_family_index( ) const noexcept;
 
 private:
     VkQueue handle_  = VK_NULL_HANDLE;
-    flag flag_ = flag::e_none; 
+    std::uint32_t family_index_ = 0;
+    std::uint32_t index_ = 0;
 };
+
+ENABLE_BITMASK_OPERATORS( queue::flag );
 
 #endif // LUCIOLE_VULKAN_QUEUE_HPP

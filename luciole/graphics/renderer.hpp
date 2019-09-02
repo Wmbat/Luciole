@@ -46,15 +46,15 @@ public:
 private:
     void record_command_buffers( );
 
-    [[nodiscard]] VkSwapchainKHR create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
-    [[nodiscard]] std::vector<VkImageView> create_image_views( count32_t image_count ) const;
-    [[nodiscard]] VkRenderPass create_render_pass( ) const;
+    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
+    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( vk::image_t image ) const;
+    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( ) const;
     [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_t filepath ) const;
-    [[nodiscard]] VkPipelineLayout create_default_pipeline_layout( ) const;
-    [[nodiscard]] VkPipeline create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const;
-    [[nodiscard]] VkSemaphore create_semaphore( ) const;
-    [[nodiscard]] VkFence create_fence( ) const noexcept;
-    [[nodiscard]] std::vector<VkFramebuffer> create_framebuffers( count32_t count ) const noexcept;
+    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( ) const;
+    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const;
+    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( ) const;
+    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( ) const noexcept;
+    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( vk::image_view_t image_view ) const noexcept;
 
     [[nodiscard]] VkSurfaceFormatKHR pick_swapchain_format( ) const;
     [[nodiscard]] VkPresentModeKHR pick_swapchain_present_mode( ) const;

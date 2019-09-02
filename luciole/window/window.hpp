@@ -19,12 +19,15 @@
 #ifndef LUCIOLE_WINDOW_WINDOW_HPP
 #define LUCIOLE_WINDOW_WINDOW_HPP
 
+#include <variant>
+
 #include <vulkan/vulkan.h>
 
 #include "event.hpp"
 #include "../luciole_core.hpp"
 #include "../strong_types.hpp"
 #include "../utilities/message.hpp"
+#include "../vulkan/errors.hpp"
 
 class window
 {
@@ -36,8 +39,7 @@ public:
 
     bool is_open( ) const noexcept;
 
-    // LUCIOLE_API virtual vk::UniqueSurfaceKHR create_surface( const vk::Instance& instance ) const noexcept = 0;
-    virtual VkSurfaceKHR create_surface( const VkInstance instance ) const = 0;
+    virtual std::variant<VkSurfaceKHR, vk::error::type> create_surface( const VkInstance instance ) const = 0;
 
     uint32_t get_width( ) const noexcept;
     uint32_t get_height( ) const noexcept;

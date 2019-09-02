@@ -22,15 +22,20 @@
 #include <cstdint>
 #include <vector>
 #include <optional>
+#include <map>
+#include <variant>
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
-#include "window/window.hpp"
-
 #include "extension.hpp"
 #include "layer.hpp"
 #include "strong_types.hpp"
+
+#include "window/window.hpp"
+
+#include "vulkan/errors.hpp"
+#include "vulkan/queue.hpp"
 
 #if defined( NDEBUG )
     static constexpr bool enable_debug_layers = false;
@@ -44,19 +49,10 @@ struct command_pool;
 class context
 {
 private:
-    struct queue
-    {
-        VkQueue handle_ = VK_NULL_HANDLE;
-        VkQueueFlags flags_ = 0;
-        std::uint32_t family_ = 0;
-        std::uint32_t index_ = 0;
-    };
-
     struct command_pool
     {
         VkCommandPool handle_ = VK_NULL_HANDLE;
-        std::uint32_t family_ = 0;
-        VkQueueFlags flags_ = 0;
+        queue::flag flags_ = queue::flag::e_none;
     };
 
     struct extensions_parameter{ };
@@ -74,6 +70,8 @@ private:
     struct queue_properties_parameter{ };
     using queue_properties_t = strong_type<std::vector<VkQueueFamilyProperties>, queue_properties_parameter>;
 
+    using command_pools_container_t = std::unordered_map<std::uint32_t, context::command_pool>;
+
 public:
     context( ) = default;
     explicit context( const window& wnd );
@@ -86,37 +84,37 @@ public:
     
     [[nodiscard]] VkSwapchainCreateInfoKHR swapchain_create_info( ) const noexcept;
     
-    [[nodiscard]] VkSwapchainKHR create_swapchain( vk_swapchain_create_info_t create_info ) const noexcept;
-    void destroy_swapchain( VkSwapchainKHR swapchain ) const noexcept;
+    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( vk::swapchain_create_info_t const &create_info ) const noexcept;
+    void destroy_swapchain( vk::swapchain_t swapchain ) const noexcept;
     
-    [[nodiscard]] VkImageView create_image_view( vk_image_view_create_info_t create_info ) const noexcept;
-    void destroy_image_view( vk_image_view_t image_view ) const noexcept;
+    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( vk::image_view_create_info_t const& create_info ) const noexcept;
+    void destroy_image_view( vk::image_view_t image_view ) const noexcept;
     
-    [[nodiscard]] VkRenderPass create_render_pass( vk_render_pass_create_info_t create_info ) const noexcept;
-    void destroy_render_pass( vk_render_pass_t render_pass ) const noexcept;
+    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( vk::render_pass_create_info_t const& create_info ) const noexcept;
+    void destroy_render_pass( vk::render_pass_t render_pass ) const noexcept;
     
-    [[nodiscard]] VkPipelineLayout create_pipeline_layout( vk_pipeline_layout_create_info_t create_info ) const noexcept;
-    void destroy_pipeline_layout( vk_pipeline_layout_t pipeline_layout ) const noexcept;
+    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_pipeline_layout( vk::pipeline_layout_create_info_t const& create_info ) const noexcept;
+    void destroy_pipeline_layout( vk::pipeline_layout_t pipeline_layout ) const noexcept;
 
-    [[nodiscard]] VkPipeline create_pipeline( vk_graphics_pipeline_create_info_t create_info ) const noexcept;
-    [[nodiscard]] VkPipeline create_pipeline( vk_compute_pipeline_create_info_t create_info ) const noexcept;
-    void destroy_pipeline( vk_pipeline_t pipeline ) const noexcept;
+    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_pipeline( vk::graphics_pipeline_create_info_t const& create_info ) const noexcept;
+    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_pipeline( vk::compute_pipeline_create_info_t const& create_info ) const noexcept;
+    void destroy_pipeline( vk::pipeline_t pipeline ) const noexcept;
 
-    [[nodiscard]] VkShaderModule create_shader_module( vk_shader_module_create_info_t create_info ) const noexcept;
-    void destroy_shader_module( vk_shader_module_t shader_module ) const noexcept;
+    [[nodiscard]] VkShaderModule create_shader_module( vk::shader_module_create_info_t const& create_info ) const noexcept;
+    void destroy_shader_module( vk::shader_module_t shader_module ) const noexcept;
 
-    [[nodiscard]] VkFramebuffer create_framebuffer( vk_framebuffer_create_info_t create_info ) const noexcept;
-    void destroy_framebuffer( vk_framebuffer_t framebuffer ) const noexcept;
+    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( vk::framebuffer_create_info_t const& create_info ) const noexcept;
+    void destroy_framebuffer( vk::framebuffer_t framebuffer ) const noexcept;
 
-    [[nodiscard]] VkSemaphore create_semaphore( vk_semaphore_create_info_t create_info ) const noexcept;
-    void destroy_semaphore( vk_semaphore_t semaphore ) const noexcept;
+    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( vk::semaphore_create_info_t const& create_info ) const noexcept;
+    void destroy_semaphore( vk::semaphore_t semaphore ) const noexcept;
 
-    [[nodiscard]] VkFence create_fence( vk_fence_create_info_t create_info ) const noexcept;
-    void destroy_fence( vk_fence_t fence ) const noexcept;
+    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( vk::fence_create_info_t const& create_info ) const noexcept;
+    void destroy_fence( vk::fence_t fence ) const noexcept;
 
-    [[nodiscard]] std::vector<VkCommandBuffer> create_command_buffers( VkQueueFlags flag, count32_t buffer_count ) const;
+    [[nodiscard]] std::variant<std::vector<VkCommandBuffer>, vk::error::type> create_command_buffers( queue::flag_t flag, count32_t buffer_count ) const;
 
-    [[nodiscard]] std::vector<VkImage> get_swapchain_images( vk_swapchain_t swapchain, count32_t image_count ) const;
+    [[nodiscard]] std::variant<std::vector<VkImage>, vk::error::type> get_swapchain_images( vk::swapchain_t swapchain, count32_t image_count ) const;
     
     [[nodiscard]] VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept;
     
@@ -124,11 +122,11 @@ public:
     [[nodiscard]] std::vector<VkPresentModeKHR> get_present_modes( ) const;
     [[nodiscard]] VkExtent2D get_window_extent( ) const;
 
-    VkResult submit_queue( VkQueueFlags flag, vk_submit_info_t submit_info, vk_fence_t fence ) const noexcept;
-    void present_queue( VkQueueFlags flag, vk_present_info_t present_info ) const noexcept;
+    bool submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept;
+    bool present_queue( queue::flag_t, vk::present_info_t const& present_info ) const noexcept;
 
-    void wait_for_fence( vk_fence_t fence ) const noexcept;
-    void reset_fence( vk_fence_t fence ) const noexcept;
+    void wait_for_fence( vk::fence_t fence ) const noexcept;
+    void reset_fence( vk::fence_t fence ) const noexcept;
 
     //TODO: Fix this
     VkDevice get( ) const
@@ -137,23 +135,30 @@ public:
     }
 
 private:
-    std::vector<layer> load_validation_layers( ) const;
-    std::vector<extension> load_instance_extensions( ) const;
-    std::vector<extension> load_device_extensions( ) const;
+    [[nodiscard]] std::vector<layer> load_validation_layers( ) const;
+    [[nodiscard]] std::vector<extension> load_instance_extensions( ) const;
+    [[nodiscard]] std::vector<extension> load_device_extensions( ) const;
 
-    std::vector<std::string> check_layer_support( const layers_t& layers ) const;
-    std::vector<std::string> check_ext_support( const extensions_t& extensions ) const;
+    [[nodiscard]] std::vector<std::string> check_layer_support( const layers_t& layers ) const;
+    [[nodiscard]] std::vector<std::string> check_ext_support( const extensions_t& extensions ) const;
 
-    VkInstance create_instance( const VkApplicationInfo& app_info, const extension_names_t& enabled_ext_name, const layer_names_t& enabled_layer_names ) const;
-    VkDebugUtilsMessengerEXT create_debug_messenger( ) const;
-    VkSurfaceKHR create_surface( const window& wnd ) const;
-    VkPhysicalDevice pick_gpu( ) const;
-    VkDevice create_device( const extension_names_t& enabled_ext_name, const queue_properties_t& queue_properties ) const; 
+    [[nodiscard]] std::variant<VkInstance, vk::error::type> create_instance( 
+        VkApplicationInfo const& app_info, 
+        extension_names_t const& enabled_ext_name, 
+        layer_names_t const& enabled_layer_names 
+    ) const;
 
+    [[nodiscard]] std::variant<VkDebugUtilsMessengerEXT, vk::error::type> create_debug_messenger( ) const;
+    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> create_surface( window const& wnd ) const;
+    [[nodiscard]] std::variant<VkPhysicalDevice, vk::error::type> pick_gpu( ) const;
+    
+    [[nodiscard]] std::variant<VkDevice, vk::error::type> create_device( 
+        extension_names_t const& enabled_ext_name, 
+        queue_properties_t const& queue_properties 
+    ) const; 
 
-    std::vector<queue> get_queues( const queue_properties_t& queue_properties ) const;
-
-    std::vector<command_pool> create_command_pools( ) const;
+    [[nodiscard]] std::unordered_map<queue::flag, queue> get_queues( const queue_properties_t& queue_properties ) const;
+    [[nodiscard]] std::variant<command_pools_container_t, vk::error::type> create_command_pools( ) const;
 
     int rate_gpu( const VkPhysicalDevice gpu ) const;
 
@@ -168,9 +173,8 @@ private:
     VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
     VkDevice device_ = VK_NULL_HANDLE;
 
-    std::vector<queue> queues_;
-
-    std::vector<command_pool> command_pools_;
+    std::unordered_map<queue::flag, queue> queues_;
+    std::unordered_map<std::uint32_t, command_pool> command_pools_;
 
     std::vector<layer> validation_layers_;
     std::vector<extension> instance_extensions_;

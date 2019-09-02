@@ -310,7 +310,7 @@ vk::UniqueSurfaceKHR xcb_window::create_surface( const vk::Instance& instance ) 
     return instance.createXcbSurfaceKHRUnique( create_info );
 }
 */
-VkSurfaceKHR xcb_window::create_surface( const VkInstance instance ) const
+std::variant<VkSurfaceKHR, vk::error::type> xcb_window::create_surface( const VkInstance instance ) const
 {
     VkSurfaceKHR surface = VK_NULL_HANDLE;
 
@@ -319,12 +319,15 @@ VkSurfaceKHR xcb_window::create_surface( const VkInstance instance ) const
     create_info.connection = p_xcb_connection_.get( );
     create_info.window = xcb_window_;
 
-    if ( vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ) != VK_SUCCESS )
+    switch ( vkCreateXcbSurfaceKHR( instance, &create_info, nullptr, &surface ) )
     {
-        return VK_NULL_HANDLE;
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        default:
+            return surface;
     }
-    
-    return surface;
 }
 
 #endif

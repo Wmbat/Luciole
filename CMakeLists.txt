@@ -25,41 +25,6 @@ endif( )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
-if( UNIX )
-    set( CMAKE_CXX_FLAGS -pthread )
-    OPTION( USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF )
-endif( )
-
-if( WIN32 )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )        
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR" )
-elseif( UNIX )
-    if( USE_WAYLAND_WSI )
-        find_package( Wayland REQUIRED )
-
-        if( NOT WAYLAND_FOUND )
-            message( FATAL_ERROR "Wayland development package not found" )
-        else( )
-            message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
-        endif( )
-
-        include_directories( ${WAYLAND_INCLUDE_DIR} )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR")
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_WAYLAND_KHR" )
-    else( )
-        find_package( XCB REQUIRED )
-
-        if( NOT XCB_FOUND )
-            message( FATAL_ERROR "XCB development package not found" )
-        else( )
-            message( STATUS ${XCB_LIBRARIES} )
-        endif( )
-
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVK_USE_PLATFORM_XCB_KHR" )
-    endif()
-endif( )
-
 add_subdirectory( external/vulkan )
 add_subdirectory( external/stb )
 add_subdirectory( external/glm )
@@ -70,19 +35,44 @@ add_subdirectory( external/googletest )
 
 add_executable( luciole )
 
-if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    target_compile_options( luciole 
-        PUBLIC $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
-        PUBLIC $<$<CONFIG:DEBUG>:-Wall>
-        PUBLIC $<$<CONFIG:DEBUG>:-o0>
-        PUBLIC $<$<CONFIG:RELEASE>:-o3> 
-    )
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
+target_compile_options( luciole 
+    PUBLIC $<$<PLATFORM_ID:UNIX>:-pthread>
+# Set C++ version
+    PUBLIC $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
+# Set Debug Flags
+    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
+    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
+    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
+# Set Release Flags
+    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+)
 
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+if( WIN32 )
+    target_compile_definitions( luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
+elseif( UNIX )
+    if( USE_WAYLAND_WSI )
+        find_package( Wayland REQUIRED )
 
-	set_target_properties( luciole PROPERTIES 
-		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
+        if( NOT WAYLAND_FOUND )
+            message( FATAL_ERROR "Wayland development package not found" )
+        else( )
+            message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
+        endif( )
+
+        target_include_directories( luciole PUBLIC ${WAILAND_INCLUDE_DIR} )
+        target_compile_definitions( luciole PUBLIC VK_USE_PLATFORM_WAYLAND_KHR )
+    else( )
+        find_package( XCB REQUIRED )
+
+        if( NOT XCB_FOUND )
+            message( FATAL_ERROR "XCB development package not found" )
+        else( )
+            message( STATUS ${XCB_LIBRARIES} )
+        endif( )
+
+        target_compile_definitions( luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
+    endif()
 endif( )
 
 if ( BUILD_TEST )
@@ -124,9 +114,11 @@ target_sources( luciole
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.hpp"
 
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/enum_operators.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
 
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/errors.hpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.cpp"
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.hpp"
     
@@ -157,7 +149,3 @@ add_custom_target( copy_resources
     DEPENDS ${CMAKE_SOURCE_DIR}/resources )
 
 add_dependencies( luciole copy_resources )
-
-target_compile_options( luciole 
-	PUBLIC $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
-	PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> )

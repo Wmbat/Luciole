@@ -40,43 +40,158 @@ renderer::renderer( p_context_t p_context )
     swapchain_image_views_.reserve( image_count );
     swapchain_framebuffers_.reserve( image_count );
     
-    swapchain_ = vk_check(
-        vk_swapchain_t( create_swapchain( capabilities, format ) ),
-        error_msg_t( "Failed to create Swapchain!" ) );
+    /*
+     *  Check for errors upon swapchain creation.
+     */
+    if ( auto res = create_swapchain( capabilities, format ); auto p_val = std::get_if<VkSwapchainKHR>( &res ) )
+    {
+        swapchain_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Swapchain creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
     
-    swapchain_images_ = vk_check_array(
-        p_context_->get_swapchain_images( vk_swapchain_t( swapchain_ ), count32_t( image_count ) ),
-        error_msg_t( "Failed to create Swapchain Images!" ) );
+    /*
+     *  Check for errors upon swapchain images retrieval.
+     */
+    if ( auto res = p_context_->get_swapchain_images( vk::swapchain_t( swapchain_ ), count32_t( image_count ) );
+         auto p_val = std::get_if<std::vector<VkImage>>( &res ) )
+    {
+        swapchain_images_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Swapchain Images retrieval -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
     
-    swapchain_image_views_ = vk_check_array(
-        create_image_views( count32_t( image_count ) ),
-        error_msg_t( "Failed to create Swapchain Image Views!" )
-        );
+    /*
+     *  Check for erros upon Swapchain image views creation.
+     */
+    swapchain_image_views_.reserve( swapchain_images_.size( ) );
+    for( std::size_t i = 0; i < swapchain_images_.size( ); ++i )
+    {
+        if ( auto res = create_image_view( vk::image_t( swapchain_images_[i] ) ); auto p_val = std::get_if<VkImageView>( &res ) )
+        {
+            swapchain_image_views_.emplace_back( *p_val );
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Swapchain Image View {} creation -> Error code: {}.", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+    }
     
-    render_pass_ = vk_check(
-        vk_render_pass_t( create_render_pass() ),
-        error_msg_t( "Failed to create Render Pass!" ) );
+    /*
+     *  Check for any errors upon Render Pass creation.
+     */
+    if ( auto res = create_render_pass( ); auto p_val = std::get_if<VkRenderPass>( &res ) )
+    {
+        render_pass_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Render Pass creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+        
+        abort( );
+    }
 
-    default_graphics_pipeline_layout_ = vk_check(
-        vk_pipeline_layout_t( create_default_pipeline_layout( ) ),
-        error_msg_t( "Failed to create default Pipeline Layout!" ) );
+    /*
+     *  Check for any errors upon default graphics pipeline layout creation.
+     */
+    if ( auto res = create_default_pipeline_layout( ); auto p_val = std::get_if<VkPipelineLayout>( &res ) )
+    {
+        default_graphics_pipeline_layout_ = *p_val;
+    } 
+    else
+    {
+        core_error( "Vulkan Error: On Default Graphics pipeline layout creation -> Error code: {}.",
+            vk::error::to_string( std::get<vk::error::type>( res ) ) );
 
-    default_graphics_pipeline_ = vk_check(
-        vk_pipeline_t( create_default_pipeline( 
-            shader_filepath_t( "resources/shaders/default_vert.spv" ), 
-            shader_filepath_t( "resources/shaders/default_frag.spv" ) ) ),
-        error_msg_t( "Failed to create default Pipeline!" ) );
+        abort( );
+    }
 
-    auto x = p_context_->create_command_buffers( VK_QUEUE_GRAPHICS_BIT, count32_t( image_count ) );
+    /*
+     *  Check for any errors upon default graphics pipeline creation.
+     */
+    if ( auto res = create_default_pipeline( shader_filepath_t( "resources/shaders/default_vert.spv" ), shader_filepath_t( "resources/shaders/default_frag.spv" ) );
+         auto p_val = std::get_if<VkPipeline>( &res ) )
+    {
+        default_graphics_pipeline_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Default Graphics Pipeline creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
 
-    swapchain_framebuffers_ = vk_check_array( create_framebuffers( count32_t( image_count ) ), error_msg_t( "Failed to create Framebuffers!" ) );
-    render_command_buffers_ = vk_check_array( x, error_msg_t( "Failed to create render command buffers!" ) );
+        abort( );
+    }
+
+    if ( auto res = p_context_->create_command_buffers( queue::flag_t( queue::flag::e_graphics ), count32_t( image_count ) ); 
+         auto p_val = std::get_if<std::vector<VkCommandBuffer>>( &res ) )
+    {
+        render_command_buffers_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Render Command Buffers creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+    
+    swapchain_framebuffers_.reserve( image_count );
+    for( std::size_t i = 0; i < image_count; ++i )
+    {
+        if ( auto res = create_framebuffer( vk::image_view_t( swapchain_image_views_[i] ) ); auto p_val = std::get_if<VkFramebuffer>( &res ) )
+        {
+            swapchain_framebuffers_.emplace_back( std::move( *p_val ) );
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Swapchain Framebuffer {} creation -> Error code:", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+    }
 
     for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
     {
-        image_available_semaphore_[i] = vk_check( vk_semaphore_t( create_semaphore( ) ), error_msg_t( "Failed to create image available semaphore!" ) );
-        render_finished_semaphore_[i] = vk_check( vk_semaphore_t( create_semaphore( ) ), error_msg_t( "Failed to create render finished semaphore!" ) );
-        in_flight_fences[i] = vk_check( vk_fence_t( create_fence( ) ), error_msg_t( "Failed to create in-flight fence!" ) );
+        if ( auto res = create_semaphore( ); auto p_val = std::get_if<VkSemaphore>( &res ) )
+        {
+            image_available_semaphore_[i] = *p_val;
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Image Available Semaphore {} creation -> Error code:", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+
+        if ( auto res = create_semaphore( ); auto p_val = std::get_if<VkSemaphore>( &res ) )
+        {
+            render_finished_semaphore_[i] = *p_val;
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Render Finished Semaphore {} creation -> Error code:", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+
+        if ( auto res = create_fence( ); auto p_val = std::get_if<VkFence>( &res ) )
+        {
+            in_flight_fences[i] = *p_val;
+        }
+        else
+        {
+            core_error( "Vulkan Error: On In Flight Fence {} creation -> Error code:", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
     }
 
     record_command_buffers( );
@@ -91,19 +206,19 @@ renderer::~renderer( )
     {
         if ( image_available_semaphore_[i] != VK_NULL_HANDLE )
         {
-            p_context_->destroy_semaphore( vk_semaphore_t( image_available_semaphore_[i] ) );
+            p_context_->destroy_semaphore( vk::semaphore_t( image_available_semaphore_[i] ) );
             image_available_semaphore_[i] = VK_NULL_HANDLE;
         }
 
         if ( render_finished_semaphore_[i] != VK_NULL_HANDLE )
         {
-            p_context_->destroy_semaphore( vk_semaphore_t( render_finished_semaphore_[i] ) );
+            p_context_->destroy_semaphore( vk::semaphore_t( render_finished_semaphore_[i] ) );
             render_finished_semaphore_[i] = VK_NULL_HANDLE;
         }
 
         if ( in_flight_fences[i] != VK_NULL_HANDLE )
         {
-            p_context_->destroy_fence( vk_fence_t( in_flight_fences[i] ) );
+            p_context_->destroy_fence( vk::fence_t( in_flight_fences[i] ) );
             in_flight_fences[i] = VK_NULL_HANDLE;
         }
     }
@@ -112,26 +227,26 @@ renderer::~renderer( )
     {
         if ( framebuffer != VK_NULL_HANDLE )
         {
-            p_context_->destroy_framebuffer( vk_framebuffer_t( framebuffer ) );
+            p_context_->destroy_framebuffer( vk::framebuffer_t( framebuffer ) );
             framebuffer = VK_NULL_HANDLE;
         }
     }
 
     if ( default_graphics_pipeline_ != VK_NULL_HANDLE )
     {
-        p_context_->destroy_pipeline( vk_pipeline_t( default_graphics_pipeline_ ) );
+        p_context_->destroy_pipeline( vk::pipeline_t( default_graphics_pipeline_ ) );
         default_graphics_pipeline_ = VK_NULL_HANDLE;
     }
 
     if ( default_graphics_pipeline_layout_ != VK_NULL_HANDLE )
     {
-        p_context_->destroy_pipeline_layout( vk_pipeline_layout_t( default_graphics_pipeline_layout_ ) );
+        p_context_->destroy_pipeline_layout( vk::pipeline_layout_t( default_graphics_pipeline_layout_ ) );
         default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
     }
 
     if ( render_pass_ != VK_NULL_HANDLE )
     {
-        p_context_->destroy_render_pass( vk_render_pass_t( render_pass_ ) );
+        p_context_->destroy_render_pass( vk::render_pass_t( render_pass_ ) );
         render_pass_ = VK_NULL_HANDLE;
     }
     
@@ -139,14 +254,14 @@ renderer::~renderer( )
     {
         if ( image_view != VK_NULL_HANDLE )
         {
-            p_context_->destroy_image_view( vk_image_view_t( image_view ) );
+            p_context_->destroy_image_view( vk::image_view_t( image_view ) );
             image_view = VK_NULL_HANDLE;
         }
     }
     
     if ( swapchain_ != VK_NULL_HANDLE )
     {
-        p_context_->destroy_swapchain( swapchain_ );
+        p_context_->destroy_swapchain( vk::swapchain_t( swapchain_ ) );
         swapchain_ = VK_NULL_HANDLE;
     }
 }
@@ -188,7 +303,7 @@ renderer& renderer::operator=( renderer&& rhs )
 
 void renderer::draw_frame( )
 {
-    p_context_->reset_fence( vk_fence_t( in_flight_fences[current_frame] ) );
+    p_context_->reset_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
     std::uint32_t image_index = 0;
     vkAcquireNextImageKHR( p_context_->get( ), swapchain_, std::numeric_limits<std::uint64_t>::max( ), image_available_semaphore_[current_frame], VK_NULL_HANDLE, &image_index );
@@ -211,9 +326,13 @@ void renderer::draw_frame( )
         .pSignalSemaphores = signal_semaphores
     };
 
-    p_context_->submit_queue( VK_QUEUE_GRAPHICS_BIT, vk_submit_info_t( submit_info ), vk_fence_t( in_flight_fences[current_frame] ) );
+    p_context_->submit_queue( 
+        queue::flag_t( queue::flag::e_graphics ), 
+        vk::submit_info_t( submit_info ), 
+        vk::fence_t( in_flight_fences[current_frame] ) 
+    );
 
-    p_context_->wait_for_fence( vk_fence_t( in_flight_fences[current_frame] ) );
+    p_context_->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
 
     VkPresentInfoKHR const present_info 
@@ -228,7 +347,7 @@ void renderer::draw_frame( )
         .pResults = nullptr
     };
 
-    p_context_->present_queue( VK_QUEUE_GRAPHICS_BIT, vk_present_info_t( present_info ) );
+    p_context_->present_queue( queue::flag_t( queue::flag::e_graphics ), vk::present_info_t( present_info ) );
 
     current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT_;
 }
@@ -282,7 +401,7 @@ void renderer::record_command_buffers( )
     }
 }
 
-VkSwapchainKHR renderer::create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const
+std::variant<VkSwapchainKHR, vk::error::type> renderer::create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const
 {
     auto const present_mode = pick_swapchain_present_mode( );
     
@@ -302,57 +421,40 @@ VkSwapchainKHR renderer::create_swapchain( VkSurfaceCapabilitiesKHR const& capab
     create_info.clipped = VK_TRUE;
     create_info.oldSwapchain = nullptr;
     
-    return p_context_->create_swapchain( vk_swapchain_create_info_t( create_info ) );
+    return p_context_->create_swapchain( vk::swapchain_create_info_t( create_info ) );
 }
 
-std::vector<VkImageView> renderer::create_image_views( count32_t image_count ) const
+std::variant<VkImageView, vk::error::type> renderer::create_image_view( vk::image_t image ) const
 {
-    std::vector<VkImageView> image_views;
-    image_views.reserve( image_count.value_ );
-    
-    for ( uint32_t i = 0; i < image_count.value_; ++i )
+    VkImageViewCreateInfo create_info
     {
-        VkImageView handle = VK_NULL_HANDLE;
-    
-        VkImageViewCreateInfo create_info
-         {
-             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-             .pNext = nullptr,
-             .flags = { },
-             .image = swapchain_images_[i],
-             .viewType = VK_IMAGE_VIEW_TYPE_2D,
-             .format = swapchain_image_format_,
-             .components = VkComponentMapping
-             {
-                 .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                 .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                 .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                 .a = VK_COMPONENT_SWIZZLE_IDENTITY
-             },
-             .subresourceRange = VkImageSubresourceRange
-             {
-                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                 .baseMipLevel = 0,
-                 .levelCount = 1,
-                 .baseArrayLayer = 0,
-                 .layerCount = 1
-             }
-         };
-    
-        handle = p_context_->create_image_view( vk_image_view_create_info_t( create_info ) );
-    
-        if ( handle == VK_NULL_HANDLE )
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = { },
+        .image = image.value_,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = swapchain_image_format_,
+        .components = VkComponentMapping
         {
-            return { };
+            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .a = VK_COMPONENT_SWIZZLE_IDENTITY
+        },
+        .subresourceRange = VkImageSubresourceRange
+        {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
         }
-        
-        image_views.emplace_back( handle );
-    }
-    
-    return image_views;
+    };
+
+    return p_context_->create_image_view( vk::image_view_create_info_t( create_info ) );
 }
 
-VkRenderPass renderer::create_render_pass( ) const
+std::variant<VkRenderPass, vk::error::type> renderer::create_render_pass( ) const
 {
     VkAttachmentDescription const colour_attachment
     {
@@ -407,7 +509,7 @@ VkRenderPass renderer::create_render_pass( ) const
         .pDependencies = &dependency
     };
     
-    return p_context_->create_render_pass( vk_render_pass_create_info_t( create_info ) );
+    return p_context_->create_render_pass( vk::render_pass_create_info_t( create_info ) );
 }
 
 VkShaderModule renderer::create_shader_module( shader_filepath_t filepath ) const
@@ -423,10 +525,10 @@ VkShaderModule renderer::create_shader_module( shader_filepath_t filepath ) cons
         .pCode = reinterpret_cast<const std::uint32_t*>( spirv_code.data( ) )
     };
 
-    return p_context_->create_shader_module( vk_shader_module_create_info_t( create_info ) );
+    return p_context_->create_shader_module( vk::shader_module_create_info_t( create_info ) );
 }
 
-VkPipelineLayout renderer::create_default_pipeline_layout( ) const
+std::variant<VkPipelineLayout, vk::error::type> renderer::create_default_pipeline_layout( ) const
 {
     VkPipelineLayoutCreateInfo const create_info 
     {
@@ -437,10 +539,10 @@ VkPipelineLayout renderer::create_default_pipeline_layout( ) const
         .pPushConstantRanges = nullptr
     };
 
-    return p_context_->create_pipeline_layout( vk_pipeline_layout_create_info_t( create_info ) );
+    return p_context_->create_pipeline_layout( vk::pipeline_layout_create_info_t( create_info ) );
 }
 
-VkPipeline renderer::create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const
+std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const
 {
     auto const vert_shader = create_shader_module( vert_filepath );
     auto const frag_shader = create_shader_module( frag_filepath );
@@ -596,15 +698,15 @@ VkPipeline renderer::create_default_pipeline( shader_filepath_t vert_filepath, s
         .basePipelineIndex = 0
     };
 
-    auto const handle = p_context_->create_pipeline( vk_graphics_pipeline_create_info_t( create_info ) );
+    auto const handle = p_context_->create_pipeline( vk::graphics_pipeline_create_info_t( create_info ) );
 
-    p_context_->destroy_shader_module( vk_shader_module_t( frag_shader ) );
-    p_context_->destroy_shader_module( vk_shader_module_t( vert_shader ) );
+    p_context_->destroy_shader_module( vk::shader_module_t( frag_shader ) );
+    p_context_->destroy_shader_module( vk::shader_module_t( vert_shader ) );
 
     return handle;
 }
 
-VkSemaphore renderer::create_semaphore( ) const
+std::variant<VkSemaphore, vk::error::type> renderer::create_semaphore( ) const
 {
     VkSemaphoreCreateInfo const create_info 
     {
@@ -612,10 +714,10 @@ VkSemaphore renderer::create_semaphore( ) const
         .pNext = nullptr,
     };
     
-    return p_context_->create_semaphore( vk_semaphore_create_info_t( create_info ) );
+    return p_context_->create_semaphore( vk::semaphore_create_info_t( create_info ) );
 }
 
-VkFence renderer::create_fence( ) const noexcept
+std::variant<VkFence, vk::error::type> renderer::create_fence( ) const noexcept
 {
     VkFenceCreateInfo const create_info 
     {
@@ -624,42 +726,28 @@ VkFence renderer::create_fence( ) const noexcept
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
 
-    return p_context_->create_fence( vk_fence_create_info_t( create_info ) );
+    return p_context_->create_fence( vk::fence_create_info_t( create_info ) );
 }
 
-std::vector<VkFramebuffer> renderer::create_framebuffers( count32_t count ) const noexcept
+std::variant<VkFramebuffer, vk::error::type> renderer::create_framebuffer( vk::image_view_t image_view ) const noexcept
 {
-    std::vector<VkFramebuffer> handles;
-    handles.reserve( count.value_ );
+    VkImageView attachments[] = {
+        image_view.value_
+    };
 
-    for( std::uint32_t i = 0; i < count.value_; ++i )
+    VkFramebufferCreateInfo const create_info
     {
-        VkImageView attachments[] = {
-            swapchain_image_views_[i]
-        };
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .flags = 0,
+        .renderPass = render_pass_,
+        .attachmentCount = sizeof( attachments ) / sizeof( VkImageView ),
+        .pAttachments = attachments,
+        .width = swapchain_extent_.width,
+        .height = swapchain_extent_.height,
+        .layers = 1
+    };
 
-        VkFramebufferCreateInfo const create_info
-        {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .flags = 0,
-            .renderPass = render_pass_,
-            .attachmentCount = sizeof( attachments ) / sizeof( VkImageView ),
-            .pAttachments = attachments,
-            .width = swapchain_extent_.width,
-            .height = swapchain_extent_.height,
-            .layers = 1
-        };
-
-        auto const handle = p_context_->create_framebuffer( vk_framebuffer_create_info_t( create_info ) );
-        if ( handle == VK_NULL_HANDLE )
-        {
-            return { };
-        }
-
-        handles.emplace_back( handle );
-    }
-
-    return handles;
+    return p_context_->create_framebuffer( vk::framebuffer_create_info_t( create_info ) );
 }
 
 VkSurfaceFormatKHR renderer::pick_swapchain_format( ) const
