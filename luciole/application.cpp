@@ -40,7 +40,7 @@ application::application( )
 #endif
         
     context_ = context( *p_wnd_.get( ) );
-    renderer_ = renderer( p_context_t( &context_ ) );
+    renderer_ = renderer( p_context_t( &context_ ), *p_wnd_.get( ) );
 }
 application::~application( )
 {

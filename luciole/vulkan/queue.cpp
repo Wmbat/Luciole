@@ -42,14 +42,40 @@ queue& queue::operator=( queue&& rhs )
     return *this;
 }
 
-bool queue::submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept
+vk::error::type queue::submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept
 {
-    return ( vkQueueSubmit( handle_, 1, &info.value_, fence.value_ ) == VK_SUCCESS ) ? true : false;
+    switch( vkQueueSubmit( handle_, 1, &info.value_, fence.value_ ) )
+    {
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        case VK_ERROR_DEVICE_LOST:
+            return vk::error::type::e_device_lost;
+        default:
+            return vk::error::type::e_none;
+    }
 }
 
-void queue::present( vk::present_info_t info ) const noexcept
+vk::error::type queue::present( vk::present_info_t info ) const noexcept
 {
-    vkQueuePresentKHR( handle_, &info.value_ );   
+    switch( vkQueuePresentKHR( handle_, &info.value_ ) )
+    {
+        case VK_SUBOPTIMAL_KHR:
+            return vk::error::type::e_suboptimal;
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            return vk::error::type::e_out_of_host_memory;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            return vk::error::type::e_out_of_device_memory;
+        case VK_ERROR_DEVICE_LOST:
+            return vk::error::type::e_device_lost;
+        case VK_ERROR_OUT_OF_DATE_KHR:
+            return vk::error::type::e_out_of_date;
+        case VK_ERROR_SURFACE_LOST_KHR:
+            return vk::error::type::e_surface_lost;
+        default:
+            return vk::error::type::e_none;
+    }
 }
 
 std::uint32_t queue::get_family_index( ) const noexcept

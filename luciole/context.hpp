@@ -122,8 +122,8 @@ public:
     [[nodiscard]] std::vector<VkPresentModeKHR> get_present_modes( ) const;
     [[nodiscard]] VkExtent2D get_window_extent( ) const;
 
-    bool submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept;
-    bool present_queue( queue::flag_t, vk::present_info_t const& present_info ) const noexcept;
+    [[nodiscard]] vk::error::type submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept;
+    [[nodiscard]] vk::error::type present_queue( queue::flag_t, vk::present_info_t const& present_info ) const noexcept;
 
     void wait_for_fence( vk::fence_t fence ) const noexcept;
     void reset_fence( vk::fence_t fence ) const noexcept;

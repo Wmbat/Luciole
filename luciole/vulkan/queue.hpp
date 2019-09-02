@@ -19,6 +19,8 @@
 #ifndef LUCIOLE_VULKAN_QUEUE_HPP
 #define LUCIOLE_VULKAN_QUEUE_HPP
 
+#include "errors.hpp"
+
 #include "../luciole_core.hpp"
 
 #include "../utilities/enum_operators.hpp"
@@ -52,8 +54,8 @@ public:
     queue& operator=( queue const& rhs ) = delete;
     queue& operator=( queue && rhs );
 
-    bool submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept;
-    void present( vk::present_info_t info ) const noexcept;
+    [[nodiscard]] vk::error::type submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept;
+    [[nodiscard]] vk::error::type present( vk::present_info_t info ) const noexcept;
 
     [[nodiscard]] std::uint32_t get_family_index( ) const noexcept;
 

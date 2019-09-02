@@ -590,7 +590,7 @@ VkExtent2D context::get_window_extent( ) const
     return VkExtent2D{ wnd_size_.x, wnd_size_.y };
 }
 
-bool context::submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept
+vk::error::type context::submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept
 {
     if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
     {
@@ -598,22 +598,19 @@ bool context::submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_
     }
     else
     {
-        return false;
+        return vk::error::type::e_invalid_queue;
     }
 }
-bool context::present_queue( queue::flag_t flag, vk::present_info_t const& present_info ) const noexcept
+vk::error::type context::present_queue( queue::flag_t flag, vk::present_info_t const& present_info ) const noexcept
 {
     if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
     {
-        queue->second.present( present_info );
-
-        return true;
+        return queue->second.present( present_info );
     }
     else
     {
-        return false;
+        return vk::error::type::e_invalid_queue;
     }
-    
 }
 
 void context::wait_for_fence( vk::fence_t fence ) const noexcept

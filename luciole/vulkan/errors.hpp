@@ -32,6 +32,8 @@ namespace vk
     public:
         enum class type
         {
+            e_none,
+            e_suboptimal,
             e_out_of_host_memory,
             e_out_of_device_memory,
             e_initialization_failed,
@@ -40,8 +42,10 @@ namespace vk
             e_no_suitable_physical_devices,
             e_device_lost,
             e_surface_lost,
+            e_out_of_date,
             e_native_window_in_use,
             e_too_many_objects,
+            e_invalid_queue,
             e_command_pool_creation_failed,
             e_count
         };

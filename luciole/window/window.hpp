@@ -99,4 +99,6 @@ protected:
     message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
 };
 
+
+
 #endif //LUCIOLE_WINDOW_WINDOW_HPP

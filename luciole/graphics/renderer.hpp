@@ -33,7 +33,7 @@ private:
     
 public:
     renderer( ) = default;
-    explicit renderer( p_context_t p_context );
+    explicit renderer( p_context_t p_context, window& wnd );
     renderer( renderer const& rhs ) = delete;
     renderer( renderer&& rhs );
     ~renderer( );
@@ -43,7 +43,12 @@ public:
 
     void draw_frame();
 
+    void on_framebuffer_resize( framebuffer_resize_event const& event );
+
 private:
+    void recreate_swapchain( );
+    void cleanup_swapchain( );
+
     void record_command_buffers( );
 
     [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
@@ -84,6 +89,11 @@ private:
     VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT_] = { };
 
     size_t current_frame = 0;
+
+    bool is_framebuffer_resized_ = false;
+
+    std::uint32_t window_width_ = 0;
+    std::uint32_t window_height_ = 0;
 };
 
 #endif // LUCIOLE_GRAPHICS_RENDERER_HPP

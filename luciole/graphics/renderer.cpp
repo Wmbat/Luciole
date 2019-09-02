@@ -20,10 +20,14 @@
 
 #include "renderer.hpp"
 
-renderer::renderer( p_context_t p_context )
+#include "../window/event.hpp"
+
+renderer::renderer( p_context_t p_context, window& wnd )
     :
     p_context_( p_context.value_ )
 {
+    wnd.set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
+
     auto const capabilities = p_context_->get_surface_capabilities();
     auto const format = pick_swapchain_format();
     
@@ -306,7 +310,20 @@ void renderer::draw_frame( )
     p_context_->reset_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
     std::uint32_t image_index = 0;
-    vkAcquireNextImageKHR( p_context_->get( ), swapchain_, std::numeric_limits<std::uint64_t>::max( ), image_available_semaphore_[current_frame], VK_NULL_HANDLE, &image_index );
+    auto result = vkAcquireNextImageKHR( 
+        p_context_->get( ), 
+        swapchain_, 
+        std::numeric_limits<std::uint64_t>::max( ), 
+        image_available_semaphore_[current_frame], 
+        VK_NULL_HANDLE, 
+        &image_index 
+    );
+
+    if ( result == VK_ERROR_OUT_OF_DATE_KHR )
+    {
+        recreate_swapchain( );
+        return;
+    }
 
     VkSemaphore wait_semaphores[] = { image_available_semaphore_[current_frame] };
     VkSemaphore signal_semaphores[] = { render_finished_semaphore_[current_frame] };
@@ -334,7 +351,6 @@ void renderer::draw_frame( )
 
     p_context_->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
-
     VkPresentInfoKHR const present_info 
     {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -347,9 +363,198 @@ void renderer::draw_frame( )
         .pResults = nullptr
     };
 
-    p_context_->present_queue( queue::flag_t( queue::flag::e_graphics ), vk::present_info_t( present_info ) );
+    auto present_res = p_context_->present_queue( queue::flag_t( queue::flag::e_graphics ), vk::present_info_t( present_info ) );
+    if ( present_res == vk::error::type::e_out_of_date || present_res == vk::error::type::e_suboptimal || is_framebuffer_resized_ )
+    {
+        is_framebuffer_resized_ = false;
+        recreate_swapchain( );
+    }
+    else if ( present_res == vk::error::type::e_none )
+    {
+        current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT_;   
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Present Queue -> Error code: {}.", vk::error::to_string( present_res ) );
 
-    current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT_;
+        abort( );
+    }
+}
+
+void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )
+{
+    window_width_ = event.size_.x;
+    window_height_ = event.size_.y;
+    is_framebuffer_resized_ = true;
+}
+
+void renderer::recreate_swapchain( )
+{
+    vkDeviceWaitIdle( p_context_->get( ) );
+
+    cleanup_swapchain( );
+
+    auto const capabilities = p_context_->get_surface_capabilities();
+    auto const format = pick_swapchain_format();
+
+    swapchain_image_format_ = format.format;
+    swapchain_extent_ = pick_swapchain_extent( capabilities );
+    
+    std::uint32_t image_count = capabilities.minImageCount + 1;
+    if ( capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount )
+    {
+        image_count = capabilities.maxImageCount;
+    }
+
+    if ( auto res = create_swapchain( capabilities, format ); auto p_val = std::get_if<VkSwapchainKHR>( &res ) )
+    {
+        swapchain_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Swapchain creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+
+    swapchain_images_.reserve( image_count );
+    if ( auto res = p_context_->get_swapchain_images( vk::swapchain_t( swapchain_ ), count32_t( image_count ) );
+         auto p_val = std::get_if<std::vector<VkImage>>( &res ) )
+    {
+        swapchain_images_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Swapchain Images retrieval -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+    
+    swapchain_image_views_.reserve( swapchain_images_.size( ) );
+    for( std::size_t i = 0; i < swapchain_images_.size( ); ++i )
+    {
+        if ( auto res = create_image_view( vk::image_t( swapchain_images_[i] ) ); auto p_val = std::get_if<VkImageView>( &res ) )
+        {
+            swapchain_image_views_.emplace_back( *p_val );
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Swapchain Image View {} creation -> Error code: {}.", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+    }
+
+        if ( auto res = create_render_pass( ); auto p_val = std::get_if<VkRenderPass>( &res ) )
+    {
+        render_pass_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Render Pass creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+        
+        abort( );
+    }
+
+    if ( auto res = create_default_pipeline_layout( ); auto p_val = std::get_if<VkPipelineLayout>( &res ) )
+    {
+        default_graphics_pipeline_layout_ = *p_val;
+    } 
+    else
+    {
+        core_error( "Vulkan Error: On Default Graphics pipeline layout creation -> Error code: {}.",
+            vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+
+    if ( auto res = create_default_pipeline( shader_filepath_t( "resources/shaders/default_vert.spv" ), shader_filepath_t( "resources/shaders/default_frag.spv" ) );
+         auto p_val = std::get_if<VkPipeline>( &res ) )
+    {
+        default_graphics_pipeline_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Default Graphics Pipeline creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+
+    if ( auto res = p_context_->create_command_buffers( queue::flag_t( queue::flag::e_graphics ), count32_t( image_count ) ); 
+         auto p_val = std::get_if<std::vector<VkCommandBuffer>>( &res ) )
+    {
+        render_command_buffers_ = *p_val;
+    }
+    else
+    {
+        core_error( "Vulkan Error: On Render Command Buffers creation -> Error code: {}.", vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+        abort( );
+    }
+    
+    swapchain_framebuffers_.reserve( image_count );
+    for( std::size_t i = 0; i < image_count; ++i )
+    {
+        if ( auto res = create_framebuffer( vk::image_view_t( swapchain_image_views_[i] ) ); auto p_val = std::get_if<VkFramebuffer>( &res ) )
+        {
+            swapchain_framebuffers_.emplace_back( std::move( *p_val ) );
+        }
+        else
+        {
+            core_error( "Vulkan Error: On Swapchain Framebuffer {} creation -> Error code:", i, vk::error::to_string( std::get<vk::error::type>( res ) ) );
+
+            abort( );
+        }
+    }
+
+    record_command_buffers( );
+}
+void renderer::cleanup_swapchain( )
+{
+    for( auto& framebuffer : swapchain_framebuffers_ )
+    {
+        if ( framebuffer != VK_NULL_HANDLE )
+        {
+            p_context_->destroy_framebuffer( vk::framebuffer_t( framebuffer ) );
+            framebuffer = VK_NULL_HANDLE;
+        }
+    }
+    swapchain_framebuffers_.clear( );
+
+    if ( default_graphics_pipeline_ != VK_NULL_HANDLE )
+    {
+        p_context_->destroy_pipeline( vk::pipeline_t( default_graphics_pipeline_ ) );
+        default_graphics_pipeline_ = VK_NULL_HANDLE;
+    }
+
+    if ( default_graphics_pipeline_layout_ != VK_NULL_HANDLE )
+    {
+        p_context_->destroy_pipeline_layout( vk::pipeline_layout_t( default_graphics_pipeline_layout_ ) );
+        default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+    }
+
+    if ( render_pass_ != VK_NULL_HANDLE )
+    {
+        p_context_->destroy_render_pass( vk::render_pass_t( render_pass_ ) );
+        render_pass_ = VK_NULL_HANDLE;
+    }
+    
+    for( auto& image_view : swapchain_image_views_ )
+    {
+        if ( image_view != VK_NULL_HANDLE )
+        {
+            p_context_->destroy_image_view( vk::image_view_t( image_view ) );
+            image_view = VK_NULL_HANDLE;
+        }
+    }
+    swapchain_image_views_.clear( );
+    
+    if ( swapchain_ != VK_NULL_HANDLE )
+    {
+        p_context_->destroy_swapchain( vk::swapchain_t( swapchain_ ) );
+        swapchain_ = VK_NULL_HANDLE;
+    }
+    swapchain_images_.clear( );
 }
 
 void renderer::record_command_buffers( )
@@ -788,7 +993,7 @@ VkExtent2D renderer::pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capa
     }
     else
     {
-        auto actual_extent = p_context_->get_window_extent();
+        VkExtent2D actual_extent = { window_width_, window_height_ };
         
         actual_extent.width = std::clamp( actual_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width );
         actual_extent.height = std::clamp( actual_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height );
