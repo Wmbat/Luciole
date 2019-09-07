@@ -123,7 +123,7 @@ renderer::renderer( p_context_t p_context, window& wnd )
     /*
      *  Check for any errors upon default graphics pipeline creation.
      */
-    if ( auto res = create_default_pipeline( shader_filepath_t( "resources/shaders/default_vert.spv" ), shader_filepath_t( "resources/shaders/default_frag.spv" ) );
+    if ( auto res = create_default_pipeline( shader_filepath_t( "../resources/shaders/default_vert.spv" ), shader_filepath_t( "../resources/shaders/default_frag.spv" ) );
          auto p_val = std::get_if<VkPipeline>( &res ) )
     {
         default_graphics_pipeline_ = *p_val;

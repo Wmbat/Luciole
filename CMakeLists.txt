@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.15 )
-project( luciole LANGUAGES CXX )
+project( Luciole LANGUAGES CXX )
 
 option( BUILD_TEST "Enable unit testing" OFF )
 
@@ -33,23 +33,29 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 add_subdirectory( external/googletest )
 
-add_executable( luciole )
+add_executable( Luciole )
 
-target_compile_options( luciole 
-    PUBLIC $<$<PLATFORM_ID:UNIX>:-pthread>
+set_target_properties( Luciole PROPERTIES
+    DEBUG_POSTFIX "_d"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+target_compile_options( Luciole 
+    PUBLIC
+        $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
-    PUBLIC $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
-    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
+        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
 # Set Debug Flags
-    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
-    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
-    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
 # Set Release Flags
-    PUBLIC $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
 )
 
 if( WIN32 )
-    target_compile_definitions( luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
+    target_compile_definitions( Luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
 elseif( UNIX )
     if( USE_WAYLAND_WSI )
         find_package( Wayland REQUIRED )
@@ -60,8 +66,8 @@ elseif( UNIX )
             message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
         endif( )
 
-        target_include_directories( luciole PUBLIC ${WAILAND_INCLUDE_DIR} )
-        target_compile_definitions( luciole PUBLIC VK_USE_PLATFORM_WAYLAND_KHR )
+        target_include_directories( Luciole PUBLIC ${WAILAND_INCLUDE_DIR} )
+        target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_WAYLAND_KHR )
     else( )
         find_package( XCB REQUIRED )
 
@@ -71,81 +77,65 @@ elseif( UNIX )
             message( STATUS ${XCB_LIBRARIES} )
         endif( )
 
-        target_compile_definitions( luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
+        target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
     endif()
 endif( )
 
 if ( BUILD_TEST )
     message( STATUS "Building unit tests." )
-    target_compile_definitions( luciole PUBLIC BUILD_TEST )
+    target_compile_definitions( Luciole PUBLIC BUILD_TEST )
 endif( )
 
 if( NOT WIN32 )
-	target_link_libraries( luciole
-	    PUBLIC ${XCB_LIBRARIES}
-        PUBLIC vulkan
-        PUBLIC stb
-        PUBLIC spdlog
-        PUBLIC wmbats_bazaar
-        PUBLIC nlohmann
-        PUBLIC tinygltf
-        PUBLIC glm
-        PUBLIC gtest )
+    target_link_libraries( Luciole
+        PUBLIC 
+            ${XCB_LIBRARIES}
+            vulkan
+            stb
+            spdlog
+            wmbats_bazaar
+            nlohmann
+            tinygltf
+            glm
+            gtest )
 else()
-    target_link_libraries( luciole
-        PUBLIC vulkan
-        PUBLIC stb
-        PUBLIC spdlog
-		PUBLIC wmbats_bazaar
-        PUBLIC nlohmann
-        PUBLIC tinygltf
-        PUBLIC glm
-		PUBLIC gtest )
+    target_link_libraries( Luciole
+        PUBLIC 
+            vulkan
+            stb
+            spdlog
+		    wmbats_bazaar
+            nlohmann
+            tinygltf
+            glm
+		    gtest )
 endif( )
 
-target_sources( luciole
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/graphics/renderer.hpp"
+target_sources( Luciole
+    PRIVATE
+        "src/graphics/renderer.cpp"
+        "src/memory/memory_pool.cpp"
+        "src/threads/thread_pool.cpp"
+        "src/vulkan/queue.cpp"
+        "src/window/win32_window.cpp"
+        "src/window/window.cpp"
+        "src/window/xcb_window.cpp"
+        "src/application.cpp"
+        "src/context.cpp"
+        "src/main.cpp"
+)
 
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/memory/memory_pool.hpp"
-
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/atomic_queue.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/threads/thread_pool.hpp"
-
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/enum_operators.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/log.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/utilities/message.hpp"
-
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/errors.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/vulkan/queue.hpp"
-    
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/event.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/keyboard.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/mouse.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/win32_window.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/window.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/window/xcb_window.hpp"
-
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/luciole_core.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/application.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/context.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/extension.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/layer.hpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/main.cpp"
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/luciole/strong_types.hpp" )
+target_include_directories( Luciole 
+    PUBLIC 
+        "includes" 
+    PRIVATE
+        "src"
+)
 
 add_custom_target( copy_resources 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/resources
-        ${CMAKE_BINARY_DIR}/resources
-    DEPENDS ${CMAKE_SOURCE_DIR}/resources )
+        ${CMAKE_SOURCE_DIR}/data
+        ${CMAKE_BINARY_DIR}/data
+    DEPENDS ${CMAKE_SOURCE_DIR}/data )
 
-add_dependencies( luciole copy_resources )
+add_dependencies( Luciole copy_resources )

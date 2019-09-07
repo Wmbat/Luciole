@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright (C) 2018-2019 Wmbat
  *
  *  wmbat@protonmail.com
@@ -19,19 +19,36 @@
 #ifndef LUCIOLE_UTILITIES_MESSAGE_HPP
 #define LUCIOLE_UTILITIES_MESSAGE_HPP
 
-#include <vector>
-
+/* INCLUDES */
 #include <wmbats_bazaar/delegate.hpp>
 
+#include <vector>
+
+/**
+ * @brief Basic wrapper around a bzr::delegate that allows for entities to
+ * submit function(s) to the handler, which may be called upon a certain event.
+ * 
+ * @tparam C The Class/Struct type the delegates must have as a parameter
+ */
 template<class C>
 class message_handler
 {
 public:
+    /**
+     * @brief 
+     * 
+     * @param[in] callback - The function to be added to the handler.
+     */
     void add_callback( const bzr::delegate<void( C )>& callback )
     {
         callbacks_.push_back( callback );
     }
         
+    /**
+     * @brief 
+     * 
+     * @param message 
+     */
     void send_message( const C& message )
     {
         for( auto& delegate : callbacks_ )
