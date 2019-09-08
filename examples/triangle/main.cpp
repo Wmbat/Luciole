@@ -16,33 +16,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_APPLICATION_HPP
-#define LUCIOLE_APPLICATION_HPP
 
-#include <memory>
-#include <unordered_map>
-
-#include <vulkan/vulkan.h>
- 
-#include "graphics/renderer.hpp"
-
-#include "window/window.hpp"
-
-#include "context.hpp"
-
-class application
+int main( )
 {
-public:
-    application( );
-    ~application( );
-
-    void run( );
-
-private: 
-    std::unique_ptr<window> p_wnd_;
-
-    context context_;
-    renderer renderer_;
-};
-
-#endif // LUCIOLE_APPLICATION_HPP
+    return 0;
+}

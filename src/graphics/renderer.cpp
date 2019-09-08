@@ -20,6 +20,7 @@
 
 #include "renderer.hpp"
 
+#include "../utilities/log.hpp"
 #include "../window/event.hpp"
 
 renderer::renderer( p_context_t p_context, window& wnd )
@@ -123,8 +124,10 @@ renderer::renderer( p_context_t p_context, window& wnd )
     /*
      *  Check for any errors upon default graphics pipeline creation.
      */
-    if ( auto res = create_default_pipeline( shader_filepath_t( "../resources/shaders/default_vert.spv" ), shader_filepath_t( "../resources/shaders/default_frag.spv" ) );
-         auto p_val = std::get_if<VkPipeline>( &res ) )
+    if ( auto res = create_default_pipeline( 
+        vert_shader_filepath_const_ref_t( "../data/shaders/default_vert.spv" ), 
+        frag_shader_filepath_const_ref_t( "../data/shaders/default_frag.spv" ) 
+        ); auto p_val = std::get_if<VkPipeline>( &res ) )
     {
         default_graphics_pipeline_ = *p_val;
     }
@@ -468,8 +471,10 @@ void renderer::recreate_swapchain( )
         abort( );
     }
 
-    if ( auto res = create_default_pipeline( shader_filepath_t( "resources/shaders/default_vert.spv" ), shader_filepath_t( "resources/shaders/default_frag.spv" ) );
-         auto p_val = std::get_if<VkPipeline>( &res ) )
+    if ( auto res = create_default_pipeline( 
+        vert_shader_filepath_const_ref_t( "../data/shaders/default_vert.spv" ), 
+        frag_shader_filepath_const_ref_t( "../data/shaders/default_frag.spv" ) );
+        auto p_val = std::get_if<VkPipeline>( &res ) )
     {
         default_graphics_pipeline_ = *p_val;
     }
@@ -717,7 +722,7 @@ std::variant<VkRenderPass, vk::error::type> renderer::create_render_pass( ) cons
     return p_context_->create_render_pass( vk::render_pass_create_info_t( create_info ) );
 }
 
-VkShaderModule renderer::create_shader_module( shader_filepath_t filepath ) const
+VkShaderModule renderer::create_shader_module( shader_filepath_const_ref_t filepath ) const
 {
     auto const spirv_code = bzr::read_from_binary_file( filepath.value_ );
 
@@ -747,10 +752,12 @@ std::variant<VkPipelineLayout, vk::error::type> renderer::create_default_pipelin
     return p_context_->create_pipeline_layout( vk::pipeline_layout_create_info_t( create_info ) );
 }
 
-std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const
+std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline( 
+    vert_shader_filepath_const_ref_t vert_filepath, 
+    frag_shader_filepath_const_ref_t frag_filepath ) const 
 {
-    auto const vert_shader = create_shader_module( vert_filepath );
-    auto const frag_shader = create_shader_module( frag_filepath );
+    auto const vert_shader = create_shader_module( shader_filepath_const_ref_t( vert_filepath.value_ ) );
+    auto const frag_shader = create_shader_module( shader_filepath_const_ref_t( frag_filepath.value_ ) );
 
     VkPipelineShaderStageCreateInfo vert_shader_stage_create_info 
     {

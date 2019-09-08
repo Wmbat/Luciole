@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <vector>
 #include <optional>
-#include <map>
+#include <unordered_map>
 #include <variant>
 
 #include <vulkan/vulkan.h>
@@ -30,10 +30,10 @@
 
 #include "extension.hpp"
 #include "layer.hpp"
-#include "strong_types.hpp"
 
 #include "window/window.hpp"
 
+#include "vulkan/core.hpp"
 #include "vulkan/errors.hpp"
 #include "vulkan/queue.hpp"
 

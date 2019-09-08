@@ -24,9 +24,8 @@
 #include <vulkan/vulkan.h>
 
 #include "event.hpp"
-#include "../luciole_core.hpp"
-#include "../strong_types.hpp"
 #include "../utilities/message.hpp"
+#include "../vulkan/core.hpp"
 #include "../vulkan/errors.hpp"
 
 class window

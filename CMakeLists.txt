@@ -18,6 +18,7 @@ cmake_minimum_required( VERSION 3.15 )
 project( Luciole LANGUAGES CXX )
 
 option( BUILD_TEST "Enable unit testing" OFF )
+option( BUILD_EXAMPLE "Build demo examples" OFF )
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )

@@ -19,26 +19,74 @@
 #ifndef LUCIOLE_GRAPHICS_RENDERER_HPP
 #define LUCIOLE_GRAPHICS_RENDERER_HPP
 
-#include <vector>
+/* INCLUDES */
+#include "../context.hpp"
 
 #include <vulkan/vulkan.h>
 
-#include "../context.hpp"
+#include <vector>
 
+/**
+ * @brief 
+ */
 class renderer
 {
 private:
+    /**
+     * @brief Dummy struct for custom strong type to designate a shader filepath.
+     */
     struct shader_filepath_parameter{ };
-    using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
+    using shader_filepath_const_ref_t = strong_type<std::string const&, shader_filepath_parameter>;
+
+    /**
+     * @brief Dummy struct for custom strong type to designate a vertex shader filepath.
+     */
+    struct vert_shader_filepath_param{ };
+    using vert_shader_filepath_const_ref_t = strong_type<std::string const&, vert_shader_filepath_param>;
     
+    /**
+     * @brief Dummy struct for custom strong type to designate a fragment shader filepath.
+     */
+    struct frag_shader_filepath_param{ };
+    using frag_shader_filepath_const_ref_t = strong_type<std::string const&, frag_shader_filepath_param>;
+
 public:
+    /**
+     * @brief Default Constructor.
+     */
     renderer( ) = default;
-    explicit renderer( p_context_t p_context, window& wnd );
+    /**
+     * @brief Construct a new renderer object.
+     * 
+     * @param p_context Pointer to a context object.
+     * @param wnd Reference to a window object.
+     */
+    renderer( p_context_t p_context, window& wnd );
+    /**
+     * @brief Deleted copy constructor.
+     */
     renderer( renderer const& rhs ) = delete;
+    /**
+     * @brief Move constructor.
+     * 
+     * @param rhs Data to move into current object.
+     */
     renderer( renderer&& rhs );
+    /**
+     * @brief Destructor.
+     */
     ~renderer( );
     
+    /**
+     * @brief Deleted copy assignment operator.
+     */
     renderer& operator=( renderer const& rhs ) = delete;
+    /**
+     * @brief Move assignment operator.
+     * 
+     * @param rhs The data to move.
+     * @return renderer& The altered current object.
+     */
     renderer& operator=( renderer&& rhs );
 
     void draw_frame();
@@ -46,24 +94,129 @@ public:
     void on_framebuffer_resize( framebuffer_resize_event const& event );
 
 private:
+    /**
+     * @brief Create all objects related to the swapchain.
+     */
     void recreate_swapchain( );
+    /**
+     * @brief Destroy all objects related to the swapchain.
+     */
     void cleanup_swapchain( );
 
     void record_command_buffers( );
 
-    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const;
-    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( vk::image_t image ) const;
-    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( ) const;
-    [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_t filepath ) const;
-    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( ) const;
-    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_default_pipeline( shader_filepath_t vert_filepath, shader_filepath_t frag_filepath ) const;
-    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( ) const;
-    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( ) const noexcept;
-    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( vk::image_view_t image_view ) const noexcept;
+    /**
+     * @brief Create a swapchain object.
+     * 
+     * @param capabilities The capabilities of the Surface.
+     * @param format The format of the Surface.
+     * @return std::variant<VkSwapchainKHR, vk::error::type> Type safe union that returns 
+     * either the created Swapchain handle or an error code.
+     */
+    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( 
+        VkSurfaceCapabilitiesKHR const& capabilities, 
+        VkSurfaceFormatKHR const& format 
+    ) const;
 
+    /**
+     * @brief Create a image view object.
+     * 
+     * @param image The Image to create the view for.
+     * @return std::variant<VkImageView, vk::error::type> Type safe union that either returns
+     * an image view or an error code.
+     */
+    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( 
+        vk::image_t image 
+    ) const;
+
+    /**
+     * @brief Create a render pass object.
+     * 
+     * @return std::variant<VkRenderPass, vk::error::type> Type safe union that either returns
+     * a render pass or an error code.
+     */
+    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( ) const;
+
+    /**
+     * @brief Create a shader module object.
+     * 
+     * @param filepath 
+     * @return VkShaderModule 
+     */
+    [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_const_ref_t filepath ) const;
+
+    /**
+     * @brief Create a default pipeline layout object.
+     * 
+     * @return std::variant<VkPipelineLayout, vk::error::type> Type safe union that either returns a 
+     * pipeline layout or an error code.
+     */
+    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( ) const;
+
+    /**
+     * @brief Create a default pipeline object.
+     * 
+     * @param vert_filepath The path from the executable to the vertex shader SPIR-V file. 
+     * @param frag_filepath The path from the executable to the fragment shader SPIR-V file.
+     * @return std::variant<VkPipeline, vk::error::type> Type safe union that either returns a 
+     * default graphics pipeline or an error code.
+     */
+    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_default_pipeline( 
+        vert_shader_filepath_const_ref_t vert_filepath, 
+        frag_shader_filepath_const_ref_t frag_filepath 
+    ) const;
+
+    /**
+     * @brief Create a semaphore object.
+     * 
+     * @return std::variant<VkSemaphore, vk::error::type> Type safe union that either returns a
+     * semaphore or an error code.
+     */
+    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( ) const;
+
+    /**
+     * @brief Create a fence object.
+     * 
+     * @return std::variant<VkFence, vk::error::type> Type safe union that either returns a
+     * fence or an error code.
+     */
+    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( ) const noexcept;
+
+    /**
+     * @brief Create a framebuffer object.
+     * 
+     * @param image_view 
+     * @return std::variant<VkFramebuffer, vk::error::type> Type safe union that either returns a
+     * framebuffer or an error code.
+     */
+    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( 
+        vk::image_view_t image_view 
+    ) const noexcept;
+
+    /**
+     * @brief Pick a surface format for the swapchain.
+     * 
+     * @return VkSurfaceFormatKHR The chosen surface format.
+     */
     [[nodiscard]] VkSurfaceFormatKHR pick_swapchain_format( ) const;
+
+    /**
+     * @brief Pick a surface present mode for the swapchain.
+     * 
+     * @return VkPresentModeKHR The chosen present mode.
+     */
     [[nodiscard]] VkPresentModeKHR pick_swapchain_present_mode( ) const;
-    [[nodiscard]] VkExtent2D pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capabilities ) const;
+
+    /**
+     * @brief Pick a extent supported by the surface for the
+     * swapchain.
+     * 
+     * @param capabilities The surface capabilities.
+     * @return VkExtent2D The chosen extent.
+     */
+    [[nodiscard]] VkExtent2D pick_swapchain_extent( 
+        VkSurfaceCapabilitiesKHR const& capabilities 
+    ) const;
     
 private:
     static constexpr int MAX_FRAMES_IN_FLIGHT_ = 2;

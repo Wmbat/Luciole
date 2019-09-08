@@ -19,14 +19,19 @@
 #ifndef LUCIOLE_THREAD_POOL_HPP
 #define LUCIOLE_THREAD_POOL_HPP
 
+/* INCLUDES */
+#include "../strong_types.hpp"
+
+#include <wmbats_bazaar/delegate.hpp>
+
 #include <vector>
 #include <queue>
 #include <thread>
 
-#include <wmbats_bazaar/delegate.hpp>
-
-#include "../strong_types.hpp"
-
+/**
+ * @brief 
+ * 
+ */
 class thread_pool
 {
 public:
@@ -34,7 +39,7 @@ public:
 
 public:
     thread_pool( );
-    explicit thread_pool( const count32_t thread_count );
+    explicit thread_pool( count32_t thread_count );
 
 private:
     std::vector<std::queue<task>> task_queues_;
