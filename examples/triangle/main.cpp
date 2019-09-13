@@ -16,8 +16,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole.hpp>
 
 int main( )
 {
+    auto p_wnd = create_window( "Simple Triangle Example" );
+
     return 0;
 }

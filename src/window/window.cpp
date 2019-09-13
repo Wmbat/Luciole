@@ -18,7 +18,7 @@
 
 #include <wmbats_bazaar/logger.hpp>
 
-#include "window.hpp"
+#include "window/window.hpp"
 
 window::window( )
 {

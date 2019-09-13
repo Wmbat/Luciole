@@ -18,10 +18,10 @@
 
 #include <wmbats_bazaar/file_io.hpp>
 
-#include "renderer.hpp"
+#include "graphics/renderer.hpp"
 
-#include "../utilities/log.hpp"
-#include "../window/event.hpp"
+#include "utilities/log.hpp"
+#include "window/event.hpp"
 
 renderer::renderer( p_context_t p_context, window& wnd )
     :

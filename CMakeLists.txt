@@ -32,13 +32,12 @@ add_subdirectory( external/glm )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
-add_subdirectory( external/googletest )
 
-add_executable( Luciole )
+add_library( Luciole SHARED )
 
 set_target_properties( Luciole PROPERTIES
-    DEBUG_POSTFIX "_d"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    DEBUG_POSTFIX "Debug"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 )
 
 target_compile_options( Luciole 
@@ -98,7 +97,7 @@ if( NOT WIN32 )
             nlohmann
             tinygltf
             glm
-            gtest )
+        )
 else()
     target_link_libraries( Luciole
         PUBLIC 
@@ -109,8 +108,13 @@ else()
             nlohmann
             tinygltf
             glm
-		    gtest )
+		)
 endif( )
+
+target_include_directories( Luciole 
+    PUBLIC 
+        "includes" 
+)
 
 target_sources( Luciole
     PRIVATE
@@ -121,16 +125,7 @@ target_sources( Luciole
         "src/window/win32_window.cpp"
         "src/window/window.cpp"
         "src/window/xcb_window.cpp"
-        "src/application.cpp"
         "src/context.cpp"
-        "src/main.cpp"
-)
-
-target_include_directories( Luciole 
-    PUBLIC 
-        "includes" 
-    PRIVATE
-        "src"
 )
 
 add_custom_target( copy_resources 
@@ -140,3 +135,5 @@ add_custom_target( copy_resources
     DEPENDS ${CMAKE_SOURCE_DIR}/data )
 
 add_dependencies( Luciole copy_resources )
+
+add_subdirectory( examples/triangle )

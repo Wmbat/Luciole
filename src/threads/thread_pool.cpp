@@ -16,7 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "thread_pool.hpp"
+#include "threads/thread_pool.hpp"
 
 thread_pool::thread_pool( )
 {

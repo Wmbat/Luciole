@@ -16,3 +16,38 @@
 
 cmake_minimum_required( VERSION 3.15 )
 project( Triangle LANGUAGES CXX )
+
+if( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE Release )
+endif( )
+
+add_executable( Triangle )
+
+set_target_properties( Triangle PROPERTIES
+    DEBUG_POSTFIX "Debug"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples/triangle/bin"
+)
+
+target_compile_options( Triangle 
+    PUBLIC
+        $<$<PLATFORM_ID:UNIX>:-pthread>
+# Set C++ version
+        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
+# Set Debug Flags
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
+# Set Release Flags
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+)
+
+target_link_libraries( Triangle
+    PRIVATE
+        Luciole
+)
+
+target_sources( Triangle
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+)

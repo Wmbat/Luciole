@@ -15,3 +15,5 @@
  *  GNU General Public License for more details.
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "memory/memory_pool.hpp"
