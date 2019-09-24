@@ -578,7 +578,7 @@ void renderer::record_command_buffers( )
             core_error( "Failed to begin recording command buffer!" );
         }
 
-        VkClearValue const clear_colour = { 0.0f, 0.0f, 1.0f, 1.0f };
+        VkClearValue const clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 
         VkRenderPassBeginInfo const pass_begin_info 
         {

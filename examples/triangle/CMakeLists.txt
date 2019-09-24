@@ -51,3 +51,12 @@ target_sources( Triangle
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 )
+
+add_custom_target( copy_resources 
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/data
+        ${CMAKE_CURRENT_BINARY_DIR}/data
+    DEPENDS ${CMAKE_SOURCE_DIR}/data 
+)
+
+add_dependencies( Luciole copy_resources )

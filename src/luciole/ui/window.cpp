@@ -122,13 +122,15 @@ window::window( window::create_info_cref_t create_info )
     xcb_change_property(
         p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
         xcb_window_, p_reply->atom, 4, 32, 1,
-        &p_xcb_wm_delete_window_->atom );
+        &p_xcb_wm_delete_window_->atom 
+    );
 
     /** Change the title of the window. */
     xcb_change_property(
         p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
         xcb_window_, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
-        title_.size(), title_.c_str() );
+        title_.size(), title_.c_str() 
+    );
 
     /** Set the window to fullscreen if fullscreen is enabled. */
     if ( is_fullscreen_ )
@@ -140,7 +142,8 @@ window::window( window::create_info_cref_t create_info )
             p_xcb_connection_.get(), XCB_PROP_MODE_REPLACE,
             xcb_window_, p_atom_wm_state->atom,
             XCB_ATOM_ATOM, 32, 1,
-            &p_atom_wm_fullscreen->atom );
+            &p_atom_wm_fullscreen->atom 
+        );
     }
     xcb_map_window( p_xcb_connection_.get(), xcb_window_ );
     xcb_flush( p_xcb_connection_.get() );
