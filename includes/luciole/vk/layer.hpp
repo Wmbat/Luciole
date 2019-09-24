@@ -16,35 +16,34 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_STRONG_TYPES_HPP
-#define LUCIOLE_STRONG_TYPES_HPP
+#ifndef LUCIOLE_LAYER_HPP
+#define LUCIOLE_LAYER_HPP
 
-// INCLUDES //
-#include <cstdint>
+/* INCLUDES */
 #include <string>
 
-struct default_parameter { };
-
-template <typename T, typename parameter = default_parameter>
-class strong_type
+namespace vk
 {
-public:
-    explicit strong_type( const T& value )
-        : 
-        value_( value ) 
-    {   }
+    /**
+     * @brief Data aggregate holding the information about Vulkan
+     * layers.
+     */
+    struct layer
+    {
+        /**
+         * @brief Enum to define how needed the extension is.
+         */
+        enum class priority
+        {
+            e_none,
+            e_required,
+            e_optional
+        };
 
-    template<typename type_ = T>
-    explicit strong_type( T&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
-    : 
-    value_( std::move( value ) ) 
-    {   }
-    
-public:
-    T value_;
-};
+        priority priority_ = priority::e_none;
+        bool found_ = false;
+        std::string name_ = { };
+    };
+} // namespace vk
 
-struct count_parameter { };
-using count32_t = strong_type<std::uint32_t, count_parameter>;
-
-#endif // LUCIOLE_STRONG_TYPES_HPP
+#endif // LUCIOLE_LAYER_HPP

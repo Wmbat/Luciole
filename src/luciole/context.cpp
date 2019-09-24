@@ -16,14 +16,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/context.hpp>
+#include <luciole/luciole_core.hpp>
+#include <luciole/utilities/log.hpp>
+
 #include <cstring>
 #include <map>
 #include <variant>
-
-#include "utilities/log.hpp"
-
-#include "context.hpp"
-#include "luciole_core.hpp"
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
@@ -74,9 +73,9 @@ void destroy_debug_utils_messenger (
     }
 }
 
-context::context( const window& wnd )
+context::context( const ui::window& wnd )
 {
-    wnd_size_ = { wnd.get_width(), wnd.get_height() };
+    wnd_size_ = wnd.get_size();
     
     std::uint32_t api_version;
     vkEnumerateInstanceVersion( &api_version );
@@ -295,7 +294,7 @@ context& context::operator=( context&& rhs )
     return *this;
 }
 
-VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
+VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const
 {
     VkSwapchainCreateInfoKHR const create_info
     {
@@ -308,7 +307,7 @@ VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
     return create_info;
 }
 
-std::variant<VkSwapchainKHR, vk::error::type> context::create_swapchain( vk::swapchain_create_info_t const& create_info ) const noexcept
+vk::error_variant<VkSwapchainKHR> context::create_swapchain( vk::swapchain_create_info_t const& create_info ) const
 {
     VkSwapchainKHR handle = VK_NULL_HANDLE;
  
@@ -622,13 +621,13 @@ void context::reset_fence( vk::fence_t fence ) const noexcept
     vkResetFences( device_, 1, &fence.value_ );
 }
 
-std::vector<layer> context::load_validation_layers( ) const
+std::vector<vk::layer> context::load_validation_layers( ) const
 {
     if constexpr( enable_debug_layers )
     {
-        std::vector<layer> layers =
+        std::vector<vk::layer> layers =
         {
-            layer{ .priority_ = layer::priority::e_optional, .found_ = false, .name_ = "VK_LAYER_KHRONOS_validation" }
+            vk::layer{ .priority_ = vk::layer::priority::e_optional, .found_ = false, .name_ = "VK_LAYER_KHRONOS_validation" }
         };
 
         std::uint32_t layer_count = 0;
@@ -655,18 +654,18 @@ std::vector<layer> context::load_validation_layers( ) const
     }
 }
 
-std::vector<extension> context::load_instance_extensions( ) const
+std::vector<vk::extension> context::load_instance_extensions( ) const
 {
-    std::vector<extension> exts = 
+    std::vector<vk::extension> exts = 
     {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_win32_surface" },
+        vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_win32_surface" },
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_xcb_surface" },
+        vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_xcb_surface" },
 #endif
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_surface" },
-        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_KHR_load_surface_capabilities2" },
-        extension{ .priority_ = extension::priority::e_optional, .found_ = false, .name_ = "VK_EXT_debug_utils" }
+        vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_surface" },
+        vk::extension{ .priority_ = vk::extension::priority::e_optional, .found_ = false, .name_ = "VK_KHR_load_surface_capabilities2" },
+        vk::extension{ .priority_ = vk::extension::priority::e_optional, .found_ = false, .name_ = "VK_EXT_debug_utils" }
     };
 
     std::uint32_t instance_extension_count = 0;
@@ -688,11 +687,11 @@ std::vector<extension> context::load_instance_extensions( ) const
     return exts;
 }
 
-std::vector<extension> context::load_device_extensions( ) const
+std::vector<vk::extension> context::load_device_extensions( ) const
 {
-    std::vector<extension> exts =
+    std::vector<vk::extension> exts =
     {
-        extension{ .priority_ = extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_swapchain" }
+        vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_swapchain" }
     };
 
     std::uint32_t extension_count = 0;
@@ -721,7 +720,7 @@ std::vector<std::string> context::check_layer_support( const layers_t& layers ) 
 
     for ( const auto& layer : validation_layers_ )
     {
-        if ( ( !layer.found_ ) && layer.priority_ == layer::priority::e_required )
+        if ( ( !layer.found_ ) && layer.priority_ == vk::layer::priority::e_required )
         {
             return { };
         }
@@ -744,7 +743,7 @@ std::vector<std::string> context::check_ext_support( const extensions_t& extensi
 
     for( const auto& extension : extensions.value_ )
     {
-        if ( ( !extension.found_ ) && extension.priority_ == extension::priority::e_required )
+        if ( ( !extension.found_ ) && extension.priority_ == vk::extension::priority::e_required )
         {
             return { };
         }
@@ -855,9 +854,9 @@ std::variant<VkDebugUtilsMessengerEXT, vk::error::type> context::create_debug_me
     return handle;
 }
 
-std::variant<VkSurfaceKHR, vk::error::type> context::create_surface( const window& wnd ) const
+std::variant<VkSurfaceKHR, vk::error::type> context::create_surface( const ui::window& wnd ) const
 {
-    return wnd.create_surface( instance_ );
+    return wnd.create_surface( vk::instance_t( instance_ ) );
 }
 
 std::variant<VkPhysicalDevice, vk::error::type> context::pick_gpu( ) const

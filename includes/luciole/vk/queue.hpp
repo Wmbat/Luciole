@@ -19,10 +19,9 @@
 #ifndef LUCIOLE_VULKAN_QUEUE_HPP
 #define LUCIOLE_VULKAN_QUEUE_HPP
 
-#include "core.hpp"
-#include "errors.hpp"
-
-#include "../utilities/enum_operators.hpp"
+#include <luciole/utilities/enum_operators.hpp>
+#include <luciole/vk/core.hpp>
+#include <luciole/vk/errors.hpp>
 
 class queue
 {

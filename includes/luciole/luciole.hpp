@@ -16,4 +16,17 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "memory/memory_pool.hpp"
+#include <luciole/context.hpp>
+#include <luciole/graphics/renderer.hpp>
+#include <luciole/ui/window.hpp>
+
+namespace lcl
+{
+    /**
+     * @brief Initialize core Luciole Components.
+     */
+    inline void init()
+    {
+        bzr::logger::init( "Luciole Core", "%^%n: %v%$" );
+    }
+} // namespace lcl

@@ -19,23 +19,22 @@
 #ifndef LUCIOLE_CONTEXT_HPP
 #define LUCIOLE_CONTEXT_HPP
 
+#include <luciole/luciole_core.hpp>
+#include <luciole/ui/window.hpp>
+#include <luciole/vk/core.hpp>
+#include <luciole/vk/errors.hpp>
+#include <luciole/vk/extension.hpp>
+#include <luciole/vk/layer.hpp>
+#include <luciole/vk/queue.hpp>
+
+#include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
+
 #include <cstdint>
 #include <vector>
 #include <optional>
 #include <unordered_map>
 #include <variant>
-
-#include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
-
-#include "extension.hpp"
-#include "layer.hpp"
-
-#include "window/window.hpp"
-
-#include "vulkan/core.hpp"
-#include "vulkan/errors.hpp"
-#include "vulkan/queue.hpp"
 
 #if defined( NDEBUG )
     static constexpr bool enable_debug_layers = false;
@@ -56,13 +55,13 @@ private:
     };
 
     struct extensions_parameter{ };
-    using extensions_t = strong_type<std::vector<extension>, extensions_parameter>;
+    using extensions_t = strong_type<std::vector<vk::extension>, extensions_parameter>;
 
     struct extension_names_parameter{ };
     using extension_names_t = strong_type<std::vector<std::string>, extension_names_parameter>;
 
     struct layers_parameter{ };
-    using layers_t = strong_type<std::vector<layer>, layers_parameter>;
+    using layers_t = strong_type<std::vector<vk::layer>, layers_parameter>;
 
     struct layer_names_parameter{ };
     using layer_names_t = strong_type<std::vector<std::string>, layer_names_parameter>;
@@ -74,7 +73,7 @@ private:
 
 public:
     context( ) = default;
-    explicit context( const window& wnd );
+    explicit context( const ui::window& wnd );
     context( const context& other ) = delete;
     context( context&& other );
     ~context( );
@@ -82,9 +81,10 @@ public:
     context& operator=( context const& rhs ) = delete;
     context& operator=( context&& rhs );
     
-    [[nodiscard]] VkSwapchainCreateInfoKHR swapchain_create_info( ) const noexcept;
+    [[nodiscard]] VkSwapchainCreateInfoKHR swapchain_create_info( ) LCL_PURE;
     
-    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( vk::swapchain_create_info_t const &create_info ) const noexcept;
+    [[nodiscard]] vk::error_variant<VkSwapchainKHR> create_swapchain( vk::swapchain_create_info_t const &create_info ) LCL_PURE;
+
     void destroy_swapchain( vk::swapchain_t swapchain ) const noexcept;
     
     [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( vk::image_view_create_info_t const& create_info ) const noexcept;
@@ -135,9 +135,9 @@ public:
     }
 
 private:
-    [[nodiscard]] std::vector<layer> load_validation_layers( ) const;
-    [[nodiscard]] std::vector<extension> load_instance_extensions( ) const;
-    [[nodiscard]] std::vector<extension> load_device_extensions( ) const;
+    [[nodiscard]] std::vector<vk::layer> load_validation_layers( ) const;
+    [[nodiscard]] std::vector<vk::extension> load_instance_extensions( ) const;
+    [[nodiscard]] std::vector<vk::extension> load_device_extensions( ) const;
 
     [[nodiscard]] std::vector<std::string> check_layer_support( const layers_t& layers ) const;
     [[nodiscard]] std::vector<std::string> check_ext_support( const extensions_t& extensions ) const;
@@ -149,7 +149,7 @@ private:
     ) const;
 
     [[nodiscard]] std::variant<VkDebugUtilsMessengerEXT, vk::error::type> create_debug_messenger( ) const;
-    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> create_surface( window const& wnd ) const;
+    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> create_surface( ui::window const& wnd ) const;
     [[nodiscard]] std::variant<VkPhysicalDevice, vk::error::type> pick_gpu( ) const;
     
     [[nodiscard]] std::variant<VkDevice, vk::error::type> create_device( 
@@ -176,9 +176,9 @@ private:
     std::unordered_map<queue::flag, queue> queues_;
     std::unordered_map<std::uint32_t, command_pool> command_pools_;
 
-    std::vector<layer> validation_layers_;
-    std::vector<extension> instance_extensions_;
-    std::vector<extension> device_extensions_;
+    std::vector<vk::layer> validation_layers_;
+    std::vector<vk::extension> instance_extensions_;
+    std::vector<vk::extension> device_extensions_;
 };
 
 using p_context_t = strong_type<context const*>;

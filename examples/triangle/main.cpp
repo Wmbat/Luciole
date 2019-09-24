@@ -16,11 +16,29 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole.hpp>
+#include <luciole/luciole.hpp>
 
 int main( )
 {
-    auto p_wnd = create_window( "Simple Triangle Example" );
+    lcl::init();
+
+    ui::window::create_info const create_info 
+    {
+        .title = "Simple Triangle Example",
+        .position = { 100, 100 },
+        .size = { 1080, 720 }
+    };
+
+    auto wnd = ui::window( ui::window::create_info_cref_t( create_info ) );    
+    auto ctx = context( wnd );
+    auto rdr = renderer( p_context_t( &ctx ), wnd);
+
+    while( wnd.is_open() )
+    {
+        rdr.draw_frame();
+
+        wnd.poll_events();
+    }
 
     return 0;
 }

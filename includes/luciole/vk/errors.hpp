@@ -23,10 +23,6 @@
 
 namespace vk
 {
-    /*
-     * Use static reflection on this to make it less work.
-     */
-
     class error
     {
     public:

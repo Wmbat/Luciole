@@ -45,7 +45,7 @@ target_compile_options( Luciole
         $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
         $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
-        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
+        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
 # Set Debug Flags
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
@@ -118,14 +118,11 @@ target_include_directories( Luciole
 
 target_sources( Luciole
     PRIVATE
-        "src/graphics/renderer.cpp"
-        "src/memory/memory_pool.cpp"
-        "src/threads/thread_pool.cpp"
-        "src/vulkan/queue.cpp"
-        "src/window/win32_window.cpp"
-        "src/window/window.cpp"
-        "src/window/xcb_window.cpp"
-        "src/context.cpp"
+        "src/luciole/graphics/renderer.cpp"
+        "src/luciole/threads/thread_pool.cpp"
+        "src/luciole/ui/window.cpp"
+        "src/luciole/vk/queue.cpp"
+        "src/luciole/context.cpp"
 )
 
 add_custom_target( copy_resources 

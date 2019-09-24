@@ -21,8 +21,13 @@
 
 #include <type_traits>
 
-#include <type_traits>
-
+/**
+ * @brief Struct used to do a compile-time check on whether an
+ * enum can use the overleaded binary operators.
+ * 
+ * @tparam T The Enum Class for whom the overleaded operators will
+ * be enabled.
+ */
 template<typename T>
 struct enable_bitmask_operators
 {
@@ -31,6 +36,9 @@ struct enable_bitmask_operators
     static constexpr bool enable = false;
 };
 
+/**
+ * @brief Macro to facilitate the enabling of the binary operators.
+ */
 #define ENABLE_BITMASK_OPERATORS( enum_class )                                          \
 template<>                                                                              \  
 struct enable_bitmask_operators<enum_class>                                             \  
@@ -40,6 +48,14 @@ struct enable_bitmask_operators<enum_class>                                     
     static constexpr bool enable = true;                                                \
 };
 
+/**
+ * @brief 
+ * 
+ * @tparam T The Enum Class to compare
+ * @param lhs The Enum value on the left hand side of the operator.
+ * @param rhs The Enum value on the right hand side of the operator.
+ * @return std::enable_if_t<enable_bitmask_operators<T>::enable, T> Returns a new instance of T.
+ */
 template<typename T>  
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator|( T lhs, T rhs)  
 {

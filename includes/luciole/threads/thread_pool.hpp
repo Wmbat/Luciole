@@ -16,23 +16,34 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_LAYER_HPP
-#define LUCIOLE_LAYER_HPP
+#ifndef LUCIOLE_THREAD_POOL_HPP
+#define LUCIOLE_THREAD_POOL_HPP
 
-#include <string>
+/* INCLUDES */
+#include <luciole/strong_types.hpp>
 
-struct layer
+#include <wmbats_bazaar/delegate.hpp>
+
+#include <vector>
+#include <queue>
+#include <thread>
+
+/**
+ * @brief 
+ * 
+ */
+class thread_pool
 {
-    enum class priority
-    {
-        e_none,
-        e_required,
-        e_optional
-    };
+public:
+    using task = bzr::delegate<void( )>;
 
-    priority priority_ = priority::e_none;
-    bool found_ = false;
-    std::string name_ = { };
+public:
+    thread_pool( );
+    explicit thread_pool( count32_t thread_count );
+
+private:
+    std::vector<std::queue<task>> task_queues_;
+    std::vector<std::thread> threads_; 
 };
 
-#endif // LUCIOLE_LAYER_HPP
+#endif // LUCIOLE_THREAD_POOL_HPP

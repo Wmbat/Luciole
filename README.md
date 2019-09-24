@@ -1,7 +1,5 @@
-# Luciole
-Luciole is a cross-platform game engine framework using the Vulkan API.
+## Luciole
+A linux game-engine using Vulkan.
 
-## GNU/Linux
-As of v0.0.6, Luciole only support X11 platforms in the GNU/Linux ecosystem.
-
-## Windows
+## How to use.
+To clone, call git clone with recursive option.

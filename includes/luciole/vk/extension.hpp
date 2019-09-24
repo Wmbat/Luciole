@@ -16,43 +16,34 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_MEMORY_POOL_HPP
-#define LUCIOLE_MEMORY_POOL_HPP
+#ifndef LUCIOLE_EXTENSION_HPP
+#define LUCIOLE_EXTENSION_HPP
 
-#include <cstdint>
-#include <list>
+/* INCLUDES */
+#include <string>
 
-/*
-
-constexpr std::uint32_t cache_line = 64;
-
-template<std::size_t block_count = 64>
-class memory_pool
+namespace vk
 {
-private:
-    struct block
+    /**
+     * @brief Data aggregate to hold information regarding Vulkan
+     * extensions.
+     */
+    struct extension
     {
-        alignas( cache_line ) char memory[cache_line];
+        /**
+         * @brief An enum to define the priority of the extension.
+         */
+        enum class priority
+        {
+            e_none,
+            e_required,
+            e_optional
+        };
+
+        priority priority_ = priority::e_none;
+        bool found_ = false;
+        std::string name_ = { };
     };
+} // namespace vk
 
-public:
-    template<typename type>
-    type* allocate( std::size_t count )
-    {
-        return new ( data_->memory ) type[count];
-    }
-
-    template<typename type>
-    void deallocate( type* p_type )
-    {
-        
-    }
-
-public:
-    block* data_ = new block( );
-
-    std::vector<std::size_t> offsets_;
-};
- */
-
-#endif //LUCIOLE_MEMORY_POOL_HPP
+#endif // LUCIOLE_EXTENSION_HPP

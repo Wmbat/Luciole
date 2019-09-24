@@ -20,9 +20,12 @@
 #define LUCIOLE_VULKAN_CORE_HPP
 
 /* INCLUDES */
-#include "../strong_types.hpp"
+#include <luciole/strong_types.hpp>
+#include <luciole/vk/errors.hpp>
 
 #include <vulkan/vulkan.h>
+
+#include <variant>
 
 namespace vk
 {
@@ -56,6 +59,9 @@ namespace vk
     using semaphore_create_info_t = strong_type<VkSemaphoreCreateInfo, default_param>;
     using fence_t = strong_type<VkFence, default_param>;
     using fence_create_info_t = strong_type<VkFenceCreateInfo, default_param>;
+
+    template<typename T>
+    using error_variant = std::variant<T, error::type>;
 }
 
 #endif // LUCIOLE_VULKAN_CORE_HPP

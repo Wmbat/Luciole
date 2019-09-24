@@ -20,14 +20,14 @@
 #define LUCIOLE_GRAPHICS_RENDERER_HPP
 
 /* INCLUDES */
-#include "../context.hpp"
+#include <luciole/context.hpp>
 
 #include <vulkan/vulkan.h>
 
 #include <vector>
 
 /**
- * @brief 
+ * @brief The main class to render object.
  */
 class renderer
 {
@@ -61,7 +61,7 @@ public:
      * @param p_context Pointer to a context object.
      * @param wnd Reference to a window object.
      */
-    renderer( p_context_t p_context, window& wnd );
+    renderer( p_context_t p_context, ui::window& wnd );
     /**
      * @brief Deleted copy constructor.
      */
@@ -103,6 +103,9 @@ private:
      */
     void cleanup_swapchain( );
 
+    /**
+     * @brief Record the command buffers.
+     */
     void record_command_buffers( );
 
     /**
@@ -113,10 +116,10 @@ private:
      * @return std::variant<VkSwapchainKHR, vk::error::type> Type safe union that returns 
      * either the created Swapchain handle or an error code.
      */
-    [[nodiscard]] std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( 
+    [[nodiscard]] vk::error_variant<VkSwapchainKHR> create_swapchain( 
         VkSurfaceCapabilitiesKHR const& capabilities, 
         VkSurfaceFormatKHR const& format 
-    ) const;
+    ) LCL_PURE;
 
     /**
      * @brief Create a image view object.
@@ -127,7 +130,7 @@ private:
      */
     [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( 
         vk::image_t image 
-    ) const;
+    ) LCL_PURE;
 
     /**
      * @brief Create a render pass object.
@@ -140,8 +143,8 @@ private:
     /**
      * @brief Create a shader module object.
      * 
-     * @param filepath 
-     * @return VkShaderModule 
+     * @param filepath The Path to the SPIR-V binary file
+     * @return VkShaderModule The shader module generated from the SPIR-V code.
      */
     [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_const_ref_t filepath ) const;
 

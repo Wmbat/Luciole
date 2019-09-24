@@ -16,7 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vulkan/queue.hpp"
+#include <luciole/vk/queue.hpp>
 
 queue::queue( vk::device_t device, family_index_t family_index, index_t index )
     :

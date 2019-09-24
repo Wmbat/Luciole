@@ -19,14 +19,15 @@
 #ifndef LUCIOLE_WINDOW_WINDOW_HPP
 #define LUCIOLE_WINDOW_WINDOW_HPP
 
-#include <variant>
-
-#include <vulkan/vulkan.h>
-
 #include "event.hpp"
-#include "../utilities/message.hpp"
+
 #include "../vulkan/core.hpp"
 #include "../vulkan/errors.hpp"
+
+#include <wmbats_bazaar/message.hpp>
+#include <vulkan/vulkan.h>
+
+#include <variant>
 
 class window
 {
@@ -91,11 +92,11 @@ protected:
         bool fullscreen_ = false;
     } settings_;
     
-    message_handler<const key_event> key_event_;
-    message_handler<const mouse_button_event> mouse_button_event_;
-    message_handler<const mouse_motion_event> mouse_motion_event_;
-    message_handler<const window_close_event> window_close_event_;
-    message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
+    bzr::message_handler<const key_event> key_event_;
+    bzr::message_handler<const mouse_button_event> mouse_button_event_;
+    bzr::message_handler<const mouse_motion_event> mouse_motion_event_;
+    bzr::message_handler<const window_close_event> window_close_event_;
+    bzr::message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
 };
 
 

@@ -16,34 +16,38 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_THREAD_POOL_HPP
-#define LUCIOLE_THREAD_POOL_HPP
+#ifndef LUCIOLE_STRONG_TYPES_HPP
+#define LUCIOLE_STRONG_TYPES_HPP
 
-/* INCLUDES */
-#include "../strong_types.hpp"
-
-#include <wmbats_bazaar/delegate.hpp>
-
-#include <vector>
-#include <queue>
-#include <thread>
+// INCLUDES //
+#include <cstdint>
+#include <string>
 
 /**
- * @brief 
- * 
+ * @brief struct to use as a default template parameter for the strong_type class.
  */
-class thread_pool
+struct default_parameter { };
+
+template <typename T, typename parameter = default_parameter>
+class strong_type
 {
 public:
-    using task = bzr::delegate<void( )>;
+    explicit strong_type( const T& value )
+        : 
+        value_( value ) 
+    {   }
 
+    template<typename type_ = T>
+    explicit strong_type( T&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
+    : 
+    value_( std::move( value ) ) 
+    {   }
+    
 public:
-    thread_pool( );
-    explicit thread_pool( count32_t thread_count );
-
-private:
-    std::vector<std::queue<task>> task_queues_;
-    std::vector<std::thread> threads_; 
+    T value_;
 };
 
-#endif // LUCIOLE_THREAD_POOL_HPP
+struct count_parameter { };
+using count32_t = strong_type<std::uint32_t, count_parameter>;
+
+#endif // LUCIOLE_STRONG_TYPES_HPP

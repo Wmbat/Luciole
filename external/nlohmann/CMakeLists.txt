@@ -19,5 +19,15 @@ project( nlohmann )
 
 add_library( nlohmann INTERFACE )
 
+target_compile_options( nlohmann 
+    INTERFACE
+# Set C++ version
+        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
+# Set Debug Flags
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
+# Set Release Flags
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+)
+
 target_include_directories( nlohmann INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-target_compile_features( nlohmann INTERFACE cxx_std_17 )

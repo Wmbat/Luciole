@@ -16,16 +16,14 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "context.hpp"
-#include "window/window.hpp"
+#include <luciole/threads/thread_pool.hpp>
 
-#if defined( VK_USE_PLATFORM_XCB_KHR )
-#include "window/xcb_window.hpp"
-#endif
-
-inline std::unique_ptr<window> create_window( std::string const& title )
+thread_pool::thread_pool( )
 {
-#if defined( VK_USE_PLATFORM_XCB_KHR )
-    return std::make_unique<xcb_window>( title );
-#endif
+
+}
+
+thread_pool::thread_pool( const count32_t thread_count )
+{
+    
 }

@@ -16,18 +16,17 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/graphics/renderer.hpp>
+#include <luciole/ui/event.hpp>
+#include <luciole/utilities/log.hpp>
+
 #include <wmbats_bazaar/file_io.hpp>
 
-#include "graphics/renderer.hpp"
-
-#include "utilities/log.hpp"
-#include "window/event.hpp"
-
-renderer::renderer( p_context_t p_context, window& wnd )
+renderer::renderer( p_context_t p_context, ui::window& wnd )
     :
     p_context_( p_context.value_ )
 {
-    wnd.set_event_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
+    wnd.add_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
 
     auto const capabilities = p_context_->get_surface_capabilities();
     auto const format = pick_swapchain_format();
@@ -611,7 +610,9 @@ void renderer::record_command_buffers( )
     }
 }
 
-std::variant<VkSwapchainKHR, vk::error::type> renderer::create_swapchain( VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const
+vk::error_variant<VkSwapchainKHR> renderer::create_swapchain( 
+    VkSurfaceCapabilitiesKHR const& capabilities, 
+    VkSurfaceFormatKHR const& format ) const 
 {
     auto const present_mode = pick_swapchain_present_mode( );
     

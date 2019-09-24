@@ -19,12 +19,12 @@
 #ifndef LUCIOLE_WINDOW_EVENT_HPP
 #define LUCIOLE_WINDOW_EVENT_HPP
 
+#include <luciole/ui/keyboard.hpp>
+#include <luciole/ui/mouse.hpp>
+
 #include <glm/glm.hpp>
 
 #include <wmbats_bazaar/delegate.hpp>
-
-#include "keyboard.hpp"
-#include "mouse.hpp"
 
 /*!
  * @brief A struct to hold the information of the key event.
