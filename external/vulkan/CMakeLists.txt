@@ -21,7 +21,9 @@ find_package( Vulkan )
 
 add_library( vulkan INTERFACE )
 
-if ( NOT Vulkan_FOUND )
+if ( Vulkan_FOUND )
+    message( STATUS "Using local Vulkan Library" )
+elseif ( )
     find_library( Vulkan_LIBRARY NAMES vulkan-1 vulkan PATHS ${CMAKE_SOURCE_DIR}/lib )
 
     if ( Vulkan_LIBRARY )

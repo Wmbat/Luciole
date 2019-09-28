@@ -17,13 +17,3 @@
  */
 
 #include <luciole/threads/thread_pool.hpp>
-
-thread_pool::thread_pool( )
-{
-
-}
-
-thread_pool::thread_pool( const count32_t thread_count )
-{
-    
-}

@@ -30,6 +30,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data,
     void* p_user_data ) 
 {
+    if ( message_type != 0 )
+    {
+
+    }
+
+    if ( p_user_data != nullptr )
+    {
+
+    }
+
     if ( message_severity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT )
     {
         core_info( "Validation Layer Info: {}", p_callback_data->pMessage );
@@ -51,10 +61,13 @@ VkResult create_debug_utils_messenger (
     const VkAllocationCallbacks* pAllocator, 
     VkDebugUtilsMessengerEXT* pDebugMessenger ) 
 {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>( 
+        vkGetInstanceProcAddr( instance, "vkCreateDebugUtilsMessengerEXT" ) 
+    );
+
     if ( func != nullptr ) 
     {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+        return func( instance, pCreateInfo, pAllocator, pDebugMessenger );
     } 
     else 
     {
@@ -66,7 +79,10 @@ void destroy_debug_utils_messenger (
     VkDebugUtilsMessengerEXT debugMessenger, 
     const VkAllocationCallbacks* pAllocator ) 
 {
-    auto func = ( PFN_vkDestroyDebugUtilsMessengerEXT ) vkGetInstanceProcAddr( instance, "vkDestroyDebugUtilsMessengerEXT" );
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>( 
+        vkGetInstanceProcAddr( instance, "vkDestroyDebugUtilsMessengerEXT" ) 
+    );
+    
     if (func != nullptr) 
     {
         func(instance, debugMessenger, pAllocator);
@@ -296,13 +312,11 @@ context& context::operator=( context&& rhs )
 
 VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const
 {
-    VkSwapchainCreateInfoKHR const create_info
-    {
-        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-        .pNext = nullptr,
-        .flags = 0,
-        .surface = surface_
-    };
+    auto create_info = VkSwapchainCreateInfoKHR{};
+    create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    create_info.pNext = nullptr;
+    create_info.flags = 0;
+    create_info.surface = surface_;
     
     return create_info;
 }
@@ -716,9 +730,9 @@ std::vector<vk::extension> context::load_device_extensions( ) const
 std::vector<std::string> context::check_layer_support( const layers_t& layers ) const
 {
     std::vector<std::string> enabled_layers;
-    enabled_layers.reserve( validation_layers_.size( ) );
+    enabled_layers.reserve( layers.value_.size( ) );
 
-    for ( const auto& layer : validation_layers_ )
+    for ( const auto& layer : layers.value_ )
     {
         if ( ( !layer.found_ ) && layer.priority_ == vk::layer::priority::e_required )
         {
@@ -782,7 +796,9 @@ std::variant<VkInstance, vk::error::type> context::create_instance(
     {
         const VkInstanceCreateInfo create_info 
         {
-            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, 
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
             .pApplicationInfo = &app_info,
             .enabledLayerCount = static_cast<uint32_t>( layers.size( ) ),
             .ppEnabledLayerNames = layers.data( ),
@@ -809,6 +825,8 @@ std::variant<VkInstance, vk::error::type> context::create_instance(
         const VkInstanceCreateInfo create_info 
         {
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, 
+            .pNext = nullptr,
+            .flags = 0,
             .pApplicationInfo = &app_info,
             .enabledLayerCount = 0,
             .ppEnabledLayerNames = nullptr,
@@ -840,6 +858,7 @@ std::variant<VkDebugUtilsMessengerEXT, vk::error::type> context::create_debug_me
     {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext = nullptr,
+        .flags = 0,
         .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
         .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
         .pfnUserCallback = debug_callback,
@@ -899,6 +918,8 @@ std::variant<VkDevice, vk::error::type> context::create_device( extension_names_
             VkDeviceQueueCreateInfo create_info
             {
                 .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
                 .queueFamilyIndex = static_cast<std::uint32_t>( i ),
                 .queueCount = queue_properties.value_[i].queueCount,
                 .pQueuePriorities = nullptr
@@ -922,8 +943,12 @@ std::variant<VkDevice, vk::error::type> context::create_device( extension_names_
     const VkDeviceCreateInfo create_info
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .queueCreateInfoCount = static_cast<std::uint32_t>( queue_create_infos.size( ) ),
         .pQueueCreateInfos = queue_create_infos.data( ),
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr,
         .enabledExtensionCount = static_cast<std::uint32_t>( extensions.size( ) ),
         .ppEnabledExtensionNames = extensions.data( ),
         .pEnabledFeatures = &features
@@ -1071,6 +1096,7 @@ std::variant<context::command_pools_container_t, vk::error::type> context::creat
             VkCommandPoolCreateInfo create_info 
             {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+                .pNext = nullptr,
                 .flags = 0,
                 .queueFamilyIndex = queue.second.get_family_index( )
             };

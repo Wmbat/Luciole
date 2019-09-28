@@ -38,8 +38,7 @@ public:
     using task = bzr::delegate<void( )>;
 
 public:
-    thread_pool( );
-    explicit thread_pool( count32_t thread_count );
+    thread_pool( ) = default;
 
 private:
     std::vector<std::queue<task>> task_queues_;

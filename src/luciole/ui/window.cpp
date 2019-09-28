@@ -38,6 +38,9 @@ inline window::xcb_intern_atom_uptr intern_atom_helper( xcb_connection_t *p_conn
 
 window::window( window::create_info_cref_t create_info )
     :
+    title_( create_info.value_.title ),
+    position_( create_info.value_.position ),
+    size_( create_info.value_.size ),
     is_open_( true ),
     is_fullscreen_( false )
 {
@@ -186,6 +189,8 @@ window& window::operator=( window&& rhs )
         rhs.default_screen_id_ = -1;
 #endif
     }
+
+    return *this;
 }
 
 bool window::is_open( )

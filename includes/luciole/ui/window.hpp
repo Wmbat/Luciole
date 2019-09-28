@@ -228,9 +228,9 @@ public:
      */
     struct create_info
     {
-        std::string title;
-        glm::uvec2 position;
-        glm::uvec2 size;
+        std::string title = "Default Luciole Window";
+        glm::uvec2 position = { 100, 100 };
+        glm::uvec2 size = { 1080, 720 };
     };
 };
 

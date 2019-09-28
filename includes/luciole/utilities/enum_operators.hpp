@@ -39,13 +39,13 @@ struct enable_bitmask_operators
 /**
  * @brief Macro to facilitate the enabling of the binary operators.
  */
-#define ENABLE_BITMASK_OPERATORS( enum_class )                                          \
-template<>                                                                              \  
-struct enable_bitmask_operators<enum_class>                                             \  
-{                                                                                       \
-    static_assert( std::is_enum_v<enum_class>, "Template parameter is not of enum type." );      \
-                                                                                        \
-    static constexpr bool enable = true;                                                \
+#define ENABLE_BITMASK_OPERATORS( enum_class )                                                      \
+template<>                                                                                          \
+struct enable_bitmask_operators<enum_class>                                                         \
+{                                                                                                   \
+    static_assert( std::is_enum_v<enum_class>, "Template parameter is not of enum type." );         \
+                                                                                                    \
+    static constexpr bool enable = true;                                                            \
 };
 
 /**

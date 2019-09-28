@@ -17,6 +17,8 @@
 cmake_minimum_required( VERSION 3.11 )
 project( nlohmann )
 
+message( STATUS "Building Nlohmann Header Library" )
+
 add_library( nlohmann INTERFACE )
 
 target_compile_options( nlohmann 

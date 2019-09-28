@@ -26,13 +26,6 @@ endif( )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 
-add_subdirectory( external/vulkan )
-add_subdirectory( external/stb )
-add_subdirectory( external/glm )
-add_subdirectory( external/nlohmann )
-add_subdirectory( external/tinygltf )
-add_subdirectory( external/wmbats_bazaar )
-
 add_library( Luciole SHARED )
 
 set_target_properties( Luciole PROPERTIES
@@ -44,11 +37,18 @@ target_compile_options( Luciole
     PUBLIC
         $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
-        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+        $<$<CXX_COMPILER_ID:GNU>:-std=c++2a>
         $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
+# Set Flags
+        $<$<CXX_COMPILER_ID:GNU>:-fconcepts>
 # Set Debug Flags
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
+        $<$<AND:$<CXX_COMPILER_ID:GUN>,$<CONFIG:DEBUG>>:-g>
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wextra>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wold-style-cast>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wdouble-promotion>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Werror>
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
 # Set Release Flags
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
@@ -74,12 +74,20 @@ elseif( UNIX )
         if( NOT XCB_FOUND )
             message( FATAL_ERROR "XCB development package not found" )
         else( )
-            message( STATUS ${XCB_LIBRARIES} )
+            message( STATUS "Using XCB Library" )
         endif( )
 
         target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
     endif()
 endif( )
+
+add_subdirectory( external/vulkan )
+add_subdirectory( external/vma )
+add_subdirectory( external/stb )
+add_subdirectory( external/glm )
+add_subdirectory( external/nlohmann )
+add_subdirectory( external/tinygltf )
+add_subdirectory( external/wmbats_bazaar )
 
 if ( BUILD_TEST )
     message( STATUS "Building unit tests." )
@@ -91,6 +99,7 @@ if( NOT WIN32 )
         PUBLIC 
             ${XCB_LIBRARIES}
             vulkan
+            vma
             stb
             spdlog
             wmbats_bazaar

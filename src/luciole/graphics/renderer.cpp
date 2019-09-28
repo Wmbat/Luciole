@@ -17,10 +17,17 @@
  */
 
 #include <luciole/graphics/renderer.hpp>
+#include <luciole/graphics/vertex.hpp>
 #include <luciole/ui/event.hpp>
 #include <luciole/utilities/log.hpp>
 
 #include <wmbats_bazaar/file_io.hpp>
+
+const std::vector<vertex> vertices = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+};
 
 renderer::renderer( p_context_t p_context, ui::window& wnd )
     :
@@ -345,11 +352,16 @@ void renderer::draw_frame( )
         .pSignalSemaphores = signal_semaphores
     };
 
-    p_context_->submit_queue( 
+    auto submit_result = p_context_->submit_queue( 
         queue::flag_t( queue::flag::e_graphics ), 
         vk::submit_info_t( submit_info ), 
-        vk::fence_t( in_flight_fences[current_frame] ) 
+        vk::fence_t( in_flight_fences[current_frame] )
     );
+
+    if ( submit_result != vk::error::type::e_none )
+    {
+        abort();
+    }
 
     p_context_->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
@@ -669,6 +681,7 @@ std::variant<VkRenderPass, vk::error::type> renderer::create_render_pass( ) cons
 {
     VkAttachmentDescription const colour_attachment
     {
+        .flags = 0,
         .format = swapchain_image_format_,
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -687,6 +700,7 @@ std::variant<VkRenderPass, vk::error::type> renderer::create_render_pass( ) cons
     
     VkSubpassDescription const subpass_description
     {
+        .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
@@ -712,6 +726,8 @@ std::variant<VkRenderPass, vk::error::type> renderer::create_render_pass( ) cons
     VkRenderPassCreateInfo const create_info
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .attachmentCount = 1,
         .pAttachments = &colour_attachment,
         .subpassCount = 1,
@@ -744,6 +760,8 @@ std::variant<VkPipelineLayout, vk::error::type> renderer::create_default_pipelin
     VkPipelineLayoutCreateInfo const create_info 
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .setLayoutCount = 0,
         .pSetLayouts = nullptr,
         .pushConstantRangeCount = 0,
@@ -767,7 +785,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
         .flags = 0,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
         .module = vert_shader,
-        .pName = "main"
+        .pName = "main",
+        .pSpecializationInfo = nullptr
     };
 
     VkPipelineShaderStageCreateInfo frag_shader_stage_create_info
@@ -777,7 +796,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
         .flags = 0,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
         .module = frag_shader,
-        .pName = "main"
+        .pName = "main",
+        .pSpecializationInfo = nullptr
     };
 
     VkPipelineShaderStageCreateInfo shader_stage_create_infos[] = 
@@ -786,15 +806,18 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
         frag_shader_stage_create_info
     };
 
+    auto const binding_description = vertex::get_binding_description();
+    auto const attribute_descriptions = vertex::get_attribute_descriptions();
+
     VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info 
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .vertexBindingDescriptionCount = 0,
-        .pVertexBindingDescriptions = nullptr,
-        .vertexAttributeDescriptionCount = 0,
-        .pVertexAttributeDescriptions = nullptr
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &binding_description,
+        .vertexAttributeDescriptionCount = static_cast<std::uint32_t>(attribute_descriptions.size()),
+        .pVertexAttributeDescriptions = attribute_descriptions.data()
     };
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info 
@@ -825,6 +848,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkPipelineViewportStateCreateInfo viewport_state_create_info 
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .viewportCount = 1,
         .pViewports = &viewport,
         .scissorCount = 1,
@@ -834,6 +859,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkPipelineRasterizationStateCreateInfo rasterization_state_create_info
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .depthClampEnable = VK_FALSE,
         .rasterizerDiscardEnable = VK_FALSE,
         .polygonMode = VK_POLYGON_MODE_FILL,
@@ -849,6 +876,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkPipelineMultisampleStateCreateInfo multisample_state_create_info
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
         .sampleShadingEnable = VK_FALSE,
         .minSampleShading = 1.0f,
@@ -872,6 +901,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkPipelineColorBlendStateCreateInfo colour_blend_state_create_info
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .logicOpEnable = VK_FALSE,
         .logicOp = VK_LOGIC_OP_COPY,
         .attachmentCount = 1,
@@ -887,6 +918,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkPipelineDynamicStateCreateInfo dynamic_state_create_info
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .dynamicStateCount = sizeof ( dynamic_states ) / sizeof ( VkDynamicState ),
         .pDynamicStates = dynamic_states
     };
@@ -894,6 +927,8 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
     VkGraphicsPipelineCreateInfo create_info 
     {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .stageCount = 2,
         .pStages = shader_stage_create_infos,
         .pVertexInputState = &vertex_input_state_create_info,
@@ -902,6 +937,7 @@ std::variant<VkPipeline, vk::error::type> renderer::create_default_pipeline(
         .pViewportState = &viewport_state_create_info,
         .pRasterizationState = &rasterization_state_create_info,
         .pMultisampleState = &multisample_state_create_info,
+        .pDepthStencilState = nullptr,
         .pColorBlendState = &colour_blend_state_create_info,
         .pDynamicState = &dynamic_state_create_info,
         .layout = default_graphics_pipeline_layout_,
@@ -925,6 +961,7 @@ std::variant<VkSemaphore, vk::error::type> renderer::create_semaphore( ) const
     {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = nullptr,
+        .flags = 0
     };
     
     return p_context_->create_semaphore( vk::semaphore_create_info_t( create_info ) );
@@ -951,6 +988,7 @@ std::variant<VkFramebuffer, vk::error::type> renderer::create_framebuffer( vk::i
     VkFramebufferCreateInfo const create_info
     {
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .pNext = nullptr,
         .flags = 0,
         .renderPass = render_pass_,
         .attachmentCount = sizeof( attachments ) / sizeof( VkImageView ),
