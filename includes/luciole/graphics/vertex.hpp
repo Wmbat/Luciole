@@ -22,6 +22,9 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
+#include <array>
+#include <vector>
+
 struct vertex
 {
     glm::vec2 position;

@@ -116,10 +116,11 @@ private:
      * @return std::variant<VkSwapchainKHR, vk::error::type> Type safe union that returns 
      * either the created Swapchain handle or an error code.
      */
-    [[nodiscard]] vk::error_variant<VkSwapchainKHR> create_swapchain( 
+    [[nodiscard]] 
+    std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( 
         VkSurfaceCapabilitiesKHR const& capabilities, 
         VkSurfaceFormatKHR const& format 
-    ) LCL_PURE;
+    ) const PURE;
 
     /**
      * @brief Create a image view object.
@@ -128,9 +129,10 @@ private:
      * @return std::variant<VkImageView, vk::error::type> Type safe union that either returns
      * an image view or an error code.
      */
-    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( 
+    [[nodiscard]] 
+    std::variant<VkImageView, vk::error::type> create_image_view( 
         vk::image_t image 
-    ) LCL_PURE;
+    ) const PURE;
 
     /**
      * @brief Create a render pass object.
@@ -138,7 +140,9 @@ private:
      * @return std::variant<VkRenderPass, vk::error::type> Type safe union that either returns
      * a render pass or an error code.
      */
-    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( ) const;
+    [[nodiscard]] 
+    std::variant<VkRenderPass, vk::error::type> create_render_pass( 
+    ) const PURE;
 
     /**
      * @brief Create a shader module object.
@@ -146,7 +150,10 @@ private:
      * @param filepath The Path to the SPIR-V binary file
      * @return VkShaderModule The shader module generated from the SPIR-V code.
      */
-    [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_const_ref_t filepath ) const;
+    [[nodiscard]] 
+    VkShaderModule create_shader_module( 
+        shader_filepath_const_ref_t filepath 
+    ) const PURE;
 
     /**
      * @brief Create a default pipeline layout object.
@@ -154,7 +161,9 @@ private:
      * @return std::variant<VkPipelineLayout, vk::error::type> Type safe union that either returns a 
      * pipeline layout or an error code.
      */
-    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( ) const;
+    [[nodiscard]] 
+    std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( 
+    ) const PURE;
 
     /**
      * @brief Create a default pipeline object.
@@ -164,10 +173,11 @@ private:
      * @return std::variant<VkPipeline, vk::error::type> Type safe union that either returns a 
      * default graphics pipeline or an error code.
      */
-    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_default_pipeline( 
+    [[nodiscard]] 
+    std::variant<VkPipeline, vk::error::type> create_default_pipeline( 
         vert_shader_filepath_const_ref_t vert_filepath, 
         frag_shader_filepath_const_ref_t frag_filepath 
-    ) const;
+    ) const PURE;
 
     /**
      * @brief Create a semaphore object.
@@ -175,7 +185,9 @@ private:
      * @return std::variant<VkSemaphore, vk::error::type> Type safe union that either returns a
      * semaphore or an error code.
      */
-    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( ) const;
+    [[nodiscard]] 
+    std::variant<VkSemaphore, vk::error::type> create_semaphore( 
+    ) const PURE;
 
     /**
      * @brief Create a fence object.
@@ -183,7 +195,9 @@ private:
      * @return std::variant<VkFence, vk::error::type> Type safe union that either returns a
      * fence or an error code.
      */
-    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( ) const noexcept;
+    [[nodiscard]] 
+    std::variant<VkFence, vk::error::type> create_fence( 
+    ) const PURE;
 
     /**
      * @brief Create a framebuffer object.
@@ -192,23 +206,28 @@ private:
      * @return std::variant<VkFramebuffer, vk::error::type> Type safe union that either returns a
      * framebuffer or an error code.
      */
-    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( 
+    [[nodiscard]] 
+    std::variant<VkFramebuffer, vk::error::type> create_framebuffer( 
         vk::image_view_t image_view 
-    ) const noexcept;
+    ) const PURE;
 
     /**
      * @brief Pick a surface format for the swapchain.
      * 
      * @return VkSurfaceFormatKHR The chosen surface format.
      */
-    [[nodiscard]] VkSurfaceFormatKHR pick_swapchain_format( ) const;
+    [[nodiscard]]
+    VkSurfaceFormatKHR pick_swapchain_format(
+    ) const PURE;
 
     /**
      * @brief Pick a surface present mode for the swapchain.
      * 
      * @return VkPresentModeKHR The chosen present mode.
      */
-    [[nodiscard]] VkPresentModeKHR pick_swapchain_present_mode( ) const;
+    [[nodiscard]]
+    VkPresentModeKHR pick_swapchain_present_mode(
+    ) const PURE;
 
     /**
      * @brief Pick a extent supported by the surface for the
@@ -219,7 +238,7 @@ private:
      */
     [[nodiscard]] VkExtent2D pick_swapchain_extent( 
         VkSurfaceCapabilitiesKHR const& capabilities 
-    ) const;
+    ) const PURE;
     
 private:
     static constexpr int MAX_FRAMES_IN_FLIGHT_ = 2;

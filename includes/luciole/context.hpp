@@ -16,9 +16,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* HEADER GUARDS */
 #ifndef LUCIOLE_CONTEXT_HPP
 #define LUCIOLE_CONTEXT_HPP
 
+/* INCLUDES */
 #include <luciole/luciole_core.hpp>
 #include <luciole/ui/window.hpp>
 #include <luciole/vk/core.hpp>
@@ -36,15 +38,10 @@
 #include <unordered_map>
 #include <variant>
 
-#if defined( NDEBUG )
-    static constexpr bool enable_debug_layers = false;
-#else
-    static constexpr bool enable_debug_layers = true;
-#endif
-
-struct queue;
-struct command_pool;
-
+/**
+ * @brief A Vulkan context to handle all
+ * base vulkan object.
+ */
 class context
 {
 private:
@@ -54,6 +51,9 @@ private:
         queue::flag flags_ = queue::flag::e_none;
     };
 
+    using command_pools_container_t = std::unordered_map<std::uint32_t, context::command_pool>;
+
+    /* STRONG TYPES */
     struct extensions_parameter{ };
     using extensions_t = strong_type<std::vector<vk::extension>, extensions_parameter>;
 
@@ -69,64 +69,376 @@ private:
     struct queue_properties_parameter{ };
     using queue_properties_t = strong_type<std::vector<VkQueueFamilyProperties>, queue_properties_parameter>;
 
-    using command_pools_container_t = std::unordered_map<std::uint32_t, context::command_pool>;
-
 public:
+    /**
+     * @brief Default Constructor.
+     */
     context( ) = default;
+    /**
+     * @brief Constructor.
+     */
     explicit context( const ui::window& wnd );
+    /**
+     * @brief Delete Copy Constructor.
+     */
     context( const context& other ) = delete;
+    /**
+     * @brief Move Constructor.
+     */
     context( context&& other );
+    /**
+     * @brief Destructor.
+     */
     ~context( );
-
+    
+    /**
+     * @brief Deleted Copy Assigment Operator.
+     */
     context& operator=( context const& rhs ) = delete;
+    
+    /**
+     * @brief Move Assigment Operator.
+     */
     context& operator=( context&& rhs );
+   
+    /**
+     * @brief Create and fill all info that the context
+     * can fill in a SwapchainCreateInfo struct.
+     *
+     * @return The partially filled struct
+     */
+    [[nodiscard]]
+    VkSwapchainCreateInfoKHR swapchain_create_info( 
+    ) const noexcept PURE;
     
-    [[nodiscard]] VkSwapchainCreateInfoKHR swapchain_create_info( ) LCL_PURE;
+    /**
+     * @brief Create a swapchain.
+     *
+     * @param create_info The information required to create
+     * the swapchain.
+     * @return Either a handle to the newly created 
+     * swapchain or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( 
+        vk::swapchain_create_info_t const& create_info 
+    ) const PURE;
     
-    [[nodiscard]] vk::error_variant<VkSwapchainKHR> create_swapchain( vk::swapchain_create_info_t const &create_info ) LCL_PURE;
-
-    void destroy_swapchain( vk::swapchain_t swapchain ) const noexcept;
+    /**
+     * @brief Destroy a swapchain.
+     *
+     * @param swapchain The handle to the swapchain.
+     */
+    void destroy_swapchain( 
+        vk::swapchain_t swapchain 
+    ) const noexcept PURE;
+   
+    /**
+     * @brief Create an image view.
+     *
+     * @param create_info The information required to create the
+     * image view.
+     * @return Either a handle to the newly created image view or
+     * an error code explaining why the creation failed.
+     */
+    [[nodiscard]]
+	std::variant<VkImageView, vk::error::type> create_image_view( 
+        vk::image_view_create_info_t const& create_info
+    ) const noexcept PURE;
+   
+    /**
+     * @brief Destroy an image view.
+     *
+     * @param image_view The handle to the image view. 
+     */
+    void destroy_image_view( 
+        vk::image_view_t image_view 
+    ) const noexcept PURE;
+   
+    /**
+     * @brief Create a render pass.
+     *
+     * @param create_info The information required for the creation
+     * of the render pass.
+     * @return Either a handle to the newly created render pass or
+     * an error code explaining why the creation failed.
+     */
+    [[nodiscard]] 
+    std::variant<VkRenderPass, vk::error::type> create_render_pass( 
+        vk::render_pass_create_info_t const& create_info 
+    ) const noexcept PURE;
     
-    [[nodiscard]] std::variant<VkImageView, vk::error::type> create_image_view( vk::image_view_create_info_t const& create_info ) const noexcept;
-    void destroy_image_view( vk::image_view_t image_view ) const noexcept;
+    /**
+     * @brief Destroy a render pass.
+     *
+     * @param render_pass The handle to the render pass.
+     */
+    void destroy_render_pass( 
+        vk::render_pass_t render_pass 
+    ) const noexcept PURE;
+   
+    /**
+     * @brief Create a pipeline layout.
+     *
+     * @param create_info The information required to create the
+     * pipeline layout.
+     * @return Either a handle to the newly created pipeline layout
+     * or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkPipelineLayout, vk::error::type> create_pipeline_layout( 
+        vk::pipeline_layout_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a pipeline layout.
+     *
+     * @param pipeline_layout The handle to the pipeline
+     * layout.
+     */
+    void destroy_pipeline_layout( 
+        vk::pipeline_layout_t pipeline_layout 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a graphics pipeline.
+     *
+     * @param create_info The information required to create the
+     * graphics pipeline.
+     * @return Either a handle to the newly created graphics
+     * pipeline or an error code.
+     */
+    [[nodiscard]]
+    std::variant<VkPipeline, vk::error::type> create_pipeline(
+        vk::graphics_pipeline_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a compute pipeline.
+     *
+     * @param create_info The information required to create the
+     * compute pipeline.
+     * @return Either a handle to the newly created compute
+     * pipeline or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkPipeline, vk::error::type> create_pipeline(
+        vk::compute_pipeline_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a pipeline.
+     *
+     * @param pipeline The handle to the pipeline.
+     */
+    void destroy_pipeline(
+        vk::pipeline_t pipeline 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a shader module.
+     *
+     * @param create_info The information required to create
+     * a shader module.
+     * @return A handle to the newly created shader module.
+     */
+    [[nodiscard]]
+    VkShaderModule create_shader_module( 
+        vk::shader_module_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a shader module.
+     *
+     * @param shader_module The handle to the shader module.
+     */
+    void destroy_shader_module( 
+        vk::shader_module_t shader_module 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a framebuffer.
+     *
+     * @param create_info The information required to create the
+     * framebuffer.
+     * @return Either a handle to the newly create framebuffer or
+     * an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkFramebuffer, vk::error::type> create_framebuffer( 
+        vk::framebuffer_create_info_t const& create_info
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a framebuffer.
+     *
+     * @param framebuffer The handle to the framebuffer.
+     */
+    void destroy_framebuffer( 
+        vk::framebuffer_t framebuffer 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a semaphore.
+     *
+     * @param create_info The information required to create
+     * the semphore.
+     * @return Either a handle to the newly created semaphore
+     * or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkSemaphore, vk::error::type> create_semaphore( 
+        vk::semaphore_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a semaphore.
+     *
+     * @param semaphore The handle to the semaphore.
+     */
+    void destroy_semaphore( 
+        vk::semaphore_t semaphore 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create a fence.
+     *
+     * @param create_info The information required to
+     * create a fence.
+     * @return Either a handle to the newly create fence
+     * or an error code.
+     */
+    [[nodiscard]]
+    std::variant<VkFence, vk::error::type> create_fence( 
+        vk::fence_create_info_t const& create_info 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Destroy a fence.
+     *
+     * @param The handle to the fence.
+     */
+    void destroy_fence( 
+        vk::fence_t fence 
+    ) const noexcept PURE;
+
+    /**
+     * @brief Create an array of command buffers.
+     *
+     * @param flag The queue the command buffer should
+     * be associated with.
+     * @param buffer_count The number of command buffers
+     * to create.
+     * @return Either a vector of handle to the newly created 
+     * command buffers or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<std::vector<VkCommandBuffer>, vk::error::type> create_command_buffers( 
+        queue::flag_t flag, 
+        count32_t buffer_count 
+    ) const PURE;
+
+    /**
+     * @brief Get the swapchain images from the swapchain.
+     *
+     * @param swapchain The swapchain to get the images from.
+     * @param image_count The number of images we want.
+     * @return Either a vector of image handles to the images
+     * or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<std::vector<VkImage>, vk::error::type> get_swapchain_images( 
+        vk::swapchain_t swapchain, 
+        count32_t image_count 
+    ) const PURE;
+   
+    /**
+     * @brief Get the surface capabilities.
+     */
+    [[nodiscard]]
+    VkSurfaceCapabilitiesKHR get_surface_capabilities( 
+    ) const noexcept PURE;
     
-    [[nodiscard]] std::variant<VkRenderPass, vk::error::type> create_render_pass( vk::render_pass_create_info_t const& create_info ) const noexcept;
-    void destroy_render_pass( vk::render_pass_t render_pass ) const noexcept;
+    /**
+     * @brief Find all the queue family indices used in the context.
+     * 
+     * @return std::vector<std::uint32_t> A vector containing all the unique family indices.
+     */
+    [[nodiscard]] 
+    std::vector<std::uint32_t> get_unique_family_indices( 
+    ) const PURE;
+
+    /**
+     * @brief Get all the formats supported by the surface.
+     *
+     * @return The supported formats.
+     */
+    [[nodiscard]] 
+    std::vector<VkSurfaceFormatKHR> get_surface_format( 
+    ) const PURE;
     
-    [[nodiscard]] std::variant<VkPipelineLayout, vk::error::type> create_pipeline_layout( vk::pipeline_layout_create_info_t const& create_info ) const noexcept;
-    void destroy_pipeline_layout( vk::pipeline_layout_t pipeline_layout ) const noexcept;
+    /**
+     * @brief Get all the present modes supported by the
+     *
+     * @return the available present modes.
+     */
+    [[nodiscard]] 
+    std::vector<VkPresentModeKHR> get_present_modes( 
+    ) const PURE;
 
-    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_pipeline( vk::graphics_pipeline_create_info_t const& create_info ) const noexcept;
-    [[nodiscard]] std::variant<VkPipeline, vk::error::type> create_pipeline( vk::compute_pipeline_create_info_t const& create_info ) const noexcept;
-    void destroy_pipeline( vk::pipeline_t pipeline ) const noexcept;
+    /**
+     * @brief Get the window extent.
+     */
+    [[nodiscard]] 
+    VkExtent2D get_window_extent( ) const PURE;
 
-    [[nodiscard]] VkShaderModule create_shader_module( vk::shader_module_create_info_t const& create_info ) const noexcept;
-    void destroy_shader_module( vk::shader_module_t shader_module ) const noexcept;
+    /**
+     * @brief Submit a queue.
+     *
+     * @param flag The flags to submit with the queue.
+     * @param submit_info The information needed to submit
+     * the queue
+     * @param fence A fence for synchronization.
+     * @return Returns the status of the operation.
+     */
+    [[nodiscard]] 
+    vk::error::type submit_queue( 
+        queue::flag_t flag, 
+        vk::submit_info_t const& submit_info, 
+        vk::fence_t fence 
+    ) const noexcept PURE;
 
-    [[nodiscard]] std::variant<VkFramebuffer, vk::error::type> create_framebuffer( vk::framebuffer_create_info_t const& create_info ) const noexcept;
-    void destroy_framebuffer( vk::framebuffer_t framebuffer ) const noexcept;
+    /**
+     * @brief Present a queue.
+     *
+     * @param flag The flags to submit the queue with.
+     * @param present_info The information required to 
+     * present the queue.
+     * @return The status of the operation.
+     */
+    [[nodiscard]] 
+    vk::error::type present_queue( 
+        queue::flag_t flag, 
+        vk::present_info_t const& present_info 
+    ) const noexcept PURE;
 
-    [[nodiscard]] std::variant<VkSemaphore, vk::error::type> create_semaphore( vk::semaphore_create_info_t const& create_info ) const noexcept;
-    void destroy_semaphore( vk::semaphore_t semaphore ) const noexcept;
+    /**
+     * @brief Wait for a fence.
+     *
+     * @param fence The handle to the fence.
+     */
+    void wait_for_fence( 
+        vk::fence_t fence 
+    ) const noexcept PURE;
 
-    [[nodiscard]] std::variant<VkFence, vk::error::type> create_fence( vk::fence_create_info_t const& create_info ) const noexcept;
-    void destroy_fence( vk::fence_t fence ) const noexcept;
-
-    [[nodiscard]] std::variant<std::vector<VkCommandBuffer>, vk::error::type> create_command_buffers( queue::flag_t flag, count32_t buffer_count ) const;
-
-    [[nodiscard]] std::variant<std::vector<VkImage>, vk::error::type> get_swapchain_images( vk::swapchain_t swapchain, count32_t image_count ) const;
-    
-    [[nodiscard]] VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept;
-    
-    [[nodiscard]] std::vector<VkSurfaceFormatKHR> get_surface_format( ) const;
-    [[nodiscard]] std::vector<VkPresentModeKHR> get_present_modes( ) const;
-    [[nodiscard]] VkExtent2D get_window_extent( ) const;
-
-    [[nodiscard]] vk::error::type submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept;
-    [[nodiscard]] vk::error::type present_queue( queue::flag_t, vk::present_info_t const& present_info ) const noexcept;
-
-    void wait_for_fence( vk::fence_t fence ) const noexcept;
-    void reset_fence( vk::fence_t fence ) const noexcept;
+    /**
+     * @brief Reset a fence.
+     *
+     * @param fence The handle to the fence.
+     */
+    void reset_fence( 
+        vk::fence_t fence 
+    ) const noexcept PURE;
 
     //TODO: Fix this
     VkDevice get( ) const
@@ -135,34 +447,137 @@ public:
     }
 
 private:
+    /**
+     * @brief Load all the validation layers.
+     */
     [[nodiscard]] std::vector<vk::layer> load_validation_layers( ) const;
+    
+    /**
+     * @brief Load all the instance extensions
+     */
     [[nodiscard]] std::vector<vk::extension> load_instance_extensions( ) const;
+
+    /**
+     * @brief Load all the device extensions.
+     */
     [[nodiscard]] std::vector<vk::extension> load_device_extensions( ) const;
 
+    /**
+     * @brief Find all the validation layers supported by
+     * the instance.
+     */
     [[nodiscard]] std::vector<std::string> check_layer_support( const layers_t& layers ) const;
+
+    /**
+     * @brief Find all the extension that are supported.
+     */
     [[nodiscard]] std::vector<std::string> check_ext_support( const extensions_t& extensions ) const;
 
-    [[nodiscard]] std::variant<VkInstance, vk::error::type> create_instance( 
+    /**
+     * @brief Create an instance.
+     *
+     * @param app_info Informatio about the application.
+     * @param enabled_ext_name The names of the extensions
+     * we want to enable.
+     * @param enabled_layer_names The names of the validation
+     * layers we want to enable.
+     * @return A handle to the newly created instance or an
+     * error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkInstance, vk::error::type> create_instance( 
         VkApplicationInfo const& app_info, 
         extension_names_t const& enabled_ext_name, 
         layer_names_t const& enabled_layer_names 
-    ) const;
-
-    [[nodiscard]] std::variant<VkDebugUtilsMessengerEXT, vk::error::type> create_debug_messenger( ) const;
-    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> create_surface( ui::window const& wnd ) const;
-    [[nodiscard]] std::variant<VkPhysicalDevice, vk::error::type> pick_gpu( ) const;
+    ) const PURE;
     
-    [[nodiscard]] std::variant<VkDevice, vk::error::type> create_device( 
+    /**
+     * @brief Create a debug messenger.
+     *
+     * @return The handle to the newly created debug messenger
+     * or an erro code.
+     */
+    [[nodiscard]] 
+    std::variant<VkDebugUtilsMessengerEXT, vk::error::type> create_debug_messenger( 
+    ) const PURE;
+
+    /**
+     * @brief Create a surface.
+     *
+     * @param wnd The window we create the surface
+     * from.
+     * @return The handle to the newly created surface handle 
+     * or an error code
+     */
+    [[nodiscard]] 
+    std::variant<VkSurfaceKHR, vk::error::type> create_surface( 
+        ui::window const& wnd 
+    ) const PURE;
+    
+    /**
+     * @brief Pick which gpu to use.
+     *
+     * @return The handle to the selected gpu or
+     * an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkPhysicalDevice, vk::error::type> pick_gpu(
+    ) const PURE;
+   
+    /**
+     * @brief Create a logical device.
+     * 
+     * @param enabled_ext_names The names of the enabled extensions
+     * we want to use.
+     * @param queue_properties The properties of the queue families
+     * supported by the gpu.
+     * @return Either a handle to the newly cerated logical device
+     * or an error code.
+     */
+    [[nodiscard]] 
+    std::variant<VkDevice, vk::error::type> create_device( 
         extension_names_t const& enabled_ext_name, 
         queue_properties_t const& queue_properties 
-    ) const; 
+    ) const PURE; 
 
-    [[nodiscard]] std::unordered_map<queue::flag, queue> get_queues( const queue_properties_t& queue_properties ) const;
-    [[nodiscard]] std::variant<command_pools_container_t, vk::error::type> create_command_pools( ) const;
+    /**
+     * @brief Get an unordered_map of queues.
+     *
+     * @return The unordered_map of queues.
+     */
+    [[nodiscard]] 
+    std::unordered_map<queue::flag, queue> get_queues( 
+        queue_properties_t const& queue_properties 
+    ) const PURE;
+   
+    /**
+     * @brief Create a unordered_map of command pools.
+     *
+     * @return Either the unordered_map of command pools or 
+     * an error code.
+     */
+    [[nodiscard]] 
+    std::variant<command_pools_container_t, vk::error::type> create_command_pools( 
+    ) const PURE;
 
-    int rate_gpu( const VkPhysicalDevice gpu ) const;
+    /**
+     * @brief Rate a gpu based on what it is capable
+     * of doing and what it supports.
+     *
+     * @param gpu The handle to the gpu.
+     * @return The rating given to the gpu.
+     */
+    int rate_gpu( 
+        vk::physical_device_t const gpu 
+    ) const PURE;
 
-    std::vector<VkQueueFamilyProperties> query_queue_family_properties( ) const;
+    /**
+     * @brief Retrieve the properties of the queue families.
+     *
+     * @return An array of VkQueueFamilyProperties
+     */
+    std::vector<VkQueueFamilyProperties> query_queue_family_properties( 
+    ) const PURE;
 
 private:
     glm::u32vec2 wnd_size_;

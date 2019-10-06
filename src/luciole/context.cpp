@@ -111,7 +111,7 @@ context::context( const ui::window& wnd )
     instance_extensions_ = load_instance_extensions( );
 
     auto const layer_names = check_layer_support( layers_t( validation_layers_ ) );
-    if constexpr( enable_debug_layers )
+    if constexpr( vk::enable_debug_layers )
     {
         if ( layer_names.empty( ) )
         {
@@ -160,7 +160,7 @@ context::context( const ui::window& wnd )
     /*
      *  Check for any errors on the debug utils messenger creation.
      */ 
-    if constexpr ( enable_debug_layers )
+    if constexpr ( vk::enable_debug_layers )
     {
         if ( auto res = create_debug_messenger( ); auto p_val = std::get_if<VkDebugUtilsMessengerEXT>( &res ) )
         {
@@ -272,7 +272,7 @@ context::~context( )
         surface_ = VK_NULL_HANDLE;
     }
 
-    if constexpr ( enable_debug_layers )
+    if constexpr ( vk::enable_debug_layers )
     {
         if ( debug_messenger_ != VK_NULL_HANDLE )
         {
@@ -283,11 +283,13 @@ context::~context( )
 
     if ( instance_ != VK_NULL_HANDLE )
     {
-        vkDestroyInstance( instance_, nullptr );
         instance_ = VK_NULL_HANDLE;
     }
 }
 
+/**
+ * @brief Move Assigmnent Operator.
+ */
 context& context::operator=( context&& rhs )
 {
     if ( this != &rhs )
@@ -310,7 +312,7 @@ context& context::operator=( context&& rhs )
     return *this;
 }
 
-VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const
+VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
 {
     auto create_info = VkSwapchainCreateInfoKHR{};
     create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -321,7 +323,7 @@ VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const
     return create_info;
 }
 
-vk::error_variant<VkSwapchainKHR> context::create_swapchain( vk::swapchain_create_info_t const& create_info ) const
+std::variant<VkSwapchainKHR, vk::error::type> context::create_swapchain( vk::swapchain_create_info_t const& create_info ) const
 {
     VkSwapchainKHR handle = VK_NULL_HANDLE;
  
@@ -578,6 +580,31 @@ VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
     return capabilities;
 }
 
+std::vector<std::uint32_t> context::get_unique_family_indices( ) const
+{
+    std::vector<std::uint32_t> indices;
+    indices.reserve( queues_.size() );
+
+    for( auto const& queue : queues_ )
+    {
+        bool insert = true;
+        for( auto index : indices )
+        {
+            if ( queue.second.get_family_index( ) == index )
+            {
+                insert = false;
+            }
+        }
+
+        if ( insert )
+        {
+            indices.push_back(  queue.second.get_family_index() );
+        }
+    }
+
+    return indices;
+}
+
 std::vector<VkSurfaceFormatKHR> context::get_surface_format( ) const
 {
     std::uint32_t format_count = 0;
@@ -637,7 +664,7 @@ void context::reset_fence( vk::fence_t fence ) const noexcept
 
 std::vector<vk::layer> context::load_validation_layers( ) const
 {
-    if constexpr( enable_debug_layers )
+    if constexpr( vk::enable_debug_layers )
     {
         std::vector<vk::layer> layers =
         {
@@ -792,7 +819,7 @@ std::variant<VkInstance, vk::error::type> context::create_instance(
         extensions[i] = enabled_ext_name.value_[i].c_str( );
     }
 
-    if constexpr ( enable_debug_layers )
+    if constexpr ( vk::enable_debug_layers )
     {
         const VkInstanceCreateInfo create_info 
         {
@@ -894,7 +921,7 @@ std::variant<VkPhysicalDevice, vk::error::type> context::pick_gpu( ) const
 
     for( size_t i = 0; i < physical_device_count; ++i )
     {
-        std::uint32_t rating = rate_gpu( physical_devices[i] );
+        std::uint32_t rating = rate_gpu( vk::physical_device_t( physical_devices[i] ) );
         candidates.insert( { rating, physical_devices[i] } );
     }
 
@@ -1119,12 +1146,14 @@ std::variant<context::command_pools_container_t, vk::error::type> context::creat
     return command_pools;
 }
 
-int context::rate_gpu( const VkPhysicalDevice gpu ) const
+int context::rate_gpu( vk::physical_device_t const gpu ) const
 {
+    assert( gpu.value_ != nullptr  && "GPU handle is nullptr.");
+
     std::uint32_t properties_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, nullptr );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value_, &properties_count, nullptr );
     VkQueueFamilyProperties* queue_family_properties = reinterpret_cast<VkQueueFamilyProperties*>( alloca( sizeof( VkQueueFamilyProperties ) * properties_count ) );
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, queue_family_properties );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value_, &properties_count, queue_family_properties );
 
     bool is_rendering_capable = false;
     for( size_t i = 0; i < properties_count; ++i )
@@ -1132,7 +1161,7 @@ int context::rate_gpu( const VkPhysicalDevice gpu ) const
         if ( queue_family_properties[i].queueCount > 0 )
         {
             VkBool32 surface_support = VK_FALSE;
-            vkGetPhysicalDeviceSurfaceSupportKHR( gpu, i, surface_, &surface_support );
+            vkGetPhysicalDeviceSurfaceSupportKHR( gpu.value_, i, surface_, &surface_support );
 
             if ( ( queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) && ( surface_support == VK_TRUE ) )
             {
@@ -1145,13 +1174,13 @@ int context::rate_gpu( const VkPhysicalDevice gpu ) const
         return 0;
 
     std::uint32_t surface_format_count = 0;
-    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu, surface_, &surface_format_count, nullptr );
+    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu.value_, surface_, &surface_format_count, nullptr );
 
     if ( surface_format_count == 0 )
         return 0;
 
     std::uint32_t present_mode_count = 0;
-    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu, surface_, &present_mode_count, nullptr );
+    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu.value_, surface_, &present_mode_count, nullptr );
 
     if ( present_mode_count == 0 )
         return 0;
@@ -1159,7 +1188,7 @@ int context::rate_gpu( const VkPhysicalDevice gpu ) const
     std::uint32_t score = 0;
 
     VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties( gpu, &properties );
+    vkGetPhysicalDeviceProperties( gpu.value_, &properties );
 
     if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
     {

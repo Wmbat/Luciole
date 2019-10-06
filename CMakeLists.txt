@@ -25,6 +25,11 @@ if( NOT CMAKE_BUILD_TYPE )
 endif( )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
+set( GNU_FLAGS "-std=c++2a" )
+set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer" )
+set( GNU_RELEASE_FLAGS "-o3" )
 
 add_library( Luciole SHARED )
 
@@ -34,24 +39,15 @@ set_target_properties( Luciole PROPERTIES
 )
 
 target_compile_options( Luciole 
-    PUBLIC
+    PRIVATE
         $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
-        $<$<CXX_COMPILER_ID:GNU>:-std=c++2a>
+        $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
         $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
-# Set Flags
-        $<$<CXX_COMPILER_ID:GNU>:-fconcepts>
 # Set Debug Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
-        $<$<AND:$<CXX_COMPILER_ID:GUN>,$<CONFIG:DEBUG>>:-g>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wextra>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wold-style-cast>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wdouble-promotion>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Werror>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
 # Set Release Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
 )
 
 if( WIN32 )
@@ -130,6 +126,7 @@ target_sources( Luciole
         "src/luciole/graphics/renderer.cpp"
         "src/luciole/threads/thread_pool.cpp"
         "src/luciole/ui/window.cpp"
+        "src/luciole/vk/buffers/vertex_buffer.cpp"
         "src/luciole/vk/queue.cpp"
         "src/luciole/context.cpp"
 )

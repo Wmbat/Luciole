@@ -127,8 +127,10 @@ public:
      * @param instance The Vulkan instance used for the creation of the VkSurfaceKHR.
      * @return std::variant<VkSurfaceKHR, vk::error::type> 
      */
-    [[nodiscard]] std::variant<VkSurfaceKHR, vk::error::type> 
-    create_surface( vk::instance_t instance ) LCL_PURE;
+    [[nodiscard]] 
+    std::variant<VkSurfaceKHR, vk::error::type> create_surface( 
+        vk::instance_t instance 
+    ) const PURE;
 
     /**
      * @brief Add a callback function to be called when a key event is triggered. 
@@ -195,7 +197,8 @@ public:
         framebuffer_resize_event_.add_callback( callback );
     }
 
-    [[nodiscard]] glm::uvec2 get_size() LCL_PURE;
+    [[nodiscard]] 
+    glm::uvec2 get_size() const PURE;
 
 private:
     std::string title_;

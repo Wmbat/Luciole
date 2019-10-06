@@ -29,6 +29,12 @@ const std::vector<vertex> vertices = {
     {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 };
 
+/**
+ * @brief Construct a new renderer object.
+ * 
+ * @param p_context Pointer to a context object.
+ * @param wnd Reference to a window object.
+ */
 renderer::renderer( p_context_t p_context, ui::window& wnd )
     :
     p_context_( p_context.value_ )
@@ -209,6 +215,10 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
 
     record_command_buffers( );
 }
+
+/**
+ * @brief Deleted copy constructor.
+ */
 renderer::renderer( renderer&& rhs )
 {
     *this = std::move( rhs );
@@ -622,7 +632,7 @@ void renderer::record_command_buffers( )
     }
 }
 
-vk::error_variant<VkSwapchainKHR> renderer::create_swapchain( 
+std::variant<VkSwapchainKHR, vk::error::type> renderer::create_swapchain( 
     VkSurfaceCapabilitiesKHR const& capabilities, 
     VkSurfaceFormatKHR const& format ) const 
 {
@@ -967,7 +977,7 @@ std::variant<VkSemaphore, vk::error::type> renderer::create_semaphore( ) const
     return p_context_->create_semaphore( vk::semaphore_create_info_t( create_info ) );
 }
 
-std::variant<VkFence, vk::error::type> renderer::create_fence( ) const noexcept
+std::variant<VkFence, vk::error::type> renderer::create_fence( ) const
 {
     VkFenceCreateInfo const create_info 
     {
@@ -979,7 +989,7 @@ std::variant<VkFence, vk::error::type> renderer::create_fence( ) const noexcept
     return p_context_->create_fence( vk::fence_create_info_t( create_info ) );
 }
 
-std::variant<VkFramebuffer, vk::error::type> renderer::create_framebuffer( vk::image_view_t image_view ) const noexcept
+std::variant<VkFramebuffer, vk::error::type> renderer::create_framebuffer( vk::image_view_t image_view ) const
 {
     VkImageView attachments[] = {
         image_view.value_

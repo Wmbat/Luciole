@@ -27,13 +27,10 @@
 #define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
 
 #if defined (GCC_COMPILER)
-    #define LCL_PURE const __attribute__ ((pure))
-    #define LCL_PURE_NOEXCEPT const noexcept __attribute__ ((pure))
+    #define PURE __attribute__ ((pure))
 #else
-    #define LCL_PURE const
-    #define LCL_PURE_NOEXCEPT const noexcept
+    #define PURE 
 #endif
-
 
 #include "utilities/log.hpp"
 
