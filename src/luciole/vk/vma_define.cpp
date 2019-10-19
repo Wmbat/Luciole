@@ -16,6 +16,5 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/context.hpp>
-#include <luciole/graphics/renderer.hpp>
-#include <luciole/ui/window.hpp>
+#define VMA_IMPLEMENTATION
+#include <vma/vk_mem_alloc.h>

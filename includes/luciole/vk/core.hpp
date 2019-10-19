@@ -21,9 +21,9 @@
 
 /* INCLUDES */
 #include <luciole/strong_types.hpp>
-#include <luciole/vk/errors.hpp>
 
 #include <vulkan/vulkan.h>
+#include <vma/vk_mem_alloc.h>
 
 #include <variant>
 
@@ -66,6 +66,7 @@ namespace vk
     using semaphore_create_info_t = strong_type<VkSemaphoreCreateInfo const&, default_param>;
     using fence_t = strong_type<VkFence, default_param>;
     using fence_create_info_t = strong_type<VkFenceCreateInfo const&, default_param>;
+    using result_t = strong_type<VkResult, default_param>;
 }
 
 #endif // LUCIOLE_VULKAN_CORE_HPP

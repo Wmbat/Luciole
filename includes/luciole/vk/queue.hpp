@@ -19,6 +19,7 @@
 #ifndef LUCIOLE_VULKAN_QUEUE_HPP
 #define LUCIOLE_VULKAN_QUEUE_HPP
 
+#include <luciole/luciole_core.hpp>
 #include <luciole/utilities/enum_operators.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/errors.hpp>
@@ -26,41 +27,60 @@
 class queue
 {
 private:
-    struct param { };
-    struct index_param { };
-    struct family_index_param { };
+   struct param { };
+   struct index_param { };
+   struct family_index_param { };
 
 public:
-    enum class flag
-    {
-        e_none      = 0,
-        e_graphics  = 1 << 1,
-        e_transfer  = 1 << 2,
-        e_compute   = 1 << 3
-    };
+   enum class flag
+   {
+       e_none      = 0,
+       e_graphics  = 1 << 1,
+       e_transfer  = 1 << 2,
+       e_compute   = 1 << 3
+   };
 
-    using flag_t = strong_type<flag, param>;
-    using index_t = strong_type<std::uint32_t, index_param>;
-    using family_index_t = strong_type<std::uint32_t, family_index_param>;
+   using flag_t = strong_type<flag, param>;
+   using index_t = strong_type<std::uint32_t, index_param>;
+   using family_index_t = strong_type<std::uint32_t, family_index_param>;
 
 public:
-    queue( ) = default;
-    queue( vk::device_t device, family_index_t family_index, index_t index );
-    queue( queue const& rhs ) = delete;
-    queue( queue && rhs );
+   queue( ) = default;
+   queue( vk::device_t device, family_index_t family_index, index_t index );
+   queue( queue const& rhs ) = delete;
+   queue( queue && rhs );
 
-    queue& operator=( queue const& rhs ) = delete;
-    queue& operator=( queue && rhs );
+   queue& operator=( queue const& rhs ) = delete;
+   queue& operator=( queue && rhs );
 
-    [[nodiscard]] vk::error::type submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept;
-    [[nodiscard]] vk::error::type present( vk::present_info_t info ) const noexcept;
+   /**
+    * @brief Wait for the queue to finish a task.
+    *
+    * @return The result of the operation.
+    */
+   [[nodiscard]] 
+   vk::error wait_idle( 
+   ) const noexcept PURE;
 
-    [[nodiscard]] std::uint32_t get_family_index( ) const noexcept;
+   [[nodiscard]] 
+   vk::error submit( 
+      vk::submit_info_t info, 
+      vk::fence_t fence 
+   ) const noexcept PURE;
+   
+   [[nodiscard]]
+   vk::error present( 
+      vk::present_info_t info 
+   ) const noexcept PURE;
+
+   [[nodiscard]] 
+   std::uint32_t get_family_index( 
+   ) const noexcept PURE;
 
 private:
-    VkQueue handle_  = VK_NULL_HANDLE;
-    std::uint32_t family_index_ = 0;
-    std::uint32_t index_ = 0;
+   VkQueue handle_  = VK_NULL_HANDLE;
+   std::uint32_t family_index_ = 0;
+   std::uint32_t index_ = 0;
 };
 
 ENABLE_BITMASK_OPERATORS( queue::flag );

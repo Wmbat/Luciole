@@ -32,8 +32,6 @@
     #define PURE 
 #endif
 
-#include "utilities/log.hpp"
-
 constexpr auto cache_line = std::size_t{ 64 };
 
 static constexpr uint32_t kilobyte = 1024;

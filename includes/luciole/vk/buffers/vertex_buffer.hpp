@@ -19,45 +19,66 @@
 #ifndef LUCIOLE_VK_BUFFERS_VERTEX_BUFFER_HPP
 #define LUCIOLE_VK_BUFFERS_VERTEX_BUFFER_HPP
 
+#include <luciole/context.hpp>
 #include <luciole/strong_types.hpp>
 #include <luciole/graphics/vertex.hpp>
 #include <luciole/vk/queue.hpp>
 
 #include <vulkan/vulkan.h>
-#include <vma/vk_mem_alloc.h>
 
 namespace vk
 {
-    class vertex_buffer
-    {
-    public:
-        struct create_info;
-        using create_info_cref_t = strong_type<create_info const&>;
+   /**
+    * @brief A class that contains all the information
+    * for vulkan vertex buffers.
+    */
+   class vertex_buffer
+   {
+   public:
+      struct create_info
+      {
+         context const* p_context = nullptr;
 
-    public:
-        vertex_buffer( ) = default;
-        vertex_buffer( create_info_cref_t create_info );
+         VmaAllocator memory_allocator = VK_NULL_HANDLE;
 
-    private:
-        VmaAllocator memory_allocator_;
-        VmaAllocation memory_allocation_;
+         std::vector<std::uint32_t> family_indices = {};
+         std::vector<vertex> vertices = {};
+      }; // struct create_info
+      
+      using create_info_t = strong_type<create_info const&>;
 
-        VkBuffer buffer_;
+   public:
+      /**
+       * @brief Default constructor.
+       */
+      vertex_buffer( ) = default;
+      /**
+       * @brief Constructor.
+       */
+      vertex_buffer( create_info_t const& create_info );
 
-    public:
-        struct create_info
-        {
-            VmaAllocator memory_allocator = VK_NULL_HANDLE;
-            VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-            
-            queue* p_queue;
-            
-            std::vector<std::uint32_t> family_indices; 
-            std::vector<vertex> vertices_;
-        };
-    };
+      vertex_buffer( vertex_buffer const& rhs ) = delete;
+
+      vertex_buffer( vertex_buffer&& rhs );
+
+      ~vertex_buffer();
+
+      vertex_buffer& operator=( vertex_buffer const& rhs ) = delete;
+
+      vertex_buffer& operator=( vertex_buffer&& rhs );
+
+      [[nodiscard]]
+      inline VkBuffer get_buffer(
+      ) const PURE
+      {
+         return buffer_;
+      }
+
+   private: 
+      VmaAllocator memory_allocator_;
+      VmaAllocation memory_allocation_;
+      VkBuffer buffer_;
+   }; // class vertex_buffer
 } // namespace vk
-
-
 
 #endif // LUCIOLE_VK_BUFFERS_VERTEX_BUFFER_HPP

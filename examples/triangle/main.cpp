@@ -20,8 +20,6 @@
 
 int main( )
 {
-    lcl::init();
-
     ui::window::create_info const create_info 
     {
         .title = "Simple Triangle Example",

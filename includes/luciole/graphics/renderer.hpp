@@ -21,6 +21,7 @@
 
 /* INCLUDES */
 #include <luciole/context.hpp>
+#include <luciole/vk/buffers/vertex_buffer.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -113,11 +114,11 @@ private:
      * 
      * @param capabilities The capabilities of the Surface.
      * @param format The format of the Surface.
-     * @return std::variant<VkSwapchainKHR, vk::error::type> Type safe union that returns 
+     * @return std::variant<VkSwapchainKHR, vk::error> Type safe union that returns 
      * either the created Swapchain handle or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkSwapchainKHR, vk::error::type> create_swapchain( 
+    std::variant<VkSwapchainKHR, vk::error> create_swapchain( 
         VkSurfaceCapabilitiesKHR const& capabilities, 
         VkSurfaceFormatKHR const& format 
     ) const PURE;
@@ -126,22 +127,22 @@ private:
      * @brief Create a image view object.
      * 
      * @param image The Image to create the view for.
-     * @return std::variant<VkImageView, vk::error::type> Type safe union that either returns
+     * @return std::variant<VkImageView, vk::error> Type safe union that either returns
      * an image view or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkImageView, vk::error::type> create_image_view( 
+    std::variant<VkImageView, vk::error> create_image_view( 
         vk::image_t image 
     ) const PURE;
 
     /**
      * @brief Create a render pass object.
      * 
-     * @return std::variant<VkRenderPass, vk::error::type> Type safe union that either returns
+     * @return std::variant<VkRenderPass, vk::error> Type safe union that either returns
      * a render pass or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkRenderPass, vk::error::type> create_render_pass( 
+    std::variant<VkRenderPass, vk::error> create_render_pass( 
     ) const PURE;
 
     /**
@@ -158,11 +159,11 @@ private:
     /**
      * @brief Create a default pipeline layout object.
      * 
-     * @return std::variant<VkPipelineLayout, vk::error::type> Type safe union that either returns a 
+     * @return std::variant<VkPipelineLayout, vk::error> Type safe union that either returns a 
      * pipeline layout or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkPipelineLayout, vk::error::type> create_default_pipeline_layout( 
+    std::variant<VkPipelineLayout, vk::error> create_default_pipeline_layout( 
     ) const PURE;
 
     /**
@@ -170,11 +171,11 @@ private:
      * 
      * @param vert_filepath The path from the executable to the vertex shader SPIR-V file. 
      * @param frag_filepath The path from the executable to the fragment shader SPIR-V file.
-     * @return std::variant<VkPipeline, vk::error::type> Type safe union that either returns a 
+     * @return std::variant<VkPipeline, vk::error> Type safe union that either returns a 
      * default graphics pipeline or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkPipeline, vk::error::type> create_default_pipeline( 
+    std::variant<VkPipeline, vk::error> create_default_pipeline( 
         vert_shader_filepath_const_ref_t vert_filepath, 
         frag_shader_filepath_const_ref_t frag_filepath 
     ) const PURE;
@@ -182,32 +183,32 @@ private:
     /**
      * @brief Create a semaphore object.
      * 
-     * @return std::variant<VkSemaphore, vk::error::type> Type safe union that either returns a
+     * @return std::variant<VkSemaphore, vk::error> Type safe union that either returns a
      * semaphore or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkSemaphore, vk::error::type> create_semaphore( 
+    std::variant<VkSemaphore, vk::error> create_semaphore( 
     ) const PURE;
 
     /**
      * @brief Create a fence object.
      * 
-     * @return std::variant<VkFence, vk::error::type> Type safe union that either returns a
+     * @return std::variant<VkFence, vk::error> Type safe union that either returns a
      * fence or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkFence, vk::error::type> create_fence( 
+    std::variant<VkFence, vk::error> create_fence( 
     ) const PURE;
 
     /**
      * @brief Create a framebuffer object.
      * 
      * @param image_view 
-     * @return std::variant<VkFramebuffer, vk::error::type> Type safe union that either returns a
+     * @return std::variant<VkFramebuffer, vk::error> Type safe union that either returns a
      * framebuffer or an error code.
      */
     [[nodiscard]] 
-    std::variant<VkFramebuffer, vk::error::type> create_framebuffer( 
+    std::variant<VkFramebuffer, vk::error> create_framebuffer( 
         vk::image_view_t image_view 
     ) const PURE;
 
@@ -265,10 +266,16 @@ private:
 
     size_t current_frame = 0;
 
+    vk::vertex_buffer vertex_buffer_;
+
     bool is_framebuffer_resized_ = false;
 
     std::uint32_t window_width_ = 0;
     std::uint32_t window_height_ = 0;
+
+    vk::vertex_buffer buffer_;
+
+    std::shared_ptr<spdlog::logger> vulkan_logger_;
 };
 
 #endif // LUCIOLE_GRAPHICS_RENDERER_HPP

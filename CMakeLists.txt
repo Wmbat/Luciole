@@ -17,7 +17,7 @@
 cmake_minimum_required( VERSION 3.15 )
 project( Luciole LANGUAGES CXX )
 
-option( BUILD_TEST "Enable unit testing" OFF )
+option( test "Enable unit testing" OFF )
 option( BUILD_EXAMPLE "Build demo examples" OFF )
 
 if( NOT CMAKE_BUILD_TYPE )
@@ -30,6 +30,7 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 set( GNU_FLAGS "-std=c++2a" )
 set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer" )
 set( GNU_RELEASE_FLAGS "-o3" )
+set( GNU_ALL_FLAGS "-fconcepts" )
 
 add_library( Luciole SHARED )
 
@@ -48,6 +49,8 @@ target_compile_options( Luciole
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
 # Set Release Flags
         $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
+
+        $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
 )
 
 if( WIN32 )
@@ -80,15 +83,11 @@ endif( )
 add_subdirectory( external/vulkan )
 add_subdirectory( external/vma )
 add_subdirectory( external/stb )
+add_subdirectory( external/spdlog )
 add_subdirectory( external/glm )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
-
-if ( BUILD_TEST )
-    message( STATUS "Building unit tests." )
-    target_compile_definitions( Luciole PUBLIC BUILD_TEST )
-endif( )
 
 if( NOT WIN32 )
     target_link_libraries( Luciole
@@ -97,23 +96,12 @@ if( NOT WIN32 )
             vulkan
             vma
             stb
-            spdlog
+            spdlog_header_only
             wmbats_bazaar
             nlohmann
             tinygltf
             glm
-        )
-else()
-    target_link_libraries( Luciole
-        PUBLIC 
-            vulkan
-            stb
-            spdlog
-		    wmbats_bazaar
-            nlohmann
-            tinygltf
-            glm
-		)
+   )
 endif( )
 
 target_include_directories( Luciole 
@@ -128,6 +116,8 @@ target_sources( Luciole
         "src/luciole/ui/window.cpp"
         "src/luciole/vk/buffers/vertex_buffer.cpp"
         "src/luciole/vk/queue.cpp"
+        "src/luciole/vk/errors.cpp"
+        "src/luciole/vk/vma_define.cpp"
         "src/luciole/context.cpp"
 )
 

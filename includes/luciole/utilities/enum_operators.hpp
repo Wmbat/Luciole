@@ -31,9 +31,9 @@
 template<typename T>
 struct enable_bitmask_operators
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    static constexpr bool enable = false;
+   static constexpr bool enable = false;
 };
 
 /**
@@ -43,13 +43,13 @@ struct enable_bitmask_operators
 template<>                                                                                          \
 struct enable_bitmask_operators<enum_class>                                                         \
 {                                                                                                   \
-    static_assert( std::is_enum_v<enum_class>, "Template parameter is not of enum type." );         \
-                                                                                                    \
-    static constexpr bool enable = true;                                                            \
+   static_assert( std::is_enum_v<enum_class>, "Template parameter is not of enum type." );         \
+                                                                                                   \
+   static constexpr bool enable = true;                                                            \
 };
 
 /**
- * @brief 
+ * @brief Overload the bitwise or operator. 
  * 
  * @tparam T The Enum Class to compare
  * @param lhs The Enum value on the left hand side of the operator.
@@ -59,63 +59,63 @@ struct enable_bitmask_operators<enum_class>                                     
 template<typename T>  
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator|( T lhs, T rhs)  
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
+   return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
 }
 
 template<typename T>  
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator&( T lhs, T rhs)  
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) & static_cast<std::underlying_type_t<T>>( rhs ) );
+   return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) & static_cast<std::underlying_type_t<T>>( rhs ) );
 }
 
 template<typename T>  
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator^( T lhs, T rhs)  
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
+   return static_cast<T> ( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
 }
 
 template<typename T>  
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator~( T rhs )  
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    return static_cast<T> ( ~static_cast<std::underlying_type_t<T>>( rhs ) );
+   return static_cast<T> ( ~static_cast<std::underlying_type_t<T>>( rhs ) );
 }
 
 template<typename T>
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator|=( T& lhs, T rhs )
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
+   lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) | static_cast<std::underlying_type_t<T>>( rhs ) );
 
-    return lhs;
+   return lhs;
 }
 
 template<typename T>
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator&=( T& lhs, T rhs )
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) & static_cast<std::underlying_type_t<T>>( rhs ) );
+   lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) & static_cast<std::underlying_type_t<T>>( rhs ) );
 
-    return lhs;
+   return lhs;
 }
 
 template<typename T>
 typename std::enable_if_t<enable_bitmask_operators<T>::enable, T> operator^=( T& lhs, T rhs )
 {
-    static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
+   static_assert( std::is_enum_v<T>, "Template parameter is not of enum type." );
 
-    lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) ^ static_cast<std::underlying_type_t<T>>( rhs ) );
+   lhs = static_cast<T>( static_cast<std::underlying_type_t<T>>( lhs ) ^ static_cast<std::underlying_type_t<T>>( rhs ) );
 
-    return lhs;
+   return lhs;
 }
 
 #endif // LUCIOLE_UTILITIES_ENUM_OPERATORS

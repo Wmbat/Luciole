@@ -16,25 +16,32 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wmbats_bazaar/logger.hpp>
+#include <luciole/vk/errors.hpp>
 
-#include "window/window.hpp"
+namespace vk
+{
+   error::error( result_t result ) noexcept
+   {
+      type_ = to_type( result.value_ );
+   }
 
-window::window( )
-{
-    bzr::logger::init( "Luciole Logger", "%^[%T] %n: %v%$" );
-}
-bool window::is_open( ) const noexcept
-{
-    return open_;
-}
+   error::error( type_t type ) noexcept
+   {
+      type_ = type.value_;
+   }
 
-uint32_t window::get_width( ) const noexcept
-{
-    return settings_.width_;
-}
+   std::string const& error::to_string() const
+   {
+      return string_type[static_cast<std::size_t>( type_ )];
+   }
 
-uint32_t window::get_height( ) const noexcept
-{
-    return settings_.height_;
-}
+   bool error::is_error( ) const noexcept
+   {
+      return type_ != type::e_none;
+   }  
+
+   error::type error::get_type( ) const noexcept
+   {
+      return type_;
+   }
+} // namespace vk

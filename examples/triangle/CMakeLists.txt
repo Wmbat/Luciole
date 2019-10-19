@@ -28,18 +28,23 @@ set_target_properties( Triangle PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples/triangle/bin"
 )
 
+set( GNU_VERSION_FLAGS "-std=c++2a" )
+set( GNU_DEBUG_FLAGS "-o0 -Wall -Wextra -Werror" )
+set( GNU_RELEASE_FLAGS "o3" )
+set( GNU_ALL_FLAGS "-fconcepts" )
+
 target_compile_options( Triangle 
     PUBLIC
         $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
-        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
+        $<$<CXX_COMPILER_ID:GNU>:${GNU_VERSION_FLAGS}>
         $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest> 
 # Set Debug Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-Wall>
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
 # Set Release Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
+# All Config flags
+        $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
 )
 
 target_link_libraries( Triangle
