@@ -1,5 +1,7 @@
-## Luciole
-A linux game-engine using Vulkan.
+### Luciole
+Luciole is a cross-platform Vulkan game engine.
 
-## How to use.
-To clone, call git clone with recursive option.
+## Getting Started.
+Is is recommended to follow the following basic steps to download and build the project.
+
+# Clone

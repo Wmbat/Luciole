@@ -89,6 +89,10 @@ add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 
+if ( test )
+   add_subdirectory( external/googletest )
+endif( test )
+
 if( NOT WIN32 )
    target_link_libraries( Luciole
       PUBLIC 
