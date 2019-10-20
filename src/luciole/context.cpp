@@ -315,7 +315,13 @@ context::~context( )
          command_pool.second.flags_ = queue::flag::e_none;
       }
    }
-   
+  
+   if ( memory_allocator_ != VK_NULL_HANDLE )
+   {
+      vmaDestroyAllocator( memory_allocator_ );
+      memory_allocator_ = VK_NULL_HANDLE;
+   }
+
    if ( device_ != VK_NULL_HANDLE )
    {
       vkDestroyDevice( device_, nullptr );
@@ -350,11 +356,24 @@ context& context::operator=( context&& rhs )
 {
    if ( this != &rhs )
    {
-      std::swap( instance_, rhs.instance_ );
-      std::swap( debug_messenger_, rhs.debug_messenger_ );
-      std::swap( surface_, rhs.surface_ );
-      std::swap( gpu_, rhs.gpu_ );
-      std::swap( device_, rhs.device_ );
+      instance_ = rhs.instance_;
+      rhs.instance_ = VK_NULL_HANDLE;
+
+      debug_messenger_ = rhs.debug_messenger_;
+      rhs.debug_messenger_ = VK_NULL_HANDLE;
+
+      surface_ = rhs.surface_;
+      rhs.surface_ = VK_NULL_HANDLE;
+      
+      gpu_ = rhs.gpu_;
+      rhs.gpu_ = VK_NULL_HANDLE;
+
+      device_ = rhs.device_;
+      rhs.device_ = VK_NULL_HANDLE;
+
+      memory_allocator_ = rhs.memory_allocator_;
+      rhs.memory_allocator_ = VK_NULL_HANDLE;
+
       std::swap( queues_, rhs.queues_ );
       std::swap( command_pools_, rhs.command_pools_ );
       std::swap( wnd_size_, rhs.wnd_size_ );

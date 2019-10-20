@@ -21,7 +21,7 @@ option( test "Enable unit testing" OFF )
 option( BUILD_EXAMPLE "Build demo examples" OFF )
 
 if( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE Release )
+   set( CMAKE_BUILD_TYPE Release )
 endif( )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
@@ -35,49 +35,49 @@ set( GNU_ALL_FLAGS "-fconcepts" )
 add_library( Luciole SHARED )
 
 set_target_properties( Luciole PROPERTIES
-    DEBUG_POSTFIX "Debug"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
+   DEBUG_POSTFIX "Debug"
+   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 )
 
 target_compile_options( Luciole 
-    PRIVATE
-        $<$<PLATFORM_ID:UNIX>:-pthread>
+   PRIVATE
+      $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
-        $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
-        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
+      $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
+      $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
 # Set Debug Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
+      $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
 # Set Release Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
+      $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
 
-        $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
+      $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
 )
 
 if( WIN32 )
-    target_compile_definitions( Luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
+   target_compile_definitions( Luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
 elseif( UNIX )
-    if( USE_WAYLAND_WSI )
-        find_package( Wayland REQUIRED )
+   if( USE_WAYLAND_WSI )
+      find_package( Wayland REQUIRED )
 
-        if( NOT WAYLAND_FOUND )
-            message( FATAL_ERROR "Wayland development package not found" )
-        else( )
-            message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
-        endif( )
+      if( NOT WAYLAND_FOUND )
+         message( FATAL_ERROR "Wayland development package not found" )
+      else( )
+         message( STATUS ${WAYLAND_CLIENT_LIBRARIES} )
+      endif( )
 
-        target_include_directories( Luciole PUBLIC ${WAILAND_INCLUDE_DIR} )
-        target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_WAYLAND_KHR )
-    else( )
-        find_package( XCB REQUIRED )
+      target_include_directories( Luciole PUBLIC ${WAILAND_INCLUDE_DIR} )
+      target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_WAYLAND_KHR )
+   else( )
+      find_package( XCB REQUIRED )
 
-        if( NOT XCB_FOUND )
-            message( FATAL_ERROR "XCB development package not found" )
-        else( )
-            message( STATUS "Using XCB Library" )
-        endif( )
+      if( NOT XCB_FOUND )
+         message( FATAL_ERROR "XCB development package not found" )
+      else( )
+         message( STATUS "Using XCB Library" )
+      endif( )
 
-        target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
-    endif()
+      target_compile_definitions( Luciole PUBLIC VK_USE_PLATFORM_XCB_KHR )
+   endif()
 endif( )
 
 add_subdirectory( external/vulkan )
@@ -90,35 +90,36 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/wmbats_bazaar )
 
 if( NOT WIN32 )
-    target_link_libraries( Luciole
-        PUBLIC 
-            ${XCB_LIBRARIES}
-            vulkan
-            vma
-            stb
-            spdlog_header_only
-            wmbats_bazaar
-            nlohmann
-            tinygltf
-            glm
+   target_link_libraries( Luciole
+      PUBLIC 
+         ${XCB_LIBRARIES}
+         vulkan
+         vma
+         stb
+         spdlog_header_only
+         wmbats_bazaar
+         nlohmann
+         tinygltf
+         glm
    )
 endif( )
 
 target_include_directories( Luciole 
-    PUBLIC 
-        "includes" 
+   PUBLIC 
+      "includes" 
 )
 
 target_sources( Luciole
-    PRIVATE
-        "src/luciole/graphics/renderer.cpp"
-        "src/luciole/threads/thread_pool.cpp"
-        "src/luciole/ui/window.cpp"
-        "src/luciole/vk/buffers/vertex_buffer.cpp"
-        "src/luciole/vk/queue.cpp"
-        "src/luciole/vk/errors.cpp"
-        "src/luciole/vk/vma_define.cpp"
-        "src/luciole/context.cpp"
+   PRIVATE
+      "src/luciole/graphics/renderer.cpp"
+      "src/luciole/threads/thread_pool.cpp"
+      "src/luciole/ui/window.cpp"
+      "src/luciole/vk/buffers/index_buffer.cpp"
+      "src/luciole/vk/buffers/vertex_buffer.cpp"
+      "src/luciole/vk/queue.cpp"
+      "src/luciole/vk/errors.cpp"
+      "src/luciole/vk/vma_define.cpp"
+      "src/luciole/context.cpp"
 )
 
 add_subdirectory( examples/triangle )

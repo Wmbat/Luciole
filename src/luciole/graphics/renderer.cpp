@@ -24,9 +24,14 @@
 #include <spdlog/spdlog.h>
 
 const std::vector<vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<std::uint32_t> indices = {
+    0, 1, 2, 2, 3, 0
 };
 
 /**
@@ -43,183 +48,34 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
 
    wnd.add_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
 
-   auto const capabilities = p_context_->get_surface_capabilities();
-   auto const format = pick_swapchain_format();
-   
-   swapchain_image_format_ = format.format;
-   swapchain_extent_ = pick_swapchain_extent( capabilities );
-   
-   std::uint32_t image_count = capabilities.minImageCount + 1;
-   if ( capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount )
-   {
-      image_count = capabilities.maxImageCount;
-   }
-   
-   swapchain_images_.reserve( image_count );
-   swapchain_image_views_.reserve( image_count );
-   swapchain_framebuffers_.reserve( image_count );
-  
-   /*
-    *  Check for errors upon swapchain creation.
-    */
-   auto const temp_swapchain = create_swapchain( capabilities, format );
-   if ( auto const* p_val = std::get_if<VkSwapchainKHR>( &temp_swapchain ) )
-   {
-      swapchain_ = *p_val;
-   }
-   else
-   { 
-      vulkan_logger_->error(
-         "Swapchain Creation Error: {0}.",
-         std::get<vk::error>( temp_swapchain ).to_string( )
-      );
+   vk::vertex_buffer::create_info const vertex_buffer_create_info
+   {  
+      .p_context = p_context_,
+      .memory_allocator = p_context_->get_memory_allocator(),
+      .family_indices = p_context_->get_unique_family_indices(),
+      .vertices = vertices
+   };
 
-      abort( );
-   }
-   
-   /*
-    *  Check for errors upon swapchain images retrieval.
-    */
-   auto const temp_images = p_context_->get_swapchain_images(
-      vk::swapchain_t( swapchain_ ),
-      count32_t( image_count )
+   vertex_buffer_ = vk::vertex_buffer( 
+      vk::vertex_buffer::create_info_t(
+         vertex_buffer_create_info 
+      ) 
    );
-   
-   if ( auto const* p_val = std::get_if<std::vector<VkImage>>( &temp_images ) )
-   {
-      swapchain_images_ = *p_val;
-   }
-   else
-   {     
-      vulkan_logger_->error(
-         "Swapchain Image Error: {0}.", 
-         std::get<vk::error>( temp_images ).to_string( )
-      );
 
-      abort( );
-   }
-   
-   /*
-    *  Check for erros upon Swapchain image views creation.
-    */
-   swapchain_image_views_.reserve( swapchain_images_.size( ) );
-   for( std::size_t i = 0; i < swapchain_images_.size( ); ++i )
+   vk::index_buffer::create_info const index_buffer_create_info
    {
-      auto const temp_view = create_image_view(
-         vk::image_t( swapchain_images_[i] )
-      );
+      .p_context = p_context_,
+      .family_indices = p_context_->get_unique_family_indices( ),
+      .indices = indices
+   };
 
-      if ( auto const* p_val = std::get_if<VkImageView>( &temp_view ) )
-      {
-         swapchain_image_views_.emplace_back( *p_val );
-      }
-      else
-      {
-         vulkan_logger_->error(
-            "Swapchain Image View: {0}.",
-            std::get<vk::error>( temp_view ).to_string( )
-         );
-
-         abort( );
-      }
-   }
-   
-   /*
-    *  Check for any errors upon Render Pass creation.
-    */
-   auto const temp_render_pass = create_render_pass( );
-   if ( auto const* p_val = std::get_if<VkRenderPass>( &temp_render_pass ) )
-   {
-      render_pass_ = *p_val;
-   }
-   else
-   {
-      vulkan_logger_->error( 
-         "Render Pass Creation Error: {0}.",
-         std::get<vk::error>( temp_render_pass ).to_string( )
-      );
-      
-      abort( );
-   }
-
-   /*
-    *  Check for any errors upon default graphics pipeline layout creation.
-    */
-   auto const temp_default_pipeline_layout = create_default_pipeline_layout( );
-   if ( auto const* p_val = std::get_if<VkPipelineLayout>( &temp_default_pipeline_layout ) )
-   {
-      default_graphics_pipeline_layout_ = *p_val;
-   } 
-   else
-   {
-      vulkan_logger_->error(
-         "Default Graphics Pipeline Layout Creation Error: {0}.",
-         std::get<vk::error>( temp_default_pipeline_layout ).to_string( )
-      );
-
-      abort( );
-   }
-
-   /*
-    *  Check for any errors upon default graphics pipeline creation.
-    */
-   auto const temp_default_pipeline = create_default_pipeline(
-      vert_shader_filepath_const_ref_t( "../data/shaders/default_vert.spv" ),
-      frag_shader_filepath_const_ref_t( "../data/shaders/default_frag.spv" )
+   index_buffer_ = vk::index_buffer(
+      vk::index_buffer::create_info_t(
+         index_buffer_create_info
+      )
    );
-   if ( auto const* p_val = std::get_if<VkPipeline>( &temp_default_pipeline ) )
-   {
-      default_graphics_pipeline_ = *p_val;
-   }
-   else
-   {
-      vulkan_logger_->error( 
-         "Default Graphics Pipeline Creation Error: {0}.",
-         std::get<vk::error>( temp_default_pipeline ).to_string( )
-      );
 
-      abort( );
-   }
-
-   auto const temp_command_buffers = p_context_->create_command_buffers(
-      queue::flag_t( queue::flag::e_graphics ),
-      count32_t( image_count )
-   );
-   if ( auto const* p_val = std::get_if<std::vector<VkCommandBuffer>>( &temp_command_buffers ) )
-   {
-      render_command_buffers_ = *p_val;
-   }
-   else
-   {
-      vulkan_logger_->error(
-         "Render Command Buffers Creation Error: {0}.",
-         std::get<vk::error>( temp_command_buffers ).to_string( )
-      );
-
-      abort( );
-   }
-   
-   swapchain_framebuffers_.reserve( image_count );
-   for( std::size_t i = 0; i < image_count; ++i )
-   {
-      auto const temp_framebuffer = create_framebuffer(
-         vk::image_view_t( swapchain_image_views_[i] )
-      );
-
-      if ( auto const* p_val = std::get_if<VkFramebuffer>( &temp_framebuffer ) )
-      {
-         swapchain_framebuffers_.emplace_back( std::move( *p_val ) );
-      }
-      else
-      {
-         vulkan_logger_->error(
-            "Swapchain Framebuffer Creation Error: {0}.",
-            std::get<vk::error>( temp_framebuffer ).to_string( )
-         );
-
-         abort( );
-      }
-   }
+   create_swapchain( );
 
    for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
    {
@@ -265,22 +121,6 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
          abort( );
       }
    }
-
-   vk::vertex_buffer::create_info const vertex_buffer_create_info
-   {  
-      .p_context = p_context_,
-      .memory_allocator = p_context_->get_memory_allocator(),
-      .family_indices = p_context_->get_unique_family_indices(),
-      .vertices = vertices
-   };
-
-   vertex_buffer_ = vk::vertex_buffer( 
-      vk::vertex_buffer::create_info_t(
-         vertex_buffer_create_info 
-      ) 
-   );
-
-   record_command_buffers( );
 }
 
 /**
@@ -313,47 +153,7 @@ renderer::~renderer( )
       }
    }
 
-   for( auto& framebuffer : swapchain_framebuffers_ )
-   {
-      if ( framebuffer != VK_NULL_HANDLE )
-      {
-         p_context_->destroy_framebuffer( vk::framebuffer_t( framebuffer ) );
-         framebuffer = VK_NULL_HANDLE;
-      }
-   }
-
-   if ( default_graphics_pipeline_ != VK_NULL_HANDLE )
-   {
-      p_context_->destroy_pipeline( vk::pipeline_t( default_graphics_pipeline_ ) );
-      default_graphics_pipeline_ = VK_NULL_HANDLE;
-   }
-
-   if ( default_graphics_pipeline_layout_ != VK_NULL_HANDLE )
-   {
-      p_context_->destroy_pipeline_layout( vk::pipeline_layout_t( default_graphics_pipeline_layout_ ) );
-      default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
-   }
-
-   if ( render_pass_ != VK_NULL_HANDLE )
-   {
-      p_context_->destroy_render_pass( vk::render_pass_t( render_pass_ ) );
-      render_pass_ = VK_NULL_HANDLE;
-   }
-   
-   for( auto& image_view : swapchain_image_views_ )
-   {
-      if ( image_view != VK_NULL_HANDLE )
-      {
-         p_context_->destroy_image_view( vk::image_view_t( image_view ) );
-         image_view = VK_NULL_HANDLE;
-      }
-   }
-   
-   if ( swapchain_ != VK_NULL_HANDLE )
-   {
-      p_context_->destroy_swapchain( vk::swapchain_t( swapchain_ ) );
-      swapchain_ = VK_NULL_HANDLE;
-   }
+   cleanup_swapchain( );
 }
 
 renderer& renderer::operator=( renderer&& rhs )
@@ -365,15 +165,20 @@ renderer& renderer::operator=( renderer&& rhs )
 
       swapchain_images_ = std::move( rhs.swapchain_images_ );
       swapchain_image_format_ = rhs.swapchain_image_format_;
+      swapchain_extent_ = rhs.swapchain_extent_;
       swapchain_image_views_ = std::move( rhs.swapchain_image_views_ );
 
-      std::swap( swapchain_extent_, rhs.swapchain_extent_ );
-      std::swap( swapchain_image_format_, rhs.swapchain_image_format_ );
-      std::swap( swapchain_image_views_, rhs.swapchain_image_views_ );
-      std::swap( render_pass_, rhs.render_pass_ );
-      std::swap( default_graphics_pipeline_, rhs.default_graphics_pipeline_ );
-      std::swap( default_graphics_pipeline_layout_, rhs.default_graphics_pipeline_layout_ );
-      std::swap( swapchain_framebuffers_, rhs.swapchain_framebuffers_ );
+      render_pass_ = rhs.render_pass_;
+      rhs.render_pass_ = VK_NULL_HANDLE;
+
+      default_graphics_pipeline_layout_ = rhs.default_graphics_pipeline_layout_;
+      rhs.default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+     
+      default_graphics_pipeline_ = rhs.default_graphics_pipeline_;
+      rhs.default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+
+      swapchain_framebuffers_ = std::move( rhs.swapchain_framebuffers_ );
+
       std::swap( render_command_buffers_, rhs.render_command_buffers_ );
        
       for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
@@ -409,7 +214,7 @@ void renderer::draw_frame( )
 
    if ( result == VK_ERROR_OUT_OF_DATE_KHR )
    {
-      recreate_swapchain( );
+      create_swapchain( );
       return;
    }
 
@@ -463,7 +268,7 @@ void renderer::draw_frame( )
         is_framebuffer_resized_ )
    {
       is_framebuffer_resized_ = false;
-      recreate_swapchain( );
+      create_swapchain( );
    }
    else if ( present_res.get_type() != vk::error::type::e_none )
    {
@@ -485,7 +290,7 @@ void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )
    is_framebuffer_resized_ = true;
 }
 
-void renderer::recreate_swapchain( )
+void renderer::create_swapchain( )
 {
    p_context_->device_wait_idle();
 
@@ -493,7 +298,7 @@ void renderer::recreate_swapchain( )
 
    auto const capabilities = p_context_->get_surface_capabilities();
    auto const format = pick_swapchain_format();
-
+   
    swapchain_image_format_ = format.format;
    swapchain_extent_ = pick_swapchain_extent( capabilities );
    
@@ -502,6 +307,10 @@ void renderer::recreate_swapchain( )
    {
       image_count = capabilities.maxImageCount;
    }
+   
+   swapchain_images_.reserve( image_count );
+   swapchain_image_views_.reserve( image_count );
+   swapchain_framebuffers_.reserve( image_count );
 
    auto const res_swapchain = create_swapchain(
       capabilities, format 
@@ -663,7 +472,6 @@ void renderer::cleanup_swapchain( )
          framebuffer = VK_NULL_HANDLE;
       }
    }
-   swapchain_framebuffers_.clear( );
 
    if ( default_graphics_pipeline_ != VK_NULL_HANDLE )
    {
@@ -691,13 +499,15 @@ void renderer::cleanup_swapchain( )
          image_view = VK_NULL_HANDLE;
       }
    }
-   swapchain_image_views_.clear( );
-   
+    
    if ( swapchain_ != VK_NULL_HANDLE )
    {
       p_context_->destroy_swapchain( vk::swapchain_t( swapchain_ ) );
       swapchain_ = VK_NULL_HANDLE;
    }
+
+   swapchain_framebuffers_.clear( );
+   swapchain_image_views_.clear( );
    swapchain_images_.clear( );
 }
 
@@ -750,7 +560,9 @@ void renderer::record_command_buffers( )
       VkDeviceSize offsets[] = { 0 };
       vkCmdBindVertexBuffers( render_command_buffers_[i], 0, 1, buffers, offsets );
 
-      vkCmdDraw( render_command_buffers_[i], static_cast<std::uint32_t>(vertices.size()), 1, 0, 0 );
+      vkCmdBindIndexBuffer( render_command_buffers_[i], index_buffer_.get_buffer( ), 0, VK_INDEX_TYPE_UINT32 );
+
+      vkCmdDrawIndexed( render_command_buffers_[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
       vkCmdEndRenderPass( render_command_buffers_[i] );
 

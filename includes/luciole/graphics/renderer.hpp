@@ -21,6 +21,7 @@
 
 /* INCLUDES */
 #include <luciole/context.hpp>
+#include <luciole/vk/buffers/index_buffer.hpp>
 #include <luciole/vk/buffers/vertex_buffer.hpp>
 
 #include <vulkan/vulkan.h>
@@ -98,7 +99,7 @@ private:
     /**
      * @brief Create all objects related to the swapchain.
      */
-    void recreate_swapchain( );
+    void create_swapchain( );
     /**
      * @brief Destroy all objects related to the swapchain.
      */
@@ -234,7 +235,7 @@ private:
      * @brief Pick a extent supported by the surface for the
      * swapchain.
      * 
-     * @param capabilities The surface capabilities.
+     * @param [in] capabilities The surface capabilities.
      * @return VkExtent2D The chosen extent.
      */
     [[nodiscard]] VkExtent2D pick_swapchain_extent( 
@@ -266,14 +267,13 @@ private:
 
     size_t current_frame = 0;
 
-    vk::vertex_buffer vertex_buffer_;
-
     bool is_framebuffer_resized_ = false;
 
     std::uint32_t window_width_ = 0;
     std::uint32_t window_height_ = 0;
 
-    vk::vertex_buffer buffer_;
+    vk::vertex_buffer vertex_buffer_;
+    vk::index_buffer index_buffer_;
 
     std::shared_ptr<spdlog::logger> vulkan_logger_;
 };

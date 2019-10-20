@@ -133,7 +133,7 @@ public:
     */
    void destroy_swapchain( 
       vk::swapchain_t swapchain 
-   ) const noexcept PURE;
+   ) const noexcept;
   
    /**
     * @brief Create an image view.
@@ -156,7 +156,7 @@ public:
     */
    void destroy_image_view( 
       vk::image_view_t image_view 
-   ) const noexcept PURE;
+   ) const noexcept;
    
    /**
     * @brief Create a render pass.
@@ -179,7 +179,7 @@ public:
     */
    void destroy_render_pass( 
       vk::render_pass_t render_pass 
-   ) const noexcept PURE;
+   ) const noexcept;
    
    /**
     * @brief Create a pipeline layout.
@@ -202,7 +202,7 @@ public:
     */
    void destroy_pipeline_layout( 
       vk::pipeline_layout_t pipeline_layout 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create a graphics pipeline.
@@ -237,7 +237,7 @@ public:
     */
    void destroy_pipeline(
       vk::pipeline_t pipeline 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create a shader module.
@@ -258,7 +258,7 @@ public:
     */
    void destroy_shader_module( 
       vk::shader_module_t shader_module 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create a framebuffer.
@@ -280,7 +280,7 @@ public:
     */
    void destroy_framebuffer( 
       vk::framebuffer_t framebuffer 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create a semaphore.
@@ -302,7 +302,7 @@ public:
     */
    void destroy_semaphore( 
       vk::semaphore_t semaphore 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create a fence.
@@ -324,7 +324,7 @@ public:
     */
    void destroy_fence( 
       vk::fence_t fence 
-   ) const noexcept PURE;
+   ) const noexcept;
 
    /**
     * @brief Create an array of command buffers.
