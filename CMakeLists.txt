@@ -87,7 +87,6 @@ add_subdirectory( external/spdlog )
 add_subdirectory( external/glm )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
-add_subdirectory( external/wmbats_bazaar )
 
 if ( test )
    add_subdirectory( external/googletest )
@@ -101,7 +100,6 @@ if( NOT WIN32 )
          vma
          stb
          spdlog_header_only
-         wmbats_bazaar
          nlohmann
          tinygltf
          glm

@@ -22,7 +22,7 @@
 /* INCLUDES */
 #include <luciole/strong_types.hpp>
 
-#include <wmbats_bazaar/delegate.hpp>
+#include <luciole/utilities/delegate.hpp>
 
 #include <vector>
 #include <queue>
@@ -35,14 +35,14 @@
 class thread_pool
 {
 public:
-    using task = bzr::delegate<void( )>;
+   using task = delegate<void( )>;
 
 public:
-    thread_pool( ) = default;
+   thread_pool( ) = default;
 
 private:
-    std::vector<std::queue<task>> task_queues_;
-    std::vector<std::thread> threads_; 
+   std::vector<std::queue<task>> task_queues_;
+   std::vector<std::thread> threads_; 
 };
 
 #endif // LUCIOLE_THREAD_POOL_HPP

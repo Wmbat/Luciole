@@ -28,8 +28,8 @@
 #include <glm/vec2.hpp>
 #include <vulkan/vulkan.h>
 #include <spdlog/logger.h>
-#include <wmbats_bazaar/delegate.hpp>
-#include <wmbats_bazaar/message.hpp>
+#include <luciole/utilities/delegate.hpp>
+#include <luciole/utilities/message_handler.hpp>
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
@@ -56,8 +56,8 @@ private:
 
 public:
 #if defined( VK_USE_PLATFORM_XCB_KHR )
-   using xcb_connection_uptr = std::unique_ptr<xcb_connection_t, bzr::delegate<void( xcb_connection_t* )>>;
-   using xcb_intern_atom_uptr = std::unique_ptr<xcb_intern_atom_reply_t, bzr::delegate<void(xcb_intern_atom_reply_t*)>>; 
+   using xcb_connection_uptr = std::unique_ptr<xcb_connection_t, delegate<void( xcb_connection_t* )>>;
+   using xcb_intern_atom_uptr = std::unique_ptr<xcb_intern_atom_reply_t, delegate<void(xcb_intern_atom_reply_t*)>>; 
 #endif
 
    /**
@@ -221,11 +221,11 @@ private:
 
    std::shared_ptr<spdlog::logger> window_logger_;
 
-   bzr::message_handler<const key_event> key_event_;
-   bzr::message_handler<const mouse_button_event> mouse_button_event_;
-   bzr::message_handler<const mouse_motion_event> mouse_motion_event_;
-   bzr::message_handler<const window_close_event> window_close_event_;
-   bzr::message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
+   message_handler<const key_event> key_event_;
+   message_handler<const mouse_button_event> mouse_button_event_;
+   message_handler<const mouse_motion_event> mouse_motion_event_;
+   message_handler<const window_close_event> window_close_event_;
+   message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
 
 public:
    /**

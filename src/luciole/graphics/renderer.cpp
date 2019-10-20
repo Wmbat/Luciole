@@ -19,8 +19,8 @@
 #include <luciole/graphics/renderer.hpp>
 #include <luciole/graphics/vertex.hpp>
 #include <luciole/ui/event.hpp>
+#include <luciole/utilities/file_io.hpp>
 
-#include <wmbats_bazaar/file_io.hpp>
 #include <spdlog/spdlog.h>
 
 const std::vector<vertex> vertices = {
@@ -699,7 +699,7 @@ std::variant<VkRenderPass, vk::error> renderer::create_render_pass( ) const
 
 VkShaderModule renderer::create_shader_module( shader_filepath_const_ref_t filepath ) const
 {
-   auto const spirv_code = bzr::read_from_binary_file( filepath.value_ );
+   auto const spirv_code = read_from_binary_file( filepath.value_ );
 
    VkShaderModuleCreateInfo const create_info 
    {

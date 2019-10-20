@@ -1,6 +1,3 @@
-[submodule "external/wmbats_bazaar"]
-	path = external/wmbats_bazaar
-	url = https://github.com/Wmbat/wmbats_bazaar
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest
