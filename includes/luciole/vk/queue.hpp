@@ -32,6 +32,10 @@ private:
    struct family_index_param { };
 
 public:
+   /**
+    * @brief The possible operations
+    * a queue is capable
+    */
    enum class flag
    {
        e_none      = 0,
@@ -45,12 +49,31 @@ public:
    using family_index_t = strong_type<std::uint32_t, family_index_param>;
 
 public:
+   /**
+    * @brief Default constructor.
+    */
    queue( ) = default;
+
    queue( vk::device_t device, family_index_t family_index, index_t index );
+
+   /**
+    * @brief Deleted copy constructor.
+    */
    queue( queue const& rhs ) = delete;
+
+   /**
+    * @brief Move constructor.
+    */
    queue( queue && rhs );
 
+   /**
+    * @brief Deleted copy assigment operator.
+    */
    queue& operator=( queue const& rhs ) = delete;
+
+   /**
+    * @brief Move assignment operator.
+    */
    queue& operator=( queue && rhs );
 
    /**
@@ -61,18 +84,41 @@ public:
    [[nodiscard]] 
    vk::error wait_idle( 
    ) const noexcept PURE;
-
+   
+   /**
+    * @brief Submit the queue.
+    *
+    * @param [in] info The information
+    * necessary to submit the queue.
+    * @param [in] fence The fence to handle
+    * synchronization.
+    *
+    * @return The result of the operation.
+    */
    [[nodiscard]] 
    vk::error submit( 
-      vk::submit_info_t info, 
-      vk::fence_t fence 
+      vk::submit_info_t const& info, 
+      vk::fence_t const& fence 
    ) const noexcept PURE;
    
+   /**
+    * @brief Present the queue.
+    *
+    * @param [in] info The information
+    * necessary to present the queue.
+    *
+    * @return The result of the operation.
+    */
    [[nodiscard]]
    vk::error present( 
-      vk::present_info_t info 
+      vk::present_info_t const& info 
    ) const noexcept PURE;
-
+   
+   /**
+    * @brief Get the queue's family index.
+    *
+    * @return The queue's family index.
+    */
    [[nodiscard]] 
    std::uint32_t get_family_index( 
    ) const noexcept PURE;

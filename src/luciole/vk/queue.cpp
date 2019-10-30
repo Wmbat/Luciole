@@ -25,11 +25,18 @@ queue::queue( vk::device_t device, family_index_t family_index, index_t index )
 {
    vkGetDeviceQueue( device.value_, family_index_, index_, &handle_ );
 }
+
+/**
+ * @brief Move constructor.
+ */
 queue::queue( queue&& rhs )
 {
    *this = std::move( rhs );
 }
 
+/**
+ * @brief Move assignment operator.
+ */
 queue& queue::operator=( queue&& rhs )
 {
    if ( this != &rhs )
@@ -42,6 +49,11 @@ queue& queue::operator=( queue&& rhs )
    return *this;
 }
 
+/**
+ * @brief Wait for the queue to finish a task.
+ *
+ * @return The result of the operation.
+ */
 vk::error queue::wait_idle( ) const noexcept
 {
    vk::error const err( vk::result_t(
@@ -51,7 +63,19 @@ vk::error queue::wait_idle( ) const noexcept
    return err;
 }
 
-vk::error queue::submit( vk::submit_info_t info, vk::fence_t fence ) const noexcept
+/**
+ * @brief Submit the queue.
+ *
+ * @param [in] info The information
+ * necessary to submit the queue.
+ * @param [in] fence The fence to handle
+ * synchronization.
+ *
+ * @return The result of the operation.
+ */
+vk::error queue::submit( 
+   vk::submit_info_t const& info, 
+   vk::fence_t const& fence ) const noexcept
 {
    vk::error const err( vk::result_t(
       vkQueueSubmit( handle_, 1, &info.value_, fence.value_ )
@@ -60,7 +84,16 @@ vk::error queue::submit( vk::submit_info_t info, vk::fence_t fence ) const noexc
    return err;
 }
 
-vk::error queue::present( vk::present_info_t info ) const noexcept
+/**
+ * @brief Present the queue.
+ *
+ * @param [in] info The information
+ * necessary to present the queue.
+ *
+ * @return The result of the operation.
+ */
+vk::error queue::present( 
+   vk::present_info_t const& info ) const noexcept
 {
    vk::error const err( vk::result_t(
       vkQueuePresentKHR( handle_, &info.value_ )
@@ -69,6 +102,12 @@ vk::error queue::present( vk::present_info_t info ) const noexcept
    return err;
 }
 
+
+/**
+ * @brief Get the queue's family index.
+ *
+ * @return The queue's family index.
+ */
 std::uint32_t queue::get_family_index( ) const noexcept
 {
    return family_index_;

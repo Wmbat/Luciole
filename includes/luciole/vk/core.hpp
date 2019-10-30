@@ -53,8 +53,12 @@ namespace vk
     using image_view_create_info_t = strong_type<VkImageViewCreateInfo const&, default_param>;
     using render_pass_t = strong_type<VkRenderPass, default_param>;
     using render_pass_create_info_t = strong_type<VkRenderPassCreateInfo const&, default_param>;
+    using descriptor_pool_t = strong_type<VkDescriptorPool, default_param>;
+    using descriptor_pool_create_info_t = strong_type<VkDescriptorPoolCreateInfo const&, default_param>;
     using pipeline_layout_t = strong_type<VkPipelineLayout, default_param>;
     using pipeline_layout_create_info_t = strong_type<VkPipelineLayoutCreateInfo const&, default_param>;
+    using descriptor_set_layout_t = strong_type<VkDescriptorSetLayout const&, default_param>;
+    using descriptor_set_layout_create_info_t = strong_type<VkDescriptorSetLayoutCreateInfo const&, default_param>;
     using pipeline_t = strong_type<VkPipeline, default_param>;
     using graphics_pipeline_create_info_t = strong_type<VkGraphicsPipelineCreateInfo const&, default_param>;
     using compute_pipeline_create_info_t = strong_type<VkComputePipelineCreateInfo const&, default_param>;

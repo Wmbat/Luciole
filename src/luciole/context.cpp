@@ -496,6 +496,35 @@ void context::destroy_render_pass( vk::render_pass_t render_pass ) const noexcep
    vkDestroyRenderPass( device_, render_pass.value_, nullptr );
 }
 
+std::variant<VkDescriptorPool, vk::error> context::create_descriptor_pool(
+   vk::descriptor_pool_create_info_t const& create_info ) const
+{
+   VkDescriptorPool handle = VK_NULL_HANDLE;
+
+   vk::error const err ( vk::result_t(
+      vkCreateDescriptorPool(
+         device_, &create_info.value_,
+         nullptr, &handle
+      )
+   ) );
+
+   if ( err.is_error( ) )
+   {
+      return err;
+   }
+   else
+   {
+      return handle;
+   }; 
+}
+
+VkDescriptorPool context::destroy_descriptor_pool( vk::descriptor_pool_t handle ) const
+{
+   vkDestroyDescriptorPool( device_, handle.value_, nullptr );
+
+   return VK_NULL_HANDLE;
+}
+
 std::variant<VkPipelineLayout, vk::error> context::create_pipeline_layout(
    vk::pipeline_layout_create_info_t const& create_info ) const noexcept
 {
@@ -519,6 +548,32 @@ void context::destroy_pipeline_layout( vk::pipeline_layout_t pipeline_layout ) c
    vkDestroyPipelineLayout( device_, pipeline_layout.value_, nullptr );
 }
 
+std::variant<VkDescriptorSetLayout, vk::error> context::create_descriptor_set_layout(
+   vk::descriptor_set_layout_create_info_t const& create_info ) const
+{
+   VkDescriptorSetLayout handle = VK_NULL_HANDLE;
+
+   vk::error const err( vk::result_t(
+      vkCreateDescriptorSetLayout( device_, &create_info.value_, nullptr, &handle )
+   ) );
+
+   if ( err.is_error( ) )
+   {
+      return err;
+   }
+   else
+   {
+      return handle;
+   }
+}  
+
+VkDescriptorSetLayout context::destroy_descriptor_set_layout(
+   vk::descriptor_set_layout_t layout ) const
+{
+   vkDestroyDescriptorSetLayout( device_, layout.value_, nullptr );
+
+   return VK_NULL_HANDLE;
+}
 
 std::variant<VkPipeline, vk::error> context::create_pipeline( 
    vk::graphics_pipeline_create_info_t const& create_info ) const noexcept

@@ -28,7 +28,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 set( GNU_FLAGS "-std=c++2a" )
-set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer" )
+set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer -fsanitize=address" )
 set( GNU_RELEASE_FLAGS "-o3" )
 set( GNU_ALL_FLAGS "-fconcepts" )
 
@@ -117,7 +117,9 @@ target_sources( Luciole
       "src/luciole/threads/thread_pool.cpp"
       "src/luciole/ui/window.cpp"
       "src/luciole/vk/buffers/index_buffer.cpp"
+      "src/luciole/vk/buffers/uniform_buffer.cpp"
       "src/luciole/vk/buffers/vertex_buffer.cpp"
+      "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/errors.cpp"
       "src/luciole/vk/vma_define.cpp"

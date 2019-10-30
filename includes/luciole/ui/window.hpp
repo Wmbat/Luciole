@@ -237,9 +237,7 @@ public:
       glm::uvec2 position = { 100, 100 };
       glm::uvec2 size = { 1080, 720 };
    }; // class struct
-}; // class window
-
-    
+}; // class window    
 } // namespace ui
 
 #endif // LUCIOLE_UI_WINDOW_HPP

@@ -182,6 +182,28 @@ public:
    ) const noexcept;
    
    /**
+    * @brief Create a VkDescriptorTool handle.
+    *
+    * @param create_info The information required for the acquisition
+    * of the VkDescriptorPool handle.
+    *
+    * @return the newly acquired handle or an error code.
+    */   
+   [[nodiscard]]
+   std::variant<VkDescriptorPool, vk::error> create_descriptor_pool(
+      vk::descriptor_pool_create_info_t const& create_info
+   ) const PURE;
+  
+   /**
+    * @brief Destroy a VkDescriptorPool handle.
+    *
+    * @param handle The handle to be destroyed.
+    */   
+   VkDescriptorPool destroy_descriptor_pool(
+      vk::descriptor_pool_t handle
+   ) const;
+      
+   /**
     * @brief Create a pipeline layout.
     *
     * @param create_info The information required to create the
@@ -203,6 +225,30 @@ public:
    void destroy_pipeline_layout( 
       vk::pipeline_layout_t pipeline_layout 
    ) const noexcept;
+
+   /**
+    * @brief Create a descriptor set layout.
+    *
+    * @param create_info The information required to create the
+    * descriptor set layout.
+    *
+    * @return The result of the operation.
+    */
+   [[nodiscard]]
+   std::variant<VkDescriptorSetLayout, vk::error> create_descriptor_set_layout(
+      vk::descriptor_set_layout_create_info_t const& create_info
+   ) const PURE;
+
+   /**
+    * @brief Destroy a descriptor set layout.
+    *
+    * @param [in/out] layout The descriptor set layout to destroy.
+    *
+    * @return The destroyed descriptor set layout.
+    */
+   VkDescriptorSetLayout destroy_descriptor_set_layout(
+      vk::descriptor_set_layout_t layout
+   ) const;
 
    /**
     * @brief Create a graphics pipeline.

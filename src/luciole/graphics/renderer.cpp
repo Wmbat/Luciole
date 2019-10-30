@@ -21,6 +21,10 @@
 #include <luciole/ui/event.hpp>
 #include <luciole/utilities/file_io.hpp>
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <spdlog/spdlog.h>
 
 const std::vector<vertex> vertices = {
@@ -74,6 +78,18 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
          index_buffer_create_info
       )
    );
+
+   if ( auto res = create_descriptor_set_layout( ); auto* p_val = std::get_if<VkDescriptorSetLayout>( &res ) )
+   {
+      descriptor_set_layout_ = *p_val;
+   }
+   else
+   {
+      vulkan_logger_->error(
+         "descriptor set layout creation error: {0}.",
+         std::get<vk::error>( res ).to_string( )
+      );
+   }
 
    create_swapchain( );
 
@@ -154,6 +170,13 @@ renderer::~renderer( )
    }
 
    cleanup_swapchain( );
+
+   if ( descriptor_set_layout_ != VK_NULL_HANDLE )
+   {
+      descriptor_set_layout_ = p_context_->destroy_descriptor_set_layout(
+         vk::descriptor_set_layout_t( descriptor_set_layout_ )
+      );
+   }
 }
 
 renderer& renderer::operator=( renderer&& rhs )
@@ -223,6 +246,21 @@ void renderer::draw_frame( )
    VkSwapchainKHR swapchains[] = { swapchain_ };
    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
+   static auto start_time = std::chrono::high_resolution_clock::now( );
+
+   auto current_time = std::chrono::high_resolution_clock::now( );
+   float time = std::chrono::duration<float, std::chrono::seconds::period>(
+      current_time - start_time 
+   ).count( ); 
+
+   uniform_buffer_object ubo = { };
+   ubo.model = glm::rotate( glm::mat4( 1.0f ), time * glm::radians( 90.0f ), glm::vec3( 0.0f, 0.0f, 1.0f ) );
+   ubo.view = glm::lookAt( glm::vec3( 2.0f, 2.0f, 2.0f ), glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 0.0f, 1.0f ) );
+   ubo.proj = glm::perspective( glm::radians( 45.0f ), swapchain_extent_.width / (float) swapchain_extent_.height, 0.1f, 10.0f );
+   ubo.proj[1][1] *= -1;
+
+   uniform_buffers_[image_index].map_data( ubo );
+         
    VkSubmitInfo const submit_info 
    {
       .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -235,7 +273,6 @@ void renderer::draw_frame( )
       .signalSemaphoreCount = sizeof( signal_semaphores ) / sizeof( VkSemaphore ),
       .pSignalSemaphores = signal_semaphores
    };
-
    
    auto const submit_result = p_context_->submit_queue( 
       queue::flag_t( queue::flag::e_graphics ), 
@@ -460,10 +497,18 @@ void renderer::create_swapchain( )
       }
    }
 
+   uniform_buffers_.reserve( image_count );
+   for( std::size_t i = 0; i < image_count; ++i )
+   {
+      uniform_buffers_.emplace_back( *p_context_, sizeof( uniform_buffer_object ) );
+   }
+
    record_command_buffers( );
 }
 void renderer::cleanup_swapchain( )
 {
+   uniform_buffers_.clear( );
+      
    for( auto& framebuffer : swapchain_framebuffers_ )
    {
       if ( framebuffer != VK_NULL_HANDLE )
@@ -727,6 +772,29 @@ std::variant<VkPipelineLayout, vk::error> renderer::create_default_pipeline_layo
    };
 
    return p_context_->create_pipeline_layout( vk::pipeline_layout_create_info_t( create_info ) );
+}
+
+std::variant<VkDescriptorSetLayout, vk::error> renderer::create_descriptor_set_layout( ) const
+{
+   VkDescriptorSetLayoutBinding const layout_binding =
+   { 
+      .binding = 0,
+      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorCount = 1,
+      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+      .pImmutableSamplers = nullptr
+   };
+
+   VkDescriptorSetLayoutCreateInfo const create_info =
+   {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = 0,
+      .bindingCount = 1,
+      .pBindings = &layout_binding
+   };
+
+   return p_context_->create_descriptor_set_layout( vk::descriptor_set_layout_create_info_t( create_info ) );
 }
 
 std::variant<VkPipeline, vk::error> renderer::create_default_pipeline( 
