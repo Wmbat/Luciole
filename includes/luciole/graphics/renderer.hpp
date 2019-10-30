@@ -54,42 +54,13 @@ private:
    using frag_shader_filepath_const_ref_t = strong_type<std::string const&, frag_shader_filepath_param>;
 
 public:
-   /**
-    * @brief Default Constructor.
-    */
    renderer( ) = default;
-   /**
-    * @brief Construct a new renderer object.
-    * 
-    * @param p_context Pointer to a context object.
-    * @param wnd Reference to a window object.
-    */
    renderer( p_context_t p_context, ui::window& wnd );
-   /**
-    * @brief Deleted copy constructor.
-    */
    renderer( renderer const& rhs ) = delete;
-   /**
-    * @brief Move constructor.
-    * 
-    * @param rhs Data to move into current object.
-    */
    renderer( renderer&& rhs );
-   /**
-    * @brief Destructor.
-    */
    ~renderer( );
    
-   /**
-    * @brief Deleted copy assignment operator.
-    */
    renderer& operator=( renderer const& rhs ) = delete;
-   /**
-    * @brief Move assignment operator.
-    * 
-    * @param rhs The data to move.
-    * @return renderer& The altered current object.
-    */
    renderer& operator=( renderer&& rhs );
 
    void draw_frame();
