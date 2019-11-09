@@ -16,6 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/context.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/queue.hpp>
 
@@ -25,10 +26,21 @@ namespace vk
 {
    class command_pool
    {
-   private: 
-      VkCommandPool command_pool_;
+   public:
+      command_pool( );
+      command_pool( context const* p_context );
+      command_pool( command_pool const& rhs ) = delete;
+      command_pool( command_pool&& rhs );
+      ~command_pool( );
+   
+      command_pool& operator=( command_pool const& rhs ) = delete;
+      command_pool& operator=( command_pool&& rhs );
+   
+   private:
+      context const* p_context;
 
-      std::vector<VkCommandBuffer> command_buffers_;
+      VkCommandPool handle;
+      std::vector<VkCommandBuffer> command_buffers; 
    }; // class command_pool
 } // namespace vk
 

@@ -20,7 +20,7 @@
 #define LUCIOLE_VULKAN_CORE_HPP
 
 /* INCLUDES */
-#include <luciole/strong_types.hpp>
+#include <luciole/utils/strong_types.hpp>
 
 #include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>

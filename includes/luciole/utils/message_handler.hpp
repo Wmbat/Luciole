@@ -19,7 +19,7 @@
 #ifndef LUCIOLE_UTILITIES_MESSAGE_HPP
 #define LUCIOLE_UTILITIES_MESSAGE_HPP
 
-#include <luciole/utilities/delegate.hpp>
+#include <luciole/utils/delegate.hpp>
 
 #include <vector>
 

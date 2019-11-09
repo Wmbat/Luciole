@@ -40,9 +40,9 @@ namespace vk
             e_optional
         };
 
-        priority priority_ = priority::e_none;
-        bool found_ = false;
-        std::string name_ = { };
+        priority priority = priority::e_none;
+        bool found = false;
+        std::string name = { };
     };
 } // namespace vk
 

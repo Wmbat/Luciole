@@ -20,8 +20,8 @@
 #define LUCIOLE_VK_BUFFERS_VERTEX_BUFFER_HPP
 
 #include <luciole/context.hpp>
-#include <luciole/strong_types.hpp>
 #include <luciole/graphics/vertex.hpp>
+#include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/queue.hpp>
 
 #include <vulkan/vulkan.h>
@@ -48,63 +48,26 @@ namespace vk
       using create_info_t = strong_type<create_info const&>;
 
    public:
-      /**
-       * @brief Default constructor.
-       */
       vertex_buffer( ) = default;
-      /**
-       * @brief Constructor.
-       *
-       * @param [in] create_info The information required
-       * to create the vertex_buffer object.
-       */
       vertex_buffer( create_info_t const& create_info );
-      /**
-       * @brief Deleted copy constructor.
-       *
-       * @param [in] rhs The vertex_buffer object to copy from.
-       */
       vertex_buffer( vertex_buffer const& rhs ) = delete;
-      /**
-       * @brief Move constructor.
-       *
-       * @param [in/out] rhs The vertex_buffer object to move
-       * from.
-       */
       vertex_buffer( vertex_buffer&& rhs );
-      /**
-       * @brief Destructor.
-       */
       ~vertex_buffer();
 
-      /**
-       * @brief Deleted copy assigment operator.
-       *
-       * @param [in] The vertex_buffer object to copy.
-       *
-       * @return The current vertex_buffer.
-       */
       vertex_buffer& operator=( vertex_buffer const& rhs ) = delete;
-      /**
-       * @brief Move assigment operator.
-       *
-       * @param [in/out] The vertex_buffer object to move.
-       *
-       * @return The current vertex_buffer.
-       */
       vertex_buffer& operator=( vertex_buffer&& rhs );
 
       [[nodiscard]]
       inline VkBuffer get_buffer(
       ) const PURE
       {
-         return buffer_;
+         return buffer;
       }
 
    private: 
-      VmaAllocator memory_allocator_ = VK_NULL_HANDLE;
-      VmaAllocation memory_allocation_ = VK_NULL_HANDLE;
-      VkBuffer buffer_ = VK_NULL_HANDLE;
+      VmaAllocator memory_allocator = VK_NULL_HANDLE;
+      VmaAllocation allocation = VK_NULL_HANDLE;
+      VkBuffer buffer = VK_NULL_HANDLE;
    }; // class vertex_buffer
 } // namespace vk
 

@@ -24,8 +24,17 @@ if( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release )
 endif( )
 
+set( SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_ENABLE_MSL OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE )
+
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
+set( CLANG_FLAGS "-std=c++2a -Xclang -fconcepts-ts" )
+set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsanitize=address" )
+set( CLANG_RELEASE_FLAGS "-o3" )
 
 set( GNU_FLAGS "-std=c++2a" )
 set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer -fsanitize=address" )
@@ -44,11 +53,14 @@ target_compile_options( Luciole
       $<$<PLATFORM_ID:UNIX>:-pthread>
 # Set C++ version
       $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
+      $<$<CXX_COMPILER_ID:Clang>:${CLANG_FLAGS}>
       $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
 # Set Debug Flags
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
+      $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:DEBUG>>:${CLANG_DEBUG_FLAGS}>
 # Set Release Flags
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
+      $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:RELEASE>>:${CLANG_RELEASE_FLAGS}>
 
       $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
 )
@@ -87,6 +99,8 @@ add_subdirectory( external/spdlog )
 add_subdirectory( external/glm )
 add_subdirectory( external/nlohmann )
 add_subdirectory( external/tinygltf )
+add_subdirectory( external/glslang )
+add_subdirectory( external/spirv_cross )
 
 if ( test )
    add_subdirectory( external/googletest )
@@ -103,6 +117,8 @@ if( NOT WIN32 )
          nlohmann
          tinygltf
          glm
+         glslang 
+         spirv-cross-cpp
    )
 endif( )
 
@@ -119,6 +135,7 @@ target_sources( Luciole
       "src/luciole/vk/buffers/index_buffer.cpp"
       "src/luciole/vk/buffers/uniform_buffer.cpp"
       "src/luciole/vk/buffers/vertex_buffer.cpp"
+      "src/luciole/vk/shaders/shader.cpp"
       "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/errors.cpp"

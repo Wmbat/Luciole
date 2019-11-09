@@ -22,14 +22,14 @@
 /* INCLUDES */
 #include <luciole/luciole_core.hpp>
 #include <luciole/ui/event.hpp>
+#include <luciole/utils/delegate.hpp>
+#include <luciole/utils/message_handler.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/errors.hpp>
 
 #include <glm/vec2.hpp>
 #include <vulkan/vulkan.h>
 #include <spdlog/logger.h>
-#include <luciole/utilities/delegate.hpp>
-#include <luciole/utilities/message_handler.hpp>
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 #include <xcb/xcb.h>
@@ -41,10 +41,6 @@
 
 namespace ui
 {
-/**
- * @brief 
- * 
- */
 class window
 {
 private:
@@ -65,44 +61,16 @@ public:
     */
    struct create_info;
 
-   using create_info_cref_t = strong_type<create_info const&, window_param>;
+   using create_info_t = strong_type<create_info const&, window_param>;
 
 public:
-   /**
-    * @brief Default constructor.
-    */
    window() = default;
-   /**
-    * @brief Create a new window object.
-    * 
-    * @param create_info The information to use for the creation of the window.
-    */
-   window( create_info_cref_t create_info );
-   /**
-    * @brief Deleted copy constructor.
-    */
+   window( create_info_t const& create_info );
    window( window const& wnd ) = delete;
-   /**
-    * @brief Move constructor
-    * 
-    * @param wnd The window to move the data from.
-    */
    window( window&& wnd );
-   /**
-    * @brief Destructor
-    */
    ~window();
 
-   /**
-    * @brief Deleted copy assignment operator
-    */
    window& operator=( window const& rhs ) = delete;
-   /**
-    * @brief 
-    * 
-    * @param rhs 
-    * @return window& 
-    */
    window& operator=( window&& rhs );
 
    /**
@@ -143,7 +111,7 @@ public:
    template<class C>
    std::enable_if_t<std::is_same_v<C, key_event_delg>, void> add_callback ( const C& callback )
    {
-      key_event_.add_callback( callback );
+      key_handler.add_callback( callback );
    }
 
    /**
@@ -156,7 +124,7 @@ public:
    template<class C>
    std::enable_if_t<std::is_same_v<C, mouse_button_event_delg>, void> add_callback( const C& callback )
    {
-      mouse_button_event_.add_callback( callback );
+      mouse_button_handler.add_callback( callback );
    }
 
    /**
@@ -169,7 +137,7 @@ public:
    template<class C>
    std::enable_if_t<std::is_same_v<C, mouse_motion_event_delg>, void> add_callback( const C& callback )
    {
-      mouse_motion_event_.add_callback( callback );
+      mouse_motion_handler.add_callback( callback );
    }
 
    /**
@@ -182,7 +150,7 @@ public:
    template<class C>
    std::enable_if_t<std::is_same_v<C, window_close_event_delg>, void> add_callback( const C& callback )
    {
-      window_close_event_.add_callback( callback );
+      window_close_handler.add_callback( callback );
    }
 
    /**
@@ -195,37 +163,37 @@ public:
    template<class C>
    std::enable_if_t<std::is_same_v<C, framebuffer_resize_event_delg>, void> add_callback( const C& callback )
    {
-      framebuffer_resize_event_.add_callback( callback );
+      framebuffer_resize_handler.add_callback( callback );
    }
 
    [[nodiscard]] 
    glm::uvec2 get_size() const PURE;
 
 private:
-   std::string title_;
-   glm::uvec2 position_;
-   glm::uvec2 size_;
+   std::string title;
+   glm::uvec2 position;
+   glm::uvec2 size;
 
-   bool is_open_;
-   bool is_fullscreen_;
+   bool is_wnd_open;
+   bool is_fullscreen;
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
-   xcb_connection_uptr p_xcb_connection_;
-   xcb_screen_t* p_xcb_screen_;
-   xcb_window_t xcb_window_;
+   xcb_connection_uptr p_xcb_connection;
+   xcb_screen_t* p_xcb_screen;
+   xcb_window_t xcb_window;
        
-   xcb_intern_atom_uptr p_xcb_wm_delete_window_;
+   xcb_intern_atom_uptr p_xcb_wm_delete_window;
 
-   int default_screen_id_;
+   int default_screen_id;
 #endif
 
-   std::shared_ptr<spdlog::logger> window_logger_;
+   std::shared_ptr<spdlog::logger> window_logger;
 
-   message_handler<const key_event> key_event_;
-   message_handler<const mouse_button_event> mouse_button_event_;
-   message_handler<const mouse_motion_event> mouse_motion_event_;
-   message_handler<const window_close_event> window_close_event_;
-   message_handler<const framebuffer_resize_event> framebuffer_resize_event_;
+   message_handler<const key_event> key_handler;
+   message_handler<const mouse_button_event> mouse_button_handler;
+   message_handler<const mouse_motion_event> mouse_motion_handler;
+   message_handler<const window_close_event> window_close_handler;
+   message_handler<const framebuffer_resize_event> framebuffer_resize_handler;
 
 public:
    /**

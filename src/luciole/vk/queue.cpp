@@ -20,10 +20,10 @@
 
 queue::queue( vk::device_t device, family_index_t family_index, index_t index )
    :
-   family_index_( family_index.value_ ),
-   index_( index.value_ )
+   family_index( family_index.value( ) ),
+   index( index.value( ) )
 {
-   vkGetDeviceQueue( device.value_, family_index_, index_, &handle_ );
+   vkGetDeviceQueue( device.value( ), family_index.value( ), index.value( ), &handle );
 }
 
 /**
@@ -41,9 +41,9 @@ queue& queue::operator=( queue&& rhs )
 {
    if ( this != &rhs )
    {
-      std::swap( handle_, rhs.handle_ );
-      std::swap( family_index_, rhs.family_index_ );
-      std::swap( index_, rhs.index_ );
+      std::swap( handle, rhs.handle );
+      std::swap( family_index, rhs.family_index );
+      std::swap( index, rhs.index );
    }
 
    return *this;
@@ -57,7 +57,7 @@ queue& queue::operator=( queue&& rhs )
 vk::error queue::wait_idle( ) const noexcept
 {
    vk::error const err( vk::result_t(
-      vkQueueWaitIdle( handle_ )
+      vkQueueWaitIdle( handle )
    ) );
 
    return err;
@@ -78,7 +78,7 @@ vk::error queue::submit(
    vk::fence_t const& fence ) const noexcept
 {
    vk::error const err( vk::result_t(
-      vkQueueSubmit( handle_, 1, &info.value_, fence.value_ )
+      vkQueueSubmit( handle, 1, &info.value( ), fence.value( ) )
    ) );
 
    return err;
@@ -96,7 +96,7 @@ vk::error queue::present(
    vk::present_info_t const& info ) const noexcept
 {
    vk::error const err( vk::result_t(
-      vkQueuePresentKHR( handle_, &info.value_ )
+      vkQueuePresentKHR( handle, &info.value( ) )
    ) );
 
    return err;
@@ -110,5 +110,5 @@ vk::error queue::present(
  */
 std::uint32_t queue::get_family_index( ) const noexcept
 {
-   return family_index_;
+   return family_index;
 }

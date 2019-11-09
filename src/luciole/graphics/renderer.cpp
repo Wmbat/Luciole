@@ -19,7 +19,7 @@
 #include <luciole/graphics/renderer.hpp>
 #include <luciole/graphics/vertex.hpp>
 #include <luciole/ui/event.hpp>
-#include <luciole/utilities/file_io.hpp>
+#include <luciole/utils/file_io.hpp>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -45,35 +45,42 @@ const std::vector<std::uint32_t> indices = {
  * @param wnd Reference to a window object.
  */
 renderer::renderer( p_context_t p_context, ui::window& wnd )
-    :
-    p_context_( p_context.value_ )
+   :
+   p_context( p_context.value( ) ),
+   swapchain( VK_NULL_HANDLE ),
+   swapchain_images( { } ),
+   swapchain_image_views( { } ),
+   swapchain_framebuffers( { } ),
+   swapchain_image_format( VK_FORMAT_UNDEFINED ),
+   swapchain_extent( { 0, 0 } ),
+   render_pass( VK_NULL_HANDLE ),
+   default_graphics_pipeline_layout( VK_NULL_HANDLE ),
+   default_graphics_pipeline( VK_NULL_HANDLE ),
+   descriptor_set_layout( VK_NULL_HANDLE ),
+   render_command_buffers( { } )
 {
-   vulkan_logger_ = spdlog::get( "Vulkan Logger" );
+   vulkan_logger = spdlog::get( "Vulkan Logger" );
 
    wnd.add_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
 
-   vk::vertex_buffer::create_info const vertex_buffer_create_info
-   {  
-      .p_context = p_context_,
-      .memory_allocator = p_context_->get_memory_allocator(),
-      .family_indices = p_context_->get_unique_family_indices(),
-      .vertices = vertices
-   };
+   auto vertex_buffer_create_info = vk::vertex_buffer::create_info( );
+   vertex_buffer_create_info.p_context = p_context.value( );
+   vertex_buffer_create_info.memory_allocator = p_context.value( )->get_memory_allocator( );
+   vertex_buffer_create_info.family_indices = p_context.value( )->get_unique_family_indices( );
+   vertex_buffer_create_info.vertices = vertices;
 
-   vertex_buffer_ = vk::vertex_buffer( 
+   vertex_buffer = vk::vertex_buffer( 
       vk::vertex_buffer::create_info_t(
          vertex_buffer_create_info 
       ) 
    );
 
-   vk::index_buffer::create_info const index_buffer_create_info
-   {
-      .p_context = p_context_,
-      .family_indices = p_context_->get_unique_family_indices( ),
-      .indices = indices
-   };
-
-   index_buffer_ = vk::index_buffer(
+   auto index_buffer_create_info = vk::index_buffer::create_info( );
+   index_buffer_create_info.p_context = p_context.value( );
+   index_buffer_create_info.family_indices = p_context.value( )->get_unique_family_indices( );
+   index_buffer_create_info.indices = indices;
+   
+   index_buffer = vk::index_buffer(
       vk::index_buffer::create_info_t(
          index_buffer_create_info
       )
@@ -81,11 +88,11 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
 
    if ( auto res = create_descriptor_set_layout( ); auto* p_val = std::get_if<VkDescriptorSetLayout>( &res ) )
    {
-      descriptor_set_layout_ = *p_val;
+      descriptor_set_layout = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "descriptor set layout creation error: {0}.",
          std::get<vk::error>( res ).to_string( )
       );
@@ -93,15 +100,15 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
 
    create_swapchain( );
 
-   for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
+   for( int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
    {
       if ( auto res = create_semaphore( ); auto p_val = std::get_if<VkSemaphore>( &res ) )
       {
-         image_available_semaphore_[i] = *p_val;
+         image_available_semaphore[i] = *p_val;
       }
       else
       {
-         vulkan_logger_->error( 
+         vulkan_logger->error( 
             "Image Available Semaphore Creation Error: {0}.",
             std::get<vk::error>( res ).to_string()
          );
@@ -111,11 +118,11 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
 
       if ( auto res = create_semaphore( ); auto p_val = std::get_if<VkSemaphore>( &res ) )
       {
-         render_finished_semaphore_[i] = *p_val;
+         render_finished_semaphore[i] = *p_val;
       }
       else
       { 
-         vulkan_logger_->error( 
+         vulkan_logger->error( 
             "Render Finished Semaphore Creation Error: {0}.",
             std::get<vk::error>( res ).to_string( )
          );
@@ -129,7 +136,7 @@ renderer::renderer( p_context_t p_context, ui::window& wnd )
       }
       else
       {
-         vulkan_logger_->error( 
+         vulkan_logger->error( 
             "In Flight Fence Creation Error: {0}.",
             std::get<vk::error>( res ).to_string( )
          );
@@ -148,33 +155,33 @@ renderer::renderer( renderer&& rhs )
 }
 renderer::~renderer( )
 {
-   for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
+   for( int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
    {
-      if ( image_available_semaphore_[i] != VK_NULL_HANDLE )
+      if ( image_available_semaphore[i] != VK_NULL_HANDLE )
       {
-         p_context_->destroy_semaphore( vk::semaphore_t( image_available_semaphore_[i] ) );
-         image_available_semaphore_[i] = VK_NULL_HANDLE;
+         p_context->destroy_semaphore( vk::semaphore_t( image_available_semaphore[i] ) );
+         image_available_semaphore[i] = VK_NULL_HANDLE;
       }
 
-      if ( render_finished_semaphore_[i] != VK_NULL_HANDLE )
+      if ( render_finished_semaphore[i] != VK_NULL_HANDLE )
       {
-         p_context_->destroy_semaphore( vk::semaphore_t( render_finished_semaphore_[i] ) );
-         render_finished_semaphore_[i] = VK_NULL_HANDLE;
+         p_context->destroy_semaphore( vk::semaphore_t( render_finished_semaphore[i] ) );
+         render_finished_semaphore[i] = VK_NULL_HANDLE;
       }
 
       if ( in_flight_fences[i] != VK_NULL_HANDLE )
       {
-         p_context_->destroy_fence( vk::fence_t( in_flight_fences[i] ) );
+         p_context->destroy_fence( vk::fence_t( in_flight_fences[i] ) );
          in_flight_fences[i] = VK_NULL_HANDLE;
       }
    }
 
    cleanup_swapchain( );
 
-   if ( descriptor_set_layout_ != VK_NULL_HANDLE )
+   if ( descriptor_set_layout != VK_NULL_HANDLE )
    {
-      descriptor_set_layout_ = p_context_->destroy_descriptor_set_layout(
-         vk::descriptor_set_layout_t( descriptor_set_layout_ )
+      descriptor_set_layout = p_context->destroy_descriptor_set_layout(
+         vk::descriptor_set_layout_t( descriptor_set_layout )
       );
    }
 }
@@ -183,41 +190,41 @@ renderer& renderer::operator=( renderer&& rhs )
 {
    if ( this != &rhs )
    {
-      swapchain_ = rhs.swapchain_;
-      rhs.swapchain_ = VK_NULL_HANDLE;
+      swapchain = rhs.swapchain;
+      rhs.swapchain = VK_NULL_HANDLE;
 
-      swapchain_images_ = std::move( rhs.swapchain_images_ );
-      swapchain_image_format_ = rhs.swapchain_image_format_;
-      swapchain_extent_ = rhs.swapchain_extent_;
-      swapchain_image_views_ = std::move( rhs.swapchain_image_views_ );
+      swapchain_images = std::move( rhs.swapchain_images );
+      swapchain_image_format = rhs.swapchain_image_format;
+      swapchain_extent = rhs.swapchain_extent;
+      swapchain_image_views = std::move( rhs.swapchain_image_views );
 
-      render_pass_ = rhs.render_pass_;
-      rhs.render_pass_ = VK_NULL_HANDLE;
+      render_pass = rhs.render_pass;
+      rhs.render_pass = VK_NULL_HANDLE;
 
-      default_graphics_pipeline_layout_ = rhs.default_graphics_pipeline_layout_;
-      rhs.default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+      default_graphics_pipeline_layout = rhs.default_graphics_pipeline_layout;
+      rhs.default_graphics_pipeline_layout = VK_NULL_HANDLE;
      
-      default_graphics_pipeline_ = rhs.default_graphics_pipeline_;
-      rhs.default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+      default_graphics_pipeline = rhs.default_graphics_pipeline;
+      rhs.default_graphics_pipeline_layout = VK_NULL_HANDLE;
 
-      swapchain_framebuffers_ = std::move( rhs.swapchain_framebuffers_ );
+      swapchain_framebuffers = std::move( rhs.swapchain_framebuffers );
 
-      std::swap( render_command_buffers_, rhs.render_command_buffers_ );
+      std::swap( render_command_buffers, rhs.render_command_buffers );
        
-      for( int i = 0; i < MAX_FRAMES_IN_FLIGHT_; ++i )
+      for( int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
       {
-         image_available_semaphore_[i] = rhs.image_available_semaphore_[i];
-         rhs.image_available_semaphore_[i] = VK_NULL_HANDLE;
+         image_available_semaphore[i] = rhs.image_available_semaphore[i];
+         rhs.image_available_semaphore[i] = VK_NULL_HANDLE;
 
-         render_finished_semaphore_[i] = rhs.render_finished_semaphore_[i];
-         rhs.render_finished_semaphore_[i] = VK_NULL_HANDLE;
+         render_finished_semaphore[i] = rhs.render_finished_semaphore[i];
+         rhs.render_finished_semaphore[i] = VK_NULL_HANDLE;
 
          in_flight_fences[i] = rhs.in_flight_fences[i];
          rhs.in_flight_fences[i] = VK_NULL_HANDLE;
       }
 
-      p_context_ = rhs.p_context_;
-      rhs.p_context_ = nullptr;
+      p_context = rhs.p_context;
+      rhs.p_context = nullptr;
    }
    
    return *this;
@@ -227,10 +234,10 @@ void renderer::draw_frame( )
 {
    std::uint32_t image_index = 0;
    auto result = vkAcquireNextImageKHR( 
-      p_context_->get( ), 
-      swapchain_, 
+      p_context->get( ), 
+      swapchain, 
       std::numeric_limits<std::uint64_t>::max( ), 
-      image_available_semaphore_[current_frame], 
+      image_available_semaphore[current_frame], 
       VK_NULL_HANDLE, 
       &image_index 
    );
@@ -241,9 +248,9 @@ void renderer::draw_frame( )
       return;
    }
 
-   VkSemaphore wait_semaphores[] = { image_available_semaphore_[current_frame] };
-   VkSemaphore signal_semaphores[] = { render_finished_semaphore_[current_frame] };
-   VkSwapchainKHR swapchains[] = { swapchain_ };
+   VkSemaphore wait_semaphores[] = { image_available_semaphore[current_frame] };
+   VkSemaphore signal_semaphores[] = { render_finished_semaphore[current_frame] };
+   VkSwapchainKHR swapchains[] = { swapchain };
    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
    static auto start_time = std::chrono::high_resolution_clock::now( );
@@ -256,10 +263,10 @@ void renderer::draw_frame( )
    uniform_buffer_object ubo = { };
    ubo.model = glm::rotate( glm::mat4( 1.0f ), time * glm::radians( 90.0f ), glm::vec3( 0.0f, 0.0f, 1.0f ) );
    ubo.view = glm::lookAt( glm::vec3( 2.0f, 2.0f, 2.0f ), glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 0.0f, 1.0f ) );
-   ubo.proj = glm::perspective( glm::radians( 45.0f ), swapchain_extent_.width / (float) swapchain_extent_.height, 0.1f, 10.0f );
+   ubo.proj = glm::perspective( glm::radians( 45.0f ), swapchain_extent.width / (float) swapchain_extent.height, 0.1f, 10.0f );
    ubo.proj[1][1] *= -1;
 
-   uniform_buffers_[image_index].map_data( ubo );
+   uniform_buffers[image_index].map_data( ubo );
          
    VkSubmitInfo const submit_info 
    {
@@ -269,19 +276,19 @@ void renderer::draw_frame( )
       .pWaitSemaphores = wait_semaphores,
       .pWaitDstStageMask = wait_stages,
       .commandBufferCount = 1,
-      .pCommandBuffers = &render_command_buffers_[image_index],
+      .pCommandBuffers = &render_command_buffers[image_index],
       .signalSemaphoreCount = sizeof( signal_semaphores ) / sizeof( VkSemaphore ),
       .pSignalSemaphores = signal_semaphores
    };
    
-   auto const submit_result = p_context_->submit_queue( 
+   auto const submit_result = p_context->submit_queue( 
       queue::flag_t( queue::flag::e_graphics ), 
       vk::submit_info_t( submit_info ), 
       vk::fence_t( in_flight_fences[current_frame] )
    );
 
-   p_context_->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
-   p_context_->reset_fence( vk::fence_t( in_flight_fences[current_frame] ) );
+   p_context->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
+   p_context->reset_fence( vk::fence_t( in_flight_fences[current_frame] ) );
 
    VkPresentInfoKHR const present_info 
    {
@@ -295,21 +302,21 @@ void renderer::draw_frame( )
       .pResults = nullptr
    };
 
-   auto const present_res = p_context_->present_queue( 
+   auto const present_res = p_context->present_queue( 
       queue::flag_t( queue::flag::e_graphics ), 
       vk::present_info_t( present_info ) 
    );
 
    if ( present_res.get_type( ) == vk::error::type::e_out_of_date || 
         present_res.get_type( ) == vk::error::type::e_suboptimal || 
-        is_framebuffer_resized_ )
+        is_framebuffer_resized )
    {
-      is_framebuffer_resized_ = false;
+      is_framebuffer_resized = false;
       create_swapchain( );
    }
    else if ( present_res.get_type() != vk::error::type::e_none )
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Present Queue Error: {0}.",
          present_res.to_string( )
       );
@@ -317,27 +324,27 @@ void renderer::draw_frame( )
       abort( );
    }
 
-   current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT_;   
+   current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )
 {
-   window_width_ = event.size_.x;
-   window_height_ = event.size_.y;
-   is_framebuffer_resized_ = true;
+   window_width = event.size.x;
+   window_height = event.size.y;
+   is_framebuffer_resized = true;
 }
 
 void renderer::create_swapchain( )
 {
-   p_context_->device_wait_idle();
+   p_context->device_wait_idle();
 
    cleanup_swapchain( );
 
-   auto const capabilities = p_context_->get_surface_capabilities();
+   auto const capabilities = p_context->get_surface_capabilities();
    auto const format = pick_swapchain_format();
    
-   swapchain_image_format_ = format.format;
-   swapchain_extent_ = pick_swapchain_extent( capabilities );
+   swapchain_image_format = format.format;
+   swapchain_extent = pick_swapchain_extent( capabilities );
    
    std::uint32_t image_count = capabilities.minImageCount + 1;
    if ( capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount )
@@ -345,9 +352,9 @@ void renderer::create_swapchain( )
       image_count = capabilities.maxImageCount;
    }
    
-   swapchain_images_.reserve( image_count );
-   swapchain_image_views_.reserve( image_count );
-   swapchain_framebuffers_.reserve( image_count );
+   swapchain_images.reserve( image_count );
+   swapchain_image_views.reserve( image_count );
+   swapchain_framebuffers.reserve( image_count );
 
    auto const res_swapchain = create_swapchain(
       capabilities, format 
@@ -355,11 +362,11 @@ void renderer::create_swapchain( )
 
    if ( auto const* p_val = std::get_if<VkSwapchainKHR>( &res_swapchain ) )
    {
-      swapchain_ = *p_val;
+      swapchain = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Swapchain Recreation Error: {0}.",
          std::get<vk::error>( res_swapchain ).to_string( )
       );
@@ -367,19 +374,19 @@ void renderer::create_swapchain( )
       abort( );
    }
 
-   swapchain_images_.reserve( image_count );
-   auto const res_images = p_context_->get_swapchain_images(
-      vk::swapchain_t( swapchain_ ),
+   swapchain_images.reserve( image_count );
+   auto const res_images = p_context->get_swapchain_images(
+      vk::swapchain_t( swapchain ),
       count32_t( image_count )
    );
 
    if ( auto const* p_val = std::get_if<std::vector<VkImage>>( &res_images ) )
    {
-      swapchain_images_ = *p_val;
+      swapchain_images = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Swapchain Images Retrieval Error {0}.",
          std::get<vk::error>( res_images ).to_string( )
       );
@@ -387,20 +394,20 @@ void renderer::create_swapchain( )
       abort( );
    }
    
-   swapchain_image_views_.reserve( swapchain_images_.size( ) );
-   for( std::size_t i = 0; i < swapchain_images_.size( ); ++i )
+   swapchain_image_views.reserve( swapchain_images.size( ) );
+   for( std::size_t i = 0; i < swapchain_images.size( ); ++i )
    {
       auto const res_image_view = create_image_view(
-         vk::image_t( swapchain_images_[i] )
+         vk::image_t( swapchain_images[i] )
       );
 
       if ( auto const* p_val = std::get_if<VkImageView>( &res_image_view ) )
       {
-         swapchain_image_views_.emplace_back( *p_val );
+         swapchain_image_views.emplace_back( *p_val );
       }
       else
       {
-         vulkan_logger_->error(
+         vulkan_logger->error(
             "Swapchain Image View Recreation Error {0}.",
             std::get<vk::error>( res_image_view ).to_string( )
          );
@@ -411,11 +418,11 @@ void renderer::create_swapchain( )
 
    if ( auto res = create_render_pass( ); auto p_val = std::get_if<VkRenderPass>( &res ) )
    {
-      render_pass_ = *p_val;
+      render_pass = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Render Pass Recreation Error: {0}.",
          std::get<vk::error>( res ).to_string( )
       );
@@ -425,11 +432,11 @@ void renderer::create_swapchain( )
 
    if ( auto res = create_default_pipeline_layout( ); auto p_val = std::get_if<VkPipelineLayout>( &res ) )
    {
-      default_graphics_pipeline_layout_ = *p_val;
+      default_graphics_pipeline_layout = *p_val;
    } 
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Default Graphics Pipeline layout Recreation Error: {0}.",
          std::get<vk::error>( res ).to_string( )
       );
@@ -438,17 +445,17 @@ void renderer::create_swapchain( )
    }
 
    auto const res_default_pipeline = create_default_pipeline( 
-      vert_shader_filepath_const_ref_t( "../data/shaders/default_vert.spv" ), 
-      frag_shader_filepath_const_ref_t( "../data/shaders/default_frag.spv" )
+      vert_shader_filepath_t( "../data/shaders/default_vert.spv" ), 
+      frag_shader_filepath_t( "../data/shaders/default_frag.spv" )
    );
       
    if ( auto const* p_val = std::get_if<VkPipeline>( &res_default_pipeline ) )
    {
-      default_graphics_pipeline_ = *p_val;
+      default_graphics_pipeline = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Default Graphics Pipeline Recreation Error: {0}.",
          std::get<vk::error>( res_default_pipeline ).to_string( )
       );
@@ -456,18 +463,18 @@ void renderer::create_swapchain( )
       abort( );
    }
 
-   auto const res_command_buffers = p_context_->create_command_buffers(
+   auto const res_command_buffers = p_context->create_command_buffers(
       queue::flag_t( queue::flag::e_graphics ),
       count32_t( image_count )
    );
    
    if ( auto const* p_val = std::get_if<std::vector<VkCommandBuffer>>( &res_command_buffers ) )
    {
-      render_command_buffers_ = *p_val;
+      render_command_buffers = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Render Command Buffers Recreation Error: {0}.",
          std::get<vk::error>( res_command_buffers ).to_string( )
       );
@@ -475,20 +482,20 @@ void renderer::create_swapchain( )
       abort( );
    }
    
-   swapchain_framebuffers_.reserve( image_count );
+   swapchain_framebuffers.reserve( image_count );
    for( std::size_t i = 0; i < image_count; ++i )
    {
       auto const res_framebuffer = create_framebuffer(
-         vk::image_view_t( swapchain_image_views_[i] )
+         vk::image_view_t( swapchain_image_views[i] )
       );
 
       if ( auto const* p_val = std::get_if<VkFramebuffer>( &res_framebuffer ) )
       {
-         swapchain_framebuffers_.emplace_back( std::move( *p_val ) );
+         swapchain_framebuffers.emplace_back( std::move( *p_val ) );
       }
       else
       {
-         vulkan_logger_->error(
+         vulkan_logger->error(
             "Swapchain Framebuffer Recreation Error: {0}.",
             std::get<vk::error>( res_framebuffer ).to_string( )
          );
@@ -497,68 +504,68 @@ void renderer::create_swapchain( )
       }
    }
 
-   uniform_buffers_.reserve( image_count );
+   uniform_buffers.reserve( image_count );
    for( std::size_t i = 0; i < image_count; ++i )
    {
-      uniform_buffers_.emplace_back( *p_context_, sizeof( uniform_buffer_object ) );
+      uniform_buffers.emplace_back( *p_context, sizeof( uniform_buffer_object ) );
    }
 
    record_command_buffers( );
 }
 void renderer::cleanup_swapchain( )
 {
-   uniform_buffers_.clear( );
+   uniform_buffers.clear( );
       
-   for( auto& framebuffer : swapchain_framebuffers_ )
+   for( auto& framebuffer : swapchain_framebuffers )
    {
       if ( framebuffer != VK_NULL_HANDLE )
       {
-         p_context_->destroy_framebuffer( vk::framebuffer_t( framebuffer ) );
+         p_context->destroy_framebuffer( vk::framebuffer_t( framebuffer ) );
          framebuffer = VK_NULL_HANDLE;
       }
    }
 
-   if ( default_graphics_pipeline_ != VK_NULL_HANDLE )
+   if ( default_graphics_pipeline != VK_NULL_HANDLE )
    {
-      p_context_->destroy_pipeline( vk::pipeline_t( default_graphics_pipeline_ ) );
-      default_graphics_pipeline_ = VK_NULL_HANDLE;
+      p_context->destroy_pipeline( vk::pipeline_t( default_graphics_pipeline ) );
+      default_graphics_pipeline = VK_NULL_HANDLE;
    }
 
-   if ( default_graphics_pipeline_layout_ != VK_NULL_HANDLE )
+   if ( default_graphics_pipeline_layout != VK_NULL_HANDLE )
    {
-      p_context_->destroy_pipeline_layout( vk::pipeline_layout_t( default_graphics_pipeline_layout_ ) );
-      default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+      p_context->destroy_pipeline_layout( vk::pipeline_layout_t( default_graphics_pipeline_layout ) );
+      default_graphics_pipeline_layout = VK_NULL_HANDLE;
    }
 
-   if ( render_pass_ != VK_NULL_HANDLE )
+   if ( render_pass != VK_NULL_HANDLE )
    {
-      p_context_->destroy_render_pass( vk::render_pass_t( render_pass_ ) );
-      render_pass_ = VK_NULL_HANDLE;
+      p_context->destroy_render_pass( vk::render_pass_t( render_pass ) );
+      render_pass = VK_NULL_HANDLE;
    }
    
-   for( auto& image_view : swapchain_image_views_ )
+   for( auto& image_view : swapchain_image_views )
    {
       if ( image_view != VK_NULL_HANDLE )
       {
-         p_context_->destroy_image_view( vk::image_view_t( image_view ) );
+         p_context->destroy_image_view( vk::image_view_t( image_view ) );
          image_view = VK_NULL_HANDLE;
       }
    }
     
-   if ( swapchain_ != VK_NULL_HANDLE )
+   if ( swapchain != VK_NULL_HANDLE )
    {
-      p_context_->destroy_swapchain( vk::swapchain_t( swapchain_ ) );
-      swapchain_ = VK_NULL_HANDLE;
+      p_context->destroy_swapchain( vk::swapchain_t( swapchain ) );
+      swapchain = VK_NULL_HANDLE;
    }
 
-   swapchain_framebuffers_.clear( );
-   swapchain_image_views_.clear( );
-   swapchain_images_.clear( );
+   swapchain_framebuffers.clear( );
+   swapchain_image_views.clear( );
+   swapchain_images.clear( );
 }
 
 void renderer::record_command_buffers( )
 {
-   for( size_t i = 0; i < render_command_buffers_.size( ); ++i )
+   for( size_t i = 0; i < render_command_buffers.size( ); ++i )
    {
       VkCommandBufferBeginInfo const buffer_begin_info 
       {
@@ -569,12 +576,12 @@ void renderer::record_command_buffers( )
       };
 
       vk::error const err_begin( vk::result_t(
-         vkBeginCommandBuffer( render_command_buffers_[i], &buffer_begin_info )
+         vkBeginCommandBuffer( render_command_buffers[i], &buffer_begin_info )
       ) );
 
       if ( err_begin.is_error( ) )
       {
-         vulkan_logger_->error(
+         vulkan_logger->error(
             "Failed to begin recording command buffer error: {0}.",
             err_begin.to_string( )
          );
@@ -586,38 +593,38 @@ void renderer::record_command_buffers( )
       {
          .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
          .pNext = nullptr,
-         .renderPass = render_pass_,
-         .framebuffer = swapchain_framebuffers_[i],
+         .renderPass = render_pass,
+         .framebuffer = swapchain_framebuffers[i],
          .renderArea = VkRect2D 
          {
             .offset = {0, 0},
-            .extent = swapchain_extent_
+            .extent = swapchain_extent
          },
          .clearValueCount = 1,
          .pClearValues = &clear_colour
       };
 
-      vkCmdBeginRenderPass( render_command_buffers_[i], &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+      vkCmdBeginRenderPass( render_command_buffers[i], &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
 
-      vkCmdBindPipeline( render_command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, default_graphics_pipeline_ );
+      vkCmdBindPipeline( render_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, default_graphics_pipeline );
    
-      VkBuffer buffers[] = { vertex_buffer_.get_buffer() };
+      VkBuffer buffers[] = { vertex_buffer.get_buffer() };
       VkDeviceSize offsets[] = { 0 };
-      vkCmdBindVertexBuffers( render_command_buffers_[i], 0, 1, buffers, offsets );
+      vkCmdBindVertexBuffers( render_command_buffers[i], 0, 1, buffers, offsets );
 
-      vkCmdBindIndexBuffer( render_command_buffers_[i], index_buffer_.get_buffer( ), 0, VK_INDEX_TYPE_UINT32 );
+      vkCmdBindIndexBuffer( render_command_buffers[i], index_buffer.get_buffer( ), 0, VK_INDEX_TYPE_UINT32 );
 
-      vkCmdDrawIndexed( render_command_buffers_[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+      vkCmdDrawIndexed( render_command_buffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
-      vkCmdEndRenderPass( render_command_buffers_[i] );
+      vkCmdEndRenderPass( render_command_buffers[i] );
 
       vk::error const err_end( vk::result_t(
-         vkEndCommandBuffer( render_command_buffers_[i] ) 
+         vkEndCommandBuffer( render_command_buffers[i] ) 
       ) );
 
       if ( err_end.is_error( ) )
       {
-         vulkan_logger_->error(
+         vulkan_logger->error(
             "Failed to end recording command buffer error: {0}.",
             err_end.to_string( )
          );
@@ -631,11 +638,11 @@ std::variant<VkSwapchainKHR, vk::error> renderer::create_swapchain(
 {
    auto const present_mode = pick_swapchain_present_mode( );
    
-   auto create_info = p_context_->swapchain_create_info( );
-   create_info.minImageCount = static_cast<std::uint32_t>( swapchain_images_.capacity( ) );
+   auto create_info = p_context->swapchain_create_info( );
+   create_info.minImageCount = static_cast<std::uint32_t>( swapchain_images.capacity( ) );
    create_info.imageFormat = format.format;
    create_info.imageColorSpace = format.colorSpace;
-   create_info.imageExtent = swapchain_extent_;
+   create_info.imageExtent = swapchain_extent;
    create_info.imageArrayLayers = 1;
    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
    create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -647,7 +654,7 @@ std::variant<VkSwapchainKHR, vk::error> renderer::create_swapchain(
    create_info.clipped = VK_TRUE;
    create_info.oldSwapchain = nullptr;
    
-   return p_context_->create_swapchain( vk::swapchain_create_info_t( create_info ) );
+   return p_context->create_swapchain( vk::swapchain_create_info_t( create_info ) );
 }
 
 std::variant<VkImageView, vk::error> renderer::create_image_view( vk::image_t image ) const
@@ -657,9 +664,9 @@ std::variant<VkImageView, vk::error> renderer::create_image_view( vk::image_t im
       .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
       .pNext = nullptr,
       .flags = { },
-      .image = image.value_,
+      .image = image.value( ),
       .viewType = VK_IMAGE_VIEW_TYPE_2D,
-      .format = swapchain_image_format_,
+      .format = swapchain_image_format,
       .components = VkComponentMapping
       {
          .r = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -677,7 +684,7 @@ std::variant<VkImageView, vk::error> renderer::create_image_view( vk::image_t im
       }
    };
 
-   return p_context_->create_image_view( vk::image_view_create_info_t( create_info ) );
+   return p_context->create_image_view( vk::image_view_create_info_t( create_info ) );
 }
 
 std::variant<VkRenderPass, vk::error> renderer::create_render_pass( ) const
@@ -685,7 +692,7 @@ std::variant<VkRenderPass, vk::error> renderer::create_render_pass( ) const
    VkAttachmentDescription const colour_attachment
    {
       .flags = 0,
-      .format = swapchain_image_format_,
+      .format = swapchain_image_format,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -739,12 +746,12 @@ std::variant<VkRenderPass, vk::error> renderer::create_render_pass( ) const
       .pDependencies = &dependency
    };
    
-   return p_context_->create_render_pass( vk::render_pass_create_info_t( create_info ) );
+   return p_context->create_render_pass( vk::render_pass_create_info_t( create_info ) );
 }
 
-VkShaderModule renderer::create_shader_module( shader_filepath_const_ref_t filepath ) const
+VkShaderModule renderer::create_shader_module( shader_filepath_t filepath ) const
 {
-   auto const spirv_code = read_from_binary_file( filepath.value_ );
+   auto const spirv_code = read_from_binary_file( filepath.value( ) );
 
    VkShaderModuleCreateInfo const create_info 
    {
@@ -755,7 +762,7 @@ VkShaderModule renderer::create_shader_module( shader_filepath_const_ref_t filep
       .pCode = reinterpret_cast<const std::uint32_t*>( spirv_code.data( ) )
    };
 
-   return p_context_->create_shader_module( vk::shader_module_create_info_t( create_info ) );
+   return p_context->create_shader_module( vk::shader_module_create_info_t( create_info ) );
 }
 
 std::variant<VkPipelineLayout, vk::error> renderer::create_default_pipeline_layout( ) const
@@ -771,7 +778,7 @@ std::variant<VkPipelineLayout, vk::error> renderer::create_default_pipeline_layo
       .pPushConstantRanges = nullptr
    };
 
-   return p_context_->create_pipeline_layout( vk::pipeline_layout_create_info_t( create_info ) );
+   return p_context->create_pipeline_layout( vk::pipeline_layout_create_info_t( create_info ) );
 }
 
 std::variant<VkDescriptorSetLayout, vk::error> renderer::create_descriptor_set_layout( ) const
@@ -794,15 +801,15 @@ std::variant<VkDescriptorSetLayout, vk::error> renderer::create_descriptor_set_l
       .pBindings = &layout_binding
    };
 
-   return p_context_->create_descriptor_set_layout( vk::descriptor_set_layout_create_info_t( create_info ) );
+   return p_context->create_descriptor_set_layout( vk::descriptor_set_layout_create_info_t( create_info ) );
 }
 
 std::variant<VkPipeline, vk::error> renderer::create_default_pipeline( 
-   vert_shader_filepath_const_ref_t vert_filepath, 
-   frag_shader_filepath_const_ref_t frag_filepath ) const 
+   vert_shader_filepath_t vert_filepath, 
+   frag_shader_filepath_t frag_filepath ) const 
 {
-   auto const vert_shader = create_shader_module( shader_filepath_const_ref_t( vert_filepath.value_ ) );
-   auto const frag_shader = create_shader_module( shader_filepath_const_ref_t( frag_filepath.value_ ) );
+   auto const vert_shader = create_shader_module( shader_filepath_t( vert_filepath.value( ) ) );
+   auto const frag_shader = create_shader_module( shader_filepath_t( frag_filepath.value( ) ) );
 
    VkPipelineShaderStageCreateInfo vert_shader_stage_create_info 
    {
@@ -859,8 +866,8 @@ std::variant<VkPipeline, vk::error> renderer::create_default_pipeline(
    {
       .x = 0.0f,
       .y = 0.0f,
-      .width = static_cast<float>( swapchain_extent_.width ),
-      .height = static_cast<float>( swapchain_extent_.height ),
+      .width = static_cast<float>( swapchain_extent.width ),
+      .height = static_cast<float>( swapchain_extent.height ),
       .minDepth = 0.0f,
       .maxDepth = 1.0f
    };
@@ -868,7 +875,7 @@ std::variant<VkPipeline, vk::error> renderer::create_default_pipeline(
    VkRect2D scissor
    {
       .offset = { 0, 0 },
-      .extent = swapchain_extent_
+      .extent = swapchain_extent
    };
 
    VkPipelineViewportStateCreateInfo viewport_state_create_info 
@@ -966,17 +973,17 @@ std::variant<VkPipeline, vk::error> renderer::create_default_pipeline(
       .pDepthStencilState = nullptr,
       .pColorBlendState = &colour_blend_state_create_info,
       .pDynamicState = &dynamic_state_create_info,
-      .layout = default_graphics_pipeline_layout_,
-      .renderPass = render_pass_,
+      .layout = default_graphics_pipeline_layout,
+      .renderPass = render_pass,
       .subpass = 0,
       .basePipelineHandle = VK_NULL_HANDLE,
       .basePipelineIndex = 0
    };
 
-   auto const handle = p_context_->create_pipeline( vk::graphics_pipeline_create_info_t( create_info ) );
+   auto const handle = p_context->create_pipeline( vk::graphics_pipeline_create_info_t( create_info ) );
 
-   p_context_->destroy_shader_module( vk::shader_module_t( frag_shader ) );
-   p_context_->destroy_shader_module( vk::shader_module_t( vert_shader ) );
+   p_context->destroy_shader_module( vk::shader_module_t( frag_shader ) );
+   p_context->destroy_shader_module( vk::shader_module_t( vert_shader ) );
 
    return handle;
 }
@@ -990,7 +997,7 @@ std::variant<VkSemaphore, vk::error> renderer::create_semaphore( ) const
       .flags = 0
    };
    
-   return p_context_->create_semaphore( vk::semaphore_create_info_t( create_info ) );
+   return p_context->create_semaphore( vk::semaphore_create_info_t( create_info ) );
 }
 
 std::variant<VkFence, vk::error> renderer::create_fence( ) const
@@ -1002,13 +1009,13 @@ std::variant<VkFence, vk::error> renderer::create_fence( ) const
       .flags = 0
    };
 
-   return p_context_->create_fence( vk::fence_create_info_t( create_info ) );
+   return p_context->create_fence( vk::fence_create_info_t( create_info ) );
 }
 
 std::variant<VkFramebuffer, vk::error> renderer::create_framebuffer( vk::image_view_t image_view ) const
 {
    VkImageView attachments[] = {
-      image_view.value_
+      image_view.value( )
    };
 
    VkFramebufferCreateInfo const create_info
@@ -1016,20 +1023,20 @@ std::variant<VkFramebuffer, vk::error> renderer::create_framebuffer( vk::image_v
       .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
       .pNext = nullptr,
       .flags = 0,
-      .renderPass = render_pass_,
+      .renderPass = render_pass,
       .attachmentCount = sizeof( attachments ) / sizeof( VkImageView ),
       .pAttachments = attachments,
-      .width = swapchain_extent_.width,
-      .height = swapchain_extent_.height,
+      .width = swapchain_extent.width,
+      .height = swapchain_extent.height,
       .layers = 1
    };
 
-   return p_context_->create_framebuffer( vk::framebuffer_create_info_t( create_info ) );
+   return p_context->create_framebuffer( vk::framebuffer_create_info_t( create_info ) );
 }
 
 VkSurfaceFormatKHR renderer::pick_swapchain_format( ) const
 {
-   auto const formats = p_context_->get_surface_format( );
+   auto const formats = p_context->get_surface_format( );
    
    for ( auto const& format : formats )
    {
@@ -1044,7 +1051,7 @@ VkSurfaceFormatKHR renderer::pick_swapchain_format( ) const
 
 VkPresentModeKHR renderer::pick_swapchain_present_mode( ) const
 {
-   auto const present_modes = p_context_->get_present_modes( );
+   auto const present_modes = p_context->get_present_modes( );
    
    for( auto const& present_mode : present_modes )
    {
@@ -1065,7 +1072,7 @@ VkExtent2D renderer::pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capa
    }
    else
    {
-      VkExtent2D actual_extent = { window_width_, window_height_ };
+      VkExtent2D actual_extent = { window_width, window_height };
       
       actual_extent.width = std::clamp( actual_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width );
       actual_extent.height = std::clamp( actual_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height );

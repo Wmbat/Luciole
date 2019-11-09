@@ -21,6 +21,7 @@
 
 /* INCLUDES */
 #include <luciole/context.hpp>
+#include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/buffers/index_buffer.hpp>
 #include <luciole/vk/buffers/uniform_buffer.hpp>
 #include <luciole/vk/buffers/vertex_buffer.hpp>
@@ -39,19 +40,19 @@ private:
     * @brief Dummy struct for custom strong type to designate a shader filepath.
     */
    struct shader_filepath_parameter{ };
-   using shader_filepath_const_ref_t = strong_type<std::string const&, shader_filepath_parameter>;
+   using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
 
    /**
     * @brief Dummy struct for custom strong type to designate a vertex shader filepath.
     */
    struct vert_shader_filepath_param{ };
-   using vert_shader_filepath_const_ref_t = strong_type<std::string const&, vert_shader_filepath_param>;
+   using vert_shader_filepath_t = strong_type<std::string const&, vert_shader_filepath_param>;
    
    /**
     * @brief Dummy struct for custom strong type to designate a fragment shader filepath.
     */
    struct frag_shader_filepath_param{ };
-   using frag_shader_filepath_const_ref_t = strong_type<std::string const&, frag_shader_filepath_param>;
+   using frag_shader_filepath_t = strong_type<std::string const&, frag_shader_filepath_param>;
 
 public:
    renderer( ) = default;
@@ -66,6 +67,8 @@ public:
    void draw_frame();
 
    void on_framebuffer_resize( framebuffer_resize_event const& event );
+
+   void load_shader( shader_filepath_t const& filepath );
 
 private:
    /**
@@ -126,7 +129,7 @@ private:
     */
    [[nodiscard]] 
    VkShaderModule create_shader_module( 
-       shader_filepath_const_ref_t filepath 
+       shader_filepath_t filepath 
    ) const PURE;
 
    /**
@@ -160,8 +163,8 @@ private:
     */
    [[nodiscard]] 
    std::variant<VkPipeline, vk::error> create_default_pipeline( 
-       vert_shader_filepath_const_ref_t vert_filepath, 
-       frag_shader_filepath_const_ref_t frag_filepath 
+       vert_shader_filepath_t vert_filepath, 
+       frag_shader_filepath_t frag_filepath 
    ) const PURE;
 
    /**
@@ -226,43 +229,43 @@ private:
    ) const PURE;
    
 private:
-   static constexpr int MAX_FRAMES_IN_FLIGHT_ = 2;
+   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-   const context* p_context_;
+   const context* p_context;
    
-   VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
-   std::vector<VkImage> swapchain_images_ = { };
-   std::vector<VkImageView> swapchain_image_views_ = { };
-   std::vector<VkFramebuffer> swapchain_framebuffers_ = { };
+   VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+   std::vector<VkImage> swapchain_images = { };
+   std::vector<VkImageView> swapchain_image_views = { };
+   std::vector<VkFramebuffer> swapchain_framebuffers = { };
 
-   VkFormat swapchain_image_format_;
-   VkExtent2D swapchain_extent_;
+   VkFormat swapchain_image_format;
+   VkExtent2D swapchain_extent;
 
-   VkRenderPass render_pass_ = VK_NULL_HANDLE;
-   VkPipeline default_graphics_pipeline_ = VK_NULL_HANDLE;
-   VkPipelineLayout default_graphics_pipeline_layout_ = VK_NULL_HANDLE;
+   VkRenderPass render_pass = VK_NULL_HANDLE;
+   VkPipeline default_graphics_pipeline = VK_NULL_HANDLE;
+   VkPipelineLayout default_graphics_pipeline_layout = VK_NULL_HANDLE;
 
-   VkDescriptorSetLayout descriptor_set_layout_ = VK_NULL_HANDLE;
+   VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
 
-   std::vector<VkCommandBuffer> render_command_buffers_ = { };
+   std::vector<VkCommandBuffer> render_command_buffers = { };
 
-   VkSemaphore image_available_semaphore_[MAX_FRAMES_IN_FLIGHT_] = { };
-   VkSemaphore render_finished_semaphore_[MAX_FRAMES_IN_FLIGHT_] = { };
-   VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT_] = { };
+   VkSemaphore image_available_semaphore[MAX_FRAMES_IN_FLIGHT] = { };
+   VkSemaphore render_finished_semaphore[MAX_FRAMES_IN_FLIGHT] = { };
+   VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT] = { };
 
-   std::vector<vk::uniform_buffer> uniform_buffers_;
+   std::vector<vk::uniform_buffer> uniform_buffers;
       
    size_t current_frame = 0;
 
-   bool is_framebuffer_resized_ = false;
+   bool is_framebuffer_resized = false;
 
-   std::uint32_t window_width_ = 0;
-   std::uint32_t window_height_ = 0;
+   std::uint32_t window_width = 0;
+   std::uint32_t window_height = 0;
 
-   vk::vertex_buffer vertex_buffer_;
-   vk::index_buffer index_buffer_;
+   vk::vertex_buffer vertex_buffer;
+   vk::index_buffer index_buffer;
 
-   std::shared_ptr<spdlog::logger> vulkan_logger_;
+   std::shared_ptr<spdlog::logger> vulkan_logger;
 };
 
 #endif // LUCIOLE_GRAPHICS_RENDERER_HPP

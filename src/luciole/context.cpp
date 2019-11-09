@@ -93,18 +93,24 @@ void destroy_debug_utils_messenger (
 }
 
 context::context( const ui::window& wnd )
+   :
+   wnd_size( wnd.get_size( ) ),
+   instance( VK_NULL_HANDLE ),
+   debug_messenger( VK_NULL_HANDLE ),
+   surface( VK_NULL_HANDLE ),
+   gpu( VK_NULL_HANDLE ),
+   device( VK_NULL_HANDLE ),
+   memory_allocator( VK_NULL_HANDLE )
 {
    /* Vulkan Logger */
    auto vk_console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
    vk_console_sink->set_pattern( "[%^%n] [thread %t] %v%$" );
 
-   vulkan_logger_ = std::shared_ptr<spdlog::logger>( 
+   vulkan_logger = std::shared_ptr<spdlog::logger>( 
       new spdlog::logger( "Vulkan Logger", { vk_console_sink } ) 
    );
-   spdlog::register_logger( vulkan_logger_ );
+   spdlog::register_logger( vulkan_logger );
 
-   wnd_size_ = wnd.get_size();
-   
    std::uint32_t api_version;
    vkEnumerateInstanceVersion( &api_version );
 
@@ -119,15 +125,15 @@ context::context( const ui::window& wnd )
       .apiVersion = api_version
    };
 
-   validation_layers_ = load_validation_layers( );  
-   instance_extensions_ = load_instance_extensions( );
+   validation_layers = load_validation_layers( );  
+   instance_extensions = load_instance_extensions( );
 
-   auto const layer_names = check_layer_support( layers_t( validation_layers_ ) );
+   auto const layer_names = check_layer_support( layers_t( validation_layers ) );
    if constexpr( vk::enable_debug_layers )
    {
       if ( layer_names.empty( ) )
       {
-         vulkan_logger_->error( "1 or more validation layers are not supported." );
+         vulkan_logger->error( "1 or more validation layers are not supported." );
 
          abort();
       }
@@ -135,15 +141,15 @@ context::context( const ui::window& wnd )
       {
          for ( auto const& name : layer_names )
          {
-            vulkan_logger_->info( "Validation Layer \"{0}\": ENABLED.", name );
+            vulkan_logger->info( "Validation Layer \"{0}\": ENABLED.", name );
          }
       }
    }
 
-   auto const instance_ext_names = check_ext_support( extensions_t( instance_extensions_ ) );
+   auto const instance_ext_names = check_ext_support( extensions_t( instance_extensions ) );
    if ( instance_ext_names.empty( ) )
    {
-      vulkan_logger_->error( "1 or more instance extension are not supported." );
+      vulkan_logger->error( "1 or more instance extension are not supported." );
 
       abort();
    }
@@ -151,7 +157,7 @@ context::context( const ui::window& wnd )
    {
       for( auto const& name : instance_ext_names )
       {
-         vulkan_logger_->info( "Instance Extension \"{0}\": ENABLED.", name );
+         vulkan_logger->info( "Instance Extension \"{0}\": ENABLED.", name );
       }
    }
 
@@ -166,11 +172,11 @@ context::context( const ui::window& wnd )
   
    if ( auto const* p_val = std::get_if<VkInstance>( &temp_instance ) )
    {
-      instance_ = *p_val;
+      instance = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Instance Creation Error: {0}.", 
          std::get<vk::error>( temp_instance ).to_string( )
       );
@@ -186,11 +192,11 @@ context::context( const ui::window& wnd )
       auto const temp_messenger = create_debug_messenger( );
       if ( auto const* p_val = std::get_if<VkDebugUtilsMessengerEXT>( &temp_messenger ) )
       {
-         debug_messenger_ = *p_val;
+         debug_messenger = *p_val;
       }
       else
       {
-         vulkan_logger_->error( 
+         vulkan_logger->error( 
             "Debug Messenger Creation Error: {0}.",
             std::get<vk::error>( temp_messenger ).to_string( )
          );
@@ -205,11 +211,11 @@ context::context( const ui::window& wnd )
    auto const temp_surface = create_surface( wnd );
    if ( auto const* p_val = std::get_if<VkSurfaceKHR>( &temp_surface ) )
    {
-      surface_ = *p_val;
+      surface = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Surface Creation Error: {0}.",
          std::get<vk::error>( temp_surface ).to_string( )
       );
@@ -223,11 +229,11 @@ context::context( const ui::window& wnd )
    auto const temp_gpu = pick_gpu( );
    if ( auto const* p_val = std::get_if<VkPhysicalDevice>( &temp_gpu ) )
    {
-      gpu_ = *p_val;
+      gpu = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "GPU Selection Error: {0}.",
          std::get<vk::error>( temp_gpu ).to_string( )
       );
@@ -235,13 +241,13 @@ context::context( const ui::window& wnd )
       abort( );
    }
 
-   device_extensions_ = load_device_extensions( );
+   device_extensions = load_device_extensions( );
 
    auto const queue_properties = query_queue_family_properties( );
-   auto const device_ext_names = check_ext_support( extensions_t( device_extensions_ ) );
+   auto const device_ext_names = check_ext_support( extensions_t( device_extensions ) );
    if ( device_ext_names.empty( ) )
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "1 or more device extensions are not supported."
       );
 
@@ -257,11 +263,11 @@ context::context( const ui::window& wnd )
    );
    if ( auto const* p_val = std::get_if<VkDevice>( &temp_device ) )
    {   
-      device_ = *p_val;
+      device = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Device Creation Error: {0}",
          std::get<vk::error>( temp_device ).to_string( )
       );
@@ -269,7 +275,7 @@ context::context( const ui::window& wnd )
       abort( );
    }
 
-   queues_ = get_queues( queue_properties_t( queue_properties ) );
+   queues = get_queues( queue_properties_t( queue_properties ) );
    
    /*
     *  Check for any errors on the command pools creation.
@@ -277,11 +283,11 @@ context::context( const ui::window& wnd )
    auto const temp_command_pools = create_command_pools( );
    if ( auto const* p_val = std::get_if<command_pools_container_t>( &temp_command_pools ) )
    {
-      command_pools_ = *p_val;
+      command_pools = *p_val;
    }
    else
    {
-      vulkan_logger_->error(
+      vulkan_logger->error(
          "Command Pools Creation Error: {0}.",
          std::get<vk::error>( temp_command_pools ).to_string( )
       );
@@ -292,13 +298,12 @@ context::context( const ui::window& wnd )
    auto const temp_memory_allocator = create_memory_allocator();
    if ( auto const* p_val = std::get_if<VmaAllocator>( &temp_memory_allocator ) )
    {
-      memory_allocator_ = *p_val;
+      memory_allocator = *p_val;
    }
    else
    {
       abort();
    }
-
 }
 context::context( context&& other )
 {
@@ -306,46 +311,46 @@ context::context( context&& other )
 }
 context::~context( )
 {
-   for ( auto& command_pool : command_pools_ )
+   for ( auto& command_pool : command_pools )
    {
-      if ( command_pool.second.handle_ != VK_NULL_HANDLE )
+      if ( command_pool.second.handle != VK_NULL_HANDLE )
       {
-         vkDestroyCommandPool( device_, command_pool.second.handle_, nullptr );
-         command_pool.second.handle_ = VK_NULL_HANDLE;
-         command_pool.second.flags_ = queue::flag::e_none;
+         vkDestroyCommandPool( device, command_pool.second.handle, nullptr );
+         command_pool.second.handle = VK_NULL_HANDLE;
+         command_pool.second.flags = queue::flag::e_none;
       }
    }
   
-   if ( memory_allocator_ != VK_NULL_HANDLE )
+   if ( memory_allocator != VK_NULL_HANDLE )
    {
-      vmaDestroyAllocator( memory_allocator_ );
-      memory_allocator_ = VK_NULL_HANDLE;
+      vmaDestroyAllocator( memory_allocator );
+      memory_allocator = VK_NULL_HANDLE;
    }
 
-   if ( device_ != VK_NULL_HANDLE )
+   if ( device != VK_NULL_HANDLE )
    {
-      vkDestroyDevice( device_, nullptr );
-      device_ = VK_NULL_HANDLE;
+      vkDestroyDevice( device, nullptr );
+      device = VK_NULL_HANDLE;
    }
 
-   if ( surface_ != VK_NULL_HANDLE )
+   if ( surface != VK_NULL_HANDLE )
    {
-      vkDestroySurfaceKHR( instance_, surface_, nullptr );
-      surface_ = VK_NULL_HANDLE;
+      vkDestroySurfaceKHR( instance, surface, nullptr );
+      surface = VK_NULL_HANDLE;
    }
 
    if constexpr ( vk::enable_debug_layers )
    {
-      if ( debug_messenger_ != VK_NULL_HANDLE )
+      if ( debug_messenger != VK_NULL_HANDLE )
       {
-         destroy_debug_utils_messenger( instance_, debug_messenger_, nullptr );
-         debug_messenger_ = VK_NULL_HANDLE;
+         destroy_debug_utils_messenger( instance, debug_messenger, nullptr );
+         debug_messenger = VK_NULL_HANDLE;
       }
    }
 
-   if ( instance_ != VK_NULL_HANDLE )
+   if ( instance != VK_NULL_HANDLE )
    {
-      instance_ = VK_NULL_HANDLE;
+      instance = VK_NULL_HANDLE;
    }
 }
 
@@ -356,31 +361,31 @@ context& context::operator=( context&& rhs )
 {
    if ( this != &rhs )
    {
-      instance_ = rhs.instance_;
-      rhs.instance_ = VK_NULL_HANDLE;
+      instance = rhs.instance;
+      rhs.instance = VK_NULL_HANDLE;
 
-      debug_messenger_ = rhs.debug_messenger_;
-      rhs.debug_messenger_ = VK_NULL_HANDLE;
+      debug_messenger = rhs.debug_messenger;
+      rhs.debug_messenger = VK_NULL_HANDLE;
 
-      surface_ = rhs.surface_;
-      rhs.surface_ = VK_NULL_HANDLE;
+      surface = rhs.surface;
+      rhs.surface = VK_NULL_HANDLE;
       
-      gpu_ = rhs.gpu_;
-      rhs.gpu_ = VK_NULL_HANDLE;
+      gpu = rhs.gpu;
+      rhs.gpu = VK_NULL_HANDLE;
 
-      device_ = rhs.device_;
-      rhs.device_ = VK_NULL_HANDLE;
+      device = rhs.device;
+      rhs.device = VK_NULL_HANDLE;
 
-      memory_allocator_ = rhs.memory_allocator_;
-      rhs.memory_allocator_ = VK_NULL_HANDLE;
+      memory_allocator = rhs.memory_allocator;
+      rhs.memory_allocator = VK_NULL_HANDLE;
 
-      std::swap( queues_, rhs.queues_ );
-      std::swap( command_pools_, rhs.command_pools_ );
-      std::swap( wnd_size_, rhs.wnd_size_ );
+      std::swap( queues, rhs.queues );
+      std::swap( command_pools, rhs.command_pools );
+      std::swap( wnd_size, rhs.wnd_size );
        
-      validation_layers_ = std::move( rhs.validation_layers_ );
-      instance_extensions_ = std::move( rhs.instance_extensions_ );
-      device_extensions_ = std::move( rhs.device_extensions_ );
+      validation_layers = std::move( rhs.validation_layers );
+      instance_extensions = std::move( rhs.instance_extensions );
+      device_extensions = std::move( rhs.device_extensions );
    }
 
    return *this;
@@ -392,7 +397,7 @@ VkSwapchainCreateInfoKHR context::swapchain_create_info( ) const noexcept
    create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    create_info.pNext = nullptr;
    create_info.flags = 0;
-   create_info.surface = surface_;
+   create_info.surface = surface;
    
    return create_info;
 }
@@ -412,7 +417,7 @@ std::variant<VkSwapchainKHR, vk::error> context::create_swapchain(
 
    vk::error err( vk::result_t( 
       vkCreateSwapchainKHR( 
-         device_, &create_info.value_, 
+         device, &create_info.value( ), 
          nullptr, &handle 
    ) ) );
 
@@ -433,7 +438,7 @@ std::variant<VkSwapchainKHR, vk::error> context::create_swapchain(
  */
 void context::destroy_swapchain( vk::swapchain_t swapchain ) const noexcept
 {
-   vkDestroySwapchainKHR( device_, swapchain.value_, nullptr );
+   vkDestroySwapchainKHR( device, swapchain.value( ), nullptr );
 }
 
 
@@ -452,7 +457,7 @@ std::variant<VkImageView, vk::error> context::create_image_view(
 
    vk::error err( vk::result_t(
       vkCreateImageView( 
-         device_, &create_info.value_, 
+         device, &create_info.value( ), 
          nullptr, &handle 
    ) ) );
 
@@ -467,7 +472,7 @@ std::variant<VkImageView, vk::error> context::create_image_view(
 }
 void context::destroy_image_view( vk::image_view_t image_view ) const noexcept
 {
-   vkDestroyImageView( device_, image_view.value_, nullptr );
+   vkDestroyImageView( device, image_view.value( ), nullptr );
 }
 
 
@@ -478,7 +483,7 @@ std::variant<VkRenderPass, vk::error> context::create_render_pass(
   
    vk::error const err ( vk::result_t( 
       vkCreateRenderPass( 
-         device_, &create_info.value_, 
+         device, &create_info.value( ), 
          nullptr, &handle 
    ) ) );
 
@@ -493,7 +498,7 @@ std::variant<VkRenderPass, vk::error> context::create_render_pass(
 }
 void context::destroy_render_pass( vk::render_pass_t render_pass ) const noexcept
 {
-   vkDestroyRenderPass( device_, render_pass.value_, nullptr );
+   vkDestroyRenderPass( device, render_pass.value( ), nullptr );
 }
 
 std::variant<VkDescriptorPool, vk::error> context::create_descriptor_pool(
@@ -503,7 +508,7 @@ std::variant<VkDescriptorPool, vk::error> context::create_descriptor_pool(
 
    vk::error const err ( vk::result_t(
       vkCreateDescriptorPool(
-         device_, &create_info.value_,
+         device, &create_info.value( ),
          nullptr, &handle
       )
    ) );
@@ -520,7 +525,7 @@ std::variant<VkDescriptorPool, vk::error> context::create_descriptor_pool(
 
 VkDescriptorPool context::destroy_descriptor_pool( vk::descriptor_pool_t handle ) const
 {
-   vkDestroyDescriptorPool( device_, handle.value_, nullptr );
+   vkDestroyDescriptorPool( device, handle.value( ), nullptr );
 
    return VK_NULL_HANDLE;
 }
@@ -531,7 +536,7 @@ std::variant<VkPipelineLayout, vk::error> context::create_pipeline_layout(
    VkPipelineLayout handle = VK_NULL_HANDLE;
 
    vk::error const err( vk::result_t(
-      vkCreatePipelineLayout( device_, &create_info.value_, nullptr, &handle ) 
+      vkCreatePipelineLayout( device, &create_info.value( ), nullptr, &handle ) 
    ) );
    
    if ( err.is_error() )
@@ -545,7 +550,7 @@ std::variant<VkPipelineLayout, vk::error> context::create_pipeline_layout(
 }
 void context::destroy_pipeline_layout( vk::pipeline_layout_t pipeline_layout ) const noexcept
 {
-   vkDestroyPipelineLayout( device_, pipeline_layout.value_, nullptr );
+   vkDestroyPipelineLayout( device, pipeline_layout.value( ), nullptr );
 }
 
 std::variant<VkDescriptorSetLayout, vk::error> context::create_descriptor_set_layout(
@@ -554,7 +559,7 @@ std::variant<VkDescriptorSetLayout, vk::error> context::create_descriptor_set_la
    VkDescriptorSetLayout handle = VK_NULL_HANDLE;
 
    vk::error const err( vk::result_t(
-      vkCreateDescriptorSetLayout( device_, &create_info.value_, nullptr, &handle )
+      vkCreateDescriptorSetLayout( device, &create_info.value( ), nullptr, &handle )
    ) );
 
    if ( err.is_error( ) )
@@ -570,7 +575,7 @@ std::variant<VkDescriptorSetLayout, vk::error> context::create_descriptor_set_la
 VkDescriptorSetLayout context::destroy_descriptor_set_layout(
    vk::descriptor_set_layout_t layout ) const
 {
-   vkDestroyDescriptorSetLayout( device_, layout.value_, nullptr );
+   vkDestroyDescriptorSetLayout( device, layout.value( ), nullptr );
 
    return VK_NULL_HANDLE;
 }
@@ -581,7 +586,7 @@ std::variant<VkPipeline, vk::error> context::create_pipeline(
    VkPipeline handle = VK_NULL_HANDLE;
 
    vk::error const err( vk::result_t(
-      vkCreateGraphicsPipelines( device_, nullptr, 1, &create_info.value_, nullptr, &handle )  
+      vkCreateGraphicsPipelines( device, nullptr, 1, &create_info.value( ), nullptr, &handle )  
    ) );
 
    if ( err.is_error( ) )
@@ -600,8 +605,8 @@ std::variant<VkPipeline, vk::error> context::create_pipeline(
 
    vk::error const err( vk::result_t(
       vkCreateComputePipelines( 
-         device_, nullptr, 1, 
-         &create_info.value_, 
+         device, nullptr, 1, 
+         &create_info.value( ), 
          nullptr, &handle 
       ) 
    ) );
@@ -617,7 +622,7 @@ std::variant<VkPipeline, vk::error> context::create_pipeline(
 }
 void context::destroy_pipeline( vk::pipeline_t pipeline ) const noexcept
 {
-    vkDestroyPipeline( device_, pipeline.value_, nullptr );
+    vkDestroyPipeline( device, pipeline.value( ), nullptr );
 }
 
 
@@ -625,11 +630,11 @@ VkShaderModule context::create_shader_module( vk::shader_module_create_info_t co
 {
    VkShaderModule handle;
 
-   return ( vkCreateShaderModule( device_, &create_info.value_, nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
+   return ( vkCreateShaderModule( device, &create_info.value( ), nullptr, &handle ) == VK_SUCCESS ) ? handle : VK_NULL_HANDLE;
 }
 void context::destroy_shader_module( vk::shader_module_t shader_module ) const noexcept
 {
-   vkDestroyShaderModule( device_, shader_module.value_, nullptr );
+   vkDestroyShaderModule( device, shader_module.value( ), nullptr );
 }
 
 
@@ -638,7 +643,7 @@ std::variant<VkFramebuffer, vk::error> context::create_framebuffer( vk::framebuf
    VkFramebuffer handle = VK_NULL_HANDLE;
  
    vk::error const err( vk::result_t( 
-      vkCreateFramebuffer( device_, &create_info.value_, nullptr, &handle ) 
+      vkCreateFramebuffer( device, &create_info.value( ), nullptr, &handle ) 
    ) );
 
    if ( err.is_error( ) )
@@ -652,7 +657,7 @@ std::variant<VkFramebuffer, vk::error> context::create_framebuffer( vk::framebuf
 }
 void context::destroy_framebuffer( vk::framebuffer_t framebuffer ) const noexcept
 {
-   vkDestroyFramebuffer( device_, framebuffer.value_, nullptr ); 
+   vkDestroyFramebuffer( device, framebuffer.value( ), nullptr ); 
 }
 
 std::variant<VkSemaphore, vk::error> context::create_semaphore( 
@@ -661,7 +666,7 @@ std::variant<VkSemaphore, vk::error> context::create_semaphore(
    VkSemaphore handle = VK_NULL_HANDLE;
 
    vk::error const err( vk::result_t(
-      vkCreateSemaphore( device_, &create_info.value_, nullptr, &handle )  
+      vkCreateSemaphore( device, &create_info.value( ), nullptr, &handle )  
    ) );
 
    if ( err.is_error( ) )
@@ -675,7 +680,7 @@ std::variant<VkSemaphore, vk::error> context::create_semaphore(
 }
 void context::destroy_semaphore( vk::semaphore_t semaphore ) const noexcept
 {
-   vkDestroySemaphore( device_, semaphore.value_, nullptr );
+   vkDestroySemaphore( device, semaphore.value( ), nullptr );
 }
 
 std::variant<VkFence, vk::error> context::create_fence( 
@@ -684,7 +689,7 @@ std::variant<VkFence, vk::error> context::create_fence(
    VkFence handle = VK_NULL_HANDLE;
 
    vk::error const err( vk::result_t(
-      vkCreateFence( device_, &create_info.value_, nullptr, &handle )
+      vkCreateFence( device, &create_info.value( ), nullptr, &handle )
    ) );
 
    if ( err.is_error( ) )
@@ -698,28 +703,28 @@ std::variant<VkFence, vk::error> context::create_fence(
 }
 void context::destroy_fence( vk::fence_t fence ) const noexcept
 {
-   vkDestroyFence( device_, fence.value_, nullptr );
+   vkDestroyFence( device, fence.value( ), nullptr );
 }
 
 std::variant<std::vector<VkCommandBuffer>, vk::error> context::create_command_buffers( 
    queue::flag_t flag, 
    count32_t buffer_count ) const 
 {
-   auto pool = command_pools_.find( queues_.find( flag.value_ )->second.get_family_index( ) );
+   auto pool = command_pools.find( queues.find( flag.value( ) )->second.get_family_index( ) );
 
    VkCommandBufferAllocateInfo const allocate_info
    {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .pNext = nullptr,
-      .commandPool = pool->second.handle_,
+      .commandPool = pool->second.handle,
       .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-      .commandBufferCount = buffer_count.value_
+      .commandBufferCount = buffer_count.value( )
    };
 
-   std::vector<VkCommandBuffer> handles( buffer_count.value_ );
+   std::vector<VkCommandBuffer> handles( buffer_count.value( ) );
    
    vk::error const err( vk::result_t(
-      vkAllocateCommandBuffers( device_, &allocate_info, handles.data( ) ) 
+      vkAllocateCommandBuffers( device, &allocate_info, handles.data( ) ) 
    ) );
 
    if ( err.is_error( ) )
@@ -736,8 +741,10 @@ std::variant<std::vector<VkImage>, vk::error> context::get_swapchain_images(
    vk::swapchain_t swapchain, 
    count32_t image_count ) const
 {
+   std::uint32_t count = image_count.value( );
+
    vk::error const err_count( vk::result_t(
-      vkGetSwapchainImagesKHR( device_, swapchain.value_, &image_count.value_, nullptr ) 
+      vkGetSwapchainImagesKHR( device, swapchain.value( ), &count, nullptr ) 
    ) );
 
    if ( err_count.is_error( ) )
@@ -745,12 +752,13 @@ std::variant<std::vector<VkImage>, vk::error> context::get_swapchain_images(
       return err_count;
    }
 
-   std::vector<VkImage> images( image_count.value_ );
+   std::vector<VkImage> images( image_count.value( ) );
+
 
    vk::error const err( vk::result_t(
       vkGetSwapchainImagesKHR( 
-         device_, swapchain.value_, 
-         &image_count.value_, images.data( ) 
+         device, swapchain.value( ), 
+         &count, images.data( ) 
       )
    ) );
 
@@ -767,7 +775,7 @@ std::variant<std::vector<VkImage>, vk::error> context::get_swapchain_images(
 VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
 {
    VkSurfaceCapabilitiesKHR capabilities;
-   vkGetPhysicalDeviceSurfaceCapabilitiesKHR( gpu_, surface_, &capabilities );
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR( gpu, surface, &capabilities );
    
    return capabilities;
 }
@@ -775,9 +783,9 @@ VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
 std::vector<std::uint32_t> context::get_unique_family_indices( ) const
 {
    std::vector<std::uint32_t> indices;
-   indices.reserve( queues_.size() );
+   indices.reserve( queues.size() );
 
-   for( auto const& queue : queues_ )
+   for( auto const& queue : queues )
    {
       bool insert = true;
       for( auto index : indices )
@@ -800,9 +808,9 @@ std::vector<std::uint32_t> context::get_unique_family_indices( ) const
 std::vector<VkSurfaceFormatKHR> context::get_surface_format( ) const
 {
    std::uint32_t format_count = 0;
-   vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &format_count, nullptr );
+   vkGetPhysicalDeviceSurfaceFormatsKHR( gpu, surface, &format_count, nullptr );
    std::vector<VkSurfaceFormatKHR> formats( format_count );
-   vkGetPhysicalDeviceSurfaceFormatsKHR( gpu_, surface_, &format_count, formats.data() );
+   vkGetPhysicalDeviceSurfaceFormatsKHR( gpu, surface, &format_count, formats.data() );
    
    return formats;
 }
@@ -810,21 +818,21 @@ std::vector<VkSurfaceFormatKHR> context::get_surface_format( ) const
 std::vector<VkPresentModeKHR> context::get_present_modes( ) const
 {
    std::uint32_t mode_count = 0u;
-   vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &mode_count, nullptr );
+   vkGetPhysicalDeviceSurfacePresentModesKHR( gpu, surface, &mode_count, nullptr );
    std::vector<VkPresentModeKHR> present_modes( mode_count );
-   vkGetPhysicalDeviceSurfacePresentModesKHR( gpu_, surface_, &mode_count, present_modes.data() );
+   vkGetPhysicalDeviceSurfacePresentModesKHR( gpu, surface, &mode_count, present_modes.data() );
    
    return present_modes;
 }
 
 VkExtent2D context::get_window_extent( ) const
 {
-   return VkExtent2D{ wnd_size_.x, wnd_size_.y };
+   return VkExtent2D{ wnd_size.x, wnd_size.y };
 }
 
 vk::error context::queue_wait_idle( queue::flag_t flag ) const
 {
-   if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
+   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
    {
       return queue->second.wait_idle( );
    }
@@ -838,7 +846,7 @@ vk::error context::submit_queue(
    queue::flag_t flag, vk::submit_info_t const& submit_info, 
    vk::fence_t fence ) const noexcept
 {
-   if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
+   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
    {
       return queue->second.submit( submit_info, fence );
    }
@@ -851,7 +859,7 @@ vk::error context::present_queue(
    queue::flag_t flag,
    vk::present_info_t const& present_info ) const noexcept
 {
-   if ( auto queue = queues_.find( flag.value_ ); queue != queues_.cend( ) )
+   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
    {
       return queue->second.present( present_info );
    }
@@ -863,21 +871,25 @@ vk::error context::present_queue(
 
 void context::wait_for_fence( vk::fence_t fence ) const noexcept
 {
-   bool res = vkWaitForFences( device_, 1, &fence.value_, VK_TRUE, std::numeric_limits<std::uint64_t>::max() );
+   auto fence_handle = fence.value( );
+
+   bool res = vkWaitForFences( device, 1, &fence_handle, VK_TRUE, std::numeric_limits<std::uint64_t>::max() );
 }
 void context::reset_fence( vk::fence_t fence ) const noexcept
 {
-   bool res = vkResetFences( device_, 1, &fence.value_);
+   auto fence_handle = fence.value( );
+
+   bool res = vkResetFences( device, 1, &fence_handle );
 }
 
 vk::error context::device_wait_idle( ) const noexcept
 {
-   return vk::error( vk::result_t( vkDeviceWaitIdle( device_ ) ) );
+   return vk::error( vk::result_t( vkDeviceWaitIdle( device ) ) );
 }
 
 VmaAllocator context::get_memory_allocator( ) const
 {
-   return memory_allocator_;
+   return memory_allocator;
 }
 
 std::vector<vk::layer> context::load_validation_layers( ) const
@@ -886,7 +898,7 @@ std::vector<vk::layer> context::load_validation_layers( ) const
    {
       std::vector<vk::layer> layers =
       {
-         vk::layer{ .priority_ = vk::layer::priority::e_optional, .found_ = false, .name_ = "VK_LAYER_KHRONOS_validation" }
+         vk::layer{ .priority = vk::layer::priority::e_optional, .found = false, .name = "VK_LAYER_KHRONOS_validation" }
       };
 
       std::uint32_t layer_count = 0;
@@ -898,9 +910,9 @@ std::vector<vk::layer> context::load_validation_layers( ) const
       {
          for( auto& layer : layers )
          {
-            if ( strcmp( layer.name_.c_str( ), layer_properties[i].layerName ) == 0 )
+            if ( strcmp( layer.name.c_str( ), layer_properties[i].layerName ) == 0 )
             {
-               layer.found_ = true;
+               layer.found = true;
             }
          }
       }
@@ -918,13 +930,13 @@ std::vector<vk::extension> context::load_instance_extensions( ) const
     std::vector<vk::extension> exts = 
     {
 #if defined( VK_USE_PLATFORM_WIN32_KHR )
-      vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_win32_surface" },
+      vk::extension{ .priority = vk::extension::priority::e_required, .found = false, .name = "VK_KHR_win32_surface" },
 #elif defined( VK_USE_PLATFORM_XCB_KHR )
-      vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_xcb_surface" },
+      vk::extension{ .priority = vk::extension::priority::e_required, .found = false, .name = "VK_KHR_xcb_surface" },
 #endif
-      vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_surface" },
-      vk::extension{ .priority_ = vk::extension::priority::e_optional, .found_ = false, .name_ = "VK_KHR_load_surface_capabilities2" },
-      vk::extension{ .priority_ = vk::extension::priority::e_optional, .found_ = false, .name_ = "VK_EXT_debug_utils" }
+      vk::extension{ .priority = vk::extension::priority::e_required, .found = false, .name = "VK_KHR_surface" },
+      vk::extension{ .priority = vk::extension::priority::e_optional, .found = false, .name = "VK_KHR_load_surface_capabilities2" },
+      vk::extension{ .priority = vk::extension::priority::e_optional, .found = false, .name = "VK_EXT_debug_utils" }
    };
 
    std::uint32_t instance_extension_count = 0;
@@ -936,9 +948,9 @@ std::vector<vk::extension> context::load_instance_extensions( ) const
    {
       for( auto& extension : exts )
       {
-         if ( strcmp( extension.name_.c_str( ), extension_properties[i].extensionName ) == 0 )
+         if ( strcmp( extension.name.c_str( ), extension_properties[i].extensionName ) == 0 )
          {
-            extension.found_ = true;
+            extension.found = true;
          }
       }
    }
@@ -950,21 +962,21 @@ std::vector<vk::extension> context::load_device_extensions( ) const
 {
    std::vector<vk::extension> exts =
    {
-      vk::extension{ .priority_ = vk::extension::priority::e_required, .found_ = false, .name_ = "VK_KHR_swapchain" }
+      vk::extension{ .priority = vk::extension::priority::e_required, .found = false, .name = "VK_KHR_swapchain" }
    };
 
    std::uint32_t extension_count = 0;
-   vkEnumerateDeviceExtensionProperties( gpu_, nullptr, &extension_count, nullptr );
+   vkEnumerateDeviceExtensionProperties( gpu, nullptr, &extension_count, nullptr );
    VkExtensionProperties* extensions = reinterpret_cast<VkExtensionProperties*>( alloca( sizeof( VkExtensionProperties ) * extension_count ) );
-   vkEnumerateDeviceExtensionProperties( gpu_, nullptr, &extension_count, extensions );
+   vkEnumerateDeviceExtensionProperties( gpu, nullptr, &extension_count, extensions );
 
    for( size_t i = 0; i < extension_count; ++i )
    {
       for( auto& extension : exts )
       {
-         if ( strcmp( extensions[i].extensionName, extension.name_.c_str( ) ) ) 
+         if ( strcmp( extensions[i].extensionName, extension.name.c_str( ) ) ) 
          {
-            extension.found_ = true;
+            extension.found = true;
          }
       }
    }
@@ -975,18 +987,18 @@ std::vector<vk::extension> context::load_device_extensions( ) const
 std::vector<std::string> context::check_layer_support( const layers_t& layers ) const
 {
    std::vector<std::string> enabled_layers;
-   enabled_layers.reserve( layers.value_.size( ) );
+   enabled_layers.reserve( layers.value( ).size( ) );
 
-   for ( const auto& layer : layers.value_ )
+   for ( const auto& layer : layers.value( ) )
    {
-      if ( ( !layer.found_ ) && layer.priority_ == vk::layer::priority::e_required )
+      if ( ( !layer.found ) && layer.priority == vk::layer::priority::e_required )
       {
          return { };
       }
 
-      if ( layer.found_ )
+      if ( layer.found )
       {
-         enabled_layers.emplace_back( layer.name_ );
+         enabled_layers.emplace_back( layer.name );
       }
    }
 
@@ -998,18 +1010,18 @@ std::vector<std::string> context::check_layer_support( const layers_t& layers ) 
 std::vector<std::string> context::check_ext_support( const extensions_t& extensions ) const
 {
    std::vector<std::string> enabled_extensions;
-   enabled_extensions.reserve( extensions.value_.size( ) );
+   enabled_extensions.reserve( extensions.value( ).size( ) );
 
-   for( const auto& extension : extensions.value_ )
+   for( const auto& extension : extensions.value( ) )
    {
-      if ( ( !extension.found_ ) && extension.priority_ == vk::extension::priority::e_required )
+      if ( ( !extension.found ) && extension.priority == vk::extension::priority::e_required )
       {
          return { };
       }
 
-      if ( extension.found_ )
+      if ( extension.found )
       {
-         enabled_extensions.emplace_back( extension.name_ );
+         enabled_extensions.emplace_back( extension.name );
       }
    }
 
@@ -1025,16 +1037,16 @@ std::variant<VkInstance, vk::error> context::create_instance(
 {
    VkInstance handle = VK_NULL_HANDLE;
 
-   std::vector<const char*> layers( enabled_layer_names.value_.size( ) );
-   for( std::size_t i = 0; i < enabled_layer_names.value_.size( ); ++i )
+   std::vector<const char*> layers( enabled_layer_names.value( ).size( ) );
+   for( std::size_t i = 0; i < enabled_layer_names.value( ).size( ); ++i )
    {
-      layers[i] = enabled_layer_names.value_[i].c_str( );
+      layers[i] = enabled_layer_names.value( )[i].c_str( );
    }
 
-   std::vector<const char*> extensions( enabled_ext_name.value_.size( ) );
-   for( std::size_t i = 0; i < enabled_ext_name.value_.size( ); ++i )
+   std::vector<const char*> extensions( enabled_ext_name.value( ).size( ) );
+   for( std::size_t i = 0; i < enabled_ext_name.value( ).size( ); ++i )
    {
-      extensions[i] = enabled_ext_name.value_[i].c_str( );
+      extensions[i] = enabled_ext_name.value( )[i].c_str( );
    }
 
    if constexpr ( vk::enable_debug_layers )
@@ -1114,7 +1126,7 @@ std::variant<VkDebugUtilsMessengerEXT, vk::error> context::create_debug_messenge
 
    vk::error const err( vk::result_t(
       create_debug_utils_messenger(
-         instance_, &create_info,
+         instance, &create_info,
          nullptr, &handle
       )
    ) );
@@ -1131,15 +1143,15 @@ std::variant<VkDebugUtilsMessengerEXT, vk::error> context::create_debug_messenge
 
 std::variant<VkSurfaceKHR, vk::error> context::create_surface( const ui::window& wnd ) const
 {
-   return wnd.create_surface( vk::instance_t( instance_ ) );
+   return wnd.create_surface( vk::instance_t( instance ) );
 }
 
 std::variant<VkPhysicalDevice, vk::error> context::pick_gpu( ) const
 {
    std::uint32_t physical_device_count = 0;
-   vkEnumeratePhysicalDevices( instance_, &physical_device_count, nullptr );
+   vkEnumeratePhysicalDevices( instance, &physical_device_count, nullptr );
    VkPhysicalDevice* physical_devices = reinterpret_cast<VkPhysicalDevice*>( alloca( sizeof( VkPhysicalDevice ) * physical_device_count ) );
-   vkEnumeratePhysicalDevices( instance_, &physical_device_count, physical_devices );
+   vkEnumeratePhysicalDevices( instance, &physical_device_count, physical_devices );
 
    if ( physical_device_count == 0 )
    {
@@ -1173,12 +1185,12 @@ std::variant<VkDevice, vk::error> context::create_device(
    queue_properties_t const& queue_properties ) const
 {
    std::vector<VkDeviceQueueCreateInfo> queue_create_infos; 
-   queue_create_infos.reserve( queue_properties.value_.size( ) );
+   queue_create_infos.reserve( queue_properties.value( ).size( ) );
 
    float priority = 1.0f;
-   for( size_t i = 0; i < queue_properties.value_.size( ); ++i )
+   for( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
    {
-      if ( queue_properties.value_[i].queueCount > 0 )
+      if ( queue_properties.value( )[i].queueCount > 0 )
       {
          VkDeviceQueueCreateInfo create_info
          {
@@ -1186,7 +1198,7 @@ std::variant<VkDevice, vk::error> context::create_device(
             .pNext = nullptr,
             .flags = 0,
             .queueFamilyIndex = static_cast<std::uint32_t>( i ),
-            .queueCount = queue_properties.value_[i].queueCount,
+            .queueCount = queue_properties.value( )[i].queueCount,
             .pQueuePriorities = &priority
          };
 
@@ -1195,12 +1207,12 @@ std::variant<VkDevice, vk::error> context::create_device(
    }
 
    VkPhysicalDeviceFeatures features;
-   vkGetPhysicalDeviceFeatures( gpu_, &features );
+   vkGetPhysicalDeviceFeatures( gpu, &features );
 
-   std::vector<const char*> extensions( enabled_ext_name.value_.size( ) );
-   for( std::size_t i = 0; i < enabled_ext_name.value_.size( ); ++i )
+   std::vector<const char*> extensions( enabled_ext_name.value( ).size( ) );
+   for( std::size_t i = 0; i < enabled_ext_name.value( ).size( ); ++i )
    {
-      extensions[i] = enabled_ext_name.value_[i].c_str( );
+      extensions[i] = enabled_ext_name.value( )[i].c_str( );
    }
 
    VkDeviceCreateInfo const create_info
@@ -1219,7 +1231,7 @@ std::variant<VkDevice, vk::error> context::create_device(
 
    VkDevice handle = VK_NULL_HANDLE; 
    vk::error const err( vk::result_t(
-      vkCreateDevice( gpu_, &create_info, nullptr, &handle )
+      vkCreateDevice( gpu, &create_info, nullptr, &handle )
    ) );
 
    if( err.is_error( ) )
@@ -1235,8 +1247,8 @@ std::variant<VkDevice, vk::error> context::create_device(
 std::variant<VmaAllocator, vk::error> context::create_memory_allocator() const
 {
    VmaAllocatorCreateInfo allocator_info = {};
-   allocator_info.physicalDevice = gpu_;
-   allocator_info.device = device_; 
+   allocator_info.physicalDevice = gpu;
+   allocator_info.device = device; 
 
    VmaAllocator mem_allocator = VK_NULL_HANDLE;
    vmaCreateAllocator( &allocator_info, &mem_allocator );
@@ -1251,32 +1263,32 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
 
    bool has_transfer_only = false;
    bool has_compute_only = false;
-   for( size_t i = 0; i < queue_properties.value_.size( ); ++i )
+   for( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
    {
-      if ( queue_properties.value_[i].queueCount > 0 )
+      if ( queue_properties.value( )[i].queueCount > 0 )
       {
-         if ( queue_properties.value_[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
+         if ( queue_properties.value( )[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
          {
             has_transfer_only = true;
 
             queues.insert( { 
                queue::flag::e_transfer,
                queue( 
-                  vk::device_t( device_ ),  
+                  vk::device_t( device ),  
                   queue::family_index_t( i ), 
                   queue::index_t( 0 ) 
                ) 
             } );
          }
 
-         if ( queue_properties.value_[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
+         if ( queue_properties.value( )[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
          {
             has_compute_only = true;
          
             queues.insert( { 
                queue::flag::e_compute,
                queue( 
-                  vk::device_t( device_ ),  
+                  vk::device_t( device ),  
                   queue::family_index_t( i ), 
                   queue::index_t( 0 ) 
                ) 
@@ -1285,20 +1297,20 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
       }
    }
 
-   for( size_t i = 0; i < queue_properties.value_.size( ); ++i )
+   for( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
    {
-      if ( queue_properties.value_[i].queueCount > 0 )
+      if ( queue_properties.value( )[i].queueCount > 0 )
       {
-         if ( queue_properties.value_[i].queueFlags & VK_QUEUE_TRANSFER_BIT && 
-              queue_properties.value_[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
-              queue_properties.value_[i].queueFlags & VK_QUEUE_COMPUTE_BIT )
+         if ( queue_properties.value( )[i].queueFlags & VK_QUEUE_TRANSFER_BIT && 
+              queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
+              queue_properties.value( )[i].queueFlags & VK_QUEUE_COMPUTE_BIT )
          {
             std::uint32_t index = 0;
 
             queues.insert( { 
                queue::flag::e_graphics,
                queue( 
-                  vk::device_t( device_ ),  
+                  vk::device_t( device ),  
                   queue::family_index_t( i ), 
                   queue::index_t( index ) 
                ) 
@@ -1311,7 +1323,7 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
                queues.insert( { 
                   queue::flag::e_transfer,
                   queue( 
-                     vk::device_t( device_ ),  
+                     vk::device_t( device ),  
                      queue::family_index_t( i ), 
                      queue::index_t( index ) 
                   ) 
@@ -1325,7 +1337,7 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
                 queues.insert( { 
                     queue::flag::e_compute,
                     queue( 
-                        vk::device_t( device_ ),  
+                        vk::device_t( device ),  
                         queue::family_index_t( i ), 
                         queue::index_t( index ) 
                     ) 
@@ -1343,13 +1355,13 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
 std::variant<context::command_pools_container_t, vk::error> context::create_command_pools( ) const
 {
    context::command_pools_container_t command_pools;
-   command_pools.reserve( queues_.size( ) );
+   command_pools.reserve( queues.size( ) );
 
-   for ( const auto& queue : queues_ )
+   for ( const auto& queue : queues )
    {
       if ( auto it = command_pools.find( queue.second.get_family_index( ) ); it != command_pools.end( ) )
       {
-         it->second.flags_ |= queue.first;
+         it->second.flags |= queue.first;
       }
       else
       {
@@ -1365,7 +1377,7 @@ std::variant<context::command_pools_container_t, vk::error> context::create_comm
 
          vk::error const err( vk::result_t(
             vkCreateCommandPool( 
-               device_, &create_info, 
+               device, &create_info, 
                nullptr, &handle 
             )
          ) );
@@ -1378,8 +1390,8 @@ std::variant<context::command_pools_container_t, vk::error> context::create_comm
          command_pools.insert( { 
             queue.second.get_family_index( ),
             command_pool {
-               .handle_ = handle,
-               .flags_ = queue.first
+               .handle = handle,
+               .flags = queue.first
             }
          } );   
       }
@@ -1390,12 +1402,12 @@ std::variant<context::command_pools_container_t, vk::error> context::create_comm
 
 int context::rate_gpu( vk::physical_device_t const gpu ) const
 {
-    assert( gpu.value_ != nullptr  && "GPU handle is nullptr.");
+    assert( gpu.value( ) != nullptr  && "GPU handle is nullptr.");
 
     std::uint32_t properties_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value_, &properties_count, nullptr );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value( ), &properties_count, nullptr );
     VkQueueFamilyProperties* queue_family_properties = reinterpret_cast<VkQueueFamilyProperties*>( alloca( sizeof( VkQueueFamilyProperties ) * properties_count ) );
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value_, &properties_count, queue_family_properties );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value( ), &properties_count, queue_family_properties );
 
     bool is_rendering_capable = false;
     for( size_t i = 0; i < properties_count; ++i )
@@ -1403,7 +1415,7 @@ int context::rate_gpu( vk::physical_device_t const gpu ) const
         if ( queue_family_properties[i].queueCount > 0 )
         {
             VkBool32 surface_support = VK_FALSE;
-            vkGetPhysicalDeviceSurfaceSupportKHR( gpu.value_, i, surface_, &surface_support );
+            vkGetPhysicalDeviceSurfaceSupportKHR( gpu.value( ), i, surface, &surface_support );
 
             if ( ( queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) && ( surface_support == VK_TRUE ) )
             {
@@ -1416,13 +1428,13 @@ int context::rate_gpu( vk::physical_device_t const gpu ) const
         return 0;
 
     std::uint32_t surface_format_count = 0;
-    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu.value_, surface_, &surface_format_count, nullptr );
+    vkGetPhysicalDeviceSurfaceFormatsKHR( gpu.value( ), surface, &surface_format_count, nullptr );
 
     if ( surface_format_count == 0 )
         return 0;
 
     std::uint32_t present_mode_count = 0;
-    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu.value_, surface_, &present_mode_count, nullptr );
+    vkGetPhysicalDeviceSurfacePresentModesKHR( gpu.value( ), surface, &present_mode_count, nullptr );
 
     if ( present_mode_count == 0 )
         return 0;
@@ -1430,7 +1442,7 @@ int context::rate_gpu( vk::physical_device_t const gpu ) const
     std::uint32_t score = 0;
 
     VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties( gpu.value_, &properties );
+    vkGetPhysicalDeviceProperties( gpu.value( ), &properties );
 
     if ( properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
     {
@@ -1446,9 +1458,9 @@ int context::rate_gpu( vk::physical_device_t const gpu ) const
 std::vector<VkQueueFamilyProperties> context::query_queue_family_properties( ) const
 {
     std::uint32_t properties_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu_, &properties_count, nullptr );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, nullptr );
     std::vector<VkQueueFamilyProperties> properties( properties_count );
-    vkGetPhysicalDeviceQueueFamilyProperties( gpu_, &properties_count, properties.data( ) );
+    vkGetPhysicalDeviceQueueFamilyProperties( gpu, &properties_count, properties.data( ) );
 
     return properties;
 }

@@ -20,7 +20,7 @@
 #define LUCIOLE_VK_BUFFERS_UNIFORM_BUFFER_HPP
 
 #include <luciole/context.hpp>
-#include <luciole/strong_types.hpp>
+#include <luciole/utils/strong_types.hpp>
 #include <luciole/ui/window.hpp>
 
 #include <vulkan/vulkan.h>
@@ -44,15 +44,15 @@ namespace vk
       {
          void* local_data;
 
-         vmaMapMemory( memory_allocator_, allocation_, &local_data );
+         vmaMapMemory( memory_allocator, allocation, &local_data );
          memcpy( local_data, &data, sizeof( data ) );
-         vmaUnmapMemory( memory_allocator_, allocation_ );
+         vmaUnmapMemory( memory_allocator, allocation );
       }
 
    private:
-      VmaAllocator memory_allocator_ = VK_NULL_HANDLE;
-      VmaAllocation allocation_ = VK_NULL_HANDLE;
-      VkBuffer buffer_ = VK_NULL_HANDLE;
+      VmaAllocator memory_allocator = VK_NULL_HANDLE;
+      VmaAllocation allocation = VK_NULL_HANDLE;
+      VkBuffer buffer = VK_NULL_HANDLE;
    }; // class uniform_buffer
 } // namespace vk
 

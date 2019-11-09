@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright (C) 2018-2019 Wmbat
  *
  *  wmbat@protonmail.com
@@ -16,34 +16,21 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_LAYER_HPP
-#define LUCIOLE_LAYER_HPP
+#include <luciole/vk/core.hpp>
+#include <luciole/vk/shaders/shader.hpp>
 
-/* INCLUDES */
 #include <string>
+#include <unordered_map>
 
 namespace vk
 {
-    /**
-     * @brief Data aggregate holding the information about Vulkan
-     * layers.
-     */
-    struct layer
-    {
-        /**
-         * @brief Enum to define how needed the extension is.
-         */
-        enum class priority
-        {
-            e_none,
-            e_required,
-            e_optional
-        };
+   class shader_manager
+   {
+   public:
 
-        priority priority = priority::e_none;
-        bool found = false;
-        std::string name = { };
-    };
+      void load_shader();
+   
+   private:
+      std::unordered_map<std::string, shader> shaders;
+   }; // class shader_manager
 } // namespace vk
-
-#endif // LUCIOLE_LAYER_HPP

@@ -20,7 +20,7 @@
 #define LUCIOLE_VULKAN_QUEUE_HPP
 
 #include <luciole/luciole_core.hpp>
-#include <luciole/utilities/enum_operators.hpp>
+#include <luciole/utils/enum_operators.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/errors.hpp>
 
@@ -49,31 +49,12 @@ public:
    using family_index_t = strong_type<std::uint32_t, family_index_param>;
 
 public:
-   /**
-    * @brief Default constructor.
-    */
    queue( ) = default;
-
    queue( vk::device_t device, family_index_t family_index, index_t index );
-
-   /**
-    * @brief Deleted copy constructor.
-    */
    queue( queue const& rhs ) = delete;
-
-   /**
-    * @brief Move constructor.
-    */
    queue( queue && rhs );
 
-   /**
-    * @brief Deleted copy assigment operator.
-    */
    queue& operator=( queue const& rhs ) = delete;
-
-   /**
-    * @brief Move assignment operator.
-    */
    queue& operator=( queue && rhs );
 
    /**
@@ -124,9 +105,9 @@ public:
    ) const noexcept PURE;
 
 private:
-   VkQueue handle_  = VK_NULL_HANDLE;
-   std::uint32_t family_index_ = 0;
-   std::uint32_t index_ = 0;
+   VkQueue handle = VK_NULL_HANDLE;
+   std::uint32_t family_index = 0;
+   std::uint32_t index = 0;
 };
 
 ENABLE_BITMASK_OPERATORS( queue::flag );

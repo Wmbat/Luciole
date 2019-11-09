@@ -22,11 +22,13 @@ namespace vk
 {
    vertex_buffer::vertex_buffer( vertex_buffer::create_info_t const& create_info )
       :
-      memory_allocator_( create_info.value_.memory_allocator )
+      memory_allocator( create_info.value( ).memory_allocator ),
+      allocation( VK_NULL_HANDLE ),
+      buffer( VK_NULL_HANDLE )
    {
       auto const buffer_size = 
-         create_info.value_.vertices.size() * 
-         sizeof( create_info.value_.vertices[0] );
+         create_info.value( ).vertices.size() * 
+         sizeof( create_info.value( ).vertices[0] );
 
       VkBuffer staging_buffer = VK_NULL_HANDLE;
       VmaAllocation staging_memory = VK_NULL_HANDLE; 
@@ -41,16 +43,16 @@ namespace vk
          .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
          .sharingMode = VK_SHARING_MODE_CONCURRENT,
          .queueFamilyIndexCount = static_cast<std::uint32_t>( 
-            create_info.value_.family_indices.size() 
+            create_info.value( ).family_indices.size() 
          ),
-         .pQueueFamilyIndices = create_info.value_.family_indices.data()
+         .pQueueFamilyIndices = create_info.value( ).family_indices.data()
       };
 
       VmaAllocationCreateInfo staging_allocation_info = { };
       staging_allocation_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
       vmaCreateBuffer( 
-         memory_allocator_,
+         memory_allocator,
          &staging_create_info,
          &staging_allocation_info,
          &staging_buffer, 
@@ -60,13 +62,13 @@ namespace vk
 
       /* MAP THE MEMORY INTO THE STAGING BUFFER */
       void* data;
-      vmaMapMemory( memory_allocator_, staging_memory, &data );
+      vmaMapMemory( memory_allocator, staging_memory, &data );
       memcpy( 
          data, 
-         create_info.value_.vertices.data(), 
+         create_info.value( ).vertices.data(), 
          buffer_size
       );
-      vmaUnmapMemory( memory_allocator_, staging_memory );
+      vmaUnmapMemory( memory_allocator, staging_memory );
 
       VkBufferCreateInfo const vertex_buffer_create_info
       {
@@ -77,27 +79,27 @@ namespace vk
          .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
          .sharingMode = VK_SHARING_MODE_CONCURRENT,
          .queueFamilyIndexCount = static_cast<std::uint32_t>(
-               create_info.value_.family_indices.size()
+               create_info.value( ).family_indices.size()
          ),
-         .pQueueFamilyIndices = create_info.value_.family_indices.data()
+         .pQueueFamilyIndices = create_info.value( ).family_indices.data()
       };
 
       VmaAllocationCreateInfo allocation_info = {};
       allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
       vmaCreateBuffer(
-         memory_allocator_,
+         memory_allocator,
          &vertex_buffer_create_info,
          &allocation_info,
-         &buffer_,
-         &memory_allocation_,
+         &buffer,
+         &allocation,
          nullptr
       );
 
       /* CREATE COMMAND BUFFER */
       VkCommandBuffer cmd_buffer = VK_NULL_HANDLE;
 
-      auto temp_cmd_buffer = create_info.value_.p_context->create_command_buffers(
+      auto temp_cmd_buffer = create_info.value( ).p_context->create_command_buffers(
          queue::flag_t( queue::flag::e_transfer ),
          count32_t( 1 )
       );
@@ -132,7 +134,7 @@ namespace vk
 
       vkCmdCopyBuffer(
          cmd_buffer,
-         staging_buffer, buffer_,
+         staging_buffer, buffer,
          1,&copy_region
       );
 
@@ -151,17 +153,17 @@ namespace vk
          .pSignalSemaphores = nullptr
       };
 
-      create_info.value_.p_context->submit_queue(
+      create_info.value( ).p_context->submit_queue(
          queue::flag_t( queue::flag::e_transfer ),
          submit_info_t( submit_info ),
          fence_t( nullptr )
       );
 
-      create_info.value_.p_context->queue_wait_idle(
+      create_info.value( ).p_context->queue_wait_idle(
          queue::flag_t( queue::flag::e_transfer )
       );
 
-      vmaDestroyBuffer( memory_allocator_, staging_buffer, staging_memory );
+      vmaDestroyBuffer( memory_allocator, staging_buffer, staging_memory );
    }
 
    vertex_buffer::vertex_buffer( vertex_buffer&& rhs )
@@ -171,22 +173,22 @@ namespace vk
 
    vertex_buffer::~vertex_buffer( )
    {
-      if ( buffer_ != VK_NULL_HANDLE )
-         vmaDestroyBuffer( memory_allocator_, buffer_, memory_allocation_ );
+      if ( buffer != VK_NULL_HANDLE )
+         vmaDestroyBuffer( memory_allocator, buffer, allocation );
    }
 
    vertex_buffer& vertex_buffer::operator=( vertex_buffer&& rhs )
    {
       if ( this != &rhs )
       {
-         memory_allocator_ = rhs.memory_allocator_;
-         rhs.memory_allocator_ = VK_NULL_HANDLE;
+         memory_allocator = rhs.memory_allocator;
+         rhs.memory_allocator = VK_NULL_HANDLE;
 
-         buffer_ = rhs.buffer_;
-         rhs.buffer_ = VK_NULL_HANDLE;
+         buffer = rhs.buffer;
+         rhs.buffer = VK_NULL_HANDLE;
 
-         memory_allocation_ = rhs.memory_allocation_;
-         rhs.memory_allocator_ = VK_NULL_HANDLE;
+         allocation = rhs.allocation;
+         rhs.allocation = VK_NULL_HANDLE;
       }
    }
 } // namespace vk

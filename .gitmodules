@@ -4,3 +4,9 @@
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "external/glslang"]
+	path = external/glslang
+	url = https://github.com/KhronosGroup/glslang
+[submodule "external/spirv_cross"]
+	path = external/spirv_cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross

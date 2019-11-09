@@ -35,51 +35,13 @@ namespace vk
       using create_info_t = strong_type<create_info const&>;
 
    public:
-      /**
-       * @brief default constructor.
-       */
       index_buffer( ) = default;
-      /**
-       * @brief Constructor.
-       *
-       * @param [in] create_info The information required to
-       * create the buffer.
-       */
       index_buffer( create_info_t const& create_info );
-      /**
-       * @brief Deleted Copy Constructor.
-       *
-       * @param [in] rhs The index_buffer to copy from.
-       */
       index_buffer( index_buffer const& rhs ) = delete;
-      /**
-       * @brief Move Constructor.
-       *
-       * @param [in/out] rhs The index_buffer to move the
-       * data from.
-       */
       index_buffer( index_buffer&& rhs );
-      /**
-       * @brief Destructor.
-       */
       ~index_buffer( );
 
-      /**
-       * @brief Deleted copy assigment operator.
-       *
-       * @param [in] rhs The data to copy from.
-       *
-       * @return The current index_buffer.
-       */
       index_buffer& operator=( index_buffer const& rhs ) = delete;
-
-      /**
-       * @brief Copy assigment operator.
-       *
-       * @param [in/out] rhs The data to move.
-       *
-       * @return The current index_buffer.
-       */
       index_buffer& operator=( index_buffer&& rhs );
 
       /**
@@ -92,8 +54,8 @@ namespace vk
       ) const PURE;
 
    private:
-      VmaAllocator memory_allocator_ = VK_NULL_HANDLE;
-      VmaAllocation allocation_ = VK_NULL_HANDLE;
-      VkBuffer buffer_ = VK_NULL_HANDLE;
+      VmaAllocator memory_allocator = VK_NULL_HANDLE;
+      VmaAllocation allocation = VK_NULL_HANDLE;
+      VkBuffer buffer = VK_NULL_HANDLE;
    }; // class index_buffer
 } // namespace vk

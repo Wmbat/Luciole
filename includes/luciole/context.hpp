@@ -38,7 +38,7 @@
 #include <optional>
 #include <unordered_map>
 #include <variant>
-
+   
 /**
  * @brief A Vulkan context to handle all
  * base vulkan object.
@@ -48,8 +48,8 @@ class context
 private:
    struct command_pool
    {
-       VkCommandPool handle_ = VK_NULL_HANDLE;
-       queue::flag flags_ = queue::flag::e_none;
+       VkCommandPool handle = VK_NULL_HANDLE;
+       queue::flag flags = queue::flag::e_none;
    };
 
    using command_pools_container_t = std::unordered_map<std::uint32_t, context::command_pool>;
@@ -71,35 +71,13 @@ private:
    using queue_properties_t = strong_type<std::vector<VkQueueFamilyProperties>, queue_properties_parameter>;
 
 public:
-   /**
-    * @brief Default Constructor.
-    */
    context( ) = default;
-   /**
-    * @brief Constructor.
-    */
    explicit context( const ui::window& wnd );
-   /**
-    * @brief Delete Copy Constructor.
-    */
    context( const context& other ) = delete;
-   /**
-    * @brief Move Constructor.
-    */
    context( context&& other );
-   /**
-    * @brief Destructor.
-    */
    ~context( );
    
-   /**
-    * @brief Deleted Copy Assigment Operator.
-    */
    context& operator=( context const& rhs ) = delete;
-   
-   /**
-    * @brief Move Assigment Operator.
-    */
    context& operator=( context&& rhs );
   
    /**
@@ -506,7 +484,7 @@ public:
    //TODO: Fix this
    VkDevice get( ) const
    {
-      return device_;
+      return device;
    }
 
    VmaAllocator get_memory_allocator( 
@@ -667,27 +645,25 @@ private:
    ) const PURE;
 
 private:
-   glm::u32vec2 wnd_size_;
+   glm::u32vec2 wnd_size;
     
-   VkInstance instance_ = VK_NULL_HANDLE;
-   VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
-   VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-   VkPhysicalDevice gpu_ = VK_NULL_HANDLE;
-   VkDevice device_ = VK_NULL_HANDLE;
+   VkInstance instance = VK_NULL_HANDLE;
+   VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
+   VkSurfaceKHR surface = VK_NULL_HANDLE;
+   VkPhysicalDevice gpu = VK_NULL_HANDLE;
+   VkDevice device = VK_NULL_HANDLE;
 
-   VmaAllocator memory_allocator_ = VK_NULL_HANDLE;
+   VmaAllocator memory_allocator = VK_NULL_HANDLE;
 
-   std::unordered_map<queue::flag, queue> queues_;
-   std::unordered_map<std::uint32_t, command_pool> command_pools_;
+   std::unordered_map<queue::flag, queue> queues;
+   std::unordered_map<std::uint32_t, command_pool> command_pools;
 
-   VkCommandBuffer transfer_command_buffer = VK_NULL_HANDLE;
-
-   std::vector<vk::layer> validation_layers_;
-   std::vector<vk::extension> instance_extensions_;
-   std::vector<vk::extension> device_extensions_;
+   std::vector<vk::layer> validation_layers;
+   std::vector<vk::extension> instance_extensions;
+   std::vector<vk::extension> device_extensions;
   
-   std::shared_ptr<spdlog::logger> validation_layer_logger_;
-   std::shared_ptr<spdlog::logger> vulkan_logger_;
+   std::shared_ptr<spdlog::logger> validation_layer_logger;
+   std::shared_ptr<spdlog::logger> vulkan_logger;
 };
 
 using p_context_t = strong_type<context const*>;

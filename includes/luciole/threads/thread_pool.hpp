@@ -20,18 +20,13 @@
 #define LUCIOLE_THREAD_POOL_HPP
 
 /* INCLUDES */
-#include <luciole/strong_types.hpp>
-
-#include <luciole/utilities/delegate.hpp>
+#include <luciole/utils/delegate.hpp>
+#include <luciole/utils/strong_types.hpp>
 
 #include <vector>
 #include <queue>
 #include <thread>
 
-/**
- * @brief 
- * 
- */
 class thread_pool
 {
 public:

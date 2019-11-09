@@ -27,7 +27,7 @@ int main( )
         .size = { 1080, 720 }
     };
 
-    auto wnd = ui::window( ui::window::create_info_cref_t( create_info ) );    
+    auto wnd = ui::window( ui::window::create_info_t( create_info ) );    
     auto ctx = context( wnd );
     auto rdr = renderer( p_context_t( &ctx ), wnd);
 

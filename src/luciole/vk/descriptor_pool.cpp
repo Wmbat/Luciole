@@ -22,12 +22,12 @@ namespace vk
 {
    descriptor_pool::descriptor_pool( create_info_t const& create_info )
       :
-      p_context_( create_info.value_.p_context )
+      p_context( create_info.value( ).p_context )
    {
       std::vector<VkDescriptorPoolSize> sizes;
-      sizes.reserve( create_info.value_.pool_sizes.size() );
+      sizes.reserve( create_info.value( ).pool_sizes.size() );
 
-      for( auto const& size : create_info.value_.pool_sizes )
+      for( auto const& size : create_info.value( ).pool_sizes )
       {
          VkDescriptorPoolSize const pool_size
          {
@@ -41,18 +41,18 @@ namespace vk
          .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
          .pNext = nullptr,
          .flags = 0,
-         .maxSets = create_info.value_.max_num_sets,
+         .maxSets = create_info.value( ).max_num_sets,
          .poolSizeCount = static_cast<std::uint32_t>( sizes.size( ) ),
          .pPoolSizes = sizes.data( )
       };
 
-      auto const res = p_context_->create_descriptor_pool(
+      auto const res = p_context->create_descriptor_pool(
          vk::descriptor_pool_create_info_t( pool_create_info )
       );
 
       if ( auto const* p_val = std::get_if<VkDescriptorPool>( &res ) )
       {
-         pool_ = *p_val;
+         pool = *p_val;
       }
 
       // TODO: Log the potential error.
@@ -64,9 +64,9 @@ namespace vk
    
    descriptor_pool::~descriptor_pool( )
    {
-      if ( pool_ != VK_NULL_HANDLE )
+      if ( pool != VK_NULL_HANDLE )
       {
-         pool_ = p_context_->destroy_descriptor_pool( vk::descriptor_pool_t( pool_ ) );
+         pool = p_context->destroy_descriptor_pool( vk::descriptor_pool_t( pool ) );
       } 
    }
    
@@ -74,11 +74,11 @@ namespace vk
    {
       if ( this != &rhs )
       {
-         p_context_ = rhs.p_context_;
-         rhs.p_context_ = nullptr;
+         p_context = rhs.p_context;
+         rhs.p_context = nullptr;
 
-         pool_ = rhs.pool_;
-         rhs.pool_ = VK_NULL_HANDLE;
+         pool = rhs.pool;
+         rhs.pool = VK_NULL_HANDLE;
       }
    }
 } // namespace vk

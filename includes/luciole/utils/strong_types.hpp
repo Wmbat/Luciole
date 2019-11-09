@@ -23,28 +23,37 @@
 #include <cstdint>
 #include <string>
 
-/**
- * @brief struct to use as a default template parameter for the strong_type class.
- */
+#include <luciole/luciole_core.hpp>
+
 struct default_parameter { };
 
-template <typename T, typename parameter = default_parameter>
+template <typename type_, typename parameter_ = default_parameter>
 class strong_type
 {
 public:
-    explicit strong_type( const T& value )
-        : 
-        value_( value ) 
-    {   }
+   explicit strong_type( const type_& value )
+      : 
+      data( value ) 
+   {   }
 
-    template<typename type_ = T>
-    explicit strong_type( T&& value, typename std::enable_if<!std::is_reference<type_>{ }, std::nullptr_t>::type = nullptr )
-    : 
-    value_( std::move( value ) ) 
-    {   }
-    
+   template<typename type1_ = type_>
+   explicit strong_type( type_&& value, typename std::enable_if<!std::is_reference<type1_>{ }, std::nullptr_t>::type = nullptr )
+      : 
+      data( std::move( value ) ) 
+   {   }
+  
+   type_ const& value( ) const PURE
+   {
+      return data;
+   }
+
+   type_ value( )
+   {
+      return data;
+   }
+   
 public:
-    T value_;
+    type_ data;
 };
 
 struct count_parameter { };

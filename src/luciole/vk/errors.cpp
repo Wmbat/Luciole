@@ -22,26 +22,26 @@ namespace vk
 {
    error::error( result_t result ) noexcept
    {
-      type_ = to_type( result.value_ );
+      err_code = to_type( result.value( ) );
    }
 
    error::error( type_t type ) noexcept
    {
-      type_ = type.value_;
+      err_code = type.value( );
    }
 
    std::string const& error::to_string() const
    {
-      return string_type[static_cast<std::size_t>( type_ )];
+      return string_type[static_cast<std::size_t>( err_code )];
    }
 
    bool error::is_error( ) const noexcept
    {
-      return type_ != type::e_none;
+      return err_code != type::e_none;
    }  
 
    error::type error::get_type( ) const noexcept
    {
-      return type_;
+      return err_code;
    }
 } // namespace vk

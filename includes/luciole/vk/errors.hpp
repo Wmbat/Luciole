@@ -21,8 +21,7 @@
 
 /* INCLUDES */
 #include <luciole/luciole_core.hpp>
-#include <luciole/strong_types.hpp>
-
+#include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/core.hpp>
 
 #include <vulkan/vulkan.h>
@@ -121,7 +120,7 @@ namespace vk
       }
 
    private:
-      type type_;
+      type err_code;
 
       inline static std::string const string_type[] =
       {

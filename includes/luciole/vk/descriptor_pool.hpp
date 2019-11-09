@@ -26,17 +26,17 @@ namespace vk
 {
    enum class descriptor_type
    {
-      sampler                    = 0,
-      combined_image_sampler     = 1,
-      sampled_image              = 2,
-      storage_image              = 3,
-      uniform_texel_buffer       = 4,
-      storage_texel_buffer       = 5,
-      uniform_buffer             = 6,
-      storage_buffer             = 7,
-      uniform_buffer_dynamic     = 8,
-      storage_buffer_dynamic     = 9,
-      input_attachment           = 10,
+      e_sampler                    = 0,
+      e_combined_image_sampler     = 1,
+      e_sampled_image              = 2,
+      e_storage_image              = 3,
+      e_uniform_texel_buffer       = 4,
+      e_storage_texel_buffer       = 5,
+      e_uniform_buffer             = 6,
+      e_storage_buffer             = 7,
+      e_uniform_buffer_dynamic     = 8,
+      e_storage_buffer_dynamic     = 9,
+      e_input_attachment           = 10,
    }; 
       
    class descriptor_pool
@@ -70,9 +70,10 @@ namespace vk
       descriptor_pool& operator=( descriptor_pool&& rhs );
    
    private:
-      context const* p_context_ = nullptr;
+      context const* p_context = nullptr;
 
-      VkDescriptorPool pool_ = VK_NULL_HANDLE;
+      VkDescriptorPool pool = VK_NULL_HANDLE;
+      std::vector<VkDescriptorSet> descriptor_sets;
    }; // class descriptor_pool
 } // namespace vk
 

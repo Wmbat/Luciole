@@ -22,7 +22,9 @@ namespace vk
 {
    uniform_buffer::uniform_buffer( context const& ctx, std::size_t buffer_size )
       :
-      memory_allocator_( ctx.get_memory_allocator( ) )
+      memory_allocator( ctx.get_memory_allocator( ) ),
+      allocation( VK_NULL_HANDLE ),
+      buffer( VK_NULL_HANDLE )
    {
       auto const indices = ctx.get_unique_family_indices( );
 
@@ -44,11 +46,11 @@ namespace vk
       alloc_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
       vmaCreateBuffer(
-         memory_allocator_,
+         memory_allocator,
          &create_info,
          &alloc_info,
-         &buffer_,
-         &allocation_,
+         &buffer,
+         &allocation,
          nullptr
       );
    }   
@@ -60,11 +62,11 @@ namespace vk
    
    uniform_buffer::~uniform_buffer( )
    {
-      if ( buffer_ != VK_NULL_HANDLE || 
-           memory_allocator_ != VK_NULL_HANDLE || 
-           allocation_ != VK_NULL_HANDLE )
+      if ( buffer != VK_NULL_HANDLE || 
+           memory_allocator != VK_NULL_HANDLE || 
+           allocation != VK_NULL_HANDLE )
       {
-         vmaDestroyBuffer( memory_allocator_, buffer_, allocation_ );  
+         vmaDestroyBuffer( memory_allocator, buffer, allocation );  
       }
    }
    
@@ -72,14 +74,14 @@ namespace vk
    {
       if ( this != &rhs )
       {
-         memory_allocator_ = rhs.memory_allocator_;
-         rhs.memory_allocator_ = VK_NULL_HANDLE;
+         memory_allocator = rhs.memory_allocator;
+         rhs.memory_allocator = VK_NULL_HANDLE;
 
-         allocation_ = rhs.allocation_;
-         rhs.allocation_ = VK_NULL_HANDLE;
+         allocation = rhs.allocation;
+         rhs.allocation = VK_NULL_HANDLE;
 
-         buffer_ = rhs.buffer_;
-         rhs.buffer_ = VK_NULL_HANDLE;
+         buffer = rhs.buffer;
+         rhs.buffer = VK_NULL_HANDLE;
       }
    }
 
