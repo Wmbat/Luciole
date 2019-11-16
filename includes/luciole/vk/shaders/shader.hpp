@@ -23,13 +23,42 @@
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/core.hpp>
 
+#include <string>
+#include <string_view>
+
 namespace vk
-{
+{    
    class shader
    {
-   protected:
+   public: 
+      using filepath_t = strong_type<std::string const&, shader>; 
+      using filepath_view_t = strong_type<std::string_view, shader>;
+      
+      enum class type
+      {
+         e_vertex,
+         e_fragment,
+         e_tess_control,
+         e_tess_eval,
+         e_geometry,
+         e_compute,
+         e_count
+      }; // enum class type
+
+      struct create_info
+      {
+         context const* p_context = nullptr;
+
+         type shader_type = type::e_count;
+
+         std::vector<std::uint32_t> spir_v;
+      }; // struct create_info
+
+      using create_info_t = strong_type<create_info const&, shader>;
+
+   public:
       shader( ); 
-      shader( p_context_t const& p_context );
+      shader( create_info_t const& create_info );
       shader( shader const& rhs ) = delete;
       shader( shader&& rhs );
       ~shader( );       
@@ -37,12 +66,13 @@ namespace vk
       shader& operator=( shader const& rhs ) = delete;
       shader& operator=( shader&& rhs ); 
 
-   protected:
+   private:
       context const* p_context;
+
+      type shader_type;
 
       VkShaderModule handle;
    }; // class 
 } // namespace 
 
 #endif // LUCIOLE_VK_SHADER_HPP
-

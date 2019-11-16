@@ -37,9 +37,13 @@ set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsaniti
 set( CLANG_RELEASE_FLAGS "-o3" )
 
 set( GNU_FLAGS "-std=c++2a" )
-set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer -fsanitize=address" )
+set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer" )
+set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-parameter -Wunused-value  -Wunused-variable" )
+set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-but-set-parameter -Wunused-but-set-variable -fsanitize=address" )
 set( GNU_RELEASE_FLAGS "-o3" )
 set( GNU_ALL_FLAGS "-fconcepts" )
+
+set( MSVC_FLAGS "-std:c++latest" )
 
 add_library( Luciole SHARED )
 
@@ -54,7 +58,7 @@ target_compile_options( Luciole
 # Set C++ version
       $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
       $<$<CXX_COMPILER_ID:Clang>:${CLANG_FLAGS}>
-      $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
+      $<$<CXX_COMPILER_ID:MSVC>:${MSVC_FLAGS}>
 # Set Debug Flags
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
       $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:DEBUG>>:${CLANG_DEBUG_FLAGS}>
@@ -117,14 +121,16 @@ if( NOT WIN32 )
          nlohmann
          tinygltf
          glm
-         glslang 
+         glslang
+         SPIRV
          spirv-cross-cpp
    )
 endif( )
 
 target_include_directories( Luciole 
    PUBLIC 
-      "includes" 
+      $<INSTALL_INTERFACE:include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/includes>
 )
 
 target_sources( Luciole
@@ -136,6 +142,8 @@ target_sources( Luciole
       "src/luciole/vk/buffers/uniform_buffer.cpp"
       "src/luciole/vk/buffers/vertex_buffer.cpp"
       "src/luciole/vk/shaders/shader.cpp"
+      "src/luciole/vk/shaders/shader_compiler.cpp"
+      "src/luciole/vk/shaders/shader_manager.cpp"
       "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/errors.cpp"

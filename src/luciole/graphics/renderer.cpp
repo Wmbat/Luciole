@@ -280,7 +280,7 @@ void renderer::draw_frame( )
       .signalSemaphoreCount = sizeof( signal_semaphores ) / sizeof( VkSemaphore ),
       .pSignalSemaphores = signal_semaphores
    };
-   
+  
    auto const submit_result = p_context->submit_queue( 
       queue::flag_t( queue::flag::e_graphics ), 
       vk::submit_info_t( submit_info ), 
@@ -325,6 +325,11 @@ void renderer::draw_frame( )
    }
 
    current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT;
+}
+
+std::uint32_t renderer::load_shader( vk::shader_loader_interface const* p_loader, vk::shader::filepath_t const& filepath)
+{
+   return shader_manager.load_shader( p_loader, filepath );
 }
 
 void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )

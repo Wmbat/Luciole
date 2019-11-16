@@ -25,6 +25,7 @@
 #include <luciole/vk/buffers/index_buffer.hpp>
 #include <luciole/vk/buffers/uniform_buffer.hpp>
 #include <luciole/vk/buffers/vertex_buffer.hpp>
+#include <luciole/vk/shaders/shader_manager.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -68,7 +69,7 @@ public:
 
    void on_framebuffer_resize( framebuffer_resize_event const& event );
 
-   void load_shader( shader_filepath_t const& filepath );
+   std::uint32_t load_shader( vk::shader_loader_interface const* p_loader, vk::shader::filepath_t const& filepath );
 
 private:
    /**
@@ -264,6 +265,8 @@ private:
 
    vk::vertex_buffer vertex_buffer;
    vk::index_buffer index_buffer;
+
+   vk::shader_manager shader_manager;
 
    std::shared_ptr<spdlog::logger> vulkan_logger;
 };

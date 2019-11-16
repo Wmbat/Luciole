@@ -16,21 +16,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/vk/core.hpp>
-#include <luciole/vk/shaders/shader.hpp>
-
-#include <string>
-#include <unordered_map>
+#include <luciole/vk/shaders/shader_loader_interface.hpp>
 
 namespace vk
 {
-   class shader_manager
+   class shader_compiler : public shader_loader_interface
    {
    public:
+      shader_compiler() = default;
+      virtual ~shader_compiler( ) = default;
 
-      void load_shader();
-   
+      virtual shader_data load_shader( shader::filepath_view_t filepath ) const override;
+
    private:
-      std::unordered_map<std::string, shader> shaders;
-   }; // class shader_manager
-} // namespace vk
+      std::string_view get_filepath( std::string_view str ) const;
+      std::string_view get_suffix( std::string_view name ) const;
+
+      EShLanguage get_shader_stage( std::string_view stage ) const;
+      shader::type get_shader_type( EShLanguage shader_stage ) const;
+   }; // class shader_compiler
+}

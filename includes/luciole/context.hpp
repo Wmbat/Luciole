@@ -38,7 +38,7 @@
 #include <optional>
 #include <unordered_map>
 #include <variant>
-   
+
 /**
  * @brief A Vulkan context to handle all
  * base vulkan object.
