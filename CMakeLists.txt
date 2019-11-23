@@ -17,13 +17,15 @@
 cmake_minimum_required( VERSION 3.15 )
 project( Luciole LANGUAGES CXX )
 
-option( test "Enable unit testing" OFF )
-option( BUILD_EXAMPLE "Build demo examples" OFF )
+option( BUILD_TESTS "Enable unit testing" OFF )
+option( BUILD_EXAMPLES "Build demo examples" ON )
 
 if( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release )
 endif( )
 
+set( SPIRV_CROSS_SHARED ON CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_STATIC OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_MSL OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "" FORCE )
@@ -50,12 +52,13 @@ add_library( Luciole SHARED )
 set_target_properties( Luciole PROPERTIES
    DEBUG_POSTFIX "Debug"
    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
+   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 )
 
 target_compile_options( Luciole 
    PRIVATE
       $<$<PLATFORM_ID:UNIX>:-pthread>
-# Set C++ version
+
       $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
       $<$<CXX_COMPILER_ID:Clang>:${CLANG_FLAGS}>
       $<$<CXX_COMPILER_ID:MSVC>:${MSVC_FLAGS}>
@@ -106,9 +109,9 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/glslang )
 add_subdirectory( external/spirv_cross )
 
-if ( test )
+if ( BUILD_TESTS )
    add_subdirectory( external/googletest )
-endif( test )
+endif( BUILD_TESTS )
 
 if( NOT WIN32 )
    target_link_libraries( Luciole
@@ -123,7 +126,7 @@ if( NOT WIN32 )
          glm
          glslang
          SPIRV
-         spirv-cross-cpp
+         spirv-cross-c-shared
    )
 endif( )
 
@@ -141,9 +144,13 @@ target_sources( Luciole
       "src/luciole/vk/buffers/index_buffer.cpp"
       "src/luciole/vk/buffers/uniform_buffer.cpp"
       "src/luciole/vk/buffers/vertex_buffer.cpp"
+      "src/luciole/vk/pipelines/pipeline.cpp"
+      "src/luciole/vk/pipelines/pipeline_json_loader.cpp"
+      "src/luciole/vk/pipelines/pipeline_manager.cpp"
       "src/luciole/vk/shaders/shader.cpp"
       "src/luciole/vk/shaders/shader_compiler.cpp"
       "src/luciole/vk/shaders/shader_manager.cpp"
+      "src/luciole/vk/shaders/shader_set.cpp"
       "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/errors.cpp"
@@ -151,4 +158,6 @@ target_sources( Luciole
       "src/luciole/context.cpp"
 )
 
-add_subdirectory( examples/triangle )
+if ( BUILD_EXAMPLES )
+   add_subdirectory( examples/triangle )
+endif ( BUILD_EXAMPLES )

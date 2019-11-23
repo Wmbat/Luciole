@@ -19,7 +19,7 @@
 #include <luciole/utils/file_io.hpp>
 #include <luciole/vk/shaders/shader_compiler.hpp>
 
-namespace vk
+namespace vk::shader
 {
    const TBuiltInResource default_built_in_resource = {
       /* .MaxLights = */ 32,
@@ -128,7 +128,7 @@ namespace vk
       }
    };
 
-   shader_compiler::shader_data shader_compiler::load_shader( shader::filepath_view_t filepath ) const
+   compiler::shader_data compiler::load_shader( shader::filepath_view_t filepath ) const
    {   
       std::string data = read_from_file( filepath.value( ) );
       char const* raw_data = data.c_str( );
@@ -193,19 +193,19 @@ namespace vk
       return std::pair{ spir_v, get_shader_type( shader_stage ) };
    }
 
-   std::string_view shader_compiler::get_filepath( std::string_view str ) const
+   std::string_view compiler::get_filepath( std::string_view str ) const
    {
       return str.substr(0, str.find_last_of("/\\"));
    }
 
-   std::string_view shader_compiler::get_suffix( std::string_view name ) const
+   std::string_view compiler::get_suffix( std::string_view name ) const
    {
       std::size_t const pos = name.rfind( '.' );
 
       return pos == std::string::npos ? "" : name.substr( name.rfind( '.' ) + 1 );
    }
 
-   EShLanguage shader_compiler::get_shader_stage( std::string_view stage ) const
+   EShLanguage compiler::get_shader_stage( std::string_view stage ) const
    {
       if ( stage == "vert" )
       {
@@ -238,7 +238,7 @@ namespace vk
       }
    }
 
-   shader::type shader_compiler::get_shader_type( EShLanguage shader_stage ) const
+   shader::type compiler::get_shader_type( EShLanguage shader_stage ) const
    {
       switch ( shader_stage )
       {
@@ -259,5 +259,4 @@ namespace vk
             return shader::type::e_count;
       }
    }
-
-} // namespace vk
+} // namespace vk::shader

@@ -327,9 +327,19 @@ void renderer::draw_frame( )
    current_frame = ( current_frame + 1 ) % MAX_FRAMES_IN_FLIGHT;
 }
 
-std::uint32_t renderer::load_shader( vk::shader_loader_interface const* p_loader, vk::shader::filepath_t const& filepath)
+vk::shader::id renderer::load_shader_module( vk::shader::loader_ptr_t p_loader, vk::shader::filepath_t const& filepath)
 {
-   return shader_manager.load_shader( p_loader, filepath );
+   return shader_manager.load_module( p_loader, filepath );
+}
+
+vk::shader::set::id renderer::create_shader_pack( vk::shader::set::create_info_t const& create_info )
+{
+   return shader_manager.create_pack( create_info );
+}
+
+vk::pipeline::id renderer::create_pipeline( vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id )
+{
+   
 }
 
 void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )

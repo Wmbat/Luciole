@@ -14,10 +14,14 @@
 # GNU General Public License for more details.
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-echo Building Luciole in Release mode with tests.
+echo Building Luciole in Debug mode with Tests using GCC.
 
-mkdir build -p
+echo Creating build folder.
+mkdir ../build -p
 
-git submodule --init --recursive
+git submodule update --init --recursive ../
 
-cmake . -B build -DCMAKE_BUILD_TYPE=Release -Dtest=ON
+cmake ../ -B ../build -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+
+echo Copying compile_commands.json to project root.
+cp ../build/compile_commands.json ./

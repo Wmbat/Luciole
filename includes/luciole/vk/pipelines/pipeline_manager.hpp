@@ -16,23 +16,29 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/vk/shaders/shader_loader_interface.hpp>
+#ifndef LUCIOLE_VK_PIPELINES_PIPELINE_MANAGER_HPP
+#define LUCIOLE_VK_PIPELINES_PIPELINE_MANAGER_HPP
 
-namespace vk::shader
+#include <luciole/context.hpp>
+#include <luciole/vk/pipelines/pipeline.hpp>
+#include <luciole/vk/pipelines/pipeline_loader_interface.hpp>
+#include <luciole/vk/shaders/shader.hpp>
+
+#include <unordered_map>
+
+namespace vk::pipeline
 {
-   class compiler : public loader_interface
+   class manager
    {
-   public:
-      compiler() = default;
-      virtual ~compiler( ) = default;
-
-      virtual shader_data load_shader( shader::filepath_view_t filepath ) const override;
+   public: 
+      id create_pipeline( loader_ptr_t p_loader, shader::set::id_t pack_id );
 
    private:
-      std::string_view get_filepath( std::string_view str ) const;
-      std::string_view get_suffix( std::string_view name ) const;
+      std::unordered_map<id, unique_pipeline> pipelines;
 
-      EShLanguage get_shader_stage( std::string_view stage ) const;
-      type get_shader_type( EShLanguage shader_stage ) const;
-   }; // class shader_compiler
-}
+      static inline id PIPELINE_ID_COUNT = 0;
+   }; // class manager
+
+} // namespace vk::pipeline
+
+#endif // LUCIOLE_VK_PIPELINES_PIPELINE_MANAGER_HPP

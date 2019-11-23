@@ -21,6 +21,8 @@
 
 #include <luciole/vk/shaders/shader.hpp>
 #include <luciole/vk/shaders/shader_loader_interface.hpp>
+#include <luciole/vk/shaders/shader_save_interface.hpp>
+#include <luciole/vk/shaders/shader_set.hpp>
 #include <luciole/context.hpp>
 
 #include <glslang/Public/ShaderLang.h>
@@ -30,30 +32,45 @@
 #include <unordered_map>
 #include <string_view>
 #include <cstdint>
+#include <vector>
 
-namespace vk
+namespace vk::shader
 { 
-   class shader_manager
+   class manager
    {
    public:
-      shader_manager( );
-      shader_manager( p_context_t const& p_context );
-      shader_manager( shader_manager const& rhs ) = delete;
-      shader_manager( shader_manager&& rhs );
-      ~shader_manager( );
+      manager( );
+      manager( p_context_t const& p_context );
+      manager( manager const& rhs ) = delete;
+      manager( manager&& rhs );
+      ~manager( );
    
-      shader_manager& operator=( shader_manager const& rhs ) = delete;
-      shader_manager& operator=( shader_manager&& rhs );
-  
-      std::uint32_t load_shader( shader_loader_interface const* loader, shader::filepath_t const& filepath );
-   
+      manager& operator=( manager const& rhs ) = delete;
+      manager& operator=( manager&& rhs );
+     
+      id load_module( loader_ptr_t p_loader, filepath_t const& filepath );
+      bool delete_module( id_t shader_id );  
+      
+      std::vector<VkPipelineShaderStageCreateInfo> get_shader_stage_create_infos( set::id_t shader_pack_id ) const;
+
+      set::id create_pack( set::create_info_t const& create_info );
+      bool delete_pack( set::id_t shader_pack_id );
+
+      void enable_shader_saving( save_uptr_t p_saving );
+      void disable_shader_saving( );
+      
    private:
       context const* p_context; 
 
-      std::unordered_map<std::uint32_t, shader> shaders;
+      std::unique_ptr<save_interface> p_save_interface;
+
+      std::unordered_map<id, unique_shader> shaders; 
+      std::unordered_map<set::id, set> shader_packs; 
 
       static inline bool GLSLANG_INITIALIZED = false;
+
       static inline std::uint32_t SHADER_ID_COUNT = 0;
+      static inline std::uint32_t SHADER_PACK_ID_COUNT = 0;
    }; // class shader_manager
 } // namespace vk
 

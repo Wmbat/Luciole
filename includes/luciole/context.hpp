@@ -667,5 +667,6 @@ private:
 };
 
 using p_context_t = strong_type<context const*>;
+using context_ptr_t = strong_type<context const*>;
 
 #endif // LUCIOLE_CONTEXT_HPP

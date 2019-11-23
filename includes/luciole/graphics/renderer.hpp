@@ -21,10 +21,12 @@
 
 /* INCLUDES */
 #include <luciole/context.hpp>
+#include <luciole/sys/component.hpp>
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/buffers/index_buffer.hpp>
 #include <luciole/vk/buffers/uniform_buffer.hpp>
 #include <luciole/vk/buffers/vertex_buffer.hpp>
+#include <luciole/vk/pipelines/pipeline_manager.hpp>
 #include <luciole/vk/shaders/shader_manager.hpp>
 
 #include <vulkan/vulkan.h>
@@ -69,7 +71,11 @@ public:
 
    void on_framebuffer_resize( framebuffer_resize_event const& event );
 
-   std::uint32_t load_shader( vk::shader_loader_interface const* p_loader, vk::shader::filepath_t const& filepath );
+   vk::shader::id load_shader_module( vk::shader::loader_ptr_t p_loader, vk::shader::filepath_t const& filepath );
+
+   vk::shader::set::id create_shader_pack( vk::shader::set::create_info_t const& create_info );
+
+   vk::pipeline::id create_pipeline( vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id );
 
 private:
    /**
@@ -266,7 +272,8 @@ private:
    vk::vertex_buffer vertex_buffer;
    vk::index_buffer index_buffer;
 
-   vk::shader_manager shader_manager;
+   vk::shader::manager shader_manager;
+   vk::pipeline::manager pipeline_manager;
 
    std::shared_ptr<spdlog::logger> vulkan_logger;
 };

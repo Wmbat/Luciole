@@ -16,23 +16,21 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/vk/shaders/shader_loader_interface.hpp>
+#ifndef LUCIOLE_VK_PIPELINES_PIPELINE_JSON_LOADER_HPP
+#define LUCIOLE_VK_PIPELINES_PIPELINE_JSON_LOADER_HPP
 
-namespace vk::shader
+#include <luciole/vk/pipelines/pipeline_loader_interface.hpp>
+
+namespace vk::pipeline
 {
-   class compiler : public loader_interface
+   class json_loader : public loader_interface 
    {
    public:
-      compiler() = default;
-      virtual ~compiler( ) = default;
+      json_loader( ) = default;
+      virtual ~json_loader( ) = default;
 
-      virtual shader_data load_shader( shader::filepath_view_t filepath ) const override;
+      virtual data load_pipeline( filepath_view_t const& filepath ) const override;
+   };
+} // namespace vk
 
-   private:
-      std::string_view get_filepath( std::string_view str ) const;
-      std::string_view get_suffix( std::string_view name ) const;
-
-      EShLanguage get_shader_stage( std::string_view stage ) const;
-      type get_shader_type( EShLanguage shader_stage ) const;
-   }; // class shader_compiler
-}
+#endif // LUCIOLE_VK_PIPELINES_PIPELINE_JSON_LOADER_HPP

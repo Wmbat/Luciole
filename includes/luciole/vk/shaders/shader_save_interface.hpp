@@ -16,23 +16,25 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/vk/shaders/shader_loader_interface.hpp>
+#ifndef LUCIOLE_VK_SHADER_SAVING_INTERFACE_HPP
+#define LUCIOLE_VK_SHADER_SAVING_INTERFACE_HPP
+
+#include <luciole/vk/shaders/shader.hpp>
+
+#include <memory>
 
 namespace vk::shader
 {
-   class compiler : public loader_interface
+   class save_interface
    {
-   public:
-      compiler() = default;
-      virtual ~compiler( ) = default;
+   public:  
+      virtual ~save_interface( );
 
-      virtual shader_data load_shader( shader::filepath_view_t filepath ) const override;
+      virtual void save_shader( unique_shader_t const& shader ) const = 0;
+   };
 
-   private:
-      std::string_view get_filepath( std::string_view str ) const;
-      std::string_view get_suffix( std::string_view name ) const;
-
-      EShLanguage get_shader_stage( std::string_view stage ) const;
-      type get_shader_type( EShLanguage shader_stage ) const;
-   }; // class shader_compiler
+   using save_ptr_t = strong_type<save_interface const*, save_interface>;
+   using save_uptr_t = strong_type<std::unique_ptr<save_interface> &, save_interface>;
 }
+
+#endif // LUCIOLE_VK_SHADER_SAVING_INTERFACE_HPP
