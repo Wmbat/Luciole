@@ -24,8 +24,8 @@ if( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release )
 endif( )
 
-set( SPIRV_CROSS_SHARED ON CACHE BOOL "" FORCE )
-set( SPIRV_CROSS_STATIC OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_SHARED OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_STATIC ON CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_MSL OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "" FORCE )
@@ -33,6 +33,7 @@ set( SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--whole-archive" )
 
 set( CLANG_FLAGS "-std=c++2a -Xclang -fconcepts-ts" )
 set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsanitize=address" )
@@ -48,6 +49,8 @@ set( GNU_ALL_FLAGS "-fconcepts" )
 set( MSVC_FLAGS "-std:c++latest" )
 
 add_library( Luciole SHARED )
+
+set_property(TARGET Luciole PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set_target_properties( Luciole PROPERTIES
    DEBUG_POSTFIX "Debug"
@@ -126,7 +129,7 @@ if( NOT WIN32 )
          glm
          glslang
          SPIRV
-         spirv-cross-c-shared
+         spirv-cross-cpp
    )
 endif( )
 

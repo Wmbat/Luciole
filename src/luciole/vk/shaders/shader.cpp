@@ -18,6 +18,8 @@
 
 #include <luciole/vk/shaders/shader.hpp>
 
+#include <spirv_glsl.hpp>
+
 namespace vk::shader
 {
    unique_shader::unique_shader( )
@@ -43,7 +45,7 @@ namespace vk::shader
       module_create_info.codeSize = static_cast<std::uint32_t>( create_info.value( ).spir_v.size( ) );
 
       handle = p_context->create_shader_module( shader_module_create_info_t( module_create_info ) );
-/*
+
       spirv_cross::CompilerGLSL glsl( std::move( create_info.value( ).spir_v ) ); 
       spirv_cross::ShaderResources resources = glsl.get_shader_resources( );
 
@@ -56,7 +58,7 @@ namespace vk::shader
             entry_point = entry.name;
          }
       }
-*/
+
       if ( entry_point.empty( ) )
       {
          abort( );

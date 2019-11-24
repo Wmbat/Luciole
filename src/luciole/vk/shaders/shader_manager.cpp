@@ -24,6 +24,8 @@
 namespace vk::shader
 {
    manager::manager( )
+      :
+      p_context( nullptr )
    {
       if ( !GLSLANG_INITIALIZED )
       {
