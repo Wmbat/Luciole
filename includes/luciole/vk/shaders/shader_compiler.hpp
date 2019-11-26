@@ -23,7 +23,7 @@ namespace vk::shader
    class compiler : public loader_interface
    {
    public:
-      compiler() = default;
+      compiler( ) = default;
       virtual ~compiler( ) = default;
 
       virtual shader_data load_shader( shader::filepath_view_t filepath ) const override;
@@ -35,4 +35,4 @@ namespace vk::shader
       EShLanguage get_shader_stage( std::string_view stage ) const;
       type get_shader_type( EShLanguage shader_stage ) const;
    }; // class shader_compiler
-}
+} // namespace vk::shader

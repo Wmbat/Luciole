@@ -40,7 +40,7 @@ namespace vk::shader
    {
    public:
       manager( );
-      manager( p_context_t const& p_context );
+      manager( context_ptr_t const& p_context );
       manager( manager const& rhs ) = delete;
       manager( manager&& rhs );
       ~manager( );

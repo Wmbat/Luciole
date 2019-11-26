@@ -20,35 +20,27 @@
 
 namespace vk
 {
-   descriptor_pool::descriptor_pool( create_info_t const& create_info )
-      :
-      p_context( create_info.value( ).p_context )
+   descriptor_pool::descriptor_pool( create_info_t const& create_info ) : p_context( create_info.value( ).p_context )
    {
       std::vector<VkDescriptorPoolSize> sizes;
-      sizes.reserve( create_info.value( ).pool_sizes.size() );
+      sizes.reserve( create_info.value( ).pool_sizes.size( ) );
 
-      for( auto const& size : create_info.value( ).pool_sizes )
+      for ( auto const& size : create_info.value( ).pool_sizes )
       {
-         VkDescriptorPoolSize const pool_size
-         {
-            .type = static_cast<VkDescriptorType>( size.type ),
-            .descriptorCount = static_cast<std::uint32_t>( size.descriptor_count )
-         };
-      } 
+         auto pool_size = VkDescriptorPoolSize{};
+         pool_size.type = static_cast<VkDescriptorType>( size.type );
+         pool_size.descriptorCount = static_cast<std::uint32_t>( size.descriptor_count );
+      }
 
-      VkDescriptorPoolCreateInfo const pool_create_info
-      {
-         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-         .pNext = nullptr,
-         .flags = 0,
-         .maxSets = create_info.value( ).max_num_sets,
-         .poolSizeCount = static_cast<std::uint32_t>( sizes.size( ) ),
-         .pPoolSizes = sizes.data( )
-      };
+      auto pool_create_info = VkDescriptorPoolCreateInfo{};
+      pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+      pool_create_info.pNext = nullptr;
+      pool_create_info.flags = 0;
+      pool_create_info.maxSets = create_info.value( ).max_num_sets;
+      pool_create_info.poolSizeCount = static_cast<std::uint32_t>( sizes.size( ) );
+      pool_create_info.pPoolSizes = sizes.data( );
 
-      auto const res = p_context->create_descriptor_pool(
-         vk::descriptor_pool_create_info_t( pool_create_info )
-      );
+      auto const res = p_context->create_descriptor_pool( vk::descriptor_pool_create_info_t( pool_create_info ) );
 
       if ( auto const* p_val = std::get_if<VkDescriptorPool>( &res ) )
       {
@@ -57,19 +49,16 @@ namespace vk
 
       // TODO: Log the potential error.
    }
-   descriptor_pool::descriptor_pool( descriptor_pool&& rhs )
-   {
-      *this = std::move( rhs );
-   }
-   
+   descriptor_pool::descriptor_pool( descriptor_pool&& rhs ) { *this = std::move( rhs ); }
+
    descriptor_pool::~descriptor_pool( )
    {
       if ( pool != VK_NULL_HANDLE )
       {
          pool = p_context->destroy_descriptor_pool( vk::descriptor_pool_t( pool ) );
-      } 
+      }
    }
-   
+
    descriptor_pool& descriptor_pool::operator=( descriptor_pool&& rhs )
    {
       if ( this != &rhs )
@@ -80,5 +69,7 @@ namespace vk
          pool = rhs.pool;
          rhs.pool = VK_NULL_HANDLE;
       }
+
+      return *this;
    }
 } // namespace vk

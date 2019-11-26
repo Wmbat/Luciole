@@ -30,7 +30,7 @@ namespace vk::pipeline
 {
    class unique_pipeline
    {
-   public: 
+   public:
       enum class type
       {
          e_graphics = 0,
@@ -44,13 +44,13 @@ namespace vk::pipeline
          shader::manager const* p_shader_manager = nullptr;
 
          type pipeline_type = type::e_count;
-         shader::set::id shader_set_id; 
+         shader::set::id shader_set_id;
       };
 
       using create_info_t = strong_type<create_info const&, unique_pipeline>;
 
    public:
-      unique_pipeline( ); 
+      unique_pipeline( );
       unique_pipeline( create_info_t const& create_info );
       unique_pipeline( unique_pipeline const& rhs ) = delete;
       unique_pipeline( unique_pipeline&& rhs );
@@ -69,7 +69,7 @@ namespace vk::pipeline
 
    using id = std::uint32_t;
    using id_t = strong_type<id, unique_pipeline>;
-   using filepath_t = strong_type<std::string const&, unique_pipeline>; 
+   using filepath_t = strong_type<std::string const&, unique_pipeline>;
    using filepath_view_t = strong_type<std::string_view, unique_pipeline>;
 } // namespace vk::pipeline
 

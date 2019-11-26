@@ -19,10 +19,7 @@
 #include <luciole/vk/pipelines/pipeline_json_loader.hpp>
 
 namespace vk::pipeline
-{ 
-   data json_loader::load_pipeline( filepath_view_t const& filepath ) const
-   {
+{
+   data json_loader::load_pipeline( filepath_view_t const& filepath ) const {}
 
-   }
-
-} // namespace vk
+} // namespace vk::pipeline

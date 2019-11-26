@@ -22,36 +22,27 @@
 
 namespace vk::shader
 {
-   unique_shader::unique_shader( )
-      :
-      p_context( nullptr ),
-      shader_type( type::e_count ),
-      handle( VK_NULL_HANDLE )
-   {  }
+   unique_shader::unique_shader( ) : p_context( nullptr ), shader_type( type::e_count ), handle( VK_NULL_HANDLE ) {}
 
-   unique_shader::unique_shader( create_info_t const& create_info )
-      :
-      p_context( create_info.value( ).p_context ),
-      filepath( create_info.value( ).filepath ),
-      entry_point( "" ),
-      shader_type( type::e_count ),
-      handle( VK_NULL_HANDLE )
-   {   
-      auto module_create_info = VkShaderModuleCreateInfo{ };
+   unique_shader::unique_shader( create_info_t const& create_info ) :
+      p_context( create_info.value( ).p_context ), filepath( create_info.value( ).filepath ), entry_point( "" ),
+      shader_type( type::e_count ), handle( VK_NULL_HANDLE )
+   {
+      auto module_create_info = VkShaderModuleCreateInfo{};
       module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
       module_create_info.pNext = nullptr;
-      module_create_info.flags = { };
+      module_create_info.flags = {};
       module_create_info.pCode = create_info.value( ).spir_v.data( );
-      module_create_info.codeSize = static_cast<std::uint32_t>( create_info.value( ).spir_v.size( ) );
+      module_create_info.codeSize = sizeof( std::uint32_t ) * create_info.value( ).spir_v.size( );
 
       handle = p_context->create_shader_module( shader_module_create_info_t( module_create_info ) );
 
-      spirv_cross::CompilerGLSL glsl( std::move( create_info.value( ).spir_v ) ); 
+      spirv_cross::CompilerGLSL glsl( std::move( create_info.value( ).spir_v ) );
       spirv_cross::ShaderResources resources = glsl.get_shader_resources( );
 
       auto const entry_points = glsl.get_entry_points_and_stages( );
 
-      for( auto const entry : entry_points )
+      for ( auto const entry : entry_points )
       {
          if ( entry.name == "main" )
          {
@@ -78,10 +69,7 @@ namespace vk::shader
       }
    }
 
-   unique_shader::unique_shader( unique_shader&& other )
-   {
-      *this = std::move( other );
-   }
+   unique_shader::unique_shader( unique_shader&& other ) { *this = std::move( other ); }
 
    unique_shader& unique_shader::operator=( unique_shader&& rhs )
    {
@@ -89,10 +77,10 @@ namespace vk::shader
       {
          p_context = rhs.p_context;
          rhs.p_context = nullptr;
-         
+
          shader_type = rhs.shader_type;
          rhs.shader_type = type::e_count;
-            
+
          handle = rhs.handle;
          rhs.handle = nullptr;
       }
@@ -100,7 +88,5 @@ namespace vk::shader
       return *this;
    }
 
-   VkPipelineShaderStageCreateInfo unique_shader::get_shader_stage_create_info( ) const
-   {
-   }
+   VkPipelineShaderStageCreateInfo unique_shader::get_shader_stage_create_info( ) const { return {}; }
 } // namespace vk::shader

@@ -2,7 +2,7 @@
  * @author wmbat@protonmail.com
  *
  * Copyright (C) 2019 Wmbat
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,18 +23,15 @@
 
 #include <vector>
 
-template<typename T>
+template <typename T>
 class message_handler
 {
 public:
-   void add_callback( const delegate<void( T )>& callback )
-   {
-      callbacks_.push_back( callback );
-   }
-  
+   void add_callback( const delegate<void( T )>& callback ) { callbacks_.push_back( callback ); }
+
    void send_message( const T& message )
    {
-      for( auto& delegate : callbacks_ )
+      for ( auto& delegate : callbacks_ )
       {
          delegate( message );
       }
@@ -44,4 +41,4 @@ private:
    std::vector<delegate<void( T )>> callbacks_;
 };
 
-#endif //LUCIOLE_UTILITIES_MESSAGE_HPP
+#endif // LUCIOLE_UTILITIES_MESSAGE_HPP

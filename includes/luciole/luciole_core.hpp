@@ -16,7 +16,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef LUCIOLE_LUCIOLE_CORE_HPP
 #define LUCIOLE_LUCIOLE_CORE_HPP
 
@@ -24,20 +23,26 @@
 #include <optional>
 #include <string>
 
-#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
+#define GCC_COMPILER ( defined( __GNUC__ ) && !defined( __clang__ ) )
 
-#if defined (GCC_COMPILER)
-    #define PURE __attribute__ ((pure))
+#if defined( GCC_COMPILER )
+#   define PURE __attribute__( ( pure ) )
 #else
-    #define PURE 
+#   define PURE
 #endif
 
-constexpr auto cache_line = std::size_t{ 64 };
+constexpr auto cache_line = std::size_t{64};
 
 static constexpr uint32_t kilobyte = 1024;
 static constexpr uint32_t megabyte = kilobyte * kilobyte;
-    
-constexpr unsigned long long operator "" _kg( unsigned long long size ) { return size * kilobyte; }
-constexpr unsigned long long operator "" _mb( unsigned long long size ) { return size * megabyte; }
 
-#endif //LUCIOLE_LUCIOLE_CORE_HPP
+constexpr unsigned long long operator"" _kg( unsigned long long size )
+{
+   return size * kilobyte;
+}
+constexpr unsigned long long operator"" _mb( unsigned long long size )
+{
+   return size * megabyte;
+}
+
+#endif // LUCIOLE_LUCIOLE_CORE_HPP

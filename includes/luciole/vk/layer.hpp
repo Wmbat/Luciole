@@ -24,26 +24,26 @@
 
 namespace vk
 {
-    /**
-     * @brief Data aggregate holding the information about Vulkan
-     * layers.
-     */
-    struct layer
-    {
-        /**
-         * @brief Enum to define how needed the extension is.
-         */
-        enum class priority
-        {
-            e_none,
-            e_required,
-            e_optional
-        };
+   /**
+    * @brief Data aggregate holding the information about Vulkan
+    * layers.
+    */
+   struct layer
+   {
+      /**
+       * @brief Enum to define how needed the extension is.
+       */
+      enum class priority
+      {
+         e_none,
+         e_required,
+         e_optional
+      };
 
-        priority priority = priority::e_none;
-        bool found = false;
-        std::string name = { };
-    };
+      priority priority = priority::e_none;
+      bool found = false;
+      std::string name = {};
+   };
 } // namespace vk
 
 #endif // LUCIOLE_LAYER_HPP

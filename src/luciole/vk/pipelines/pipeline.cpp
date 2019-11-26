@@ -21,31 +21,19 @@
 
 namespace vk::pipeline
 {
-   unique_pipeline::unique_pipeline( )
-      :
-      p_context( nullptr ),
-      pipeline_type( type::e_count ),
-      handle( VK_NULL_HANDLE )
-   {}
+   unique_pipeline::unique_pipeline( ) : p_context( nullptr ), pipeline_type( type::e_count ), handle( VK_NULL_HANDLE ) {}
 
-   unique_pipeline::unique_pipeline( create_info_t const& create_info )
-      :
-      p_context( create_info.value( ).p_context ),
-      pipeline_type( create_info.value().pipeline_type ),
-      handle( VK_NULL_HANDLE )
+   unique_pipeline::unique_pipeline( create_info_t const& create_info ) :
+      p_context( create_info.value( ).p_context ), pipeline_type( create_info.value( ).pipeline_type ), handle( VK_NULL_HANDLE )
    {
-      auto const shader_stages = create_info.value( ).p_shader_manager->get_shader_stage_create_infos( 
-            shader::set::id_t( create_info.value( ).shader_set_id ) 
-      );
+      auto const shader_stages =
+         create_info.value( ).p_shader_manager->get_shader_stage_create_infos( shader::set::id_t( create_info.value( ).shader_set_id ) );
 
       auto const binding_description = vertex::get_binding_description( );
       auto const attribute_description = vertex::get_attribute_descriptions( );
    }
 
-   unique_pipeline::unique_pipeline( unique_pipeline&& rhs )
-   {
-      *this = std::move( rhs );
-   }
+   unique_pipeline::unique_pipeline( unique_pipeline&& rhs ) { *this = std::move( rhs ); }
 
    unique_pipeline::~unique_pipeline( )
    {
@@ -67,11 +55,11 @@ namespace vk::pipeline
 
          pipeline_type = rhs.pipeline_type;
          rhs.pipeline_type = type::e_count;
-            
+
          handle = rhs.handle;
          rhs.handle = VK_NULL_HANDLE;
       }
 
-      return *this; 
+      return *this;
    }
-} // namespace vk
+} // namespace vk::pipeline

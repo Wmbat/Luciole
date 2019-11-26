@@ -13,4 +13,5 @@
 /out
 /compile_commands.json
 /.ccls-cache
+/.clangd
 /tags

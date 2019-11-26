@@ -22,45 +22,36 @@
 
 int main( )
 {
-   ui::window::create_info const create_info 
-   {
-      .title = "Simple Triangle Example",
-      .position = { 100, 100 },
-      .size = { 1080, 720 }
-   };
+   auto window_create_info = ui::window::create_info{};
+   window_create_info.title = "Simple Triangle Example";
+   window_create_info.position = {100, 100};
+   window_create_info.size = {1080, 720};
 
-   auto wnd = ui::window( ui::window::create_info_t( create_info ) );    
+   auto wnd = ui::window( ui::window::create_info_t( window_create_info ) );
    auto ctx = context( wnd );
    auto rdr = renderer( p_context_t( &ctx ), wnd );
-   
+
    auto const p_shader_compiler = std::make_unique<vk::shader::compiler>( );
    auto const p_pipeline_loader = std::make_unique<vk::pipeline::json_loader>( );
 
-   auto pack_create_info = vk::shader::set::create_info{ };
-   
-   pack_create_info.vertex_id = rdr.load_shader_module( 
-      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), 
-      vk::shader::filepath_t( "../data/shaders/default_shader.vert" ) 
-   );
+   auto pack_create_info = vk::shader::set::create_info{};
 
-   pack_create_info.fragment_id = rdr.load_shader_module( 
-      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), 
-      vk::shader::filepath_t( "../data/shaders/default_shader.frag" ) 
-   );
+   pack_create_info.vertex_id = rdr.load_shader_module(
+      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), vk::shader::filepath_t( "../data/shaders/default_shader.vert" ) );
+
+   pack_create_info.fragment_id = rdr.load_shader_module(
+      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), vk::shader::filepath_t( "../data/shaders/default_shader.frag" ) );
 
    auto const shader_pack_id = rdr.create_shader_pack( vk::shader::set::create_info_t( pack_create_info ) );
 
-   rdr.create_pipeline(
-      vk::pipeline::loader_ptr_t( p_pipeline_loader.get( ) ),
-      vk::shader::set::id_t( shader_pack_id )
-   );
+   rdr.create_pipeline( vk::pipeline::loader_ptr_t( p_pipeline_loader.get( ) ), vk::shader::set::id_t( shader_pack_id ) );
+   /*
+      while( wnd.is_open() )
+      {
+         rdr.draw_frame();
 
-   while( wnd.is_open() )
-   {
-      rdr.draw_frame();
-
-      wnd.poll_events();
-   }
-
+         wnd.poll_events();
+      }
+   */
    return 0;
 }

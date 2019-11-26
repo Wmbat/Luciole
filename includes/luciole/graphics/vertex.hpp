@@ -27,43 +27,30 @@
 
 struct vertex
 {
-    glm::vec2 position;
-    glm::vec3 colour;
+   glm::vec2 position;
+   glm::vec3 colour;
 
-    static VkVertexInputBindingDescription get_binding_description()
-    {
-        VkVertexInputBindingDescription const description 
-        {
-            .binding = 0,
-            .stride = sizeof(vertex),
-            .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-        };
+   static VkVertexInputBindingDescription get_binding_description( )
+   {
+      VkVertexInputBindingDescription const description{.binding = 0, .stride = sizeof( vertex ), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX};
 
-        return description;
-    }
+      return description;
+   }
 
-    static std::array<VkVertexInputAttributeDescription, 2> get_attribute_descriptions()
-    {
-        std::array<VkVertexInputAttributeDescription, 2> descriptions 
-        {
-            VkVertexInputAttributeDescription
-            {
-                .location = 0,
-                .binding = 0,
-                .format = VK_FORMAT_R32G32_SFLOAT,
-                .offset = offsetof(vertex, position)
-            },
-            VkVertexInputAttributeDescription
-            {
-                .location = 1,
-                .binding = 0,
-                .format = VK_FORMAT_R32G32B32_SFLOAT,
-                .offset = offsetof(vertex, colour)
-            }
-        };
+   static std::array<VkVertexInputAttributeDescription, 2> get_attribute_descriptions( )
+   {
+      std::array<VkVertexInputAttributeDescription, 2> descriptions;
+      descriptions[0].location = 0;
+      descriptions[0].binding = 0;
+      descriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+      descriptions[0].offset = offsetof( vertex, position );
+      descriptions[1].location = 1;
+      descriptions[1].binding = 0;
+      descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+      descriptions[1].offset = offsetof( vertex, colour );
 
-        return descriptions;
-    }
+      return descriptions;
+   }
 };
 
 struct uniform_buffer_object

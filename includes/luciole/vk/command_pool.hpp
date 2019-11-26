@@ -32,15 +32,15 @@ namespace vk
       command_pool( command_pool const& rhs ) = delete;
       command_pool( command_pool&& rhs );
       ~command_pool( );
-   
+
       command_pool& operator=( command_pool const& rhs ) = delete;
       command_pool& operator=( command_pool&& rhs );
-   
+
    private:
       context const* p_context;
 
       VkCommandPool handle;
-      std::vector<VkCommandBuffer> command_buffers; 
+      std::vector<VkCommandBuffer> command_buffers;
    }; // class command_pool
 } // namespace vk
 

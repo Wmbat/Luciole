@@ -23,7 +23,6 @@ namespace vk::pipeline
 {
    struct data
    {
-
    };
 } // namespace vk::pipeline
 

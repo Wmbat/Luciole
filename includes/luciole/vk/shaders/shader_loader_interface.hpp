@@ -22,9 +22,9 @@
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/shaders/shader.hpp>
 
-#include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
+#include <glslang/Public/ShaderLang.h>
 
 #include <vector>
 
@@ -38,7 +38,7 @@ namespace vk::shader
    public:
       loader_interface( ) = default;
       virtual ~loader_interface( ) = default;
- 
+
       /**
        * @brief Pure virtual function to override for a custom
        * implemenation to load shaders and return the SPIR-V binary.
@@ -49,6 +49,6 @@ namespace vk::shader
    }; // class shader_loader_interface
 
    using loader_ptr_t = strong_type<loader_interface const*, loader_interface>;
-} // namespace vk
+} // namespace vk::shader
 
 #endif // LUCIOLE_VK_SHADERS_SHADER_LOADER_INTERFACE_HPP

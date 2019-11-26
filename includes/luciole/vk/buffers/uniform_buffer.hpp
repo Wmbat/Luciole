@@ -20,8 +20,8 @@
 #define LUCIOLE_VK_BUFFERS_UNIFORM_BUFFER_HPP
 
 #include <luciole/context.hpp>
-#include <luciole/utils/strong_types.hpp>
 #include <luciole/ui/window.hpp>
+#include <luciole/utils/strong_types.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -35,11 +35,11 @@ namespace vk
       uniform_buffer( uniform_buffer const& rhs ) = delete;
       uniform_buffer( uniform_buffer&& rhs );
       ~uniform_buffer( );
-   
+
       uniform_buffer& operator=( uniform_buffer const& rhs ) = delete;
       uniform_buffer& operator=( uniform_buffer&& rhs );
 
-      template<typename T>
+      template <typename T>
       void map_data( T const& data )
       {
          void* local_data;
@@ -56,4 +56,4 @@ namespace vk
    }; // class uniform_buffer
 } // namespace vk
 
-#endif 
+#endif

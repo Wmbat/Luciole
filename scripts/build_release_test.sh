@@ -19,9 +19,9 @@ echo Building Luciole in Release mode with tests.
 echo Creating build folder.
 mkdir ../build -p
 
-git submodule update --init --recursive
+git submodule update --init --recursive ../
 
-cmake . -B build -DCMAKE_BUILD_TYPE=DRELEASE -Dtest=ON
+cmake ../ -B ../build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
 
-echo Copying compile_commands.json to project root
-cp build/compile_commands.json ./
+echo Copying compile_commands.json to project root.
+cp ../build/compile_commands.json ../

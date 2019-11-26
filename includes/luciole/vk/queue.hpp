@@ -27,9 +27,15 @@
 class queue
 {
 private:
-   struct param { };
-   struct index_param { };
-   struct family_index_param { };
+   struct param
+   {
+   };
+   struct index_param
+   {
+   };
+   struct family_index_param
+   {
+   };
 
 public:
    /**
@@ -38,10 +44,10 @@ public:
     */
    enum class flag
    {
-       e_none      = 0,
-       e_graphics  = 1 << 1,
-       e_transfer  = 1 << 2,
-       e_compute   = 1 << 3
+      e_none = 0,
+      e_graphics = 1 << 1,
+      e_transfer = 1 << 2,
+      e_compute = 1 << 3
    };
 
    using flag_t = strong_type<flag, param>;
@@ -52,20 +58,18 @@ public:
    queue( ) = default;
    queue( vk::device_t device, family_index_t family_index, index_t index );
    queue( queue const& rhs ) = delete;
-   queue( queue && rhs );
+   queue( queue&& rhs );
 
    queue& operator=( queue const& rhs ) = delete;
-   queue& operator=( queue && rhs );
+   queue& operator=( queue&& rhs );
 
    /**
     * @brief Wait for the queue to finish a task.
     *
     * @return The result of the operation.
     */
-   [[nodiscard]] 
-   vk::error wait_idle( 
-   ) const noexcept PURE;
-   
+   [[nodiscard]] vk::error wait_idle( ) const noexcept PURE;
+
    /**
     * @brief Submit the queue.
     *
@@ -76,12 +80,8 @@ public:
     *
     * @return The result of the operation.
     */
-   [[nodiscard]] 
-   vk::error submit( 
-      vk::submit_info_t const& info, 
-      vk::fence_t const& fence 
-   ) const noexcept PURE;
-   
+   [[nodiscard]] vk::error submit( vk::submit_info_t const& info, vk::fence_t const& fence ) const noexcept PURE;
+
    /**
     * @brief Present the queue.
     *
@@ -90,19 +90,14 @@ public:
     *
     * @return The result of the operation.
     */
-   [[nodiscard]]
-   vk::error present( 
-      vk::present_info_t const& info 
-   ) const noexcept PURE;
-   
+   [[nodiscard]] vk::error present( vk::present_info_t const& info ) const noexcept PURE;
+
    /**
     * @brief Get the queue's family index.
     *
     * @return The queue's family index.
     */
-   [[nodiscard]] 
-   std::uint32_t get_family_index( 
-   ) const noexcept PURE;
+   [[nodiscard]] std::uint32_t get_family_index( ) const noexcept PURE;
 
 private:
    VkQueue handle = VK_NULL_HANDLE;

@@ -18,10 +18,8 @@
 
 #include <luciole/vk/queue.hpp>
 
-queue::queue( vk::device_t device, family_index_t family_index, index_t index )
-   :
-   family_index( family_index.value( ) ),
-   index( index.value( ) )
+queue::queue( vk::device_t device, family_index_t family_index, index_t index ) :
+   family_index( family_index.value( ) ), index( index.value( ) )
 {
    vkGetDeviceQueue( device.value( ), family_index.value( ), index.value( ), &handle );
 }
@@ -56,9 +54,7 @@ queue& queue::operator=( queue&& rhs )
  */
 vk::error queue::wait_idle( ) const noexcept
 {
-   vk::error const err( vk::result_t(
-      vkQueueWaitIdle( handle )
-   ) );
+   vk::error const err( vk::result_t( vkQueueWaitIdle( handle ) ) );
 
    return err;
 }
@@ -73,13 +69,9 @@ vk::error queue::wait_idle( ) const noexcept
  *
  * @return The result of the operation.
  */
-vk::error queue::submit( 
-   vk::submit_info_t const& info, 
-   vk::fence_t const& fence ) const noexcept
+vk::error queue::submit( vk::submit_info_t const& info, vk::fence_t const& fence ) const noexcept
 {
-   vk::error const err( vk::result_t(
-      vkQueueSubmit( handle, 1, &info.value( ), fence.value( ) )
-   ) );
+   vk::error const err( vk::result_t( vkQueueSubmit( handle, 1, &info.value( ), fence.value( ) ) ) );
 
    return err;
 }
@@ -92,16 +84,12 @@ vk::error queue::submit(
  *
  * @return The result of the operation.
  */
-vk::error queue::present( 
-   vk::present_info_t const& info ) const noexcept
+vk::error queue::present( vk::present_info_t const& info ) const noexcept
 {
-   vk::error const err( vk::result_t(
-      vkQueuePresentKHR( handle, &info.value( ) )
-   ) );
+   vk::error const err( vk::result_t( vkQueuePresentKHR( handle, &info.value( ) ) ) );
 
    return err;
 }
-
 
 /**
  * @brief Get the queue's family index.

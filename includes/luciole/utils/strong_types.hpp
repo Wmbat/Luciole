@@ -25,38 +25,32 @@
 
 #include <luciole/luciole_core.hpp>
 
-struct default_parameter { };
+struct default_parameter
+{
+};
 
 template <typename type_, typename parameter_ = default_parameter>
 class strong_type
 {
 public:
-   explicit strong_type( const type_& value )
-      : 
-      data( value ) 
-   {   }
+   explicit strong_type( const type_& value ) : data( value ) {}
 
-   template<typename type1_ = type_>
-   explicit strong_type( type_&& value, typename std::enable_if<!std::is_reference<type1_>{ }, std::nullptr_t>::type = nullptr )
-      : 
-      data( std::move( value ) ) 
-   {   }
-  
-   type_ const& value( ) const PURE
-   {
-      return data;
-   }
+   template <typename type1_ = type_>
+   explicit strong_type( type_&& value, typename std::enable_if<!std::is_reference<type1_>{}, std::nullptr_t>::type = nullptr ) :
+      data( std::move( value ) )
+   {}
 
-   type_ value( )
-   {
-      return data;
-   }
-   
+   type_ const& value( ) const PURE { return data; }
+
+   type_ value( ) { return data; }
+
 public:
-    type_ data;
+   type_ data;
 };
 
-struct count_parameter { };
+struct count_parameter
+{
+};
 using count32_t = strong_type<std::uint32_t, count_parameter>;
 
 #endif // LUCIOLE_STRONG_TYPES_HPP

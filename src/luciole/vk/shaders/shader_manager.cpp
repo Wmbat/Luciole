@@ -23,9 +23,7 @@
 
 namespace vk::shader
 {
-   manager::manager( )
-      :
-      p_context( nullptr )
+   manager::manager( ) : p_context( nullptr )
    {
       if ( !GLSLANG_INITIALIZED )
       {
@@ -34,9 +32,7 @@ namespace vk::shader
       }
    }
 
-   manager::manager( p_context_t const& p_context )
-      :
-      p_context( p_context.value( ) )
+   manager::manager( context_ptr_t const& p_context ) : p_context( p_context.value( ) )
    {
       if ( !GLSLANG_INITIALIZED )
       {
@@ -45,18 +41,14 @@ namespace vk::shader
       }
    }
 
-   manager::manager( manager&& rhs )
-   {
-      *this = std::move( rhs );
-   }
+   manager::manager( manager&& rhs ) { *this = std::move( rhs ); }
 
    manager::~manager( )
    {
       if ( p_save_interface )
       {
-         for( auto const& shader : shaders )
+         for ( auto const& shader : shaders )
          {
-            
          }
       }
    }
@@ -65,9 +57,9 @@ namespace vk::shader
    {
       if ( this != &rhs )
       {
-         p_context = rhs.p_context;   
+         p_context = rhs.p_context;
          rhs.p_context = nullptr;
-         
+
          shaders = std::move( rhs.shaders );
 
          shader_packs = std::move( rhs.shader_packs );
@@ -78,26 +70,26 @@ namespace vk::shader
 
    id manager::load_module( loader_ptr_t loader, filepath_t const& filepath )
    {
-      if (loader.value() != nullptr)
+      if ( loader.value( ) == nullptr )
       {
          // TODO: Handle error.
-         abort();
-      } 
-    
+         abort( );
+      }
+
       auto shader_data = loader.value( )->load_shader( vk::shader::filepath_view_t( filepath.value( ) ) );
 
       auto create_info = unique_shader::create_info( );
       create_info.p_context = p_context;
       create_info.spir_v = shader_data.first;
       create_info.shader_type = shader_data.second;
-  
+
       std::uint32_t id = SHADER_ID_COUNT++;
 
       shaders.emplace( id, unique_shader( unique_shader::create_info_t( create_info ) ) );
 
       return id;
    }
-   
+
    bool manager::delete_module( id_t id )
    {
       for ( auto& pack : shader_packs )
@@ -138,7 +130,7 @@ namespace vk::shader
             return false;
          }
       }
- 
+
       if ( auto it = shaders.find( id.value( ) ); it != shaders.end( ) )
       {
          shaders.erase( it );
@@ -150,7 +142,7 @@ namespace vk::shader
    std::vector<VkPipelineShaderStageCreateInfo> manager::get_shader_stage_create_infos( set::id_t shader_pack_id ) const
    {
       auto const pack_it = shader_packs.find( shader_pack_id.value( ) );
-      
+
       assert( ( "shader pack " + std::to_string( shader_pack_id.value( ) ) + " is not present", pack_it == shader_packs.end( ) ) );
 
       std::vector<VkPipelineShaderStageCreateInfo> create_infos;
@@ -159,8 +151,8 @@ namespace vk::shader
       if ( pack_it->second.get_vertex_shader( ).has_value( ) )
       {
          auto const shader_it = shaders.find( pack_it->second.get_vertex_shader( ).value( ) );
-        
-         auto create_info = VkPipelineShaderStageCreateInfo{ };
+
+         auto create_info = VkPipelineShaderStageCreateInfo{};
          create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
          create_info.pNext = nullptr;
          create_info.flags = 0;
@@ -177,10 +169,7 @@ namespace vk::shader
       return id;
    }
 
-   void manager::enable_shader_saving( save_uptr_t p_saving )
-   {
-      p_save_interface.reset( p_saving.value( ).release( ) );   
-   }
+   void manager::enable_shader_saving( save_uptr_t p_saving ) { p_save_interface.reset( p_saving.value( ).release( ) ); }
 
    void manager::disable_shader_saving( )
    {
@@ -189,4 +178,4 @@ namespace vk::shader
          p_save_interface.reset( );
       }
    }
-} // namespace vk
+} // namespace vk::shader

@@ -26,7 +26,7 @@
 namespace vk::pipeline
 {
    class loader_interface
-   { 
+   {
    public:
       loader_interface( ) = default;
       virtual ~loader_interface( ) = default;
@@ -35,6 +35,6 @@ namespace vk::pipeline
    };
 
    using loader_ptr_t = strong_type<loader_interface const*, loader_interface>;
-} // namespace vk
+} // namespace vk::pipeline
 
 #endif // LUCIOLE_VK_PIPELINES_PIPELINE_LOADER_INTERFACE_HPP

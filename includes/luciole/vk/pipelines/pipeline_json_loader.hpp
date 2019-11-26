@@ -23,7 +23,7 @@
 
 namespace vk::pipeline
 {
-   class json_loader : public loader_interface 
+   class json_loader : public loader_interface
    {
    public:
       json_loader( ) = default;
@@ -31,6 +31,6 @@ namespace vk::pipeline
 
       virtual data load_pipeline( filepath_view_t const& filepath ) const override;
    };
-} // namespace vk
+} // namespace vk::pipeline
 
 #endif // LUCIOLE_VK_PIPELINES_PIPELINE_JSON_LOADER_HPP

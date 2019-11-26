@@ -30,7 +30,7 @@ namespace vk::pipeline
 {
    class manager
    {
-   public: 
+   public:
       id create_pipeline( loader_ptr_t p_loader, shader::set::id_t pack_id );
 
    private:

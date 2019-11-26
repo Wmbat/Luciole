@@ -20,65 +20,59 @@
 #define ENGINE_ATOMIC_QUEUE_HPP
 
 #include <atomic>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 #include <luciole/luciole_core.hpp>
 
-template<typename T>
+template <typename T>
 class atomic_queue
 {
    static_assert( std::is_move_constructible<T>::value, "Template type must be a movable type" );
+
 public:
    atomic_queue( ) = default;
    atomic_queue( const atomic_queue& rhs ) = delete;
-   atomic_queue( atomic_queue&& rhs )
-   {
-   
-   }
-   
+   atomic_queue( atomic_queue&& rhs ) {}
+
    atomic_queue& operator=( const atomic_queue& rhs ) = delete;
-   atomic_queue& operator=( atomic_queue&& rhs )
-   {
-   
-   }
-   
+   atomic_queue& operator=( atomic_queue&& rhs ) {}
+
    bool push( T&& data )
    {
-      for( ;; )
+      for ( ;; )
       {
          std::size_t tail_pos = tail_.load( std::memory_order_acquire );
          auto& node = buffer_[tail_pos & buffer_mask_];
-         
+
          const auto seq = node.sequence_.load( std::memory_order_acquire );
-         const auto difference = ( intptr_t ) seq - ( intptr_t ) tail_pos;
-         
+         const auto difference = ( intptr_t )seq - ( intptr_t )tail_pos;
+
          if ( difference == 0 )
          {
-            if ( tail_.compare_exchange_weak( tail_pos, tail_pos + 1, std::memory_order_relaxed))
+            if ( tail_.compare_exchange_weak( tail_pos, tail_pos + 1, std::memory_order_relaxed ) )
             {
-               node.data = std::forward<T>(data);
-       
-               node.sequence.store( tail_pos + 1, std::memory_order_release);
-       
+               node.data = std::forward<T>( data );
+
+               node.sequence.store( tail_pos + 1, std::memory_order_release );
+
                return true;
             }
          }
-         else if ( difference < 0)
+         else if ( difference < 0 )
          {
             return false;
          }
       }
    }
-   
-   
+
 private:
    struct node
    {
       std::atomic<std::size_t> sequence_;
       T data_;
    };
-    
+
 private:
    alignas( cache_line ) std::vector<node> buffer_;
    alignas( cache_line ) std::size_t buffer_mask_;
@@ -86,4 +80,4 @@ private:
    alignas( cache_line ) std::atomic<std::size_t> head_;
 };
 
-#endif //ENGINE_ATOMIC_QUEUE_HPP
+#endif // ENGINE_ATOMIC_QUEUE_HPP
