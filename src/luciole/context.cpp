@@ -1259,26 +1259,36 @@ std::variant<VmaAllocator, vk::error> context::create_memory_allocator() const
 std::unordered_map<queue::flag, queue> context::get_queues( const queue_properties_t& queue_properties ) const
 {
    std::unordered_map<queue::flag, queue> queues;
-   queues.reserve( 3 );
+   queues.reserve( 3 );   
 
    bool has_transfer_only = false;
    bool has_compute_only = false;
+   
+   // Find all the queues that are not for graphics.
    for( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
    {
       if ( queue_properties.value( )[i].queueCount > 0 )
       {
-         if ( queue_properties.value( )[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
+         if ( !( queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) )
          {
-            has_transfer_only = true;
 
-            queues.insert( { 
-               queue::flag::e_transfer,
-               queue( 
-                  vk::device_t( device ),  
-                  queue::family_index_t( i ), 
-                  queue::index_t( 0 ) 
-               ) 
-            } );
+         }
+
+         if ( queue_properties.value( )[i].queueFlags & VK_QUEUE_TRANSFER_BIT )
+         {
+            if ( !( queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) )
+            {
+               has_transfer_only = true;
+
+               queues.insert( { 
+                  queue::flag::e_transfer,
+                  queue( 
+                     vk::device_t( device ),  
+                     queue::family_index_t( i ), 
+                     queue::index_t( 0 ) 
+                  ) 
+               } );
+            } 
          }
 
          if ( queue_properties.value( )[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
