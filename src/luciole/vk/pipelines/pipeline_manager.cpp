@@ -20,5 +20,8 @@
 
 namespace vk::pipeline
 {
-
+   id manager::create_pipeline( loader_ptr_t p_loader, shader::set::id_t pack_id, filepath_view_t filepath )
+   {
+      auto data = p_loader.value( )->load_pipeline( filepath );
+   }
 } // namespace vk::pipeline

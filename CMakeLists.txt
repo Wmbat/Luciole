@@ -24,6 +24,10 @@ if( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release )
 endif( )
 
+# nlohmann settings
+set( JSON_BuildTests OFF CACHE BOOL "" FORCE )
+
+# spirv_cross settings
 set( SPIRV_CROSS_SHARED OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_STATIC ON CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE )
@@ -117,10 +121,9 @@ if( NOT WIN32 )
       PUBLIC 
          ${XCB_LIBRARIES} vulkan vma
          stb spdlog_header_only
-         nlohmann tinygltf
+         nlohmann_json tinygltf
          glm glslang SPIRV
          spirv-cross-cpp
-         asan
    )
 endif( )
 

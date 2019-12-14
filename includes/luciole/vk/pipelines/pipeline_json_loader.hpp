@@ -29,7 +29,14 @@ namespace vk::pipeline
       json_loader( ) = default;
       virtual ~json_loader( ) = default;
 
-      virtual data load_pipeline( filepath_view_t const& filepath ) const override;
+      virtual loader_interface::load_result load_pipeline( filepath_view_t const& filepath ) const override;
+
+   private:
+      std::string const pipeline_id = "pipeline";
+      std::string const pipeline_type_id = "type";
+      std::string const input_assembly_id = "input_assembly";
+      std::string const topology_id = "topology";
+      std::string const primitive_restart_enable_id = "primitive_restart_enable";
    };
 } // namespace vk::pipeline
 

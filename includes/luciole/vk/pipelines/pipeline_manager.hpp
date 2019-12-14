@@ -31,7 +31,7 @@ namespace vk::pipeline
    class manager
    {
    public:
-      id create_pipeline( loader_ptr_t p_loader, shader::set::id_t pack_id );
+      id create_pipeline( loader_ptr_t p_loader, shader::set::id_t pack_id, filepath_view_t filepath );
 
    private:
       std::unordered_map<id, unique_pipeline> pipelines;

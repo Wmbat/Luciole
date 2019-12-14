@@ -23,16 +23,30 @@
 #include <luciole/vk/pipelines/pipeline.hpp>
 #include <luciole/vk/pipelines/pipeline_data.hpp>
 
+#include <variant>
+
 namespace vk::pipeline
 {
    class loader_interface
    {
    public:
+      enum class error_code
+      {
+         e_incorrect_filepath = 0,
+         e_empty_filepath = 1,
+         e_no_pipeline_data = 2,
+         e_no_pipeline_type = 3
+      };
+
+      using load_result = std::variant<data, loader_interface::error_code>;
+
+   protected:
       loader_interface( ) = default;
       virtual ~loader_interface( ) = default;
 
-      virtual data load_pipeline( filepath_view_t const& filepath ) const = 0;
-   };
+   public:
+      virtual load_result load_pipeline( filepath_view_t const& filepath ) const = 0;
+   }; // class loader_interface
 
    using loader_ptr_t = strong_type<loader_interface const*, loader_interface>;
 } // namespace vk::pipeline

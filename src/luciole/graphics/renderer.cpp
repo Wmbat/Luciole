@@ -276,7 +276,11 @@ vk::shader::set::id renderer::create_shader_pack( vk::shader::set::create_info_t
    return shader_manager.create_pack( create_info );
 }
 
-vk::pipeline::id renderer::create_pipeline( vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id ) {}
+vk::pipeline::id renderer::create_pipeline(
+   vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id, vk::pipeline::filepath_view_t filepath )
+{
+   return pipeline_manager.create_pipeline( p_loader, pack_id, filepath );
+}
 
 void renderer::on_framebuffer_resize( framebuffer_resize_event const& event )
 {

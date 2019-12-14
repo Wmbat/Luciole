@@ -19,10 +19,15 @@
 #ifndef LUCIOLE_VK_PIPELINES_PIPELINE_DATA_HPP
 #define LUCIOLE_VK_PIPELINES_PIPELINE_DATA_HPP
 
+#include <luciole/vk/pipelines/pipeline.hpp>
+
+#include <vulkan/vulkan.h>
+
 namespace vk::pipeline
 {
    struct data
    {
+      pipeline::type pipeline_type;
    };
 } // namespace vk::pipeline
 

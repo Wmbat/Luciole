@@ -81,7 +81,8 @@ public:
 
    vk::shader::set::id create_shader_pack( vk::shader::set::create_info_t const& create_info );
 
-   vk::pipeline::id create_pipeline( vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id );
+   vk::pipeline::id create_pipeline(
+      vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id, vk::pipeline::filepath_view_t filepath );
 
 private:
    /**

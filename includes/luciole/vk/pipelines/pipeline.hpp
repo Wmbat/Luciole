@@ -28,16 +28,16 @@
 
 namespace vk::pipeline
 {
+   enum class type
+   {
+      e_graphics = 0,
+      e_compute = 1,
+      e_count = 2
+   };
+
    class unique_pipeline
    {
    public:
-      enum class type
-      {
-         e_graphics = 0,
-         e_computer = 1,
-         e_count = 2
-      };
-
       struct create_info
       {
          context const* p_context = nullptr;

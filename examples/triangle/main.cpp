@@ -44,7 +44,9 @@ int main( )
 
    auto const shader_pack_id = rdr.create_shader_pack( vk::shader::set::create_info_t( pack_create_info ) );
 
-   rdr.create_pipeline( vk::pipeline::loader_ptr_t( p_pipeline_loader.get( ) ), vk::shader::set::id_t( shader_pack_id ) );
+   rdr.create_pipeline( vk::pipeline::loader_ptr_t( p_pipeline_loader.get( ) ), vk::shader::set::id_t( shader_pack_id ),
+      vk::pipeline::filepath_view_t( "../data/pipelines/default_graphics_pipeline.json" ) );
+
    /*
       while( wnd.is_open() )
       {
