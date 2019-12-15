@@ -2,7 +2,7 @@
  * @author wmbat@protonmail.com
  *
  * Copyright (C) 2019 Wmbat
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,22 +19,26 @@
 #ifndef LUCIOLE_UTILITIES_FILE_IO_H
 #define LUCIOLE_UTILITIES_FILE_IO_H
 
-#include <string_view>
 #include <fstream>
+#include <string_view>
 #include <vector>
 
 inline const std::string read_from_file( const std::string_view filepath )
 {
-   std::ifstream file( std::string{ filepath } );
+   std::ifstream file( std::string{filepath} );
    std::string str;
 
-   if( !file.is_open() )
-      throw std::runtime_error{ "Error loading file at location: " + std::string{ filepath } + "." };
-  else if( !file.good() )
-      throw std::runtime_error{ "Error reading file: " + std::string{ filepath } + "." };
+   if ( !file.is_open( ) )
+   {
+      throw std::runtime_error{"Error loading file at location: " + std::string{filepath} + "."};
+   }
+   else if ( !file.good( ) )
+   {
+      throw std::runtime_error{"Error reading file: " + std::string{filepath} + "."};
+   }
 
    char c;
-   while( file.get( c ) )
+   while ( file.get( c ) )
    {
       str.push_back( c );
    }
@@ -44,16 +48,20 @@ inline const std::string read_from_file( const std::string_view filepath )
 
 inline const std::string read_from_binary_file( const std::string_view filepath )
 {
-   std::ifstream file( std::string{ filepath }, std::ios::binary );
+   std::ifstream file( std::string{filepath}, std::ios::binary );
    std::string str;
 
-   if( !file.is_open() )
-      throw std::runtime_error{ "Error loading file at location: " + std::string{ filepath } + "." };
-  else if( !file.good() )
-      throw std::runtime_error{ "Error reading file: " + std::string{ filepath } + "." };
+   if ( !file.is_open( ) )
+   {
+      throw std::runtime_error{"Error loading file at location: " + std::string{filepath} + "."};
+   }
+   else if ( !file.good( ) )
+   {
+      throw std::runtime_error{"Error reading file: " + std::string{filepath} + "."};
+   }
 
    char c;
-   while( file.get( c ) )
+   while ( file.get( c ) )
    {
       str.push_back( c );
    }
@@ -65,11 +73,12 @@ inline void write_to_file( const std::string& filepath, const std::string& data 
 {
    std::ofstream file( filepath, std::ios::binary );
 
-   if( !file.good() )
-      throw std::runtime_error{ "Error finding file: " + filepath + "." };
+   if ( !file.good( ) )
+   {
+      throw std::runtime_error{"Error finding file: " + filepath + "."};
+   }
 
    file << data;
 }
 
-
-#endif //BAZAAR_UTILITIES_FILE_IO_HPP
+#endif // BAZAAR_UTILITIES_FILE_IO_HPP

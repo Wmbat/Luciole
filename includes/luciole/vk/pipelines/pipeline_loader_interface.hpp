@@ -16,39 +16,39 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUCIOLE_VK_SHADERS_SHADER_LOADER_INTERFACE_HPP
-#define LUCIOLE_VK_SHADERS_SHADER_LOADER_INTERFACE_HPP
+#ifndef LUCIOLE_VK_PIPELINES_PIPELINE_LOADER_INTERFACE_HPP
+#define LUCIOLE_VK_PIPELINES_PIPELINE_LOADER_INTERFACE_HPP
 
 #include <luciole/utils/strong_types.hpp>
-#include <luciole/vk/shaders/shader.hpp>
+#include <luciole/vk/pipelines/pipeline.hpp>
+#include <luciole/vk/pipelines/pipeline_data.hpp>
 
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
-#include <glslang/Public/ShaderLang.h>
+#include <variant>
 
-#include <vector>
-
-namespace vk::shader
+namespace vk::pipeline
 {
    class loader_interface
    {
    public:
-      using shader_data = std::pair<std::vector<std::uint32_t>, type>;
+      enum class error_code
+      {
+         e_incorrect_filepath = 0,
+         e_empty_filepath = 1,
+         e_no_pipeline_data = 2,
+         e_no_pipeline_type = 3
+      };
 
-   public:
+      using load_result = std::variant<data, loader_interface::error_code>;
+
+   protected:
       loader_interface( ) = default;
       virtual ~loader_interface( ) = default;
 
-      /**
-       * @brief Pure virtual function to override for a custom
-       * implemenation to load shaders and return the SPIR-V binary.
-       *
-       * @return The SPIR-V binary for the shader and the shader type.
-       */
-      virtual shader_data load_shader( shader::filepath_view_t filepath ) const = 0;
-   }; // class shader_loader_interface
+   public:
+      virtual load_result load_pipeline( filepath_view_t const& filepath ) const = 0;
+   }; // class loader_interface
 
    using loader_ptr_t = strong_type<loader_interface const*, loader_interface>;
-} // namespace vk::shader
+} // namespace vk::pipeline
 
-#endif // LUCIOLE_VK_SHADERS_SHADER_LOADER_INTERFACE_HPP
+#endif // LUCIOLE_VK_PIPELINES_PIPELINE_LOADER_INTERFACE_HPP

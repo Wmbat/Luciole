@@ -21,10 +21,12 @@
 
 /* INCLUDES */
 #include <luciole/context.hpp>
+#include <luciole/sys/component.hpp>
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/buffers/index_buffer.hpp>
 #include <luciole/vk/buffers/uniform_buffer.hpp>
 #include <luciole/vk/buffers/vertex_buffer.hpp>
+#include <luciole/vk/pipelines/pipeline_manager.hpp>
 #include <luciole/vk/shaders/shader_manager.hpp>
 
 #include <vulkan/vulkan.h>
@@ -40,19 +42,25 @@ private:
    /**
     * @brief Dummy struct for custom strong type to designate a shader filepath.
     */
-   struct shader_filepath_parameter{ };
+   struct shader_filepath_parameter
+   {
+   };
    using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
 
    /**
     * @brief Dummy struct for custom strong type to designate a vertex shader filepath.
     */
-   struct vert_shader_filepath_param{ };
+   struct vert_shader_filepath_param
+   {
+   };
    using vert_shader_filepath_t = strong_type<std::string const&, vert_shader_filepath_param>;
-   
+
    /**
     * @brief Dummy struct for custom strong type to designate a fragment shader filepath.
     */
-   struct frag_shader_filepath_param{ };
+   struct frag_shader_filepath_param
+   {
+   };
    using frag_shader_filepath_t = strong_type<std::string const&, frag_shader_filepath_param>;
 
 public:
@@ -61,15 +69,20 @@ public:
    renderer( renderer const& rhs ) = delete;
    renderer( renderer&& rhs );
    ~renderer( );
-   
+
    renderer& operator=( renderer const& rhs ) = delete;
    renderer& operator=( renderer&& rhs );
 
-   void draw_frame();
+   void draw_frame( );
 
    void on_framebuffer_resize( framebuffer_resize_event const& event );
 
-   std::uint32_t load_shader( vk::shader_loader_interface const* p_loader, vk::shader::filepath_t const& filepath );
+   vk::shader::id load_shader_module( vk::shader::loader_ptr_t p_loader, vk::shader::filepath_t const& filepath );
+
+   vk::shader::set::id create_shader_pack( vk::shader::set::create_info_t const& create_info );
+
+   vk::pipeline::id create_pipeline(
+      vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id, vk::pipeline::filepath_view_t filepath );
 
 private:
    /**
@@ -88,156 +101,125 @@ private:
 
    /**
     * @brief Create a swapchain object.
-    * 
+    *
     * @param capabilities The capabilities of the Surface.
     * @param format The format of the Surface.
-    * @return std::variant<VkSwapchainKHR, vk::error> Type safe union that returns 
+    * @return std::variant<VkSwapchainKHR, vk::error> Type safe union that returns
     * either the created Swapchain handle or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkSwapchainKHR, vk::error> create_swapchain( 
-       VkSurfaceCapabilitiesKHR const& capabilities, 
-       VkSurfaceFormatKHR const& format 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkSwapchainKHR, vk::error> create_swapchain(
+      VkSurfaceCapabilitiesKHR const& capabilities, VkSurfaceFormatKHR const& format ) const PURE;
 
    /**
     * @brief Create a image view object.
-    * 
+    *
     * @param image The Image to create the view for.
     * @return std::variant<VkImageView, vk::error> Type safe union that either returns
     * an image view or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkImageView, vk::error> create_image_view( 
-       vk::image_t image 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkImageView, vk::error> create_image_view( vk::image_t image ) const PURE;
 
    /**
     * @brief Create a render pass object.
-    * 
+    *
     * @return std::variant<VkRenderPass, vk::error> Type safe union that either returns
     * a render pass or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkRenderPass, vk::error> create_render_pass( 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkRenderPass, vk::error> create_render_pass( ) const PURE;
 
    /**
     * @brief Create a shader module object.
-    * 
+    *
     * @param filepath The Path to the SPIR-V binary file
     * @return VkShaderModule The shader module generated from the SPIR-V code.
     */
-   [[nodiscard]] 
-   VkShaderModule create_shader_module( 
-       shader_filepath_t filepath 
-   ) const PURE;
+   [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_t filepath ) const PURE;
 
    /**
     * @brief Create a default pipeline layout object.
-    * 
-    * @return std::variant<VkPipelineLayout, vk::error> Type safe union that either returns a 
+    *
+    * @return std::variant<VkPipelineLayout, vk::error> Type safe union that either returns a
     * pipeline layout or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkPipelineLayout, vk::error> create_default_pipeline_layout( 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkPipelineLayout, vk::error> create_default_pipeline_layout( ) const PURE;
 
    /**
     * @brief Create a descriptor set layout.
     *
     * @param NONE
     *
-    * @return The descriptor set layout or an error code. 
+    * @return The descriptor set layout or an error code.
     */
-   [[nodiscard]]
-   std::variant<VkDescriptorSetLayout, vk::error> create_descriptor_set_layout (
-   ) const PURE;
+   [[nodiscard]] std::variant<VkDescriptorSetLayout, vk::error> create_descriptor_set_layout( ) const PURE;
 
    /**
     * @brief Create a default pipeline object.
-    * 
-    * @param vert_filepath The path from the executable to the vertex shader SPIR-V file. 
+    *
+    * @param vert_filepath The path from the executable to the vertex shader SPIR-V file.
     * @param frag_filepath The path from the executable to the fragment shader SPIR-V file.
-    * @return std::variant<VkPipeline, vk::error> Type safe union that either returns a 
+    * @return std::variant<VkPipeline, vk::error> Type safe union that either returns a
     * default graphics pipeline or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkPipeline, vk::error> create_default_pipeline( 
-       vert_shader_filepath_t vert_filepath, 
-       frag_shader_filepath_t frag_filepath 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkPipeline, vk::error> create_default_pipeline(
+      vert_shader_filepath_t vert_filepath, frag_shader_filepath_t frag_filepath ) const PURE;
 
    /**
     * @brief Create a semaphore object.
-    * 
+    *
     * @return std::variant<VkSemaphore, vk::error> Type safe union that either returns a
     * semaphore or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkSemaphore, vk::error> create_semaphore( 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkSemaphore, vk::error> create_semaphore( ) const PURE;
 
    /**
     * @brief Create a fence object.
-    * 
+    *
     * @return std::variant<VkFence, vk::error> Type safe union that either returns a
     * fence or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkFence, vk::error> create_fence( 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkFence, vk::error> create_fence( ) const PURE;
 
    /**
     * @brief Create a framebuffer object.
-    * 
-    * @param image_view 
+    *
+    * @param image_view
     * @return std::variant<VkFramebuffer, vk::error> Type safe union that either returns a
     * framebuffer or an error code.
     */
-   [[nodiscard]] 
-   std::variant<VkFramebuffer, vk::error> create_framebuffer( 
-       vk::image_view_t image_view 
-   ) const PURE;
+   [[nodiscard]] std::variant<VkFramebuffer, vk::error> create_framebuffer( vk::image_view_t image_view ) const PURE;
 
    /**
     * @brief Pick a surface format for the swapchain.
-    * 
+    *
     * @return VkSurfaceFormatKHR The chosen surface format.
     */
-   [[nodiscard]]
-   VkSurfaceFormatKHR pick_swapchain_format(
-   ) const PURE;
+   [[nodiscard]] VkSurfaceFormatKHR pick_swapchain_format( ) const PURE;
 
    /**
     * @brief Pick a surface present mode for the swapchain.
-    * 
+    *
     * @return VkPresentModeKHR The chosen present mode.
     */
-   [[nodiscard]]
-   VkPresentModeKHR pick_swapchain_present_mode(
-   ) const PURE;
+   [[nodiscard]] VkPresentModeKHR pick_swapchain_present_mode( ) const PURE;
 
    /**
     * @brief Pick a extent supported by the surface for the
     * swapchain.
-    * 
+    *
     * @param [in] capabilities The surface capabilities.
     * @return VkExtent2D The chosen extent.
     */
-   [[nodiscard]] VkExtent2D pick_swapchain_extent( 
-       VkSurfaceCapabilitiesKHR const& capabilities 
-   ) const PURE;
-   
+   [[nodiscard]] VkExtent2D pick_swapchain_extent( VkSurfaceCapabilitiesKHR const& capabilities ) const PURE;
+
 private:
    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
    const context* p_context;
-   
+
    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-   std::vector<VkImage> swapchain_images = { };
-   std::vector<VkImageView> swapchain_image_views = { };
-   std::vector<VkFramebuffer> swapchain_framebuffers = { };
+   std::vector<VkImage> swapchain_images = {};
+   std::vector<VkImageView> swapchain_image_views = {};
+   std::vector<VkFramebuffer> swapchain_framebuffers = {};
 
    VkFormat swapchain_image_format;
    VkExtent2D swapchain_extent;
@@ -248,14 +230,14 @@ private:
 
    VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
 
-   std::vector<VkCommandBuffer> render_command_buffers = { };
+   std::vector<VkCommandBuffer> render_command_buffers = {};
 
-   VkSemaphore image_available_semaphore[MAX_FRAMES_IN_FLIGHT] = { };
-   VkSemaphore render_finished_semaphore[MAX_FRAMES_IN_FLIGHT] = { };
-   VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT] = { };
+   VkSemaphore image_available_semaphore[MAX_FRAMES_IN_FLIGHT] = {};
+   VkSemaphore render_finished_semaphore[MAX_FRAMES_IN_FLIGHT] = {};
+   VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT] = {};
 
    std::vector<vk::uniform_buffer> uniform_buffers;
-      
+
    size_t current_frame = 0;
 
    bool is_framebuffer_resized = false;
@@ -266,7 +248,8 @@ private:
    vk::vertex_buffer vertex_buffer;
    vk::index_buffer index_buffer;
 
-   vk::shader_manager shader_manager;
+   vk::shader::manager shader_manager;
+   vk::pipeline::manager pipeline_manager;
 
    std::shared_ptr<spdlog::logger> vulkan_logger;
 };

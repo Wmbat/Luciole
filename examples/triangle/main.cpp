@@ -17,35 +17,43 @@
  */
 
 #include <luciole/luciole.hpp>
+#include <luciole/vk/pipelines/pipeline_json_loader.hpp>
 #include <luciole/vk/shaders/shader_compiler.hpp>
 
 int main( )
 {
-   ui::window::create_info const create_info 
-   {
-      .title = "Simple Triangle Example",
-      .position = { 100, 100 },
-      .size = { 1080, 720 }
-   };
+   auto window_create_info = ui::window::create_info{};
+   window_create_info.title = "Simple Triangle Example";
+   window_create_info.position = {100, 100};
+   window_create_info.size = {1080, 720};
 
-   auto wnd = ui::window( ui::window::create_info_t( create_info ) );    
+   auto wnd = ui::window( ui::window::create_info_t( window_create_info ) );
    auto ctx = context( wnd );
    auto rdr = renderer( p_context_t( &ctx ), wnd );
 
-   vk::shader_compiler* p_shader_compiler = new vk::shader_compiler( );
+   auto const p_shader_compiler = std::make_unique<vk::shader::compiler>( );
+   auto const p_pipeline_loader = std::make_unique<vk::pipeline::json_loader>( );
 
-   auto vert_shader_id = rdr.load_shader( p_shader_compiler, vk::shader::filepath_t( "../data/shaders/default_shader.vert" ) );
-   auto frag_shader_id = rdr.load_shader( p_shader_compiler, vk::shader::filepath_t( "../data/shaders/default_shader.frag" ) ); 
+   auto pack_create_info = vk::shader::set::create_info{};
 
-   while( wnd.is_open() )
-   {
-      rdr.draw_frame();
+   pack_create_info.vertex_id = rdr.load_shader_module(
+      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), vk::shader::filepath_t( "../data/shaders/default_shader.vert" ) );
 
-      wnd.poll_events();
-   }
+   pack_create_info.fragment_id = rdr.load_shader_module(
+      vk::shader::loader_ptr_t( p_shader_compiler.get( ) ), vk::shader::filepath_t( "../data/shaders/default_shader.frag" ) );
 
-   delete p_shader_compiler;
-   p_shader_compiler = nullptr;
+   auto const shader_pack_id = rdr.create_shader_pack( vk::shader::set::create_info_t( pack_create_info ) );
 
+   rdr.create_pipeline( vk::pipeline::loader_ptr_t( p_pipeline_loader.get( ) ), vk::shader::set::id_t( shader_pack_id ),
+      vk::pipeline::filepath_view_t( "../data/pipelines/default_graphics_pipeline.json" ) );
+
+   /*
+      while( wnd.is_open() )
+      {
+         rdr.draw_frame();
+
+         wnd.poll_events();
+      }
+   */
    return 0;
 }

@@ -20,56 +20,36 @@
 
 namespace vk
 {
-   uniform_buffer::uniform_buffer( context const& ctx, std::size_t buffer_size )
-      :
-      memory_allocator( ctx.get_memory_allocator( ) ),
-      allocation( VK_NULL_HANDLE ),
-      buffer( VK_NULL_HANDLE )
+   uniform_buffer::uniform_buffer( context const& ctx, std::size_t buffer_size ) :
+      memory_allocator( ctx.get_memory_allocator( ) ), allocation( VK_NULL_HANDLE ), buffer( VK_NULL_HANDLE )
    {
       auto const indices = ctx.get_unique_family_indices( );
 
-      VkBufferCreateInfo const create_info
-      {
-         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      VkBufferCreateInfo const create_info{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
          .pNext = nullptr,
          .flags = 0,
          .size = buffer_size,
          .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
          .sharingMode = VK_SHARING_MODE_CONCURRENT,
-         .queueFamilyIndexCount = static_cast<std::uint32_t>(
-            indices.size()
-         ),
-         .pQueueFamilyIndices = indices.data()
-      };
+         .queueFamilyIndexCount = static_cast<std::uint32_t>( indices.size( ) ),
+         .pQueueFamilyIndices = indices.data( )};
 
-      VmaAllocationCreateInfo alloc_info = { };
+      VmaAllocationCreateInfo alloc_info = {};
       alloc_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-      vmaCreateBuffer(
-         memory_allocator,
-         &create_info,
-         &alloc_info,
-         &buffer,
-         &allocation,
-         nullptr
-      );
-   }   
-
-   uniform_buffer::uniform_buffer( uniform_buffer&& rhs )
-   {
-      *this = std::move( rhs );
+      vmaCreateBuffer( memory_allocator, &create_info, &alloc_info, &buffer, &allocation, nullptr );
    }
-   
+
+   uniform_buffer::uniform_buffer( uniform_buffer&& rhs ) { *this = std::move( rhs ); }
+
    uniform_buffer::~uniform_buffer( )
    {
-      if ( buffer != VK_NULL_HANDLE || 
-           memory_allocator != VK_NULL_HANDLE || 
-           allocation != VK_NULL_HANDLE )
+      if ( buffer != VK_NULL_HANDLE || memory_allocator != VK_NULL_HANDLE || allocation != VK_NULL_HANDLE )
       {
-         vmaDestroyBuffer( memory_allocator, buffer, allocation );  
+         vmaDestroyBuffer( memory_allocator, buffer, allocation );
       }
    }
-   
+
    uniform_buffer& uniform_buffer::operator=( uniform_buffer&& rhs )
    {
       if ( this != &rhs )

@@ -26,53 +26,62 @@
 #include <string>
 #include <string_view>
 
-namespace vk
-{    
-   class shader
+namespace vk::shader
+{
+   enum class type
    {
-   public: 
-      using filepath_t = strong_type<std::string const&, shader>; 
-      using filepath_view_t = strong_type<std::string_view, shader>;
-      
-      enum class type
-      {
-         e_vertex,
-         e_fragment,
-         e_tess_control,
-         e_tess_eval,
-         e_geometry,
-         e_compute,
-         e_count
-      }; // enum class type
+      e_vertex,
+      e_fragment,
+      e_tess_control,
+      e_tess_eval,
+      e_geometry,
+      e_compute,
+      e_count
+   }; // enum class type
 
+   class unique_shader
+   {
+   public:
       struct create_info
       {
          context const* p_context = nullptr;
 
+         std::string_view filepath = "";
          type shader_type = type::e_count;
 
          std::vector<std::uint32_t> spir_v;
       }; // struct create_info
 
-      using create_info_t = strong_type<create_info const&, shader>;
+      using create_info_t = strong_type<create_info const&, unique_shader>;
 
    public:
-      shader( ); 
-      shader( create_info_t const& create_info );
-      shader( shader const& rhs ) = delete;
-      shader( shader&& rhs );
-      ~shader( );       
-        
-      shader& operator=( shader const& rhs ) = delete;
-      shader& operator=( shader&& rhs ); 
+      unique_shader( );
+      unique_shader( create_info_t const& create_info );
+      unique_shader( unique_shader const& rhs ) = delete;
+      unique_shader( unique_shader&& rhs );
+      ~unique_shader( );
+
+      unique_shader& operator=( unique_shader const& rhs ) = delete;
+      unique_shader& operator=( unique_shader&& rhs );
+
+      VkPipelineShaderStageCreateInfo get_shader_stage_create_info( ) const PURE;
 
    private:
       context const* p_context;
 
+      std::string filepath;
+      std::string entry_point;
       type shader_type;
 
       VkShaderModule handle;
-   }; // class 
-} // namespace 
+   }; // class module
+
+   using unique_shader_t = strong_type<unique_shader const&, unique_shader>;
+
+   using id = std::uint32_t;
+   using id_t = strong_type<id, unique_shader>;
+   using filepath_t = strong_type<std::string const&, unique_shader>;
+   using filepath_view_t = strong_type<std::string_view, unique_shader>;
+} // namespace vk::shader
 
 #endif // LUCIOLE_VK_SHADER_HPP

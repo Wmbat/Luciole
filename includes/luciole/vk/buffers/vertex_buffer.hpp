@@ -44,7 +44,7 @@ namespace vk
          std::vector<std::uint32_t> family_indices = {};
          std::vector<vertex> vertices = {};
       }; // struct create_info
-      
+
       using create_info_t = strong_type<create_info const&>;
 
    public:
@@ -52,19 +52,14 @@ namespace vk
       vertex_buffer( create_info_t const& create_info );
       vertex_buffer( vertex_buffer const& rhs ) = delete;
       vertex_buffer( vertex_buffer&& rhs );
-      ~vertex_buffer();
+      ~vertex_buffer( );
 
       vertex_buffer& operator=( vertex_buffer const& rhs ) = delete;
       vertex_buffer& operator=( vertex_buffer&& rhs );
 
-      [[nodiscard]]
-      inline VkBuffer get_buffer(
-      ) const PURE
-      {
-         return buffer;
-      }
+      [[nodiscard]] inline VkBuffer get_buffer( ) const PURE { return buffer; }
 
-   private: 
+   private:
       VmaAllocator memory_allocator = VK_NULL_HANDLE;
       VmaAllocation allocation = VK_NULL_HANDLE;
       VkBuffer buffer = VK_NULL_HANDLE;

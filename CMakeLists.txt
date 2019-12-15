@@ -17,13 +17,19 @@
 cmake_minimum_required( VERSION 3.15 )
 project( Luciole LANGUAGES CXX )
 
-option( test "Enable unit testing" OFF )
-option( BUILD_EXAMPLE "Build demo examples" OFF )
+option( BUILD_TESTS "Enable unit testing" OFF )
+option( BUILD_EXAMPLES "Build demo examples" ON )
 
 if( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release )
 endif( )
 
+# nlohmann settings
+set( JSON_BuildTests OFF CACHE BOOL "" FORCE )
+
+# spirv_cross settings
+set( SPIRV_CROSS_SHARED OFF CACHE BOOL "" FORCE )
+set( SPIRV_CROSS_STATIC ON CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_MSL OFF CACHE BOOL "" FORCE )
 set( SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "" FORCE )
@@ -32,8 +38,10 @@ set( SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE )
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-set( CLANG_FLAGS "-std=c++2a -Xclang -fconcepts-ts" )
-set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsanitize=address" )
+set( CLANG_FLAGS "-std=c++2a" )
+set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsanitize=address -fsanitize=undefined" )
+set( CLANG_DEBUG_FLAGS "${CLANG_DEBUG_FLAGS} -Wunused-parameter -Wunused-value  -Wunused-variable" )
+set( CLANG_DEBUG_FLAGS "${CLANG_DEBUG_FLAGS} -Wunused-but-set-parameter -Wunused-but-set-variable -fsanitize=address" )
 set( CLANG_RELEASE_FLAGS "-o3" )
 
 set( GNU_FLAGS "-std=c++2a" )
@@ -41,21 +49,21 @@ set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-
 set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-parameter -Wunused-value  -Wunused-variable" )
 set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-but-set-parameter -Wunused-but-set-variable -fsanitize=address" )
 set( GNU_RELEASE_FLAGS "-o3" )
-set( GNU_ALL_FLAGS "-fconcepts" )
 
 set( MSVC_FLAGS "-std:c++latest" )
 
-add_library( Luciole SHARED )
+add_library( Luciole STATIC )
 
 set_target_properties( Luciole PROPERTIES
    DEBUG_POSTFIX "Debug"
    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
+   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 )
 
 target_compile_options( Luciole 
    PRIVATE
       $<$<PLATFORM_ID:UNIX>:-pthread>
-# Set C++ version
+
       $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
       $<$<CXX_COMPILER_ID:Clang>:${CLANG_FLAGS}>
       $<$<CXX_COMPILER_ID:MSVC>:${MSVC_FLAGS}>
@@ -65,8 +73,6 @@ target_compile_options( Luciole
 # Set Release Flags
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
       $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:RELEASE>>:${CLANG_RELEASE_FLAGS}>
-
-      $<$<CXX_COMPILER_ID:GNU>:${GNU_ALL_FLAGS}>
 )
 
 if( WIN32 )
@@ -106,23 +112,17 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/glslang )
 add_subdirectory( external/spirv_cross )
 
-if ( test )
+if ( BUILD_TESTS )
    add_subdirectory( external/googletest )
-endif( test )
+endif( BUILD_TESTS )
 
 if( NOT WIN32 )
    target_link_libraries( Luciole
       PUBLIC 
-         ${XCB_LIBRARIES}
-         vulkan
-         vma
-         stb
-         spdlog_header_only
-         nlohmann
-         tinygltf
-         glm
-         glslang
-         SPIRV
+         ${XCB_LIBRARIES} vulkan vma
+         stb spdlog_header_only
+         nlohmann_json tinygltf
+         glm glslang SPIRV
          spirv-cross-cpp
    )
 endif( )
@@ -141,9 +141,13 @@ target_sources( Luciole
       "src/luciole/vk/buffers/index_buffer.cpp"
       "src/luciole/vk/buffers/uniform_buffer.cpp"
       "src/luciole/vk/buffers/vertex_buffer.cpp"
+      "src/luciole/vk/pipelines/pipeline.cpp"
+      "src/luciole/vk/pipelines/pipeline_json_loader.cpp"
+      "src/luciole/vk/pipelines/pipeline_manager.cpp"
       "src/luciole/vk/shaders/shader.cpp"
       "src/luciole/vk/shaders/shader_compiler.cpp"
       "src/luciole/vk/shaders/shader_manager.cpp"
+      "src/luciole/vk/shaders/shader_set.cpp"
       "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/errors.cpp"
@@ -151,4 +155,6 @@ target_sources( Luciole
       "src/luciole/context.cpp"
 )
 
-add_subdirectory( examples/triangle )
+if ( BUILD_EXAMPLES )
+   add_subdirectory( examples/triangle )
+endif ( BUILD_EXAMPLES )

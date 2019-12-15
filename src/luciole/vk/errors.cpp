@@ -20,28 +20,13 @@
 
 namespace vk
 {
-   error::error( result_t result ) noexcept
-   {
-      err_code = to_type( result.value( ) );
-   }
+   error::error( result_t result ) noexcept { err_code = to_type( result.value( ) ); }
 
-   error::error( type_t type ) noexcept
-   {
-      err_code = type.value( );
-   }
+   error::error( type_t type ) noexcept { err_code = type.value( ); }
 
-   std::string const& error::to_string() const
-   {
-      return string_type[static_cast<std::size_t>( err_code )];
-   }
+   std::string const& error::to_string( ) const { return string_type[static_cast<std::size_t>( err_code )]; }
 
-   bool error::is_error( ) const noexcept
-   {
-      return err_code != type::e_none;
-   }  
+   bool error::is_error( ) const noexcept { return err_code != type::e_none; }
 
-   error::type error::get_type( ) const noexcept
-   {
-      return err_code;
-   }
+   error::type error::get_type( ) const noexcept { return err_code; }
 } // namespace vk

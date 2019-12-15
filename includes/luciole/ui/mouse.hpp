@@ -28,27 +28,27 @@
 class mouse
 {
 public:
-    enum class button_state : std::int32_t
-    {
-        invalid = -1,
-        pressed = 0,
-        released = 1
-    };
-    
-    enum class button : std::int32_t
-    {
-        invalid = -1,
-        l_button = 1,
-        scroll_button = 2,
-        r_button = 3,
-        scroll_up = 4,
-        scroll_down = 5,
-        scroll_left = 6,
-        scroll_right = 7,
-        side_button_1 = 8,
-        side_button_2 = 9,
-        last = 16
-    };
+   enum class button_state : std::int32_t
+   {
+      invalid = -1,
+      pressed = 0,
+      released = 1
+   };
+
+   enum class button : std::int32_t
+   {
+      invalid = -1,
+      l_button = 1,
+      scroll_button = 2,
+      r_button = 3,
+      scroll_up = 4,
+      scroll_down = 5,
+      scroll_left = 6,
+      scroll_right = 7,
+      side_button_1 = 8,
+      side_button_2 = 9,
+      last = 16
+   };
 };
 
-#endif //LUCIOLE_WINDOW_MOUSE_HPP
+#endif // LUCIOLE_WINDOW_MOUSE_HPP

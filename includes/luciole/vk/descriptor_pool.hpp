@@ -19,42 +19,42 @@
 #ifndef LUCIOLE_VK_DESCRIPTOR_POOL_HPP
 #define LUCIOLE_VK_DESCRIPTOR_POOL_HPP
 
-#include <luciole/context.hpp> 
+#include <luciole/context.hpp>
 #include <luciole/vk/core.hpp>
 
 namespace vk
 {
    enum class descriptor_type
    {
-      e_sampler                    = 0,
-      e_combined_image_sampler     = 1,
-      e_sampled_image              = 2,
-      e_storage_image              = 3,
-      e_uniform_texel_buffer       = 4,
-      e_storage_texel_buffer       = 5,
-      e_uniform_buffer             = 6,
-      e_storage_buffer             = 7,
-      e_uniform_buffer_dynamic     = 8,
-      e_storage_buffer_dynamic     = 9,
-      e_input_attachment           = 10,
-   }; 
-      
+      e_sampler = 0,
+      e_combined_image_sampler = 1,
+      e_sampled_image = 2,
+      e_storage_image = 3,
+      e_uniform_texel_buffer = 4,
+      e_storage_texel_buffer = 5,
+      e_uniform_buffer = 6,
+      e_storage_buffer = 7,
+      e_uniform_buffer_dynamic = 8,
+      e_storage_buffer_dynamic = 9,
+      e_input_attachment = 10,
+   };
+
    class descriptor_pool
    {
    public:
       struct size
-      {   
+      {
          descriptor_type type;
          std::uint32_t descriptor_count;
       }; // struct size
-         
+
       struct create_info
       {
-         context const* p_context; 
-        
+         context const* p_context;
+
          std::vector<size> pool_sizes;
 
-         std::uint32_t max_num_sets;   
+         std::uint32_t max_num_sets;
       }; // struct create_info
 
       using create_info_t = strong_type<create_info const&>;
@@ -65,10 +65,10 @@ namespace vk
       descriptor_pool( descriptor_pool const& rhs ) = delete;
       descriptor_pool( descriptor_pool&& rhs );
       ~descriptor_pool( );
-   
+
       descriptor_pool& operator=( descriptor_pool const& rhs ) = delete;
       descriptor_pool& operator=( descriptor_pool&& rhs );
-   
+
    private:
       context const* p_context = nullptr;
 

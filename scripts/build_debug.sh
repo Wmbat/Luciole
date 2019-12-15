@@ -14,22 +14,14 @@
 # GNU General Public License for more details.
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.11 )
-project( nlohmann )
+echo Building Luciole in Debug mode.
 
-message( STATUS "Building Nlohmann Header Library" )
+echo Creating build Folder.
+mkdir ../build -p
 
-add_library( nlohmann INTERFACE )
+git submodule update --init --recursive ../
 
-target_compile_options( nlohmann 
-    INTERFACE
-# Set C++ version
-        $<$<CXX_COMPILER_ID:GNU>:-std=c++17>
-        $<$<CXX_COMPILER_ID:MSVC>:-std:c++latest>
-# Set Debug Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-o0>
-# Set Release Flags
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:-o3>
-)
+cmake ../ -B ../build -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF
 
-target_include_directories( nlohmann INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+echo Copying compile_commands.json to project root.
+cp ../build/compile_commands.json ../

@@ -26,8 +26,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include <string>
 #include <array>
+#include <string>
 
 namespace vk
 {
@@ -63,7 +63,7 @@ namespace vk
       /**
        * @brief Default Constructor.
        */
-      error() = default;
+      error( ) = default;
       /**
        * @brief Explicit constructor that takes
        * a VkResult and converts it into an error
@@ -82,25 +82,20 @@ namespace vk
        *
        * @return The string equivalent to the error type.
        */
-      [[nodiscard]]
-      std::string const& to_string(
-      ) const PURE;
+      [[nodiscard]] std::string const& to_string( ) const PURE;
 
       /**
-       * @brief Check if the error type is 
+       * @brief Check if the error type is
        * type::e_none
        */
-      [[nodiscard]]
-      bool is_error(
-      ) const noexcept PURE;
+      [[nodiscard]] bool is_error( ) const noexcept PURE;
 
-      type get_type(
-      ) const noexcept PURE;
+      type get_type( ) const noexcept PURE;
 
    private:
       type to_type( VkResult result )
       {
-         switch( result )
+         switch ( result )
          {
             case VK_ERROR_OUT_OF_HOST_MEMORY:
                return type::e_out_of_host_memory;
@@ -122,23 +117,9 @@ namespace vk
    private:
       type err_code;
 
-      inline static std::string const string_type[] =
-      {
-         "none",
-         "suboptimal",
-         "out of host memory",
-         "out of device memory",
-         "initialization failed",
-         "incompatible driver",
-         "no physical device found",
-         "no suitable physical devices",
-         "device lost",
-         "surface lost",
-         "native window in use",
-         "too many objects",
-         "invalid queue",
-         "command pool creation failed"
-      };
+      inline static std::string const string_type[] = {"none", "suboptimal", "out of host memory", "out of device memory",
+         "initialization failed", "incompatible driver", "no physical device found", "no suitable physical devices", "device lost",
+         "surface lost", "native window in use", "too many objects", "invalid queue", "command pool creation failed"};
    }; // class error
 } // namespace vk
 

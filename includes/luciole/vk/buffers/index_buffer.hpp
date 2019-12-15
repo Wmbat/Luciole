@@ -49,9 +49,7 @@ namespace vk
        *
        * @return The underlying VkBuffer handle.
        */
-      [[nodiscard]]
-      VkBuffer get_buffer(
-      ) const PURE;
+      [[nodiscard]] VkBuffer get_buffer( ) const PURE;
 
    private:
       VmaAllocator memory_allocator = VK_NULL_HANDLE;

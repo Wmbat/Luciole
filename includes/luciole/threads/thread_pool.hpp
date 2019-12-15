@@ -23,9 +23,9 @@
 #include <luciole/utils/delegate.hpp>
 #include <luciole/utils/strong_types.hpp>
 
-#include <vector>
 #include <queue>
 #include <thread>
+#include <vector>
 
 class thread_pool
 {
@@ -37,7 +37,7 @@ public:
 
 private:
    std::vector<std::queue<task>> task_queues_;
-   std::vector<std::thread> threads_; 
+   std::vector<std::thread> threads_;
 };
 
 #endif // LUCIOLE_THREAD_POOL_HPP

@@ -50,7 +50,7 @@ struct window_close_event
 
 struct framebuffer_resize_event
 {
-    glm::u32vec2 size;
+   glm::u32vec2 size;
 };
 
 using key_event_delg = delegate<void( const key_event& )>;
@@ -59,5 +59,4 @@ using mouse_motion_event_delg = delegate<void( const mouse_motion_event& )>;
 using window_close_event_delg = delegate<void( const window_close_event& )>;
 using framebuffer_resize_event_delg = delegate<void( const framebuffer_resize_event& )>;
 
-
-#endif //LUCIOLE_WINDOW_EVENT_HPP
+#endif // LUCIOLE_WINDOW_EVENT_HPP

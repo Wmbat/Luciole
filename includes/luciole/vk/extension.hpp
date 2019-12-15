@@ -24,26 +24,26 @@
 
 namespace vk
 {
-    /**
-     * @brief Data aggregate to hold information regarding Vulkan
-     * extensions.
-     */
-    struct extension
-    {
-        /**
-         * @brief An enum to define the priority of the extension.
-         */
-        enum class priority
-        {
-            e_none,
-            e_required,
-            e_optional
-        };
+   /**
+    * @brief Data aggregate to hold information regarding Vulkan
+    * extensions.
+    */
+   struct extension
+   {
+      /**
+       * @brief An enum to define the priority of the extension.
+       */
+      enum class priority
+      {
+         e_none,
+         e_required,
+         e_optional
+      };
 
-        priority priority = priority::e_none;
-        bool found = false;
-        std::string name = { };
-    };
+      priority priority = priority::e_none;
+      bool found = false;
+      std::string name = {};
+   };
 } // namespace vk
 
 #endif // LUCIOLE_EXTENSION_HPP
