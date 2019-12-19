@@ -17,19 +17,23 @@
  */
 
 #include <luciole/luciole.hpp>
+#include <luciole/utils/logger.hpp>
 #include <luciole/vk/pipelines/pipeline_json_loader.hpp>
 #include <luciole/vk/shaders/shader_compiler.hpp>
 
 int main( )
 {
+   logger main_logger( "engine logger" );
+
    auto window_create_info = ui::window::create_info{};
    window_create_info.title = "Simple Triangle Example";
    window_create_info.position = {100, 100};
    window_create_info.size = {1080, 720};
+   window_create_info.p_logger = &main_logger;
 
    auto wnd = ui::window( ui::window::create_info_t( window_create_info ) );
-   auto ctx = context( wnd );
-   auto rdr = renderer( p_context_t( &ctx ), wnd );
+   auto ctx = context( wnd, &main_logger );
+   auto rdr = renderer( &ctx, wnd );
 
    auto const p_shader_compiler = std::make_unique<vk::shader::compiler>( );
    auto const p_pipeline_loader = std::make_unique<vk::pipeline::json_loader>( );

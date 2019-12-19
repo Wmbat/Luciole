@@ -18,10 +18,9 @@
 
 #include <luciole/vk/queue.hpp>
 
-queue::queue( vk::device_t device, family_index_t family_index, index_t index ) :
-   family_index( family_index.value( ) ), index( index.value( ) )
+queue::queue( VkDevice device, std::uint32_t family_index, std::uint32_t index ) : family_index( family_index ), index( index )
 {
-   vkGetDeviceQueue( device.value( ), family_index.value( ), index.value( ), &handle );
+   vkGetDeviceQueue( device, family_index, index, &handle );
 }
 
 /**

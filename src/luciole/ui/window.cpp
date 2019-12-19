@@ -39,16 +39,13 @@ namespace ui
 
    window::window( window::create_info_t const &create_info ) :
       title( create_info.value( ).title ), position( create_info.value( ).position ), size( create_info.value( ).size ),
-      is_wnd_open( true ), is_fullscreen( false )
+      p_logger( create_info.value( ).p_logger ), is_wnd_open( true ), is_fullscreen( false )
    {
-      /* Set up window logger */
-      auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>( );
-      console_sink->set_pattern( "[%^%n] [thread %t] %v%$" );
-
-      window_logger = std::shared_ptr<spdlog::logger>( new spdlog::logger( "Window Logger", {console_sink} ) );
-
 #if defined( VK_USE_PLATFORM_XCB_KHR )
-      window_logger->info( "Using XCB for window creation" );
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] Using XCB for window creation", __FUNCTION__ );
+      }
 
       /** Connect to X11 window system. */
       p_xcb_connection = xcb_connection_uptr( xcb_connect( nullptr, &default_screen_id ), []( xcb_connection_t *p ) {
@@ -57,14 +54,19 @@ namespace ui
 
       if ( xcb_connection_has_error( p_xcb_connection.get( ) ) )
       {
-         window_logger->error( "Failed to connecte to the X server."
-                               "\nDisconnecting from X server.\nExiting Application." );
+         if ( p_logger )
+         {
+            p_logger->error( "[{0}] Failed to connect to the X server. Exiting application", __FUNCTION__ );
+         }
 
          p_xcb_connection.reset( );
       }
       else
       {
-         window_logger->info( "Connection to X server established" );
+         if ( p_logger )
+         {
+            p_logger->info( "[{0}] connection to the X server established", __FUNCTION__ );
+         }
       }
 
       /** Get Default monitor */
@@ -80,7 +82,10 @@ namespace ui
 
       xcb_window = xcb_generate_id( p_xcb_connection.get( ) );
 
-      window_logger->info( "Window ID generated: {0}.", std::to_string( xcb_window ) );
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] Window ID generated: {1}.", __FUNCTION__, std::to_string( xcb_window ) );
+      }
 
       uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
       uint32_t value_list[32];
@@ -99,7 +104,10 @@ namespace ui
 
       if ( is_fullscreen )
       {
-         window_logger->info( "Window fullscreen mode." );
+         if ( p_logger )
+         {
+            p_logger->info( "[{0}] Window is in fullscreen mode", __FUNCTION__ );
+         }
 
          size.x = p_xcb_screen->width_in_pixels;
          size.y = p_xcb_screen->height_in_pixels;
@@ -116,7 +124,10 @@ namespace ui
          value_mask, value_list                   /* Masks                  */
       );
 
-      window_logger->info( "Window created." );
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] Window created", __FUNCTION__ );
+      }
 
       auto p_reply = intern_atom_helper( p_xcb_connection.get( ), true, "WM_PROTOCOLS" );
 

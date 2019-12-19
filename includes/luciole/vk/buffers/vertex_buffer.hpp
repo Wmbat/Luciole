@@ -37,7 +37,7 @@ namespace vk
    public:
       struct create_info
       {
-         context const* p_context = nullptr;
+         context* p_context = nullptr;
 
          VmaAllocator memory_allocator = VK_NULL_HANDLE;
 
@@ -45,11 +45,9 @@ namespace vk
          std::vector<vertex> vertices = {};
       }; // struct create_info
 
-      using create_info_t = strong_type<create_info const&>;
-
    public:
       vertex_buffer( ) = default;
-      vertex_buffer( create_info_t const& create_info );
+      vertex_buffer( create_info const& create_info );
       vertex_buffer( vertex_buffer const& rhs ) = delete;
       vertex_buffer( vertex_buffer&& rhs );
       ~vertex_buffer( );

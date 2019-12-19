@@ -78,19 +78,18 @@ void destroy_debug_utils_messenger( VkInstance instance, VkDebugUtilsMessengerEX
    }
 }
 
-context::context( const ui::window& wnd ) :
+context::context( const ui::window& wnd, logger* p_logger ) :
    wnd_size( wnd.get_size( ) ), instance( VK_NULL_HANDLE ), debug_messenger( VK_NULL_HANDLE ), surface( VK_NULL_HANDLE ),
-   gpu( VK_NULL_HANDLE ), device( VK_NULL_HANDLE ), memory_allocator( VK_NULL_HANDLE )
+   gpu( VK_NULL_HANDLE ), device( VK_NULL_HANDLE ), memory_allocator( VK_NULL_HANDLE ), p_logger( p_logger )
 {
-   /* Vulkan Logger */
-   auto vk_console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>( );
-   vk_console_sink->set_pattern( "[%^%n] [thread %t] %v%$" );
-
-   vulkan_logger = std::shared_ptr<spdlog::logger>( new spdlog::logger( "Vulkan Logger", {vk_console_sink} ) );
-   spdlog::register_logger( vulkan_logger );
-
    std::uint32_t api_version;
    vkEnumerateInstanceVersion( &api_version );
+
+   if ( p_logger )
+   {
+      p_logger->info( "[{0}] Vulkan API version: {1}.{2}.{3}", __FUNCTION__, VK_VERSION_MAJOR( api_version ),
+         VK_VERSION_MINOR( api_version ), VK_VERSION_PATCH( api_version ) );
+   }
 
    auto app_info = VkApplicationInfo{};
    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -109,7 +108,10 @@ context::context( const ui::window& wnd ) :
    {
       if ( layer_names.empty( ) )
       {
-         vulkan_logger->error( "1 or more validation layers are not supported." );
+         if ( p_logger )
+         {
+            p_logger->error( "[{0}] 1 or more validation layers are not supported.", __FUNCTION__ );
+         }
 
          abort( );
       }
@@ -117,7 +119,10 @@ context::context( const ui::window& wnd ) :
       {
          for ( auto const& name : layer_names )
          {
-            vulkan_logger->info( "Validation Layer \"{0}\": ENABLED.", name );
+            if ( p_logger )
+            {
+               p_logger->info( "[{0}] Validation Layer \"{1}\": ENABLED.", __FUNCTION__, name );
+            }
          }
       }
    }
@@ -125,7 +130,10 @@ context::context( const ui::window& wnd ) :
    auto const instance_ext_names = check_ext_support( extensions_t( instance_extensions ) );
    if ( instance_ext_names.empty( ) )
    {
-      vulkan_logger->error( "1 or more instance extension are not supported." );
+      if ( p_logger )
+      {
+         p_logger->error( "[{0}] 1 or more instance extension are not supported.", __FUNCTION__ );
+      }
 
       abort( );
    }
@@ -133,7 +141,10 @@ context::context( const ui::window& wnd ) :
    {
       for ( auto const& name : instance_ext_names )
       {
-         vulkan_logger->info( "Instance Extension \"{0}\": ENABLED.", name );
+         if ( p_logger )
+         {
+            p_logger->info( "[{0}] Instance Extension \"{1}\": ENABLED.", __FUNCTION__, name );
+         }
       }
    }
 
@@ -145,10 +156,18 @@ context::context( const ui::window& wnd ) :
    if ( auto const* p_val = std::get_if<VkInstance>( &temp_instance ) )
    {
       instance = *p_val;
+
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] VkInstance created 0x{1:x}", __FUNCTION__, reinterpret_cast<std::uintptr_t>( &instance ) );
+      }
    }
    else
    {
-      vulkan_logger->error( "Instance Creation Error: {0}.", std::get<vk::error>( temp_instance ).to_string( ) );
+      if ( p_logger )
+      {
+         p_logger->error( "[{0}] Instance Creation Error: {1}.", __FUNCTION__, std::get<vk::error>( temp_instance ).to_string( ) );
+      }
 
       abort( );
    }
@@ -162,10 +181,16 @@ context::context( const ui::window& wnd ) :
       if ( auto const* p_val = std::get_if<VkDebugUtilsMessengerEXT>( &temp_messenger ) )
       {
          debug_messenger = *p_val;
+
+         if ( p_logger )
+         {
+            p_logger->info(
+               "[{0}] VkDebugUtilsMessengerEXT created 0x{1:x}", __FUNCTION__, reinterpret_cast<std::uintptr_t>( &debug_messenger ) );
+         }
       }
       else
       {
-         vulkan_logger->error( "Debug Messenger Creation Error: {0}.", std::get<vk::error>( temp_messenger ).to_string( ) );
+         vulkan_logger->error( "VkDebugUtilsMessengerEXT Creation Error: {0}.", std::get<vk::error>( temp_messenger ).to_string( ) );
 
          abort( );
       }
@@ -178,10 +203,15 @@ context::context( const ui::window& wnd ) :
    if ( auto const* p_val = std::get_if<VkSurfaceKHR>( &temp_surface ) )
    {
       surface = *p_val;
+
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] VkSurfaceKHR created 0x{1:x}", __FUNCTION__, reinterpret_cast<std::uintptr_t>( &surface ) );
+      }
    }
    else
    {
-      vulkan_logger->error( "Surface Creation Error: {0}.", std::get<vk::error>( temp_surface ).to_string( ) );
+      vulkan_logger->error( "VkSurfaceKHR Creation Error: {0}.", std::get<vk::error>( temp_surface ).to_string( ) );
 
       abort( );
    }
@@ -193,10 +223,15 @@ context::context( const ui::window& wnd ) :
    if ( auto const* p_val = std::get_if<VkPhysicalDevice>( &temp_gpu ) )
    {
       gpu = *p_val;
+
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] VkPhysicalDevice created 0x{1:x}", __FUNCTION__, reinterpret_cast<std::uintptr_t>( &surface ) );
+      }
    }
    else
    {
-      vulkan_logger->error( "GPU Selection Error: {0}.", std::get<vk::error>( temp_gpu ).to_string( ) );
+      vulkan_logger->error( "VkPhysicalDevice Selection Error: {0}.", std::get<vk::error>( temp_gpu ).to_string( ) );
 
       abort( );
    }
@@ -715,41 +750,6 @@ VkExtent2D context::get_window_extent( ) const
    return VkExtent2D{wnd_size.x, wnd_size.y};
 }
 
-vk::error context::queue_wait_idle( queue::flag_t flag ) const
-{
-   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
-   {
-      return queue->second.wait_idle( );
-   }
-   else
-   {
-      return vk::error( vk::error::type_t( vk::error::type::e_invalid_queue ) );
-   }
-}
-
-vk::error context::submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept
-{
-   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
-   {
-      return queue->second.submit( submit_info, fence );
-   }
-   else
-   {
-      return vk::error( vk::error::type_t( vk::error::type::e_invalid_queue ) );
-   }
-}
-vk::error context::present_queue( queue::flag_t flag, vk::present_info_t const& present_info ) const noexcept
-{
-   if ( auto queue = queues.find( flag.value( ) ); queue != queues.cend( ) )
-   {
-      return queue->second.present( present_info );
-   }
-   else
-   {
-      return vk::error( vk::error::type_t( vk::error::type::e_invalid_queue ) );
-   }
-}
-
 void context::wait_for_fence( vk::fence_t fence ) const noexcept
 {
    auto fence_handle = fence.value( );
@@ -1102,52 +1102,43 @@ std::variant<VmaAllocator, vk::error> context::create_memory_allocator( ) const
 std::unordered_map<queue::flag, queue> context::get_queues( const queue_properties_t& queue_properties ) const
 {
    std::unordered_map<queue::flag, queue> queues;
-   queues.reserve( 3 );   
+   queues.reserve( 3 );
 
    bool has_transfer_only = false;
    bool has_compute_only = false;
-<<<<<<< HEAD
-   
+
    // Find all the queues that are not for graphics.
-   for( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
-=======
    for ( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
->>>>>>> 5c4c6011e00fc9705036da4d9a950beba8bab750
    {
       if ( queue_properties.value( )[i].queueCount > 0 )
       {
-         if ( !( queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) )
-         {
+         bool has_graphics = queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+         bool has_compute = queue_properties.value( )[i].queueFlags == VK_QUEUE_COMPUTE_BIT;
+         bool has_transfer = queue_properties.value( )[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
 
-<<<<<<< HEAD
-         }
-
-         if ( queue_properties.value( )[i].queueFlags & VK_QUEUE_TRANSFER_BIT )
+         if ( !has_graphics )
          {
-            if ( !( queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) )
+            if ( has_transfer && !has_compute )
             {
                has_transfer_only = true;
 
-               queues.insert( { 
-                  queue::flag::e_transfer,
-                  queue( 
-                     vk::device_t( device ),  
-                     queue::family_index_t( i ), 
-                     queue::index_t( 0 ) 
-                  ) 
-               } );
-            } 
-=======
-            queues.insert( {queue::flag::e_transfer, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
->>>>>>> 5c4c6011e00fc9705036da4d9a950beba8bab750
+               queue const transfer_queue( device, i, 0 );
+            }
          }
 
-         if ( queue_properties.value( )[i].queueFlags == VK_QUEUE_COMPUTE_BIT )
+         if ( !( queue_properties.value( )[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) )
          {
-            has_compute_only = true;
+            has_transfer_only = true;
 
-            queues.insert( {queue::flag::e_compute, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
+            queues.insert( {queue::flag::e_transfer, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
          }
+      }
+
+      if ( )
+      {
+         has_compute_only = true;
+
+         queues.insert( {queue::flag::e_compute, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
       }
    }
 

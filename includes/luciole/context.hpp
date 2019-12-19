@@ -27,7 +27,7 @@
 #include <luciole/vk/errors.hpp>
 #include <luciole/vk/extension.hpp>
 #include <luciole/vk/layer.hpp>
-#include <luciole/vk/queue.hpp>
+#include <luciole/vk/queue_handler.hpp>
 
 #include <glm/glm.hpp>
 #include <spdlog/logger.h>
@@ -63,7 +63,7 @@ private:
 
 public:
    context( ) = default;
-   explicit context( const ui::window& wnd );
+   context( const ui::window& wnd, logger* p_logger );
    context( const context& other ) = delete;
    context( context&& other );
    ~context( );
@@ -346,35 +346,6 @@ public:
    [[nodiscard]] VkExtent2D get_window_extent( ) const PURE;
 
    /**
-    * @brief Wait on a queue do finish it's task.
-    *
-    * @param flag The type of queue.
-    * @return The status of the operation.
-    */
-   vk::error queue_wait_idle( queue::flag_t flag ) const PURE;
-
-   /**
-    * @brief Submit a queue.
-    *
-    * @param flag The flags to submit with the queue.
-    * @param submit_info The information needed to submit
-    * the queue
-    * @param fence A fence for synchronization.
-    * @return Returns the status of the operation.
-    */
-   [[nodiscard]] vk::error submit_queue( queue::flag_t flag, vk::submit_info_t const& submit_info, vk::fence_t fence ) const noexcept PURE;
-
-   /**
-    * @brief Present a queue.
-    *
-    * @param flag The flags to submit the queue with.
-    * @param present_info The information required to
-    * present the queue.
-    * @return The status of the operation.
-    */
-   [[nodiscard]] vk::error present_queue( queue::flag_t flag, vk::present_info_t const& present_info ) const noexcept PURE;
-
-   /**
     * @brief Wait for a fence.
     *
     * @param fence The handle to the fence.
@@ -389,6 +360,8 @@ public:
    void reset_fence( vk::fence_t fence ) const noexcept;
 
    vk::error device_wait_idle( ) const noexcept PURE;
+
+   vk::queue_handler& get_queue_handler( ) { return queue_handler; }
 
    // TODO: Fix this
    VkDevice get( ) const { return device; }
@@ -524,12 +497,16 @@ private:
 
    VmaAllocator memory_allocator = VK_NULL_HANDLE;
 
+   vk::queue_handler queue_handler;
+
    std::unordered_map<queue::flag, queue> queues;
    std::unordered_map<std::uint32_t, command_pool> command_pools;
 
    std::vector<vk::layer> validation_layers;
    std::vector<vk::extension> instance_extensions;
    std::vector<vk::extension> device_extensions;
+
+   logger* p_logger;
 
    std::shared_ptr<spdlog::logger> validation_layer_logger;
    std::shared_ptr<spdlog::logger> vulkan_logger;

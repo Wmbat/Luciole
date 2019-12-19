@@ -1,4 +1,4 @@
-/*!
+/*
  * @author wmbat@protonmail.com
  *
  * Copyright (C) 2019 Wmbat

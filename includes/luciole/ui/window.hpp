@@ -35,6 +35,8 @@
 #   include <xcb/xcb.h>
 #endif
 
+#include <luciole/utils/logger.hpp>
+
 #include <memory>
 #include <string>
 #include <variant>
@@ -172,6 +174,8 @@ namespace ui
       glm::uvec2 position;
       glm::uvec2 size;
 
+      logger* p_logger;
+
       bool is_wnd_open;
       bool is_fullscreen;
 
@@ -184,8 +188,6 @@ namespace ui
 
       int default_screen_id;
 #endif
-
-      std::shared_ptr<spdlog::logger> window_logger;
 
       message_handler<const key_event> key_handler;
       message_handler<const mouse_button_event> mouse_button_handler;
@@ -202,6 +204,8 @@ namespace ui
          std::string title = "Default Luciole Window";
          glm::uvec2 position = {100, 100};
          glm::uvec2 size = {1080, 720};
+
+         logger* p_logger = nullptr;
       }; // class struct
    };    // class window
 } // namespace ui

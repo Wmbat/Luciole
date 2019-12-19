@@ -26,17 +26,15 @@ namespace vk
    public:
       struct create_info
       {
-         context const* p_context = nullptr;
+         context* p_context = nullptr;
 
          std::vector<std::uint32_t> family_indices = {};
          std::vector<std::uint32_t> indices = {};
       }; // struct create_info
 
-      using create_info_t = strong_type<create_info const&>;
-
    public:
       index_buffer( ) = default;
-      index_buffer( create_info_t const& create_info );
+      index_buffer( create_info const& create_info );
       index_buffer( index_buffer const& rhs ) = delete;
       index_buffer( index_buffer&& rhs );
       ~index_buffer( );

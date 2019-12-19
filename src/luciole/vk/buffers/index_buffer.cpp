@@ -20,10 +20,10 @@
 
 namespace vk
 {
-   index_buffer::index_buffer( index_buffer::create_info_t const& create_info ) :
-      memory_allocator( create_info.value( ).p_context->get_memory_allocator( ) ), allocation( VK_NULL_HANDLE ), buffer( VK_NULL_HANDLE )
+   index_buffer::index_buffer( create_info const& create_info ) :
+      memory_allocator( create_info.p_context->get_memory_allocator( ) ), allocation( VK_NULL_HANDLE ), buffer( VK_NULL_HANDLE )
    {
-      auto const buffer_size = create_info.value( ).indices.size( ) * sizeof( create_info.value( ).indices[0] );
+      auto const buffer_size = create_info.indices.size( ) * sizeof( create_info.indices[0] );
 
       /* STAGING BUFFER */
       VkBuffer staging_buffer = VK_NULL_HANDLE;
@@ -36,8 +36,8 @@ namespace vk
       staging_create_info.size = buffer_size;
       staging_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
       staging_create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-      staging_create_info.queueFamilyIndexCount = static_cast<std::uint32_t>( create_info.value( ).family_indices.size( ) );
-      staging_create_info.pQueueFamilyIndices = create_info.value( ).family_indices.data( );
+      staging_create_info.queueFamilyIndexCount = static_cast<std::uint32_t>( create_info.family_indices.size( ) );
+      staging_create_info.pQueueFamilyIndices = create_info.family_indices.data( );
 
       VmaAllocationCreateInfo staging_alloc_info = {};
       staging_alloc_info.usage = VMA_MEMORY_USAGE_CPU_ONLY;
@@ -47,7 +47,7 @@ namespace vk
       /* MAP THE MEMORY INTO THE STAGING BUFFER */
       void* data;
       vmaMapMemory( memory_allocator, staging_memory, &data );
-      memcpy( data, create_info.value( ).indices.data( ), buffer_size );
+      memcpy( data, create_info.indices.data( ), buffer_size );
       vmaUnmapMemory( memory_allocator, staging_memory );
 
       /* INDEX BUFFER */
@@ -58,8 +58,8 @@ namespace vk
       index_create_info.size = buffer_size;
       index_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
       index_create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-      index_create_info.queueFamilyIndexCount = static_cast<std::uint32_t>( create_info.value( ).family_indices.size( ) );
-      index_create_info.pQueueFamilyIndices = create_info.value( ).family_indices.data( );
+      index_create_info.queueFamilyIndexCount = static_cast<std::uint32_t>( create_info.family_indices.size( ) );
+      index_create_info.pQueueFamilyIndices = create_info.family_indices.data( );
 
       VmaAllocationCreateInfo index_alloc_info = {};
       index_alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -69,8 +69,7 @@ namespace vk
       /* CREATE COMMAND BUFFER */
       VkCommandBuffer cmd_buffer = VK_NULL_HANDLE;
 
-      auto temp_cmd_buffer =
-         create_info.value( ).p_context->create_command_buffers( queue::flag_t( queue::flag::e_transfer ), count32_t( 1 ) );
+      auto temp_cmd_buffer = create_info.p_context->create_command_buffers( queue::flag_t( queue::flag::e_transfer ), count32_t( 1 ) );
 
       if ( auto const* p_val = std::get_if<std::vector<VkCommandBuffer>>( &temp_cmd_buffer ) )
       {
@@ -105,10 +104,8 @@ namespace vk
          .signalSemaphoreCount = 0,
          .pSignalSemaphores = nullptr};
 
-      create_info.value( ).p_context->submit_queue(
-         queue::flag_t( queue::flag::e_transfer ), submit_info_t( submit_info ), fence_t( nullptr ) );
-
-      create_info.value( ).p_context->queue_wait_idle( queue::flag_t( queue::flag::e_transfer ) );
+      create_info.p_context->get_queue_handler( ).submit_queue( queue::flag::e_transfer, submit_info, nullptr );
+      create_info.p_context->get_queue_handler( ).make_queue_wait_idle( queue::flag::e_transfer );
 
       vmaDestroyBuffer( memory_allocator, staging_buffer, staging_memory );
    }
@@ -139,6 +136,8 @@ namespace vk
          memory_allocator = rhs.memory_allocator;
          rhs.memory_allocator = VK_NULL_HANDLE;
       }
+
+      return *this;
    }
 
    VkBuffer index_buffer::get_buffer( ) const { return buffer; }

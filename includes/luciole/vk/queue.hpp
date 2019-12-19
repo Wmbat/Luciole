@@ -44,19 +44,17 @@ public:
     */
    enum class flag
    {
-      e_none = 0,
-      e_graphics = 1 << 1,
-      e_transfer = 1 << 2,
-      e_compute = 1 << 3
+      e_none = 0x00000000,
+      e_graphics = 0x00000001,
+      e_transfer = 0x00000002,
+      e_compute = 0x00000004
    };
 
    using flag_t = strong_type<flag, param>;
-   using index_t = strong_type<std::uint32_t, index_param>;
-   using family_index_t = strong_type<std::uint32_t, family_index_param>;
 
 public:
    queue( ) = default;
-   queue( vk::device_t device, family_index_t family_index, index_t index );
+   queue( VkDevice device, std::uint32_t family_index, std::uint32_t index );
    queue( queue const& rhs ) = delete;
    queue( queue&& rhs );
 

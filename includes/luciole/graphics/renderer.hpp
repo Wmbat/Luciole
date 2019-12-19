@@ -65,7 +65,7 @@ private:
 
 public:
    renderer( ) = default;
-   renderer( p_context_t p_context, ui::window& wnd );
+   renderer( context* p_context, ui::window& wnd );
    renderer( renderer const& rhs ) = delete;
    renderer( renderer&& rhs );
    ~renderer( );
@@ -214,7 +214,7 @@ private:
 private:
    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-   const context* p_context;
+   context* p_context;
 
    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
    std::vector<VkImage> swapchain_images = {};

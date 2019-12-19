@@ -38,30 +38,30 @@ const std::vector<std::uint32_t> indices = {0, 1, 2, 2, 3, 0};
  * @param p_context Pointer to a context object.
  * @param wnd Reference to a window object.
  */
-renderer::renderer( p_context_t p_context, ui::window& wnd ) :
-   p_context( p_context.value( ) ), swapchain( VK_NULL_HANDLE ), swapchain_images( {} ), swapchain_image_views( {} ),
-   swapchain_framebuffers( {} ), swapchain_image_format( VK_FORMAT_UNDEFINED ), swapchain_extent( {0, 0} ), render_pass( VK_NULL_HANDLE ),
+renderer::renderer( context* p_context, ui::window& wnd ) :
+   p_context( p_context ), swapchain( VK_NULL_HANDLE ), swapchain_images( {} ), swapchain_image_views( {} ), swapchain_framebuffers( {} ),
+   swapchain_image_format( VK_FORMAT_UNDEFINED ), swapchain_extent( {0, 0} ), render_pass( VK_NULL_HANDLE ),
    default_graphics_pipeline_layout( VK_NULL_HANDLE ), default_graphics_pipeline( VK_NULL_HANDLE ), descriptor_set_layout( VK_NULL_HANDLE ),
-   render_command_buffers( {} ), shader_manager( context_ptr_t( p_context.value( ) ) )
+   render_command_buffers( {} ), shader_manager( context_ptr_t( p_context ) )
 {
    vulkan_logger = spdlog::get( "Vulkan Logger" );
 
    wnd.add_callback( framebuffer_resize_event_delg( *this, &renderer::on_framebuffer_resize ) );
 
    auto vertex_buffer_create_info = vk::vertex_buffer::create_info( );
-   vertex_buffer_create_info.p_context = p_context.value( );
-   vertex_buffer_create_info.memory_allocator = p_context.value( )->get_memory_allocator( );
-   vertex_buffer_create_info.family_indices = p_context.value( )->get_unique_family_indices( );
+   vertex_buffer_create_info.p_context = p_context;
+   vertex_buffer_create_info.memory_allocator = p_context->get_memory_allocator( );
+   vertex_buffer_create_info.family_indices = p_context->get_unique_family_indices( );
    vertex_buffer_create_info.vertices = vertices;
 
-   vertex_buffer = vk::vertex_buffer( vk::vertex_buffer::create_info_t( vertex_buffer_create_info ) );
+   vertex_buffer = vk::vertex_buffer( vertex_buffer_create_info );
 
    auto index_buffer_create_info = vk::index_buffer::create_info( );
-   index_buffer_create_info.p_context = p_context.value( );
-   index_buffer_create_info.family_indices = p_context.value( )->get_unique_family_indices( );
+   index_buffer_create_info.p_context = p_context;
+   index_buffer_create_info.family_indices = p_context->get_unique_family_indices( );
    index_buffer_create_info.indices = indices;
 
-   index_buffer = vk::index_buffer( vk::index_buffer::create_info_t( index_buffer_create_info ) );
+   index_buffer = vk::index_buffer( index_buffer_create_info );
 
    if ( auto res = create_descriptor_set_layout( ); auto* p_val = std::get_if<VkDescriptorSetLayout>( &res ) )
    {
@@ -233,8 +233,7 @@ void renderer::draw_frame( )
       .signalSemaphoreCount = sizeof( signal_semaphores ) / sizeof( VkSemaphore ),
       .pSignalSemaphores = signal_semaphores};
 
-   auto const submit_result = p_context->submit_queue(
-      queue::flag_t( queue::flag::e_graphics ), vk::submit_info_t( submit_info ), vk::fence_t( in_flight_fences[current_frame] ) );
+   p_context->get_queue_handler( ).submit_queue( queue::flag::e_graphics, submit_info, in_flight_fences[current_frame] );
 
    p_context->wait_for_fence( vk::fence_t( in_flight_fences[current_frame] ) );
    p_context->reset_fence( vk::fence_t( in_flight_fences[current_frame] ) );
@@ -248,7 +247,7 @@ void renderer::draw_frame( )
       .pImageIndices = &image_index,
       .pResults = nullptr};
 
-   auto const present_res = p_context->present_queue( queue::flag_t( queue::flag::e_graphics ), vk::present_info_t( present_info ) );
+   auto present_res = p_context->get_queue_handler( ).present_queue( queue::flag::e_graphics, present_info );
 
    if ( present_res.get_type( ) == vk::error::type::e_out_of_date || present_res.get_type( ) == vk::error::type::e_suboptimal ||
       is_framebuffer_resized )
