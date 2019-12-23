@@ -22,9 +22,9 @@
 /* INCLUDES */
 #include <luciole/utils/strong_types.hpp>
 
-#include <vma/vk_mem_alloc.h>
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
+#include <vma/vk_mem_alloc.h>
 #include <variant>
 
 namespace vk

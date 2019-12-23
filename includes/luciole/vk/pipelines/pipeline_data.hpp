@@ -19,9 +19,8 @@
 #ifndef LUCIOLE_VK_PIPELINES_PIPELINE_DATA_HPP
 #define LUCIOLE_VK_PIPELINES_PIPELINE_DATA_HPP
 
+#include <luciole/vk/core.hpp>
 #include <luciole/vk/pipelines/pipeline.hpp>
-
-#include <vulkan/vulkan.h>
 
 namespace vk::pipeline
 {

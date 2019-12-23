@@ -24,8 +24,6 @@
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/core.hpp>
 
-#include <vulkan/vulkan.h>
-
 #include <array>
 #include <string>
 

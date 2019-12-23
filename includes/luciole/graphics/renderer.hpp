@@ -29,8 +29,6 @@
 #include <luciole/vk/pipelines/pipeline_manager.hpp>
 #include <luciole/vk/shaders/shader_manager.hpp>
 
-#include <vulkan/vulkan.h>
-
 #include <vector>
 
 /**

@@ -19,8 +19,9 @@
 #ifndef LUCIOLE_GRAPHICS_VERTEX_HPP
 #define LUCIOLE_GRAPHICS_VERTEX_HPP
 
+#include <luciole/luciore_core.hpp>
+
 #include <glm/glm.hpp>
-#include <vulkan/vulkan.h>
 
 #include <array>
 #include <vector>

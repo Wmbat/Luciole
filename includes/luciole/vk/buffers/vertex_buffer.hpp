@@ -22,9 +22,9 @@
 #include <luciole/context.hpp>
 #include <luciole/graphics/vertex.hpp>
 #include <luciole/utils/strong_types.hpp>
+#include <luciole/vk/core.hpp>
 #include <luciole/vk/queue.hpp>
-
-#include <vulkan/vulkan.h>
+#include <luciole/vk/vma/vk_mem_alloc.h>
 
 namespace vk
 {

@@ -29,7 +29,6 @@
 
 #include <glm/vec2.hpp>
 #include <spdlog/logger.h>
-#include <vulkan/vulkan.h>
 
 #if defined( VK_USE_PLATFORM_XCB_KHR )
 #   include <xcb/xcb.h>

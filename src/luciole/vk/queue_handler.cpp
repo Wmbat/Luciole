@@ -23,22 +23,7 @@ namespace vk
    queue_handler::queue_handler( ) : p_logger( nullptr ) {}
    queue_handler::queue_handler( VkDevice device, logger* p_logger, std::vector<VkQueueFamilyProperties> const& queue_properties ) : p_logger( p_logger )
    {
-      for ( std::size_t i = 0; i < queue_properties.size( ); ++i )
-      {
-         bool has_graphics = queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
-         bool has_compute = queue_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT;
-         bool has_transfer = queue_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
-
-         if ( !has_graphics )
-         {
-            if (has_transfer && !has_compute )
-            {
-               queue const transfer_queue(device, i, 0);
-
-               queues.emplace( queue::flag::e_transfer, transfer_queue );
-            }
-         }
-      }
+      auto graphics_queue = find_graphics_queue( device, queue_properties );
    }
 
    /*
@@ -111,4 +96,28 @@ namespace vk
    {
       return queues.size( ) == 1 ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT;
    }
+
+   std::optional<queue> queue_handler::find_graphics_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
+   {
+      for ( std::size_t i = 0; i < queue_properties.size( ); ++i )
+      {
+         if ( queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
+         {
+            if ( p_logger )
+            {
+               p_logger->info( "[{0}] Graphics queue selected from queue family {1} at index {2}", __FUNCTION__, i, 0 );
+            }
+
+            return queue( device, i, 0 );
+         }
+      }
+
+      return std::nullopt;
+   }
+
+   std::optional<queue> queue_handler::find_compute_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
+   {}
+
+   std::optional<queue> queue_handler::find_transfer_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
+   {}
 } // namespace vk

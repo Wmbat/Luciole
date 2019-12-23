@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required( VERSION 3.15 )
-project( Luciole LANGUAGES CXX )
+project( Luciole VERSION 0.0.1 LANGUAGES CXX )
 
 option( BUILD_TESTS "Enable unit testing" OFF )
 option( BUILD_EXAMPLES "Build demo examples" ON )
@@ -38,21 +38,34 @@ set( SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE )
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-set( CLANG_FLAGS "-std=c++2a" )
-set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -fsanitize=address -fsanitize=undefined" )
+set( CLANG_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Werror -Wdouble-promotion -Weverything" )
 set( CLANG_DEBUG_FLAGS "${CLANG_DEBUG_FLAGS} -Wunused-parameter -Wunused-value  -Wunused-variable" )
 set( CLANG_DEBUG_FLAGS "${CLANG_DEBUG_FLAGS} -Wunused-but-set-parameter -Wunused-but-set-variable -fsanitize=address" )
 set( CLANG_RELEASE_FLAGS "-o3" )
 
-set( GNU_FLAGS "-std=c++2a" )
 set( GNU_DEBUG_FLAGS "-o0 -g -Wall -Wextra -Wdouble-promotion -Werror -fno-omit-frame-pointer" )
 set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-parameter -Wunused-value  -Wunused-variable" )
 set( GNU_DEBUG_FLAGS "${GNU_DEBUG_FLAGS} -Wunused-but-set-parameter -Wunused-but-set-variable -fsanitize=address" )
 set( GNU_RELEASE_FLAGS "-o3" )
 
-set( MSVC_FLAGS "-std:c++latest" )
+add_subdirectory( external/volk )
+add_subdirectory( external/stb )
+add_subdirectory( external/spdlog )
+add_subdirectory( external/glm )
+add_subdirectory( external/nlohmann )
+add_subdirectory( external/tinygltf )
+add_subdirectory( external/glslang )
+add_subdirectory( external/spirv_cross )
 
 add_library( Luciole STATIC )
+
+target_include_directories( Luciole 
+   PUBLIC 
+      $<INSTALL_INTERFACE:include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/includes>
+   PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 set_target_properties( Luciole PROPERTIES
    DEBUG_POSTFIX "Debug"
@@ -64,9 +77,6 @@ target_compile_options( Luciole
    PRIVATE
       $<$<PLATFORM_ID:UNIX>:-pthread>
 
-      $<$<CXX_COMPILER_ID:GNU>:${GNU_FLAGS}>
-      $<$<CXX_COMPILER_ID:Clang>:${CLANG_FLAGS}>
-      $<$<CXX_COMPILER_ID:MSVC>:${MSVC_FLAGS}>
 # Set Debug Flags
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:${GNU_DEBUG_FLAGS}>
       $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:DEBUG>>:${CLANG_DEBUG_FLAGS}>
@@ -74,6 +84,9 @@ target_compile_options( Luciole
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:RELEASE>>:${GNU_RELEASE_FLAGS}>
       $<$<AND:$<CXX_COMPILER_ID:Clang>,$<CONFIG:RELEASE>>:${CLANG_RELEASE_FLAGS}>
 )
+
+# Set C++ version
+target_compile_features( Luciole PRIVATE cxx_std_17 )
 
 if( WIN32 )
    target_compile_definitions( Luciole PUBLIC -VK_USE_PLATFORM_WIN32_KHR )
@@ -102,16 +115,6 @@ elseif( UNIX )
    endif()
 endif( )
 
-add_subdirectory( external/vulkan )
-add_subdirectory( external/vma )
-add_subdirectory( external/stb )
-add_subdirectory( external/spdlog )
-add_subdirectory( external/glm )
-add_subdirectory( external/nlohmann )
-add_subdirectory( external/tinygltf )
-add_subdirectory( external/glslang )
-add_subdirectory( external/spirv_cross )
-
 if ( BUILD_TESTS )
    add_subdirectory( external/googletest )
 endif( BUILD_TESTS )
@@ -119,19 +122,13 @@ endif( BUILD_TESTS )
 if( NOT WIN32 )
    target_link_libraries( Luciole
       PUBLIC 
-         ${XCB_LIBRARIES} vulkan vma
+         ${XCB_LIBRARIES} volk_headers
          stb spdlog_header_only
          nlohmann_json tinygltf
          glm glslang SPIRV
          spirv-cross-cpp
    )
 endif( )
-
-target_include_directories( Luciole 
-   PUBLIC 
-      $<INSTALL_INTERFACE:include>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/includes>
-)
 
 target_sources( Luciole
    PRIVATE

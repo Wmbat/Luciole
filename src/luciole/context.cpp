@@ -1130,16 +1130,19 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
          {
             has_transfer_only = true;
 
-            queues.insert( {queue::flag::e_transfer, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
+            //      queues.insert( {queue::flag::e_transfer, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 )
+            //      )} );
          }
       }
 
+      /*
       if ( )
       {
          has_compute_only = true;
 
          queues.insert( {queue::flag::e_compute, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( 0 ) )} );
       }
+      */
    }
 
    for ( size_t i = 0; i < queue_properties.value( ).size( ); ++i )
@@ -1151,25 +1154,28 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
             queue_properties.value( )[i].queueFlags & VK_QUEUE_COMPUTE_BIT )
          {
             std::uint32_t index = 0;
-
-            queues.insert(
-               {queue::flag::e_graphics, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( index ) )} );
-
+            /*
+                        queues.insert(
+                           {queue::flag::e_graphics, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( index ) )}
+               );
+            */
             ++index;
 
             if ( !has_transfer_only )
             {
+               /*
                queues.insert(
                   {queue::flag::e_transfer, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( index ) )} );
-
+               */
                ++index;
             }
 
             if ( !has_compute_only )
             {
+               /*
                queues.insert(
                   {queue::flag::e_compute, queue( vk::device_t( device ), queue::family_index_t( i ), queue::index_t( index ) )} );
-
+               */
                ++index;
             }
          }

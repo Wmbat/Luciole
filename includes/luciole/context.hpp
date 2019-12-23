@@ -31,7 +31,6 @@
 
 #include <glm/glm.hpp>
 #include <spdlog/logger.h>
-#include <vulkan/vulkan.h>
 
 #include <cstdint>
 #include <optional>

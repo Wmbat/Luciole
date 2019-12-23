@@ -19,11 +19,11 @@
 #ifndef ENGINE_ATOMIC_QUEUE_HPP
 #define ENGINE_ATOMIC_QUEUE_HPP
 
+#include <luciole/luciole_core.hpp>
+
 #include <atomic>
 #include <type_traits>
 #include <vector>
-
-#include <luciole/luciole_core.hpp>
 
 template <typename T>
 class atomic_queue

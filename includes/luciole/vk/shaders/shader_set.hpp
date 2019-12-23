@@ -21,9 +21,8 @@
 
 #include <luciole/luciole_core.hpp>
 #include <luciole/utils/strong_types.hpp>
+#include <luciole/vk/core.hpp>
 #include <luciole/vk/shaders/shader.hpp>
-
-#include <vulkan/vulkan.h>
 
 #include <optional>
 #include <cstdint>

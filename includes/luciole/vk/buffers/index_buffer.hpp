@@ -18,6 +18,7 @@
 
 #include <luciole/context.hpp>
 #include <luciole/vk/core.hpp>
+#include <luciole/vk/vma/vk_mem_alloc.h>
 
 namespace vk
 {

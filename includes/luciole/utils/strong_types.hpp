@@ -19,11 +19,11 @@
 #ifndef LUCIOLE_STRONG_TYPES_HPP
 #define LUCIOLE_STRONG_TYPES_HPP
 
+#include <luciole/luciole_core.hpp>
+
 // INCLUDES //
 #include <cstdint>
 #include <string>
-
-#include <luciole/luciole_core.hpp>
 
 struct default_parameter
 {

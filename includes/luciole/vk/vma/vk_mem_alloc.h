@@ -1649,7 +1649,7 @@ available through VmaAllocatorCreateInfo::pRecordSettings.
 #endif
 
 #ifndef VULKAN_H_
-    #include <vulkan/vulkan.h>
+#   include <volk.h>
 #endif
 
 #if VMA_RECORDING_ENABLED
