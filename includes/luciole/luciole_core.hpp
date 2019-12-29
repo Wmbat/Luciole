@@ -19,6 +19,8 @@
 #ifndef LUCIOLE_LUCIOLE_CORE_HPP
 #define LUCIOLE_LUCIOLE_CORE_HPP
 
+#include <cstdint>
+
 #define GCC_COMPILER ( defined( __GNUC__ ) && !defined( __clang__ ) )
 
 #if defined( GCC_COMPILER )

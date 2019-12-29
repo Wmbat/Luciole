@@ -21,10 +21,10 @@
 
 /* INCLUDES */
 #include <luciole/utils/strong_types.hpp>
+#include <luciole/vk/vma/vk_mem_alloc.h>
 
 #include <volk.h>
 
-#include <vma/vk_mem_alloc.h>
 #include <variant>
 
 namespace vk

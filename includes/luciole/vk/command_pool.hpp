@@ -17,6 +17,7 @@
  */
 
 #include <luciole/context.hpp>
+#include <luciole/utils/logger.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/queue.hpp>
 
@@ -28,7 +29,7 @@ namespace vk
    {
    public:
       command_pool( );
-      command_pool( context const* p_context );
+      command_pool( context const* p_context, logger* p_logger, std::uint32_t queue_family_index );
       command_pool( command_pool const& rhs ) = delete;
       command_pool( command_pool&& rhs );
       ~command_pool( );
@@ -38,6 +39,7 @@ namespace vk
 
    private:
       context const* p_context;
+      logger* p_logger;
 
       VkCommandPool handle;
       std::vector<VkCommandBuffer> command_buffers;

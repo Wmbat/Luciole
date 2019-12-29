@@ -23,7 +23,7 @@ namespace vk
    uniform_buffer::uniform_buffer( context const& ctx, std::size_t buffer_size ) :
       memory_allocator( ctx.get_memory_allocator( ) ), allocation( VK_NULL_HANDLE ), buffer( VK_NULL_HANDLE )
    {
-      auto const indices = ctx.get_unique_family_indices( );
+      auto const indices = ctx.get_queue_handler( ).get_queue_family_indices( );
 
       VkBufferCreateInfo const create_info{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
          .pNext = nullptr,

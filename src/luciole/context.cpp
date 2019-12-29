@@ -82,7 +82,23 @@ context::context( const ui::window& wnd, logger* p_logger ) :
    wnd_size( wnd.get_size( ) ), instance( VK_NULL_HANDLE ), debug_messenger( VK_NULL_HANDLE ), surface( VK_NULL_HANDLE ),
    gpu( VK_NULL_HANDLE ), device( VK_NULL_HANDLE ), memory_allocator( VK_NULL_HANDLE ), p_logger( p_logger )
 {
-   std::uint32_t api_version;
+   auto volk_result = volkInitialize( );
+   if ( volk_result != VK_SUCCESS )
+   {
+      if ( p_logger )
+      {
+         p_logger->error( "[{0}] Failed to initialize volk: {1}", __FUNCTION__, volk_result );
+      }
+   }
+   else
+   {
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] Volk initialization was successful", __FUNCTION__ );
+      }
+   }
+
+   std::uint32_t api_version = 0;
    vkEnumerateInstanceVersion( &api_version );
 
    if ( p_logger )
@@ -171,6 +187,8 @@ context::context( const ui::window& wnd, logger* p_logger ) :
 
       abort( );
    }
+
+   volkLoadInstance( instance );
 
    /*
     *  Check for any errors on the debug utils messenger creation.
@@ -262,13 +280,15 @@ context::context( const ui::window& wnd, logger* p_logger ) :
       abort( );
    }
 
-   queues = get_queues( queue_properties_t( queue_properties ) );
+   volkLoadDevice( device );
+
+   queue_handler = vk::queue_handler( device, p_logger, queue_properties );
 
    /*
     *  Check for any errors on the command pools creation.
     */
-   auto const temp_command_pools = create_command_pools( );
-   if ( auto const* p_val = std::get_if<command_pools_container_t>( &temp_command_pools ) )
+   auto const temp_command_pools = queue_handler.generate_command_pool_infos( device );
+   if ( auto const* p_val = std::get_if<std::unordered_map<std::uint32_t, VkCommandPool>>( &temp_command_pools ) )
    {
       command_pools = *p_val;
    }
@@ -363,7 +383,6 @@ context& context::operator=( context&& rhs )
       memory_allocator = rhs.memory_allocator;
       rhs.memory_allocator = VK_NULL_HANDLE;
 
-      std::swap( queues, rhs.queues );
       std::swap( command_pools, rhs.command_pools );
       std::swap( wnd_size, rhs.wnd_size );
 
@@ -644,7 +663,16 @@ void context::destroy_fence( vk::fence_t fence ) const noexcept
 
 std::variant<std::vector<VkCommandBuffer>, vk::error> context::create_command_buffers( queue::flag_t flag, count32_t buffer_count ) const
 {
-   auto pool = command_pools.find( queues.find( flag.value( ) )->second.get_family_index( ) );
+   auto const index = queue_handler.get_queue_family_index( flag.value( ) );
+   if ( !index.has_value( ) )
+   {
+      if ( p_logger )
+      {
+         p_logger->info( "[{0}] Failed to retrieve queue family index with flags {1}", __FUNCTION__, flag.value( ) );
+      }
+   }
+
+   auto pool = command_pools.find( index.value( ) );
 
    auto allocate_info = VkCommandBufferAllocateInfo{};
    allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -698,31 +726,6 @@ VkSurfaceCapabilitiesKHR context::get_surface_capabilities( ) const noexcept
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR( gpu, surface, &capabilities );
 
    return capabilities;
-}
-
-std::vector<std::uint32_t> context::get_unique_family_indices( ) const
-{
-   std::vector<std::uint32_t> indices;
-   indices.reserve( queues.size( ) );
-
-   for ( auto const& queue : queues )
-   {
-      bool insert = true;
-      for ( auto index : indices )
-      {
-         if ( queue.second.get_family_index( ) == index )
-         {
-            insert = false;
-         }
-      }
-
-      if ( insert )
-      {
-         indices.push_back( queue.second.get_family_index( ) );
-      }
-   }
-
-   return indices;
 }
 
 std::vector<VkSurfaceFormatKHR> context::get_surface_format( ) const
@@ -1089,9 +1092,31 @@ std::variant<VkDevice, vk::error> context::create_device(
 
 std::variant<VmaAllocator, vk::error> context::create_memory_allocator( ) const
 {
+   VmaVulkanFunctions vk_funcs = {};
+   vk_funcs.vkAllocateMemory = vkAllocateMemory;
+   vk_funcs.vkBindBufferMemory = vkBindBufferMemory;
+   vk_funcs.vkBindImageMemory = vkBindImageMemory;
+   vk_funcs.vkCmdCopyBuffer = vkCmdCopyBuffer;
+   vk_funcs.vkCreateBuffer = vkCreateBuffer;
+   vk_funcs.vkCreateImage = vkCreateImage;
+   vk_funcs.vkDestroyBuffer = vkDestroyBuffer;
+   vk_funcs.vkDestroyImage = vkDestroyImage;
+   vk_funcs.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+   vk_funcs.vkFreeMemory = vkFreeMemory;
+   vk_funcs.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+   vk_funcs.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR;
+   vk_funcs.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+   vk_funcs.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR;
+   vk_funcs.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+   vk_funcs.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+   vk_funcs.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+   vk_funcs.vkMapMemory = vkMapMemory;
+   vk_funcs.vkUnmapMemory = vkUnmapMemory;
+
    VmaAllocatorCreateInfo allocator_info = {};
    allocator_info.physicalDevice = gpu;
    allocator_info.device = device;
+   allocator_info.pVulkanFunctions = &vk_funcs;
 
    VmaAllocator mem_allocator = VK_NULL_HANDLE;
    vmaCreateAllocator( &allocator_info, &mem_allocator );
@@ -1185,43 +1210,9 @@ std::unordered_map<queue::flag, queue> context::get_queues( const queue_properti
    return queues;
 }
 
-std::variant<context::command_pools_container_t, vk::error> context::create_command_pools( ) const
-{
-   context::command_pools_container_t command_pools;
-   command_pools.reserve( queues.size( ) );
-
-   for ( const auto& queue : queues )
-   {
-      if ( auto it = command_pools.find( queue.second.get_family_index( ) ); it != command_pools.end( ) )
-      {
-         it->second.flags |= queue.first;
-      }
-      else
-      {
-         VkCommandPool handle = VK_NULL_HANDLE;
-
-         VkCommandPoolCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .queueFamilyIndex = queue.second.get_family_index( )};
-
-         vk::error const err( vk::result_t( vkCreateCommandPool( device, &create_info, nullptr, &handle ) ) );
-
-         if ( err.is_error( ) )
-         {
-            return err;
-         }
-
-         command_pools.insert( {queue.second.get_family_index( ), command_pool{.handle = handle, .flags = queue.first}} );
-      }
-   }
-
-   return command_pools;
-}
-
 int context::rate_gpu( vk::physical_device_t const gpu ) const
 {
-   assert( gpu.value( ) != nullptr && "GPU handle is nullptr." );
+   assert( gpu.value( ) != nullptr && "GPU handle is null." );
 
    std::uint32_t properties_count = 0;
    vkGetPhysicalDeviceQueueFamilyProperties( gpu.value( ), &properties_count, nullptr );

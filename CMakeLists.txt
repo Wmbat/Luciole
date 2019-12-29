@@ -57,6 +57,10 @@ add_subdirectory( external/tinygltf )
 add_subdirectory( external/glslang )
 add_subdirectory( external/spirv_cross )
 
+if ( BUILD_TESTS )
+   add_subdirectory( external/googletest )
+endif( BUILD_TESTS )
+
 add_library( Luciole STATIC )
 
 target_include_directories( Luciole 
@@ -115,15 +119,12 @@ elseif( UNIX )
    endif()
 endif( )
 
-if ( BUILD_TESTS )
-   add_subdirectory( external/googletest )
-endif( BUILD_TESTS )
-
 if( NOT WIN32 )
    target_link_libraries( Luciole
       PUBLIC 
-         ${XCB_LIBRARIES} volk_headers
-         stb spdlog_header_only
+         ${XCB_LIBRARIES}
+         vulkan volk_headers stb 
+         spdlog_header_only
          nlohmann_json tinygltf
          glm glslang SPIRV
          spirv-cross-cpp
@@ -146,6 +147,7 @@ target_sources( Luciole
       "src/luciole/vk/shaders/shader_compiler.cpp"
       "src/luciole/vk/shaders/shader_manager.cpp"
       "src/luciole/vk/shaders/shader_set.cpp"
+      "src/luciole/vk/command_pool.cpp"
       "src/luciole/vk/descriptor_pool.cpp"
       "src/luciole/vk/queue.cpp"
       "src/luciole/vk/queue_handler.cpp"

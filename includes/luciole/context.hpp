@@ -28,6 +28,7 @@
 #include <luciole/vk/extension.hpp>
 #include <luciole/vk/layer.hpp>
 #include <luciole/vk/queue_handler.hpp>
+#include <luciole/vk/vma/vk_mem_alloc.h>
 
 #include <glm/glm.hpp>
 #include <spdlog/logger.h>
@@ -319,13 +320,6 @@ public:
    [[nodiscard]] VkSurfaceCapabilitiesKHR get_surface_capabilities( ) const noexcept PURE;
 
    /**
-    * @brief Find all the queue family indices used in the context.
-    *
-    * @return std::vector<std::uint32_t> A vector containing all the unique family indices.
-    */
-   [[nodiscard]] std::vector<std::uint32_t> get_unique_family_indices( ) const PURE;
-
-   /**
     * @brief Get all the formats supported by the surface.
     *
     * @return The supported formats.
@@ -360,6 +354,7 @@ public:
 
    vk::error device_wait_idle( ) const noexcept PURE;
 
+   vk::queue_handler const& get_queue_handler( ) const { return queue_handler; }
    vk::queue_handler& get_queue_handler( ) { return queue_handler; }
 
    // TODO: Fix this
@@ -462,14 +457,6 @@ private:
    [[nodiscard]] std::unordered_map<queue::flag, queue> get_queues( queue_properties_t const& queue_properties ) const PURE;
 
    /**
-    * @brief Create a unordered_map of command pools.
-    *
-    * @return Either the unordered_map of command pools or
-    * an error code.
-    */
-   [[nodiscard]] std::variant<command_pools_container_t, vk::error> create_command_pools( ) const PURE;
-
-   /**
     * @brief Rate a gpu based on what it is capable
     * of doing and what it supports.
     *
@@ -498,7 +485,6 @@ private:
 
    vk::queue_handler queue_handler;
 
-   std::unordered_map<queue::flag, queue> queues;
    std::unordered_map<std::uint32_t, command_pool> command_pools;
 
    std::vector<vk::layer> validation_layers;

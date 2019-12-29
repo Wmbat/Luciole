@@ -18,12 +18,56 @@
 
 #include <luciole/vk/queue_handler.hpp>
 
+#include <algorithm>
+
 namespace vk
 {
    queue_handler::queue_handler( ) : p_logger( nullptr ) {}
    queue_handler::queue_handler( VkDevice device, logger* p_logger, std::vector<VkQueueFamilyProperties> const& queue_properties ) : p_logger( p_logger )
    {
-      auto graphics_queue = find_graphics_queue( device, queue_properties );
+      bool has_dedicated_transfer = false;
+      for ( int i = 0; i < queue_properties.size( ); ++i )
+      {
+         if ( queue_properties[i].queueFlags == VK_QUEUE_TRANSFER_BIT )
+         {
+            queues.emplace( queue::flag::e_transfer, queue( device, i, 0 ) );
+            has_dedicated_transfer = true;
+         }
+      }
+
+      if ( !has_dedicated_transfer )
+      {
+         for ( int i = 0; i < queue_properties.size( ); ++i )
+         {
+            if ( queue_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT )
+            {
+               if ( !( queue_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT ) ||
+                  !( queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT ) )
+               {
+                  queues.emplace( queue::flag::e_transfer, queue( device, i, 0 ) );
+                  has_dedicated_transfer = true;
+               }
+            }
+         }
+      }
+
+      for ( int i = 0; i < queue_properties.size( ); ++i )
+      {
+         if ( queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
+         {
+            std::size_t index = 0;
+
+            queues.emplace( queue::flag::e_graphics, queue( device, i, index++ ) );
+
+            if ( !has_dedicated_transfer )
+            {
+               if ( queue_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT && queue_properties[i].queueCount > 1 )
+               {
+                  queues.emplace( queue::flag::e_transfer, queue( device, i, index++ ) );
+               }
+            }
+         }
+      }
    }
 
    /*
@@ -88,6 +132,85 @@ namespace vk
       }
    }
 
+   std::optional<std::uint32_t> queue_handler::get_queue_family_index( queue::flag flags ) const
+   {
+      auto const& it = queues.find( flags );
+      if ( it == queues.cend( ) )
+      {
+         if ( p_logger )
+         {
+            p_logger->warn( "[{0}] Could not find a queue with the flags {1}", __FUNCTION__, flags );
+         }
+
+         return std::nullopt;
+      }
+      else
+      {
+         return it->second.get_family_index( );
+      }
+   }
+
+   std::vector<std::uint32_t> queue_handler::get_queue_family_indices( ) const
+   {
+      std::vector<std::uint32_t> indices;
+      indices.reserve( queues.size( ) );
+
+      for ( auto const& queue : queues )
+      {
+         bool insert = true;
+         for ( auto index : indices )
+         {
+            if ( queue.second.get_family_index( ) == index )
+            {
+               insert = false;
+            }
+         }
+
+         if ( insert )
+         {
+            indices.push_back( queue.second.get_family_index( ) );
+         }
+      }
+
+      return indices;
+   }
+
+   std::variant<std::unordered_map<std::uint32_t, VkCommandPool>, vk::error> queue_handler::generate_command_pool_infos(
+      VkDevice device ) const
+   {
+      std::unordered_map<std::uint32_t, VkCommandPool> command_pools;
+      command_pools.reserve( queues.size( ) );
+
+      for ( auto const& queue : queues )
+      {
+         auto const& it = command_pools.find( queue.second.get_family_index( ) );
+         if ( it != command_pools.cend( ) )
+         {
+            VkCommandPoolCreateInfo create_info = {};
+            create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            create_info.pNext = nullptr;
+            create_info.flags = 0;
+            create_info.queueFamilyIndex = queue.second.get_family_index( );
+
+            VkCommandPool handle = VK_NULL_HANDLE;
+            auto result = vkCreateCommandPool( device, &create_info, nullptr, &handle );
+
+            if ( result != VK_SUCCESS )
+            {
+               return vk::error( vk::result_t( result ) );
+            }
+            else
+            {
+               p_logger->info( "[{0}] Command pool 0x{1:x} created from queue family index {2}", __FUNCTION__,
+                  reinterpret_cast<std::uintptr_t>( handle ), queue.second.get_family_index( ) );
+
+               command_pools.emplace( queue.second.get_family_index( ), handle );
+            }
+         }
+      }
+
+      return command_pools;
+   }
    /*
     * @brief Check if the handler is capable of supporting more than
     * one queue.
@@ -96,28 +219,4 @@ namespace vk
    {
       return queues.size( ) == 1 ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT;
    }
-
-   std::optional<queue> queue_handler::find_graphics_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
-   {
-      for ( std::size_t i = 0; i < queue_properties.size( ); ++i )
-      {
-         if ( queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
-         {
-            if ( p_logger )
-            {
-               p_logger->info( "[{0}] Graphics queue selected from queue family {1} at index {2}", __FUNCTION__, i, 0 );
-            }
-
-            return queue( device, i, 0 );
-         }
-      }
-
-      return std::nullopt;
-   }
-
-   std::optional<queue> queue_handler::find_compute_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
-   {}
-
-   std::optional<queue> queue_handler::find_transfer_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties )
-   {}
 } // namespace vk

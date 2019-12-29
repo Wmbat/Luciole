@@ -51,14 +51,14 @@ renderer::renderer( context* p_context, ui::window& wnd ) :
    auto vertex_buffer_create_info = vk::vertex_buffer::create_info( );
    vertex_buffer_create_info.p_context = p_context;
    vertex_buffer_create_info.memory_allocator = p_context->get_memory_allocator( );
-   vertex_buffer_create_info.family_indices = p_context->get_unique_family_indices( );
+   vertex_buffer_create_info.family_indices = p_context->get_queue_handler( ).get_queue_family_indices( );
    vertex_buffer_create_info.vertices = vertices;
 
    vertex_buffer = vk::vertex_buffer( vertex_buffer_create_info );
 
    auto index_buffer_create_info = vk::index_buffer::create_info( );
    index_buffer_create_info.p_context = p_context;
-   index_buffer_create_info.family_indices = p_context->get_unique_family_indices( );
+   index_buffer_create_info.family_indices = p_context->get_queue_handler( ).get_queue_family_indices( );
    index_buffer_create_info.indices = indices;
 
    index_buffer = vk::index_buffer( index_buffer_create_info );

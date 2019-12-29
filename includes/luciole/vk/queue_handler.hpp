@@ -21,6 +21,7 @@
 
 #include <luciole/luciole_core.hpp>
 #include <luciole/utils/logger.hpp>
+#include <luciole/vk/command_pool.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/queue.hpp>
 
@@ -40,12 +41,12 @@ namespace vk
       void submit_queue( queue::flag flags, VkSubmitInfo const& submit_info, VkFence fence );
       vk::error present_queue( queue::flag flags, VkPresentInfoKHR const& present_info );
 
-      VkSharingMode get_sharing_mode( ) const noexcept;
+      std::optional<std::uint32_t> get_queue_family_index( queue::flag flags ) const;
+      std::vector<std::uint32_t> get_queue_family_indices( ) const;
 
-   private:
-      std::optional<queue> find_graphics_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties );
-      std::optional<queue> find_compute_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties );
-      std::optional<queue> find_transfer_queue( VkDevice device, std::vector<VkQueueFamilyProperties> const& queue_properties );
+      std::variant<std::unordered_map<std::uint32_t, VkCommandPool>, vk::error> generate_command_pool_infos( VkDevice device ) const;
+
+      VkSharingMode get_sharing_mode( ) const noexcept;
 
    private:
       logger* p_logger;
