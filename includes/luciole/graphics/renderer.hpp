@@ -19,8 +19,6 @@
 #ifndef LUCIOLE_GRAPHICS_RENDERER_HPP
 #define LUCIOLE_GRAPHICS_RENDERER_HPP
 
-/* INCLUDES */
-#include <luciole/context.hpp>
 #include <luciole/sys/component.hpp>
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/buffers/index_buffer.hpp>
@@ -31,39 +29,16 @@
 
 #include <vector>
 
-/**
- * @brief The main class to render object.
- */
+namespace core
+{
+   class context;
+} // namespace core
+
 class renderer
 {
-private:
-   /**
-    * @brief Dummy struct for custom strong type to designate a shader filepath.
-    */
-   struct shader_filepath_parameter
-   {
-   };
-   using shader_filepath_t = strong_type<std::string const&, shader_filepath_parameter>;
-
-   /**
-    * @brief Dummy struct for custom strong type to designate a vertex shader filepath.
-    */
-   struct vert_shader_filepath_param
-   {
-   };
-   using vert_shader_filepath_t = strong_type<std::string const&, vert_shader_filepath_param>;
-
-   /**
-    * @brief Dummy struct for custom strong type to designate a fragment shader filepath.
-    */
-   struct frag_shader_filepath_param
-   {
-   };
-   using frag_shader_filepath_t = strong_type<std::string const&, frag_shader_filepath_param>;
-
 public:
    renderer( ) = default;
-   renderer( context* p_context, ui::window& wnd );
+   renderer( core::context* p_context, ui::window& wnd );
    renderer( renderer const& rhs ) = delete;
    renderer( renderer&& rhs );
    ~renderer( );
@@ -83,18 +58,9 @@ public:
       vk::pipeline::loader_ptr_t p_loader, vk::shader::set::id_t pack_id, vk::pipeline::filepath_view_t filepath );
 
 private:
-   /**
-    * @brief Create all objects related to the swapchain.
-    */
    void create_swapchain( );
-   /**
-    * @brief Destroy all objects related to the swapchain.
-    */
    void cleanup_swapchain( );
 
-   /**
-    * @brief Record the command buffers.
-    */
    void record_command_buffers( );
 
    /**
@@ -131,7 +97,7 @@ private:
     * @param filepath The Path to the SPIR-V binary file
     * @return VkShaderModule The shader module generated from the SPIR-V code.
     */
-   [[nodiscard]] VkShaderModule create_shader_module( shader_filepath_t filepath ) const PURE;
+   [[nodiscard]] VkShaderModule create_shader_module( std::string_view filepath ) const PURE;
 
    /**
     * @brief Create a default pipeline layout object.
@@ -159,7 +125,7 @@ private:
     * default graphics pipeline or an error code.
     */
    [[nodiscard]] std::variant<VkPipeline, vk::error> create_default_pipeline(
-      vert_shader_filepath_t vert_filepath, frag_shader_filepath_t frag_filepath ) const PURE;
+      std::string_view vert_filepath, std::string_view frag_filepath ) const PURE;
 
    /**
     * @brief Create a semaphore object.
@@ -212,7 +178,7 @@ private:
 private:
    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-   context* p_context;
+   core::context* p_context;
 
    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
    std::vector<VkImage> swapchain_images = {};

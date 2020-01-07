@@ -23,7 +23,6 @@
 #include <luciole/vk/shaders/shader_loader_interface.hpp>
 #include <luciole/vk/shaders/shader_save_interface.hpp>
 #include <luciole/vk/shaders/shader_set.hpp>
-#include <luciole/context.hpp>
 
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
@@ -34,13 +33,18 @@
 #include <cstdint>
 #include <vector>
 
+namespace core
+{
+   class context;
+} // namespace core
+
 namespace vk::shader
 { 
    class manager
    {
    public:
       manager( );
-      manager( context_ptr_t const& p_context );
+      manager( core::context* p_context );
       manager( manager const& rhs ) = delete;
       manager( manager&& rhs );
       ~manager( );
@@ -60,7 +64,7 @@ namespace vk::shader
       void disable_shader_saving( );
       
    private:
-      context const* p_context; 
+      core::context const* p_context;
 
       std::unique_ptr<save_interface> p_save_interface;
 

@@ -288,7 +288,7 @@ context::context( const ui::window& wnd, logger* p_logger ) :
     *  Check for any errors on the command pools creation.
     */
    auto const temp_command_pools = queue_handler.generate_command_pool_infos( device );
-   if ( auto const* p_val = std::get_if<std::unordered_map<std::uint32_t, VkCommandPool>>( &temp_command_pools ) )
+   if ( auto const* p_val = std::get_if<std::unordered_map<std::uint32_t, vk::command_pool>>( &temp_command_pools ) )
    {
       command_pools = *p_val;
    }
@@ -315,16 +315,6 @@ context::context( context&& other )
 }
 context::~context( )
 {
-   for ( auto& command_pool : command_pools )
-   {
-      if ( command_pool.second.handle != VK_NULL_HANDLE )
-      {
-         vkDestroyCommandPool( device, command_pool.second.handle, nullptr );
-         command_pool.second.handle = VK_NULL_HANDLE;
-         command_pool.second.flags = queue::flag::e_none;
-      }
-   }
-
    if ( memory_allocator != VK_NULL_HANDLE )
    {
       vmaDestroyAllocator( memory_allocator );
@@ -659,40 +649,6 @@ std::variant<VkFence, vk::error> context::create_fence( vk::fence_create_info_t 
 void context::destroy_fence( vk::fence_t fence ) const noexcept
 {
    vkDestroyFence( device, fence.value( ), nullptr );
-}
-
-std::variant<std::vector<VkCommandBuffer>, vk::error> context::create_command_buffers( queue::flag_t flag, count32_t buffer_count ) const
-{
-   auto const index = queue_handler.get_queue_family_index( flag.value( ) );
-   if ( !index.has_value( ) )
-   {
-      if ( p_logger )
-      {
-         p_logger->info( "[{0}] Failed to retrieve queue family index with flags {1}", __FUNCTION__, flag.value( ) );
-      }
-   }
-
-   auto pool = command_pools.find( index.value( ) );
-
-   auto allocate_info = VkCommandBufferAllocateInfo{};
-   allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocate_info.pNext = nullptr;
-   allocate_info.commandPool = pool->second.handle;
-   allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocate_info.commandBufferCount = buffer_count.value( );
-
-   std::vector<VkCommandBuffer> handles( buffer_count.value( ) );
-
-   vk::error const err( vk::result_t( vkAllocateCommandBuffers( device, &allocate_info, handles.data( ) ) ) );
-
-   if ( err.is_error( ) )
-   {
-      return err;
-   }
-   else
-   {
-      return handles;
-   }
 }
 
 std::variant<std::vector<VkImage>, vk::error> context::get_swapchain_images( vk::swapchain_t swapchain, count32_t image_count ) const

@@ -1,5 +1,5 @@
-/*
- *  Copyright (C) 2018-2019 Wmbat
+/**
+ *  Copyright (C) 2020 Wmbat
  *
  *  wmbat@protonmail.com
  *
@@ -16,24 +16,24 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/core/context.hpp>
-#include <luciole/luciole.hpp>
-#include <luciole/utils/logger.hpp>
-#include <luciole/vk/pipelines/pipeline_json_loader.hpp>
-#include <luciole/vk/shaders/shader_compiler.hpp>
+#ifndef LUCIOLE_VK_DEVICE_PHYSICAL_DEVICE_SELECTION_INTERFACE_HPP
+#define LUCIOLE_VK_DEVICE_PHYSICAL_DEVICE_SELECTION_INTERFACE_HPP
 
-int main( )
+#include <luciole/vk/core.hpp>
+
+#include <vector>
+
+namespace core
 {
-   logger main_logger( "engine logger" );
+   class physical_device_selection_interface
+   {
+   protected:
+      physical_device_selection_interface( ) = default;
+      virtual ~physical_device_selection_interface( ) = default;
 
-   auto window_create_info = ui::window::create_info{};
-   window_create_info.title = "Simple Triangle Example";
-   window_create_info.position = {100, 100};
-   window_create_info.size = {1080, 720};
-   window_create_info.p_logger = &main_logger;
-
-   auto wnd = ui::window( window_create_info );
-   auto context = core::context( wnd, &main_logger );
-
-   return 0;
+   public:
+      virtual VkPhysicalDevice select_physical_device( std::vector<VkPhysicalDevice> const& physical_devices ) const = 0;
+   };
 }
+
+#endif // LUCIOLE_VK_DEVICE_PHYSICAL_DEVICE_SELECTION_INTERFACE_HPP

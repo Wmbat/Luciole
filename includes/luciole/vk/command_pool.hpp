@@ -16,12 +16,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <luciole/context.hpp>
-#include <luciole/utils/logger.hpp>
-#include <luciole/vk/core.hpp>
-#include <luciole/vk/queue.hpp>
+#ifndef LUCIOLE_VK_COMMAND_POOL_HPP
+#define LUCIOLE_VK_COMMAND_POOL_HPP
 
+#include <luciole/vk/core.hpp>
+
+#include <unordered_map>
 #include <vector>
+
+class context;
+class logger;
 
 namespace vk
 {
@@ -29,7 +33,7 @@ namespace vk
    {
    public:
       command_pool( );
-      command_pool( context const* p_context, logger* p_logger, std::uint32_t queue_family_index );
+      command_pool( VkDevice device, std::uint32_t queue_family_index, logger* p_logger );
       command_pool( command_pool const& rhs ) = delete;
       command_pool( command_pool&& rhs );
       ~command_pool( );
@@ -37,12 +41,19 @@ namespace vk
       command_pool& operator=( command_pool const& rhs ) = delete;
       command_pool& operator=( command_pool&& rhs );
 
+      std::uint32_t allocate_command_buffers( std::uint32_t count );
+      void free_command_buffers( std::uint32_t allocation_index );
+
    private:
-      context const* p_context;
       logger* p_logger;
 
+      VkDevice device;
       VkCommandPool handle;
-      std::vector<VkCommandBuffer> command_buffers;
+
+      std::unordered_map<std::uint32_t, std::vector<VkCommandBuffer>> command_buffers;
+
+      std::uint32_t pool_allocation_count;
    }; // class command_pool
 } // namespace vk
 
+#endif // LUCIOLE_VK_COMMAND_POOL_HPP

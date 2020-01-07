@@ -16,6 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/core/context.hpp>
 #include <luciole/vk/shaders/shader.hpp>
 
 #include <spirv_glsl.hpp>
@@ -24,20 +25,20 @@ namespace vk::shader
 {
    unique_shader::unique_shader( ) : p_context( nullptr ), shader_type( type::e_count ), handle( VK_NULL_HANDLE ) {}
 
-   unique_shader::unique_shader( create_info_t const& create_info ) :
-      p_context( create_info.value( ).p_context ), filepath( create_info.value( ).filepath ), entry_point( "" ),
-      shader_type( type::e_count ), handle( VK_NULL_HANDLE )
+   unique_shader::unique_shader( create_info const& create_info ) :
+      p_context( create_info.p_context ), filepath( create_info.filepath ), entry_point( "" ), shader_type( type::e_count ),
+      handle( VK_NULL_HANDLE )
    {
       auto module_create_info = VkShaderModuleCreateInfo{};
       module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
       module_create_info.pNext = nullptr;
       module_create_info.flags = {};
-      module_create_info.pCode = create_info.value( ).spir_v.data( );
-      module_create_info.codeSize = sizeof( std::uint32_t ) * create_info.value( ).spir_v.size( );
+      module_create_info.pCode = create_info.spir_v.data( );
+      module_create_info.codeSize = sizeof( std::uint32_t ) * create_info.spir_v.size( );
 
       handle = p_context->create_shader_module( shader_module_create_info_t( module_create_info ) );
 
-      spirv_cross::CompilerGLSL glsl( std::move( create_info.value( ).spir_v ) );
+      spirv_cross::CompilerGLSL glsl( std::move( create_info.spir_v ) );
       spirv_cross::ShaderResources resources = glsl.get_shader_resources( );
 
       auto const entry_points = glsl.get_entry_points_and_stages( );

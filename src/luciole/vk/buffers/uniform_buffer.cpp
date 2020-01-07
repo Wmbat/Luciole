@@ -63,6 +63,8 @@ namespace vk
          buffer = rhs.buffer;
          rhs.buffer = VK_NULL_HANDLE;
       }
+
+      return *this;
    }
 
 } // namespace vk

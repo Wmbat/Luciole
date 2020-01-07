@@ -37,9 +37,9 @@ namespace ui
    }
 #endif
 
-   window::window( window::create_info_t const &create_info ) :
-      title( create_info.value( ).title ), position( create_info.value( ).position ), size( create_info.value( ).size ),
-      p_logger( create_info.value( ).p_logger ), is_wnd_open( true ), is_fullscreen( false )
+   window::window( create_info const &create_info ) :
+      title( create_info.title ), position( create_info.position ), size( create_info.size ), p_logger( create_info.p_logger ),
+      is_wnd_open( true ), is_fullscreen( false )
    {
 #if defined( VK_USE_PLATFORM_XCB_KHR )
       if ( p_logger )
@@ -78,6 +78,7 @@ namespace ui
       {
          xcb_screen_next( &iter ); // TODO: Allow user to pick their prefered monitor.
       }
+
       p_xcb_screen = iter.data;
 
       xcb_window = xcb_generate_id( p_xcb_connection.get( ) );
@@ -304,6 +305,13 @@ namespace ui
 
          free( e );
       }
+#endif
+   }
+
+   bool window::check_WSI_support( VkPhysicalDevice device, core::uint32 queue_family_index ) const
+   {
+#if defined( VK_USE_PLATFORM_XCB_KHR )
+      return vkGetPhysicalDeviceXcbPresentationSupportKHR( device, queue_family_index, p_xcb_connection.get( ), p_xcb_screen->root_visual );
 #endif
    }
 

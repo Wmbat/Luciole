@@ -133,7 +133,7 @@ endif( )
 
 target_sources( Luciole
    PRIVATE
-      "src/luciole/graphics/renderer.cpp"
+      "src/luciole/core/context.cpp"
       "src/luciole/threads/thread_pool.cpp"
       "src/luciole/ui/window.cpp"
       "src/luciole/utils/logger.cpp"
@@ -153,7 +153,6 @@ target_sources( Luciole
       "src/luciole/vk/queue_handler.cpp"
       "src/luciole/vk/errors.cpp"
       "src/luciole/vk/vma_define.cpp"
-      "src/luciole/context.cpp"
 )
 
 if ( BUILD_EXAMPLES )

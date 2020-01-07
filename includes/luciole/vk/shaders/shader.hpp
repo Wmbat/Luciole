@@ -19,12 +19,17 @@
 #ifndef LUCIOLE_VK_SHADER_HPP
 #define LUCIOLE_VK_SHADER_HPP
 
-#include <luciole/context.hpp>
 #include <luciole/utils/strong_types.hpp>
 #include <luciole/vk/core.hpp>
 
 #include <string>
 #include <string_view>
+#include <vector>
+
+namespace core
+{
+   class context;
+} // namespace core
 
 namespace vk::shader
 {
@@ -44,7 +49,7 @@ namespace vk::shader
    public:
       struct create_info
       {
-         context const* p_context = nullptr;
+         core::context const* p_context = nullptr;
 
          std::string_view filepath = "";
          type shader_type = type::e_count;
@@ -52,11 +57,9 @@ namespace vk::shader
          std::vector<std::uint32_t> spir_v;
       }; // struct create_info
 
-      using create_info_t = strong_type<create_info const&, unique_shader>;
-
    public:
       unique_shader( );
-      unique_shader( create_info_t const& create_info );
+      unique_shader( create_info const& create_info );
       unique_shader( unique_shader const& rhs ) = delete;
       unique_shader( unique_shader&& rhs );
       ~unique_shader( );
@@ -67,7 +70,7 @@ namespace vk::shader
       VkPipelineShaderStageCreateInfo get_shader_stage_create_info( ) const PURE;
 
    private:
-      context const* p_context;
+      core::context const* p_context;
 
       std::string filepath;
       std::string entry_point;

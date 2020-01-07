@@ -16,6 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/utils/logger.hpp>
 #include <luciole/vk/queue_handler.hpp>
 
 #include <algorithm>
@@ -175,10 +176,10 @@ namespace vk
       return indices;
    }
 
-   std::variant<std::unordered_map<std::uint32_t, VkCommandPool>, vk::error> queue_handler::generate_command_pool_infos(
+   std::variant<std::unordered_map<std::uint32_t, vk::command_pool>, vk::error> queue_handler::generate_command_pool_infos(
       VkDevice device ) const
    {
-      std::unordered_map<std::uint32_t, VkCommandPool> command_pools;
+      std::unordered_map<std::uint32_t, vk::command_pool> command_pools;
       command_pools.reserve( queues.size( ) );
 
       for ( auto const& queue : queues )
@@ -186,26 +187,9 @@ namespace vk
          auto const& it = command_pools.find( queue.second.get_family_index( ) );
          if ( it != command_pools.cend( ) )
          {
-            VkCommandPoolCreateInfo create_info = {};
-            create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-            create_info.pNext = nullptr;
-            create_info.flags = 0;
-            create_info.queueFamilyIndex = queue.second.get_family_index( );
+            std::uint32_t family_index = queue.second.get_family_index( );
 
-            VkCommandPool handle = VK_NULL_HANDLE;
-            auto result = vkCreateCommandPool( device, &create_info, nullptr, &handle );
-
-            if ( result != VK_SUCCESS )
-            {
-               return vk::error( vk::result_t( result ) );
-            }
-            else
-            {
-               p_logger->info( "[{0}] Command pool 0x{1:x} created from queue family index {2}", __FUNCTION__,
-                  reinterpret_cast<std::uintptr_t>( handle ), queue.second.get_family_index( ) );
-
-               command_pools.emplace( queue.second.get_family_index( ), handle );
-            }
+            command_pools.emplace( family_index, command_pool( device, family_index, p_logger ) );
          }
       }
 

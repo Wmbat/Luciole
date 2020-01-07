@@ -21,8 +21,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <memory>
-
 class logger
 {
 public:
@@ -36,6 +34,8 @@ public:
    void warn( std::string const& msg ) { log.warn( msg ); }
 
    void error( std::string const& msg ) { log.error( msg ); }
+
+   void flush( ) { log.flush( ); }
 
    template <typename... _args>
    void info( std::string_view msg, _args const&... args )

@@ -16,6 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/core/context.hpp>
 #include <luciole/utils/file_io.hpp>
 #include <luciole/vk/shaders/shader_manager.hpp>
 
@@ -32,7 +33,7 @@ namespace vk::shader
       }
    }
 
-   manager::manager( context_ptr_t const& p_context ) : p_context( p_context.value( ) )
+   manager::manager( core::context* p_context ) : p_context( p_context )
    {
       if ( !GLSLANG_INITIALIZED )
       {

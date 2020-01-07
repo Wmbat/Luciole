@@ -16,6 +16,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <luciole/core/context.hpp>
 #include <luciole/graphics/renderer.hpp>
 #include <luciole/graphics/vertex.hpp>
 #include <luciole/ui/event.hpp>
@@ -38,11 +39,11 @@ const std::vector<std::uint32_t> indices = {0, 1, 2, 2, 3, 0};
  * @param p_context Pointer to a context object.
  * @param wnd Reference to a window object.
  */
-renderer::renderer( context* p_context, ui::window& wnd ) :
+renderer::renderer( core::context* p_context, ui::window& wnd ) :
    p_context( p_context ), swapchain( VK_NULL_HANDLE ), swapchain_images( {} ), swapchain_image_views( {} ), swapchain_framebuffers( {} ),
    swapchain_image_format( VK_FORMAT_UNDEFINED ), swapchain_extent( {0, 0} ), render_pass( VK_NULL_HANDLE ),
    default_graphics_pipeline_layout( VK_NULL_HANDLE ), default_graphics_pipeline( VK_NULL_HANDLE ), descriptor_set_layout( VK_NULL_HANDLE ),
-   render_command_buffers( {} ), shader_manager( context_ptr_t( p_context ) )
+   render_command_buffers( {} ), shader_manager( p_context )
 {
    vulkan_logger = spdlog::get( "Vulkan Logger" );
 
@@ -389,6 +390,8 @@ void renderer::create_swapchain( )
 
       abort( );
    }
+
+   auto gfx_command_pool = p_context->get_command_pool( queue::flag::e_graphics );
 
    auto const res_command_buffers = p_context->create_command_buffers( queue::flag_t( queue::flag::e_graphics ), count32_t( image_count ) );
 

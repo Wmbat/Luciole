@@ -20,13 +20,14 @@
 #define LUCIOLE_VULKAN_QUEUE_HANDLER_HPP
 
 #include <luciole/luciole_core.hpp>
-#include <luciole/utils/logger.hpp>
 #include <luciole/vk/command_pool.hpp>
 #include <luciole/vk/core.hpp>
 #include <luciole/vk/queue.hpp>
 
 #include <optional>
 #include <unordered_map>
+
+class logger;
 
 namespace vk
 {
@@ -44,7 +45,7 @@ namespace vk
       std::optional<std::uint32_t> get_queue_family_index( queue::flag flags ) const;
       std::vector<std::uint32_t> get_queue_family_indices( ) const;
 
-      std::variant<std::unordered_map<std::uint32_t, VkCommandPool>, vk::error> generate_command_pool_infos( VkDevice device ) const;
+      std::variant<std::unordered_map<std::uint32_t, vk::command_pool>, vk::error> generate_command_pool_infos( VkDevice device ) const;
 
       VkSharingMode get_sharing_mode( ) const noexcept;
 

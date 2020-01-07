@@ -20,6 +20,7 @@
 #define LUCIOLE_UI_WINDOW_HPP
 
 /* INCLUDES */
+#include <luciole/core/common_types.hpp>
 #include <luciole/luciole_core.hpp>
 #include <luciole/ui/event.hpp>
 #include <luciole/utils/delegate.hpp>
@@ -44,31 +45,17 @@ namespace ui
 {
    class window
    {
-   private:
-      /**
-       * @brief Dummy struct for the definition of custom strong_types
-       * in the window class.
-       */
-      struct window_param
-      {
-      };
-
    public:
 #if defined( VK_USE_PLATFORM_XCB_KHR )
       using xcb_connection_uptr = std::unique_ptr<xcb_connection_t, delegate<void( xcb_connection_t* )>>;
       using xcb_intern_atom_uptr = std::unique_ptr<xcb_intern_atom_reply_t, delegate<void( xcb_intern_atom_reply_t* )>>;
 #endif
 
-      /**
-       * @brief Forward declaration of the create_info struct.
-       */
       struct create_info;
-
-      using create_info_t = strong_type<create_info const&, window_param>;
 
    public:
       window( ) = default;
-      window( create_info_t const& create_info );
+      window( create_info const& create_info );
       window( window const& wnd ) = delete;
       window( window&& wnd );
       ~window( );
@@ -92,6 +79,8 @@ namespace ui
        * - Window Resize Events.
        */
       void poll_events( );
+
+      bool check_WSI_support( VkPhysicalDevice, core::uint32 queue_family_index ) const;
 
       /**
        * @brief Create a surface object

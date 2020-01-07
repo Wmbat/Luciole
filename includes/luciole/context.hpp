@@ -46,14 +46,6 @@
 class context
 {
 private:
-   struct command_pool
-   {
-      VkCommandPool handle = VK_NULL_HANDLE;
-      queue::flag flags = queue::flag::e_none;
-   };
-
-   using command_pools_container_t = std::unordered_map<std::uint32_t, context::command_pool>;
-
    /* STRONG TYPES */
    using extensions_t = strong_type<std::vector<vk::extension>, context>;
    using extension_names_t = strong_type<std::vector<std::string>, context>;
@@ -291,19 +283,6 @@ public:
    void destroy_fence( vk::fence_t fence ) const noexcept;
 
    /**
-    * @brief Create an array of command buffers.
-    *
-    * @param flag The queue the command buffer should
-    * be associated with.
-    * @param buffer_count The number of command buffers
-    * to create.
-    * @return Either a vector of handle to the newly created
-    * command buffers or an error code.
-    */
-   [[nodiscard]] std::variant<std::vector<VkCommandBuffer>, vk::error> create_command_buffers(
-      queue::flag_t flag, count32_t buffer_count ) const PURE;
-
-   /**
     * @brief Get the swapchain images from the swapchain.
     *
     * @param swapchain The swapchain to get the images from.
@@ -456,20 +435,8 @@ private:
     */
    [[nodiscard]] std::unordered_map<queue::flag, queue> get_queues( queue_properties_t const& queue_properties ) const PURE;
 
-   /**
-    * @brief Rate a gpu based on what it is capable
-    * of doing and what it supports.
-    *
-    * @param gpu The handle to the gpu.
-    * @return The rating given to the gpu.
-    */
    int rate_gpu( vk::physical_device_t const gpu ) const PURE;
 
-   /**
-    * @brief Retrieve the properties of the queue families.
-    *
-    * @return An array of VkQueueFamilyProperties
-    */
    std::vector<VkQueueFamilyProperties> query_queue_family_properties( ) const PURE;
 
 private:
@@ -485,7 +452,7 @@ private:
 
    vk::queue_handler queue_handler;
 
-   std::unordered_map<std::uint32_t, command_pool> command_pools;
+   std::unordered_map<std::uint32_t, vk::command_pool> command_pools;
 
    std::vector<vk::layer> validation_layers;
    std::vector<vk::extension> instance_extensions;
